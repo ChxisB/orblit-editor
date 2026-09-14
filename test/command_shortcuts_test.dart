@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/platform/command_shortcuts.dart';
+import 'package:orblit_editor/src/platform/command_shortcuts.dart';
 
 void main() {
   tearDown(() => debugDefaultTargetPlatformOverride = null);

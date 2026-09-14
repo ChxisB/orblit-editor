@@ -1,10 +1,10 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/assets.dart';
-import 'package:orbis_editor/src/editor/data_object.dart';
-import 'package:orbis_editor/src/editor/script_build.dart';
-import 'package:orbis_native/orbis_native.dart';
+import 'package:orblit_editor/src/editor/assets.dart';
+import 'package:orblit_editor/src/editor/data_object.dart';
+import 'package:orblit_editor/src/editor/script_build.dart';
+import 'package:orblit_native/orblit_native.dart';
 import 'package:path/path.dart' as p;
 
 /// These compile real C++ against the real engine headers.
@@ -15,7 +15,7 @@ import 'package:path/path.dart' as p;
 void main() {
   late Directory root;
 
-  setUp(() => root = Directory.systemTemp.createTempSync('orbis_cpp'));
+  setUp(() => root = Directory.systemTemp.createTempSync('orblit_cpp'));
   tearDown(() => root.deleteSync(recursive: true));
 
   DataObject ball() => DataObject(
@@ -74,9 +74,9 @@ void main() {
 
       final built = build('user', '''
 #include "shared.h"
-ORBIS_SCRIPT { (void)sizeof(Drift); }
-extern "C" void orbis_step(double d) { (void)d; }
-extern "C" void orbis_stop(void) {}
+ORBLIT_SCRIPT { (void)sizeof(Drift); }
+extern "C" void orblit_step(double d) { (void)d; }
+extern "C" void orblit_stop(void) {}
 ''');
       expect(built.ok, isTrue, reason: built.output);
     });
@@ -89,7 +89,7 @@ extern "C" void orbis_stop(void) {}
       final built = build('reader', '''
 #include "ball.h"
 
-ORBIS_SCRIPT {
+ORBLIT_SCRIPT {
   double speed = BallSettings::speed(1.0);
   bool bouncy = BallSettings::bouncy(false);
   const char *label = BallSettings::label();
@@ -98,8 +98,8 @@ ORBIS_SCRIPT {
   (void)speed; (void)bouncy; (void)label; (void)tint; (void)y;
 }
 
-extern "C" void orbis_step(double d) { (void)d; }
-extern "C" void orbis_stop(void) {}
+extern "C" void orblit_step(double d) { (void)d; }
+extern "C" void orblit_stop(void) {}
 ''');
       expect(built.ok, isTrue, reason: built.output);
     });
@@ -108,7 +108,7 @@ extern "C" void orbis_stop(void) {}
       // The difference between a value that is safe to read once and one that
       // is safe to read inside a loop over everything.
       final header = ball().toCpp('ball');
-      expect(header, contains('::orbis::number_at'));
+      expect(header, contains('::orblit::number_at'));
       expect(header, contains('static const double *at'));
     });
 
@@ -121,9 +121,9 @@ extern "C" void orbis_stop(void) {}
 
       final built = build('stale', '''
 #include "ball.h"
-ORBIS_SCRIPT { (void)BallSettings::speed(1.0); }
-extern "C" void orbis_step(double d) { (void)d; }
-extern "C" void orbis_stop(void) {}
+ORBLIT_SCRIPT { (void)BallSettings::speed(1.0); }
+extern "C" void orblit_step(double d) { (void)d; }
+extern "C" void orblit_stop(void) {}
 ''');
 
       expect(built.ok, isFalse);
@@ -146,7 +146,7 @@ extern "C" void orbis_stop(void) {}
 
   group('building from the editor', () {
     test('a script that does not compile says why', () {
-      final built = build('broken', '#include "orbis_script.h"\nnonsense here');
+      final built = build('broken', '#include "orblit_script.h"\nnonsense here');
 
       expect(built.ok, isFalse);
       expect(built.output, isNotEmpty);
@@ -158,7 +158,7 @@ extern "C" void orbis_stop(void) {}
       ScriptBuilder(root.path).build(made.path!);
 
       expect(
-        Directory(p.join(root.path, '.orbis', 'build')).existsSync(),
+        Directory(p.join(root.path, '.orblit', 'build')).existsSync(),
         isTrue,
       );
     });
@@ -171,7 +171,7 @@ extern "C" void orbis_stop(void) {}
 
       // A library already loaded cannot be closed, so a rebuild has to be a
       // different file or it would go on running the old code.
-      final built = Directory(p.join(root.path, '.orbis', 'build'))
+      final built = Directory(p.join(root.path, '.orblit', 'build'))
           .listSync()
           .where((e) => e.path.endsWith(Toolchain.librarySuffix));
       expect(built.length, greaterThan(1));

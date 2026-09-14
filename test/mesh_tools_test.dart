@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/mesh_edit.dart';
-import 'package:orbis_editor/src/editor/mesh_tools.dart';
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_editor/src/editor/mesh_edit.dart';
+import 'package:orblit_editor/src/editor/mesh_tools.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 
 void main() {
   Mesh cube() => Shape.of(ShapeKind.cube).build();

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:orbis_ui/orbis_ui.dart';
+import 'package:orblit_ui/orblit_ui.dart';
 
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 
 /// An interface, shown the way it will be shown, with the design chrome over
 /// the top.
@@ -145,7 +145,7 @@ class UiCanvasView extends StatelessWidget {
         final zoom = _fitInto(screen, room);
 
         return ColoredBox(
-          color: OrbisColors.ground,
+          color: OrblitColors.ground,
           child: Center(
             child: SizedBox(
               width: screen.width * zoom,
@@ -281,10 +281,10 @@ class UiCanvasView extends StatelessWidget {
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: isSelected
-                        ? OrbisColors.ember
+                        ? OrblitColors.ember
                         : (isHovered
-                            ? OrbisColors.ember.withValues(alpha: 0.5)
-                            : OrbisColors.ember.withValues(alpha: 0.14)),
+                            ? OrblitColors.ember.withValues(alpha: 0.5)
+                            : OrblitColors.ember.withValues(alpha: 0.14)),
                     width: isSelected ? 1.5 : 1,
                   ),
                 ),
@@ -372,11 +372,11 @@ class _Guides extends CustomPainter {
 
     final fill = Paint()
       ..style = PaintingStyle.fill
-      ..color = OrbisColors.ember.withValues(alpha: 0.055);
+      ..color = OrblitColors.ember.withValues(alpha: 0.055);
     final edge = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
-      ..color = OrbisColors.ember.withValues(alpha: 0.3);
+      ..color = OrblitColors.ember.withValues(alpha: 0.3);
 
     for (final band in bands) {
       final rect = Rect.fromLTRB(band.left, 0, band.right, size.height);
@@ -394,7 +394,7 @@ class _Guides extends CustomPainter {
     final edge = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2
-      ..color = OrbisColors.ember.withValues(alpha: 0.65);
+      ..color = OrblitColors.ember.withValues(alpha: 0.65);
     paint.drawRect(Offset.zero & size, edge);
 
     if (canvas.safeArea <= 0) return;
@@ -411,7 +411,7 @@ class _Guides extends CustomPainter {
     final safe = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
-      ..color = OrbisColors.good.withValues(alpha: 0.5);
+      ..color = OrblitColors.good.withValues(alpha: 0.5);
     paint.drawRect(inset, safe);
   }
 
@@ -442,7 +442,7 @@ class _Screen extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2
-        ..color = OrbisColors.inkDim.withValues(alpha: 0.6),
+        ..color = OrblitColors.inkDim.withValues(alpha: 0.6),
     );
   }
 

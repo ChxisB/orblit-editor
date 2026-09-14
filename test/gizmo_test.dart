@@ -2,9 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/gizmo.dart';
-import 'package:orbis_editor/src/editor/scene.dart';
-import 'package:orbis_editor/src/editor/viewport.dart';
+import 'package:orblit_editor/src/editor/gizmo.dart';
+import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/viewport.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 void main() {

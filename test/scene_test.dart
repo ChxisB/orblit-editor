@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_filament/orbis_filament.dart';
-import 'package:orbis_light/orbis_light.dart';
-import 'package:orbis_weather/orbis_weather.dart';
-import 'package:orbis_editor/src/editor/scene.dart';
-import 'package:orbis_editor/src/editor/viewport.dart';
+import 'package:orblit_filament/orblit_filament.dart';
+import 'package:orblit_light/orblit_light.dart';
+import 'package:orblit_weather/orblit_weather.dart';
+import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/viewport.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 void main() {
@@ -60,8 +60,8 @@ void main() {
       ]);
 
       final lights = scene.toRenderScene(OrbitCamera().toRenderCamera()).lights;
-      final sun = lights.firstWhere((l) => l.kind == OrbisLightKind.directional);
-      final bulb = lights.firstWhere((l) => l.kind == OrbisLightKind.point);
+      final sun = lights.firstWhere((l) => l.kind == OrblitLightKind.directional);
+      final bulb = lights.firstWhere((l) => l.kind == OrblitLightKind.point);
 
       // The same number of watts means two different things, and the units
       // are the whole reason the conversion lives in one place.
@@ -121,7 +121,7 @@ void main() {
 
       // Nothing is doing any weather, so there is no wind to answer — and a
       // surface that claims to sway in still air would sway for ever.
-      expect(material.wind, OrbisWind.none);
+      expect(material.wind, OrblitWind.none);
     });
 
     test('one texture on two swaying differently is two materials', () {
@@ -213,12 +213,12 @@ void main() {
       // direction, a rectangle against its own area, so the shape of the
       // highlight and the gradient of the shadow edge both come out of the
       // panel's proportions rather than out of one radius.
-      expect(light.kind, OrbisLightKind.area);
+      expect(light.kind, OrblitLightKind.area);
       expect(light.intensity, closeTo(100 * 683, 1));
     });
 
     test('a light that has no size is still given one', () {
-      // `orbis_light` leaves width and height at zero for every kind that has
+      // `orblit_light` leaves width and height at zero for every kind that has
       // no size, and zero would reach the renderer as a panel with no area to
       // integrate — a light that emits nothing. Anything that is not an area
       // light carries the renderer's own default instead.
@@ -560,7 +560,7 @@ void main() {
       final rendered = scene.toRenderScene(camera);
 
       final beam = rendered.lights
-          .firstWhere((light) => light.kind == OrbisLightKind.directional);
+          .firstWhere((light) => light.kind == OrblitLightKind.directional);
 
       // Towards the body is away from where its light travels.
       final towards = -beam.direction..normalize();
@@ -571,9 +571,9 @@ void main() {
       // Not presets of one shape with the numbers moved: they differ in how
       // high the base sits and how deep the layer is, and no slider reaches
       // either.
-      final cumulus = OrbisClouds.cumulus(cover: 0.5);
-      final cirrus = OrbisClouds.cirrus(cover: 0.5);
-      final storm = OrbisClouds.cumulonimbus(cover: 0.5);
+      final cumulus = OrblitClouds.cumulus(cover: 0.5);
+      final cirrus = OrblitClouds.cirrus(cover: 0.5);
+      final storm = OrblitClouds.cumulonimbus(cover: 0.5);
 
       // Ice needs the cold seven kilometres up; cumulus condense far lower.
       expect(cirrus.altitude, greaterThan(cumulus.altitude * 4));
@@ -581,7 +581,7 @@ void main() {
       expect(storm.thickness, greaterThan(cumulus.thickness * 3));
       // And it is nearly a smooth sheet at one end and a cauliflower at the
       // other.
-      expect(OrbisClouds.stratus(cover: 0.5).billow, lessThan(0.2));
+      expect(OrblitClouds.stratus(cover: 0.5).billow, lessThan(0.2));
       expect(cumulus.billow, greaterThan(0.7));
     });
 

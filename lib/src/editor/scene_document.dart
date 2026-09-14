@@ -1,12 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:orbis_light/orbis_light.dart';
-import 'package:orbis_weather/orbis_weather.dart';
+import 'package:orblit_light/orblit_light.dart';
+import 'package:orblit_weather/orblit_weather.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 import 'colour.dart';
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 
 import 'boundary.dart';
 import 'scene.dart';
@@ -331,7 +331,7 @@ abstract final class SceneDocument {
       // Refused rather than half-read: a newer file may mean something
       // different by the same keys, and guessing loses somebody's work.
       throw SceneFormatException(
-        'This scene was written by a newer Orbis (format $version; this one '
+        'This scene was written by a newer Orblit (format $version; this one '
         'reads up to $formatVersion).',
       );
     }
@@ -489,7 +489,7 @@ abstract final class SceneDocument {
       problems: objects.isEmpty
           ? const []
           : [
-              'This scene was written before Orbis stored positions, so its '
+              'This scene was written before Orblit stored positions, so its '
                   '${objects.length} objects are all at the origin.',
             ],
     );

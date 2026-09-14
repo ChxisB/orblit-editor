@@ -3,8 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:orbis_filament/orbis_filament.dart';
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_filament/orblit_filament.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 import 'package:path/path.dart' as p;
 import 'package:vector_math/vector_math_64.dart';
 
@@ -75,7 +75,7 @@ class GridStore {
     if (_building || _mesh != null) return;
     _building = true;
     try {
-      final folder = Directory(p.join(projectRoot, '.orbis'));
+      final folder = Directory(p.join(projectRoot, '.orblit'));
       await folder.create(recursive: true);
 
       final quad = Mesh(
@@ -200,7 +200,7 @@ extension GridAsScene on GridPlan {
     ..setTranslation(Vector3(centre.x, 0, centre.z))
     ..multiply(Matrix4.diagonal3(Vector3(extent, 1, extent)));
 
-  OrbisObject get object => OrbisObject(
+  OrblitObject get object => OrblitObject(
         key: GridPlan.renderKey,
         transform: transform,
         colour: Vector3(1, 1, 1),
@@ -212,11 +212,11 @@ extension GridAsScene on GridPlan {
         receiveShadows: false,
       );
 
-  OrbisMaterial get material => OrbisMaterial(
+  OrblitMaterial get material => OrblitMaterial(
         key: GridPlan.materialKey,
-        shading: OrbisShading.unlit,
-        blend: OrbisBlend.fade,
-        culling: OrbisCulling.none,
+        shading: OrblitShading.unlit,
+        blend: OrblitBlend.fade,
+        culling: OrblitCulling.none,
         // Writing depth would make the grid hide what is behind it, and it is
         // a hint about where the floor is rather than a floor.
         depthWrite: false,
@@ -230,6 +230,6 @@ extension GridAsScene on GridPlan {
         // Ten across the image and ten images across the quad: a hundred
         // squares, each one snap step.
         tiling: Vector2(10, 10),
-        baseColourMap: OrbisTexture(texture),
+        baseColourMap: OrblitTexture(texture),
       );
 }

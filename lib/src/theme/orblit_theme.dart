@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 /// the ember is reserved for what is selected, what is primary, and what is
 /// being edited right now. An interface where everything is highlighted has
 /// highlighted nothing.
-abstract final class OrbisColors {
+abstract final class OrblitColors {
   /// Behind everything. Darker than any panel, so panels read as lifted.
   static const ground = Color(0xFF0E1116);
 
@@ -72,7 +72,7 @@ abstract final class Radii {
 /// better at eleven point in a dense inspector than anything worth bundling.
 /// Monospace is reserved for things that are read as data — paths, numbers,
 /// identifiers — where proportional spacing actively costs comprehension.
-abstract final class OrbisText {
+abstract final class OrblitText {
   static const _mono = ['Menlo', 'SF Mono', 'Consolas', 'monospace'];
 
   static const display = TextStyle(
@@ -80,7 +80,7 @@ abstract final class OrbisText {
     height: 1.15,
     fontWeight: FontWeight.w600,
     letterSpacing: -0.5,
-    color: OrbisColors.ink,
+    color: OrblitColors.ink,
   );
 
   static const title = TextStyle(
@@ -88,13 +88,13 @@ abstract final class OrbisText {
     height: 1.3,
     fontWeight: FontWeight.w600,
     letterSpacing: -0.1,
-    color: OrbisColors.ink,
+    color: OrblitColors.ink,
   );
 
   static const body = TextStyle(
     fontSize: 13,
     height: 1.45,
-    color: OrbisColors.inkMid,
+    color: OrblitColors.inkMid,
   );
 
   /// Panel headers and field names.
@@ -102,7 +102,7 @@ abstract final class OrbisText {
     fontSize: 12,
     height: 1.3,
     fontWeight: FontWeight.w500,
-    color: OrbisColors.inkMid,
+    color: OrblitColors.inkMid,
   );
 
   /// Section headings inside panels.
@@ -111,13 +111,13 @@ abstract final class OrbisText {
     height: 1.2,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.9,
-    color: OrbisColors.inkDim,
+    color: OrblitColors.inkDim,
   );
 
   static const caption = TextStyle(
     fontSize: 11.5,
     height: 1.4,
-    color: OrbisColors.inkDim,
+    color: OrblitColors.inkDim,
   );
 
   /// Paths, identifiers, coordinates.
@@ -126,7 +126,7 @@ abstract final class OrbisText {
     fontFamilyFallback: _mono,
     fontSize: 11.5,
     height: 1.4,
-    color: OrbisColors.inkDim,
+    color: OrblitColors.inkDim,
   );
 
   static const monoValue = TextStyle(
@@ -134,55 +134,55 @@ abstract final class OrbisText {
     fontFamilyFallback: _mono,
     fontSize: 12,
     height: 1.3,
-    color: OrbisColors.ink,
+    color: OrblitColors.ink,
   );
 }
 
 /// The Material theme, so ordinary widgets land in the same world as the
 /// hand-built ones rather than arriving in Material's defaults.
-ThemeData orbisTheme() {
+ThemeData orblitTheme() {
   const scheme = ColorScheme.dark(
-    primary: OrbisColors.ember,
+    primary: OrblitColors.ember,
     onPrimary: Color(0xFF1A1206),
-    secondary: OrbisColors.ember,
-    surface: OrbisColors.surface,
-    onSurface: OrbisColors.ink,
-    error: OrbisColors.bad,
+    secondary: OrblitColors.ember,
+    surface: OrblitColors.surface,
+    onSurface: OrblitColors.ink,
+    error: OrblitColors.bad,
   );
 
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
-    scaffoldBackgroundColor: OrbisColors.ground,
-    canvasColor: OrbisColors.surface,
-    dividerColor: OrbisColors.line,
+    scaffoldBackgroundColor: OrblitColors.ground,
+    canvasColor: OrblitColors.surface,
+    dividerColor: OrblitColors.line,
     splashFactory: NoSplash.splashFactory,
     highlightColor: Colors.transparent,
     textTheme: const TextTheme(
-      bodyMedium: OrbisText.body,
-      labelMedium: OrbisText.label,
+      bodyMedium: OrblitText.body,
+      labelMedium: OrblitText.label,
     ),
     sliderTheme: const SliderThemeData(
       trackHeight: 3,
-      activeTrackColor: OrbisColors.ember,
-      inactiveTrackColor: OrbisColors.line,
-      thumbColor: OrbisColors.ember,
-      overlayColor: OrbisColors.emberWash,
+      activeTrackColor: OrblitColors.ember,
+      inactiveTrackColor: OrblitColors.line,
+      thumbColor: OrblitColors.ember,
+      overlayColor: OrblitColors.emberWash,
       thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6.5),
       overlayShape: RoundSliderOverlayShape(overlayRadius: 14),
     ),
     scrollbarTheme: ScrollbarThemeData(
-      thumbColor: WidgetStatePropertyAll(OrbisColors.line),
+      thumbColor: WidgetStatePropertyAll(OrblitColors.line),
       thickness: const WidgetStatePropertyAll(7),
       radius: const Radius.circular(4),
     ),
     tooltipTheme: TooltipThemeData(
       decoration: BoxDecoration(
-        color: OrbisColors.raised,
-        border: Border.all(color: OrbisColors.line),
+        color: OrblitColors.raised,
+        border: Border.all(color: OrblitColors.line),
         borderRadius: BorderRadius.circular(Radii.control),
       ),
-      textStyle: OrbisText.caption.copyWith(color: OrbisColors.ink),
+      textStyle: OrblitText.caption.copyWith(color: OrblitColors.ink),
       waitDuration: const Duration(milliseconds: 500),
     ),
   );

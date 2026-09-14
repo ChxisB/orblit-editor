@@ -8,7 +8,7 @@ class MainFlutterWindow: NSWindow {
     // Without this they never arrive: on macOS a Flutter app is started by
     // LaunchServices and the embedder passes the entrypoint nothing unless it
     // is told to, so `main(List<String> arguments)` is always given an empty
-    // list. `orbis_editor ~/Projects/Thing` opened the launcher instead, and
+    // list. `orblit_editor ~/Projects/Thing` opened the launcher instead, and
     // it did so in silence, which reads as the path being wrong rather than
     // as never having been looked at.
     //

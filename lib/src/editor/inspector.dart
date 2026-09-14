@@ -1,13 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:orbis_filament/orbis_filament.dart';
-import 'package:orbis_light/orbis_light.dart';
-import 'package:orbis_weather/orbis_weather.dart';
+import 'package:orblit_filament/orblit_filament.dart';
+import 'package:orblit_light/orblit_light.dart';
+import 'package:orblit_weather/orblit_weather.dart';
 import 'package:path/path.dart' as p;
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'colour.dart';
 import 'commands.dart';
@@ -98,8 +98,8 @@ class Inspector extends StatelessWidget {
     return Container(
       width: 296,
       decoration: const BoxDecoration(
-        color: OrbisColors.surface,
-        border: Border(left: BorderSide(color: OrbisColors.lineSoft)),
+        color: OrblitColors.surface,
+        border: Border(left: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -109,15 +109,15 @@ class Inspector extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: Space.md),
             alignment: Alignment.centerLeft,
             decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: OrbisColors.lineSoft)),
+              border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
             ),
-            child: Text('INSPECTOR', style: OrbisText.section),
+            child: Text('INSPECTOR', style: OrblitText.section),
           ),
           Expanded(
             child: dataPanel ??
                 (entry == null
                 ? Center(
-                    child: Text('No scene loaded.', style: OrbisText.caption),
+                    child: Text('No scene loaded.', style: OrblitText.caption),
                   )
                 : (selected == null
                     ? _SceneFields(
@@ -200,8 +200,8 @@ class _PrefabBand extends StatelessWidget {
         vertical: Space.sm,
       ),
       decoration: const BoxDecoration(
-        color: OrbisColors.raised,
-        border: Border(bottom: BorderSide(color: OrbisColors.lineSoft)),
+        color: OrblitColors.raised,
+        border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -209,7 +209,7 @@ class _PrefabBand extends StatelessWidget {
           Row(
             children: [
               const Icon(Icons.widgets_outlined,
-                  size: 13, color: OrbisColors.ember),
+                  size: 13, color: OrblitColors.ember),
               const SizedBox(width: Space.sm),
               Expanded(
                 child: Tooltip(
@@ -217,7 +217,7 @@ class _PrefabBand extends StatelessWidget {
                   child: Text(
                     name,
                     overflow: TextOverflow.ellipsis,
-                    style: OrbisText.label.copyWith(color: OrbisColors.ember),
+                    style: OrblitText.label.copyWith(color: OrblitColors.ember),
                   ),
                 ),
               ),
@@ -272,7 +272,7 @@ class _PrefabAction extends StatelessWidget {
       child: Tooltip(
         message: tooltip,
         waitDuration: const Duration(milliseconds: 400),
-        child: OrbisButton(
+        child: OrblitButton(
           label: label,
           tone: ButtonTone.quiet,
           expand: true,
@@ -298,7 +298,7 @@ class _DataLink extends StatelessWidget {
       child: Row(
         children: [
           const Icon(Icons.dataset_outlined, size: 13,
-              color: OrbisColors.inkDim),
+              color: OrblitColors.inkDim),
           const SizedBox(width: Space.sm),
           Expanded(
             child: Tooltip(
@@ -308,7 +308,7 @@ class _DataLink extends StatelessWidget {
                 child: Text(
                   p.basename(path),
                   overflow: TextOverflow.ellipsis,
-                  style: OrbisText.label.copyWith(color: OrbisColors.ink),
+                  style: OrblitText.label.copyWith(color: OrblitColors.ink),
                 ),
               ),
             ),
@@ -321,7 +321,7 @@ class _DataLink extends StatelessWidget {
                 child: const Padding(
                   padding: EdgeInsets.all(Space.xs),
                   child: Icon(Icons.close, size: 12,
-                      color: OrbisColors.inkDim),
+                      color: OrblitColors.inkDim),
                 ),
               ),
             ),
@@ -345,16 +345,16 @@ class _MultipleNotice extends StatelessWidget {
         horizontal: Space.md,
         vertical: Space.sm,
       ),
-      color: OrbisColors.emberWash,
+      color: OrblitColors.emberWash,
       child: Row(
         children: [
-          const Icon(Icons.layers_outlined, size: 13, color: OrbisColors.ember),
+          const Icon(Icons.layers_outlined, size: 13, color: OrblitColors.ember),
           const SizedBox(width: Space.sm),
           Expanded(
             child: Text(
               '$count selected · editing $name',
               overflow: TextOverflow.ellipsis,
-              style: OrbisText.caption.copyWith(color: OrbisColors.ember),
+              style: OrblitText.caption.copyWith(color: OrblitColors.ember),
             ),
           ),
         ],
@@ -424,12 +424,12 @@ class _SceneFields extends StatelessWidget {
             child: Text(
               entry.path ?? 'Never saved',
               overflow: TextOverflow.ellipsis,
-              style: OrbisText.mono.copyWith(fontSize: 11),
+              style: OrblitText.mono.copyWith(fontSize: 11),
             ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: Space.md),
-            child: OrbisButton(
+            child: OrblitButton(
               label: 'Load scene',
               icon: Icons.folder_open,
               expand: true,
@@ -441,7 +441,7 @@ class _SceneFields extends StatelessWidget {
             child: Text(
               'Loading a scene replaces the one open. Only one scene is in the '
               'viewport at a time.',
-              style: OrbisText.caption,
+              style: OrblitText.caption,
             ),
           ),
         ],
@@ -468,7 +468,7 @@ class _SceneFields extends StatelessWidget {
               'What every scene in this project has in it. Objects here are '
               'drawn and lit alongside whichever scene is open, and saved '
               'beside it.',
-              style: OrbisText.caption,
+              style: OrblitText.caption,
             ),
           ),
           _ComponentSection(
@@ -496,7 +496,7 @@ class _SceneFields extends StatelessWidget {
               'A scene of its own overrules it: a sun or a Weather object in '
               'the open scene is used instead of the one here, so a level can '
               'have its own without the shared one being in the way.',
-              style: OrbisText.caption,
+              style: OrblitText.caption,
             ),
           ),
         ],
@@ -526,7 +526,7 @@ class _SceneFields extends StatelessWidget {
                 ? 'Not saved to a file yet'
                 : p.basename(entry.path!),
             overflow: TextOverflow.ellipsis,
-            style: OrbisText.mono.copyWith(fontSize: 11),
+            style: OrblitText.mono.copyWith(fontSize: 11),
           ),
         ),
         _ComponentSection(
@@ -605,7 +605,7 @@ class _SceneFields extends StatelessWidget {
                           'keeps the hour it was saved at.'
                       : 'The scene sits at this hour. The light above it is '
                           'whichever body it is set to be.',
-                  style: OrbisText.caption,
+                  style: OrblitText.caption,
                 ),
               ),
             ],
@@ -731,13 +731,13 @@ class _Fields extends StatelessWidget {
             child: Row(
               children: [
                 const Icon(Icons.subdirectory_arrow_right,
-                    size: 12, color: OrbisColors.inkDim),
+                    size: 12, color: OrblitColors.inkDim),
                 const SizedBox(width: Space.xs),
                 Flexible(
                   child: Text(
                     'in ${parent.name}',
                     overflow: TextOverflow.ellipsis,
-                    style: OrbisText.caption.copyWith(fontSize: 11.5),
+                    style: OrblitText.caption.copyWith(fontSize: 11.5),
                   ),
                 ),
               ],
@@ -778,13 +778,13 @@ class _Fields extends StatelessWidget {
           if (shown == null)
             Text(
               'Nothing yet. Drag a .oui from the project onto the viewport.',
-              style: OrbisText.caption.copyWith(fontSize: 11),
+              style: OrblitText.caption.copyWith(fontSize: 11),
             )
           else ...[
             Row(
               children: [
                 const Icon(Icons.web_asset, size: 13,
-                    color: OrbisColors.inkDim),
+                    color: OrblitColors.inkDim),
                 const SizedBox(width: Space.sm),
                 Expanded(
                   child: Tooltip(
@@ -797,7 +797,7 @@ class _Fields extends StatelessWidget {
                         p.basename(shown),
                         overflow: TextOverflow.ellipsis,
                         style:
-                            OrbisText.label.copyWith(color: OrbisColors.ink),
+                            OrblitText.label.copyWith(color: OrblitColors.ink),
                       ),
                     ),
                   ),
@@ -807,7 +807,7 @@ class _Fields extends StatelessWidget {
             const SizedBox(height: Space.xs),
             Text(
               'Drawn over the scene. Hidden here hides it in the game too.',
-              style: OrbisText.caption.copyWith(fontSize: 11),
+              style: OrblitText.caption.copyWith(fontSize: 11),
             ),
           ],
         ],
@@ -840,7 +840,7 @@ class _Fields extends StatelessWidget {
           const SizedBox(height: Space.xs),
           Text(
             'Shared. Changing one of these changes it everywhere it is used.',
-            style: OrbisText.caption.copyWith(fontSize: 11),
+            style: OrblitText.caption.copyWith(fontSize: 11),
           ),
         ],
       ),
@@ -881,7 +881,7 @@ class _Fields extends StatelessWidget {
                   const EdgeInsets.fromLTRB(Space.md, Space.xs, Space.md, 0),
               child: Text(
                 'Hidden anyway, because something it is inside is hidden.',
-                style: OrbisText.caption,
+                style: OrblitText.caption,
               ),
             ),
         ],
@@ -985,7 +985,7 @@ class _Fields extends StatelessWidget {
                   'The day cycle is deciding: whichever body is above the '
                   'horizon lights the scene, and its colour, strength and '
                   'direction come from the hour.',
-                  style: OrbisText.caption,
+                  style: OrblitText.caption,
                 ),
               ),
           ],
@@ -1119,7 +1119,7 @@ class _Fields extends StatelessWidget {
                     'stays the same and spreads over a wider surface, which '
                     'is what widens the penumbra.',
               },
-              style: OrbisText.caption,
+              style: OrblitText.caption,
             ),
           ),
         ],
@@ -1304,7 +1304,7 @@ class _Fields extends StatelessWidget {
                       : 'Cloud takes the strength out of whatever is above '
                           'the scene and spreads it across the sky. Shadows '
                           'lose their edges before they lose their depth.',
-              style: OrbisText.caption,
+              style: OrblitText.caption,
             ),
           ),
         ],
@@ -1387,7 +1387,7 @@ class _Fields extends StatelessWidget {
                         'above — these are two different pieces of weather.'
                     : 'Density is the even haze that distance looks like. '
                         'Mist gives it a shape near the ground.',
-                style: OrbisText.caption,
+                style: OrblitText.caption,
               ),
             ),
           ],
@@ -1411,11 +1411,11 @@ class _Fields extends StatelessWidget {
   /// down twice.
   double _heightFor(CloudKind? kind) => switch (kind) {
     null || CloudKind.none => 900,
-    CloudKind.cumulus => OrbisClouds.cumulus().altitude,
-    CloudKind.stratocumulus => OrbisClouds.stratocumulus().altitude,
-    CloudKind.stratus => OrbisClouds.stratus().altitude,
-    CloudKind.cirrus => OrbisClouds.cirrus().altitude,
-    CloudKind.cumulonimbus => OrbisClouds.cumulonimbus().altitude,
+    CloudKind.cumulus => OrblitClouds.cumulus().altitude,
+    CloudKind.stratocumulus => OrblitClouds.stratocumulus().altitude,
+    CloudKind.stratus => OrblitClouds.stratus().altitude,
+    CloudKind.cirrus => OrblitClouds.cirrus().altitude,
+    CloudKind.cumulonimbus => OrblitClouds.cumulonimbus().altitude,
   };
 
   void _setCloudKind(String label) {
@@ -1563,12 +1563,12 @@ class _Fields extends StatelessWidget {
                           const EdgeInsets.symmetric(horizontal: Space.sm),
                       alignment: Alignment.centerLeft,
                       decoration: BoxDecoration(
-                        color: OrbisColors.raised,
+                        color: OrblitColors.raised,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         object.materialAsset ?? "the mesh's own",
-                        style: OrbisText.monoValue.copyWith(fontSize: 11),
+                        style: OrblitText.monoValue.copyWith(fontSize: 11),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -1587,7 +1587,7 @@ class _Fields extends StatelessWidget {
                       child: const Padding(
                         padding: EdgeInsets.only(left: Space.xs),
                         child: Icon(Icons.close, size: 14,
-                            color: OrbisColors.inkDim),
+                            color: OrblitColors.inkDim),
                       ),
                     ),
                 ],
@@ -1599,7 +1599,7 @@ class _Fields extends StatelessWidget {
               child: Text(
                 'A ground plane that casts shadows casts them onto itself, '
                 'which is most of what makes a scene look dirty.',
-                style: OrbisText.caption,
+                style: OrblitText.caption,
               ),
             ),
           ],
@@ -1670,10 +1670,10 @@ class _HeaderState extends State<_Header> {
             width: 22,
             height: 22,
             decoration: BoxDecoration(
-              color: OrbisColors.emberWash,
+              color: OrblitColors.emberWash,
               borderRadius: BorderRadius.circular(4),
             ),
-            child: Icon(widget.icon, size: 13, color: OrbisColors.ember),
+            child: Icon(widget.icon, size: 13, color: OrblitColors.ember),
           ),
           const SizedBox(width: Space.sm),
           Expanded(
@@ -1681,8 +1681,8 @@ class _HeaderState extends State<_Header> {
               controller: _controller,
               focusNode: _focus,
               readOnly: !widget.editable,
-              style: OrbisText.title.copyWith(fontSize: 13.5),
-              cursorColor: OrbisColors.ember,
+              style: OrblitText.title.copyWith(fontSize: 13.5),
+              cursorColor: OrblitColors.ember,
               decoration: const InputDecoration(
                 isDense: true,
                 border: InputBorder.none,
@@ -1718,9 +1718,9 @@ class _ComponentSection extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(Space.sm, 0, Space.sm, Space.sm),
       decoration: BoxDecoration(
-        color: OrbisColors.ground,
+        color: OrblitColors.ground,
         borderRadius: BorderRadius.circular(Radii.panel),
-        border: Border.all(color: OrbisColors.lineSoft),
+        border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1730,9 +1730,9 @@ class _ComponentSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: Space.md),
             child: Row(
               children: [
-                Icon(icon, size: 13, color: OrbisColors.inkDim),
+                Icon(icon, size: 13, color: OrblitColors.inkDim),
                 const SizedBox(width: Space.sm),
-                Text(title.toUpperCase(), style: OrbisText.section),
+                Text(title.toUpperCase(), style: OrblitText.section),
               ],
             ),
           ),
@@ -1762,7 +1762,7 @@ class FieldRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 74,
-            child: Text(label, style: OrbisText.label.copyWith(fontSize: 11.5)),
+            child: Text(label, style: OrblitText.label.copyWith(fontSize: 11.5)),
           ),
           Expanded(child: child),
         ],
@@ -1820,7 +1820,7 @@ class SliderRow extends StatelessWidget {
             child: Text(
               '${value.toStringAsFixed(decimals)}${unit ?? ''}',
               textAlign: TextAlign.right,
-              style: OrbisText.monoValue.copyWith(fontSize: 11.5),
+              style: OrblitText.monoValue.copyWith(fontSize: 11.5),
             ),
           ),
         ],
@@ -1963,14 +1963,14 @@ class _NumberFieldState extends State<_NumberField> {
           height: 24,
           padding: const EdgeInsets.symmetric(horizontal: Space.sm),
           decoration: BoxDecoration(
-            color: _hovering ? OrbisColors.line : OrbisColors.raised,
+            color: _hovering ? OrblitColors.line : OrblitColors.raised,
             borderRadius: BorderRadius.circular(4),
             border: Border(left: BorderSide(color: widget.accent, width: 2)),
           ),
           alignment: Alignment.centerRight,
           child: Text(
             widget.value.toStringAsFixed(widget.decimals),
-            style: OrbisText.monoValue.copyWith(fontSize: 11),
+            style: OrblitText.monoValue.copyWith(fontSize: 11),
           ),
         ),
       ),
@@ -2004,7 +2004,7 @@ class ChoiceRow extends StatelessWidget {
         height: 24,
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
-          color: OrbisColors.raised,
+          color: OrblitColors.raised,
           borderRadius: BorderRadius.circular(4),
         ),
         child: Row(
@@ -2017,17 +2017,17 @@ class ChoiceRow extends StatelessWidget {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: option == selected
-                          ? OrbisColors.emberDeep
+                          ? OrblitColors.emberDeep
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(3),
                     ),
                     child: Text(
                       option,
-                      style: OrbisText.label.copyWith(
+                      style: OrblitText.label.copyWith(
                         fontSize: 10.5,
                         color: option == selected
                             ? const Color(0xFFFFF0E2)
-                            : OrbisColors.inkDim,
+                            : OrblitColors.inkDim,
                       ),
                     ),
                   ),
@@ -2082,7 +2082,7 @@ class ColourRow extends StatelessWidget {
             child: Text(
               '#${value.toARGB32().toRadixString(16).substring(2).toUpperCase()}',
               overflow: TextOverflow.ellipsis,
-              style: OrbisText.mono.copyWith(fontSize: 10.5),
+              style: OrblitText.mono.copyWith(fontSize: 10.5),
             ),
           ),
         ],
@@ -2106,10 +2106,10 @@ class TextRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: Space.sm),
         alignment: Alignment.centerLeft,
         decoration: BoxDecoration(
-          color: OrbisColors.raised,
+          color: OrblitColors.raised,
           borderRadius: BorderRadius.circular(4),
         ),
-        child: Text(value, style: OrbisText.monoValue.copyWith(fontSize: 11)),
+        child: Text(value, style: OrblitText.monoValue.copyWith(fontSize: 11)),
       ),
     );
   }
@@ -2139,7 +2139,7 @@ class _Swatch extends StatelessWidget {
             color: colour,
             borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: selected ? OrbisColors.ember : OrbisColors.line,
+              color: selected ? OrblitColors.ember : OrblitColors.line,
               width: selected ? 2 : 1,
             ),
           ),

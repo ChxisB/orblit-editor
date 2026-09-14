@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:orbis_filament/orbis_filament.dart';
-import 'package:orbis_ui/orbis_ui.dart';
+import 'package:orblit_filament/orblit_filament.dart';
+import 'package:orblit_ui/orblit_ui.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 import '../platform/renderer_support.dart';
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import 'scene.dart';
 import 'ui_canvas.dart';
 import 'workspace.dart';
@@ -70,7 +70,7 @@ class GameView extends StatelessWidget {
   }
 
   /// Where the game's camera is standing and what it is looking at.
-  OrbisCamera? _camera(EditorScene scene) {
+  OrblitCamera? _camera(EditorScene scene) {
     final object = _cameraObject(scene);
     if (object == null) return null;
 
@@ -86,7 +86,7 @@ class GameView extends StatelessWidget {
     final forward =
         world.getRotation().transform(Vector3(0.0, 0.0, -1.0));
 
-    return OrbisCamera(
+    return OrblitCamera(
       position: position,
       target: position + forward.normalized() * 10,
       fieldOfView: 50,
@@ -100,12 +100,12 @@ class GameView extends StatelessWidget {
 
     if (scene == null) {
       return plain
-          ? const ColoredBox(color: OrbisColors.ground)
+          ? const ColoredBox(color: OrblitColors.ground)
           : const _Nothing(saying: 'No scene loaded.');
     }
     if (camera == null) {
       return plain
-          ? const ColoredBox(color: OrbisColors.ground)
+          ? const ColoredBox(color: OrblitColors.ground)
           : const _Nothing(
               saying: 'This scene has no camera.\n'
                   'Add one, and this is what it sees.',
@@ -117,7 +117,7 @@ class GameView extends StatelessWidget {
         Positioned.fill(
           child: !_rendererAvailable
               ? const _Nothing(saying: rendererUnavailableMessage)
-              : OrbisView(
+              : OrblitView(
                   scene: scene.toRenderScene(
                     camera,
                     projectRoot: projectRoot,
@@ -147,12 +147,12 @@ class _Nothing extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: OrbisColors.ground,
+      color: OrblitColors.ground,
       child: Center(
         child: Text(
           saying,
           textAlign: TextAlign.center,
-          style: OrbisText.caption,
+          style: OrblitText.caption,
         ),
       ),
     );

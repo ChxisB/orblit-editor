@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:orbis_ui/orbis_ui.dart';
+import 'package:orblit_ui/orblit_ui.dart';
 import 'package:path/path.dart' as p;
 
 import '../platform/command_shortcuts.dart';
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'inspector.dart' show FieldRow, SliderRow;
 import 'ui_canvas.dart';
@@ -352,11 +352,11 @@ class _UiEditorState extends State<UiEditor> {
     final answer = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: OrbisColors.surface,
-        title: Text('Save ${p.basename(widget.path)}?', style: OrbisText.title),
+        backgroundColor: OrblitColors.surface,
+        title: Text('Save ${p.basename(widget.path)}?', style: OrblitText.title),
         content: Text(
           'It has changes that are not on disk.',
-          style: OrbisText.body,
+          style: OrblitText.body,
         ),
         actions: [
           TextButton(
@@ -415,7 +415,7 @@ class _UiEditorState extends State<UiEditor> {
         child: Focus(
           autofocus: true,
           child: Scaffold(
-            backgroundColor: OrbisColors.ground,
+            backgroundColor: OrblitColors.ground,
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -480,32 +480,32 @@ class _UiEditorState extends State<UiEditor> {
       height: 44,
       padding: const EdgeInsets.symmetric(horizontal: Space.sm),
       decoration: const BoxDecoration(
-        color: OrbisColors.surface,
-        border: Border(bottom: BorderSide(color: OrbisColors.line)),
+        color: OrblitColors.surface,
+        border: Border(bottom: BorderSide(color: OrblitColors.line)),
       ),
       child: Row(
         children: [
-          OrbisButton(
+          OrblitButton(
             label: p.basename(widget.path) + (_dirty ? ' •' : ''),
             icon: Icons.chevron_left,
             tone: ButtonTone.quiet,
             onPressed: _leave,
           ),
           const SizedBox(width: Space.md),
-          OrbisButton(
+          OrblitButton(
             label: 'Save',
             icon: Icons.save_outlined,
             tone: ButtonTone.quiet,
             onPressed: _dirty ? _save : null,
           ),
           const SizedBox(width: Space.xs),
-          OrbisButton(
+          OrblitButton(
             label: 'Undo',
             icon: Icons.undo,
             tone: ButtonTone.quiet,
             onPressed: _done.isEmpty ? null : _undo,
           ),
-          OrbisButton(
+          OrblitButton(
             label: 'Redo',
             icon: Icons.redo,
             tone: ButtonTone.quiet,
@@ -584,24 +584,24 @@ class _Showing extends StatelessWidget {
         children: [
           Text(
             '${size.width.round()} × ${size.height.round()}',
-            style: OrbisText.label.copyWith(
+            style: OrblitText.label.copyWith(
               fontSize: 11,
-              color: OrbisColors.inkDim,
+              color: OrblitColors.inkDim,
             ),
           ),
           const SizedBox(width: Space.sm),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
             decoration: BoxDecoration(
-              color: OrbisColors.raised,
+              color: OrblitColors.raised,
               borderRadius: BorderRadius.circular(Radii.control),
-              border: Border.all(color: OrbisColors.line),
+              border: Border.all(color: OrblitColors.line),
             ),
             child: Text(
               at,
-              style: OrbisText.label.copyWith(
+              style: OrblitText.label.copyWith(
                 fontSize: 10.5,
-                color: OrbisColors.inkMid,
+                color: OrblitColors.inkMid,
               ),
             ),
           ),
@@ -670,8 +670,8 @@ class _Tree extends StatelessWidget {
     return Container(
       width: 248,
       decoration: const BoxDecoration(
-        color: OrbisColors.surface,
-        border: Border(right: BorderSide(color: OrbisColors.lineSoft)),
+        color: OrblitColors.surface,
+        border: Border(right: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -681,9 +681,9 @@ class _Tree extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: Space.md),
             alignment: Alignment.centerLeft,
             decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: OrbisColors.lineSoft)),
+              border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
             ),
-            child: Text('ELEMENTS', style: OrbisText.section),
+            child: Text('ELEMENTS', style: OrblitText.section),
           ),
           Expanded(
             child: ListView.builder(
@@ -738,8 +738,8 @@ class _TreeRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colour = selected
-        ? OrbisColors.ember
-        : (hovered ? OrbisColors.ink : OrbisColors.inkMid);
+        ? OrblitColors.ember
+        : (hovered ? OrblitColors.ink : OrblitColors.inkMid);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -754,8 +754,8 @@ class _TreeRow extends StatelessWidget {
             right: Space.xs,
           ),
           color: selected
-              ? OrbisColors.emberWash
-              : (hovered ? OrbisColors.raised : Colors.transparent),
+              ? OrblitColors.emberWash
+              : (hovered ? OrblitColors.raised : Colors.transparent),
           child: Row(
             children: [
               Icon(_iconFor(node.type), size: 13, color: colour),
@@ -768,7 +768,7 @@ class _TreeRow extends StatelessWidget {
                       ? node.text!.trim()
                       : node.type,
                   overflow: TextOverflow.ellipsis,
-                  style: OrbisText.label.copyWith(fontSize: 11.5, color: colour),
+                  style: OrblitText.label.copyWith(fontSize: 11.5, color: colour),
                 ),
               ),
               if (hovered && onRemove != null)
@@ -777,7 +777,7 @@ class _TreeRow extends StatelessWidget {
                   child: const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 3),
                     child: Icon(Icons.close, size: 12,
-                        color: OrbisColors.inkDim),
+                        color: OrblitColors.inkDim),
                   ),
                 ),
             ],
@@ -875,8 +875,8 @@ class _Side extends StatelessWidget {
     return Container(
       width: 296,
       decoration: const BoxDecoration(
-        color: OrbisColors.surface,
-        border: Border(left: BorderSide(color: OrbisColors.lineSoft)),
+        color: OrblitColors.surface,
+        border: Border(left: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -886,9 +886,9 @@ class _Side extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: Space.md),
             alignment: Alignment.centerLeft,
             decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: OrbisColors.lineSoft)),
+              border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
             ),
-            child: Text('INTERFACE', style: OrbisText.section),
+            child: Text('INTERFACE', style: OrblitText.section),
           ),
           Expanded(
             child: ListView(
@@ -1036,7 +1036,7 @@ class _Side extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: Space.sm),
-                      Text('ON SCREEN', style: OrbisText.section),
+                      Text('ON SCREEN', style: OrblitText.section),
                       const SizedBox(height: Space.xs),
                       // Chips that wrap rather than four segments sharing one
                       // row: "Match height" does not fit in a quarter of a
@@ -1068,7 +1068,7 @@ class _Side extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: Space.sm),
-                      Text('PREVIEW ON', style: OrbisText.section),
+                      Text('PREVIEW ON', style: OrblitText.section),
                       const SizedBox(height: Space.xs),
                       // A view rather than a property of the file. A
                       // responsive interface is a different layout at every
@@ -1145,7 +1145,7 @@ class _Side extends StatelessWidget {
                       // margin and the edge a television eats are one
                       // measurement rather than two that disagree.
                       const SizedBox(height: Space.sm),
-                      Text('FLUID RANGE', style: OrbisText.section),
+                      Text('FLUID RANGE', style: OrblitText.section),
                       const SizedBox(height: Space.xs),
                       SliderRow(
                         label: 'Smallest',
@@ -1200,9 +1200,9 @@ class _GridCount extends StatelessWidget {
             : (drawn == 0
                   ? 'No room for a column at this width'
                   : '$drawn across this screen — $authored is too fine here'),
-        style: OrbisText.label.copyWith(
+        style: OrblitText.label.copyWith(
           fontSize: 10.5,
-          color: OrbisColors.inkDim,
+          color: OrblitColors.inkDim,
         ),
       ),
     );
@@ -1221,9 +1221,9 @@ class _Group extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(Space.sm, 0, Space.sm, Space.sm),
       decoration: BoxDecoration(
-        color: OrbisColors.ground,
+        color: OrblitColors.ground,
         borderRadius: BorderRadius.circular(Radii.panel),
-        border: Border.all(color: OrbisColors.lineSoft),
+        border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1233,9 +1233,9 @@ class _Group extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: Space.md),
             child: Row(
               children: [
-                Icon(icon, size: 13, color: OrbisColors.inkDim),
+                Icon(icon, size: 13, color: OrblitColors.inkDim),
                 const SizedBox(width: Space.sm),
-                Text(title.toUpperCase(), style: OrbisText.section),
+                Text(title.toUpperCase(), style: OrblitText.section),
               ],
             ),
           ),
@@ -1287,17 +1287,17 @@ class _Chip extends StatelessWidget {
             vertical: Space.xs,
           ),
           decoration: BoxDecoration(
-            color: selected ? OrbisColors.emberWash : OrbisColors.raised,
+            color: selected ? OrblitColors.emberWash : OrblitColors.raised,
             borderRadius: BorderRadius.circular(Radii.control),
             border: Border.all(
-              color: selected ? OrbisColors.ember : OrbisColors.line,
+              color: selected ? OrblitColors.ember : OrblitColors.line,
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 12, color: OrbisColors.inkMid),
+                Icon(icon, size: 12, color: OrblitColors.inkMid),
                 const SizedBox(width: 5),
               ],
               // Flexible so a long label ellipsizes inside its own chip. An
@@ -1310,9 +1310,9 @@ class _Chip extends StatelessWidget {
                   label,
                   overflow: TextOverflow.ellipsis,
                   softWrap: false,
-                  style: OrbisText.label.copyWith(
+                  style: OrblitText.label.copyWith(
                     fontSize: 11,
-                    color: selected ? OrbisColors.ember : OrbisColors.inkMid,
+                    color: selected ? OrblitColors.ember : OrblitColors.inkMid,
                   ),
                 ),
               ),
@@ -1339,7 +1339,7 @@ class _Toggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OrbisButton(
+    return OrblitButton(
       label: label,
       icon: icon,
       tone: on ? ButtonTone.primary : ButtonTone.quiet,

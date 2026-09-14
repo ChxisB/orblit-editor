@@ -320,73 +320,73 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "9.5.0"
-  orbis_camera:
+  orblit_camera:
     dependency: transitive
     description:
-      path: "../orbis/packages/orbis_camera"
+      path: "../orblit/packages/orblit_camera"
       relative: true
     source: path
     version: "0.1.0"
-  orbis_core:
+  orblit_core:
     dependency: transitive
     description:
-      path: "../orbis/packages/orbis_core"
+      path: "../orblit/packages/orblit_core"
       relative: true
     source: path
     version: "0.1.0"
-  orbis_examples:
+  orblit_examples:
     dependency: "direct main"
     description:
-      path: "../orbis/packages/orbis_examples"
+      path: "../orblit/packages/orblit_examples"
       relative: true
     source: path
-    version: "0.20.0"
-  orbis_filament:
+    version: "0.23.0"
+  orblit_filament:
     dependency: "direct main"
     description:
-      path: "../orbis/packages/orbis_filament"
+      path: "../orblit/packages/orblit_filament"
       relative: true
     source: path
-    version: "0.20.0"
-  orbis_light:
+    version: "0.24.0"
+  orblit_light:
     dependency: "direct main"
     description:
-      path: "../orbis/packages/orbis_light"
+      path: "../orblit/packages/orblit_light"
       relative: true
     source: path
     version: "0.2.0"
-  orbis_mesh:
+  orblit_mesh:
     dependency: "direct main"
     description:
-      path: "../orbis/packages/orbis_mesh"
+      path: "../orblit/packages/orblit_mesh"
       relative: true
     source: path
     version: "0.3.0"
-  orbis_native:
+  orblit_native:
     dependency: "direct main"
     description:
-      path: "../orbis/packages/orbis_native"
+      path: "../orblit/packages/orblit_native"
       relative: true
     source: path
-    version: "0.1.1"
-  orbis_noise:
+    version: "0.2.0"
+  orblit_noise:
     dependency: transitive
     description:
-      path: "../orbis/packages/orbis_noise"
+      path: "../orblit/packages/orblit_noise"
       relative: true
     source: path
     version: "0.1.0"
-  orbis_ui:
+  orblit_ui:
     dependency: "direct main"
     description:
-      path: "../orbis/packages/orbis_ui"
+      path: "../orblit/packages/orblit_ui"
       relative: true
     source: path
     version: "0.1.0"
-  orbis_weather:
+  orblit_weather:
     dependency: "direct main"
     description:
-      path: "../orbis/packages/orbis_weather"
+      path: "../orblit/packages/orblit_weather"
       relative: true
     source: path
     version: "0.1.0"

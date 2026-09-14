@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:orbis_native/orbis_native.dart';
+import 'package:orblit_native/orblit_native.dart';
 import 'package:path/path.dart' as p;
 
 /// Compiling a C++ script from the editor.
@@ -21,7 +21,7 @@ class ScriptBuilder {
 
   /// Where built libraries go: inside the project, out of the way, and
   /// disposable. Nothing here is worth keeping — every build makes a new one.
-  Directory get output => Directory(p.join(projectRoot, '.orbis', 'build'));
+  Directory get output => Directory(p.join(projectRoot, '.orblit', 'build'));
 
   /// Null when nothing on this machine can compile C++.
   late final Toolchain? toolchain = Toolchain.find();
@@ -31,7 +31,7 @@ class ScriptBuilder {
   /// Found by the same code the runtime uses, so the header the editor checks
   /// against cannot differ from the one a script is loaded through. A packaged
   /// editor has no package config to read and carries the headers instead;
-  /// ORBIS_INCLUDE is how it says where.
+  /// ORBLIT_INCLUDE is how it says where.
   late final List<String> includes = ScriptRunner.engineIncludes();
 
   /// What went wrong before a compiler was even reached, or null.
@@ -41,8 +41,8 @@ class ScriptBuilder {
           'or clang, or gcc, and try again.';
     }
     if (includes.isEmpty) {
-      return 'The engine headers could not be found. Set ORBIS_INCLUDE to the '
-          'include folders of orbis_native and orbis_core.';
+      return 'The engine headers could not be found. Set ORBLIT_INCLUDE to the '
+          'include folders of orblit_native and orblit_core.';
     }
     return null;
   }

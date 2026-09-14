@@ -3,20 +3,20 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/drawing.dart';
-import 'package:orbis_editor/src/editor/editor_shell.dart';
-import 'package:orbis_editor/src/editor/mesh_panel.dart';
-import 'package:orbis_editor/src/editor/modelling_panel.dart';
-import 'package:orbis_editor/src/launcher/project.dart';
-import 'package:orbis_editor/src/editor/viewport.dart';
-import 'package:orbis_editor/src/theme/orbis_theme.dart';
-import 'package:orbis_editor/src/widgets/controls.dart';
+import 'package:orblit_editor/src/editor/drawing.dart';
+import 'package:orblit_editor/src/editor/editor_shell.dart';
+import 'package:orblit_editor/src/editor/mesh_panel.dart';
+import 'package:orblit_editor/src/editor/modelling_panel.dart';
+import 'package:orblit_editor/src/launcher/project.dart';
+import 'package:orblit_editor/src/editor/viewport.dart';
+import 'package:orblit_editor/src/theme/orblit_theme.dart';
+import 'package:orblit_editor/src/widgets/controls.dart';
 
 void main() {
   late Directory root;
 
   setUp(() {
-    root = Directory.systemTemp.createTempSync('orbis_tools');
+    root = Directory.systemTemp.createTempSync('orblit_tools');
     Directory('${root.path}/scenes').createSync(recursive: true);
   });
 
@@ -28,7 +28,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1440, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(MaterialApp(
-      theme: orbisTheme(),
+      theme: orblitTheme(),
       home: EditorShell(
         project: Project(
           name: 'Test',
@@ -81,8 +81,8 @@ void main() {
     await open(tester);
     await openTools(tester);
 
-    final cut = tester.widget<OrbisButton>(
-      find.widgetWithText(OrbisButton, 'Cut'),
+    final cut = tester.widget<OrblitButton>(
+      find.widgetWithText(OrblitButton, 'Cut'),
     );
     expect(cut.onPressed, isNull, reason: 'offered, and clearly not ready');
 
@@ -90,7 +90,7 @@ void main() {
     await openTools(tester);
     expect(
       tester
-          .widget<OrbisButton>(find.widgetWithText(OrbisButton, 'Cut'))
+          .widget<OrblitButton>(find.widgetWithText(OrblitButton, 'Cut'))
           .onPressed,
       isNotNull,
     );

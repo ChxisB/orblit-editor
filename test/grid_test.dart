@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/grid.dart';
-import 'package:orbis_editor/src/editor/snapping.dart';
+import 'package:orblit_editor/src/editor/grid.dart';
+import 'package:orblit_editor/src/editor/snapping.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 void main() {
@@ -11,7 +11,7 @@ void main() {
 
   setUp(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
-    root = Directory.systemTemp.createTempSync('orbis_grid');
+    root = Directory.systemTemp.createTempSync('orblit_grid');
     grid = GridStore(root.path);
     await grid.prepare();
   });
@@ -21,8 +21,8 @@ void main() {
   });
 
   test('the quad and the lines are written once', () {
-    expect(File('${root.path}/.orbis/grid.glb').existsSync(), isTrue);
-    expect(File('${root.path}/.orbis/grid.png').existsSync(), isTrue);
+    expect(File('${root.path}/.orblit/grid.glb').existsSync(), isTrue);
+    expect(File('${root.path}/.orblit/grid.png').existsSync(), isTrue);
   });
 
   test('there is no grid until it has been made', () async {

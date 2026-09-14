@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'colour.dart';
 import 'data_object.dart';
@@ -85,17 +85,17 @@ class _DataPanelState extends State<DataPanel> {
     final type = await showDialog<DataType>(
       context: context,
       builder: (context) => SimpleDialog(
-        backgroundColor: OrbisColors.surface,
-        title: Text('What kind of value?', style: OrbisText.title),
+        backgroundColor: OrblitColors.surface,
+        title: Text('What kind of value?', style: OrblitText.title),
         children: [
           for (final type in DataType.values)
             SimpleDialogOption(
               onPressed: () => Navigator.of(context).pop(type),
               child: Row(
                 children: [
-                  Icon(type.icon, size: 15, color: OrbisColors.inkMid),
+                  Icon(type.icon, size: 15, color: OrblitColors.inkMid),
                   const SizedBox(width: Space.sm),
-                  Text(type.label, style: OrbisText.body),
+                  Text(type.label, style: OrblitText.body),
                 ],
               ),
             ),
@@ -123,7 +123,7 @@ class _DataPanelState extends State<DataPanel> {
           child: Text(
             '${p.basename(widget.path)} could not be read as a data object.',
             textAlign: TextAlign.center,
-            style: OrbisText.caption,
+            style: OrblitText.caption,
           ),
         ),
       );
@@ -145,7 +145,7 @@ class _DataPanelState extends State<DataPanel> {
                 },
               ),
               const SizedBox(height: Space.xs),
-              Text(widget.path, style: OrbisText.mono.copyWith(fontSize: 10.5)),
+              Text(widget.path, style: OrblitText.mono.copyWith(fontSize: 10.5)),
               const SizedBox(height: Space.sm),
               ValueField(
                 value: data.note,
@@ -173,7 +173,7 @@ class _DataPanelState extends State<DataPanel> {
           ),
         Padding(
           padding: const EdgeInsets.fromLTRB(Space.sm, Space.xs, Space.sm, 0),
-          child: OrbisButton(
+          child: OrblitButton(
             label: 'Add a value',
             icon: Icons.add,
             expand: true,
@@ -187,7 +187,7 @@ class _DataPanelState extends State<DataPanel> {
               message: 'Writes a .d.ts and a .h beside this file, so a '
                   'script reading it — in TypeScript or in C++ — is checked '
                   'against these fields rather than guessing at string keys.',
-              child: OrbisButton(
+              child: OrblitButton(
                 label: 'Write script bindings',
                 icon: Icons.code,
                 tone: ButtonTone.quiet,
@@ -219,9 +219,9 @@ class _FieldEditor extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(Space.sm, 0, Space.sm, Space.sm),
       decoration: BoxDecoration(
-        color: OrbisColors.ground,
+        color: OrblitColors.ground,
         borderRadius: BorderRadius.circular(Radii.panel),
-        border: Border.all(color: OrbisColors.lineSoft),
+        border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -230,7 +230,7 @@ class _FieldEditor extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(Space.md, Space.sm, Space.xs, 0),
             child: Row(
               children: [
-                Icon(field.type.icon, size: 13, color: OrbisColors.inkDim),
+                Icon(field.type.icon, size: 13, color: OrblitColors.inkDim),
                 const SizedBox(width: Space.sm),
                 // The key is what a script writes, so it is editable here
                 // rather than fixed at the moment the field was added.
@@ -364,7 +364,7 @@ class _Remove extends StatelessWidget {
         onTap: onTap,
         child: const Padding(
           padding: EdgeInsets.all(Space.xs),
-          child: Icon(Icons.close, size: 13, color: OrbisColors.inkDim),
+          child: Icon(Icons.close, size: 13, color: OrblitColors.inkDim),
         ),
       ),
     );

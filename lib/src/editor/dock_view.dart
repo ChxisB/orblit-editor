@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import 'dock.dart';
 
 /// Builds the contents of one panel.
@@ -137,7 +137,7 @@ class _HandleState extends State<_Handle> {
       width: widget.axis == Axis.horizontal ? _DockSplitView._handle : null,
       height: widget.axis == Axis.vertical ? _DockSplitView._handle : null,
       child: ColoredBox(
-        color: lit && !widget.locked ? OrbisColors.ember : OrbisColors.ground,
+        color: lit && !widget.locked ? OrblitColors.ember : OrblitColors.ground,
       ),
     );
 
@@ -225,7 +225,7 @@ class _DockGroupViewState extends State<_DockGroupView> {
     final showing = group.current;
 
     final body = Container(
-      decoration: const BoxDecoration(color: OrbisColors.surface),
+      decoration: const BoxDecoration(color: OrblitColors.surface),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -315,8 +315,8 @@ class _DropHint extends StatelessWidget {
               rect: rect,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: OrbisColors.emberWash,
-                  border: Border.all(color: OrbisColors.ember, width: 2),
+                  color: OrblitColors.emberWash,
+                  border: Border.all(color: OrblitColors.ember, width: 2),
                 ),
               ),
             ),
@@ -344,8 +344,8 @@ class _Tabs extends StatelessWidget {
     return Container(
       height: 28,
       decoration: const BoxDecoration(
-        color: OrbisColors.surface,
-        border: Border(bottom: BorderSide(color: OrbisColors.lineSoft)),
+        color: OrblitColors.surface,
+        border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: Row(
         children: [
@@ -389,8 +389,8 @@ class _PanelTabState extends State<_PanelTab> {
   Widget build(BuildContext context) {
     final panel = widget.panel;
     final colour = widget.selected
-        ? OrbisColors.ink
-        : (_hovering ? OrbisColors.inkMid : OrbisColors.inkDim);
+        ? OrblitColors.ink
+        : (_hovering ? OrblitColors.inkMid : OrblitColors.inkDim);
 
     final tab = MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -401,13 +401,13 @@ class _PanelTabState extends State<_PanelTab> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: Space.md),
           decoration: BoxDecoration(
-            color: widget.selected ? OrbisColors.ground : Colors.transparent,
+            color: widget.selected ? OrblitColors.ground : Colors.transparent,
             border: Border(
               top: BorderSide(
-                color: widget.selected ? OrbisColors.ember : Colors.transparent,
+                color: widget.selected ? OrblitColors.ember : Colors.transparent,
                 width: 2,
               ),
-              right: const BorderSide(color: OrbisColors.lineSoft),
+              right: const BorderSide(color: OrblitColors.lineSoft),
             ),
           ),
           child: Row(
@@ -417,7 +417,7 @@ class _PanelTabState extends State<_PanelTab> {
               const SizedBox(width: Space.sm),
               Text(
                 panel.label.toUpperCase(),
-                style: OrbisText.section.copyWith(color: colour),
+                style: OrblitText.section.copyWith(color: colour),
               ),
               // Only under the cursor, so a row of tabs is a row of names
               // rather than a row of names and crosses.
@@ -426,7 +426,7 @@ class _PanelTabState extends State<_PanelTab> {
                 GestureDetector(
                   onTap: widget.onClose,
                   child: const Icon(Icons.close, size: 12,
-                      color: OrbisColors.inkDim),
+                      color: OrblitColors.inkDim),
                 ),
               ],
             ],
@@ -463,18 +463,18 @@ class _DragLabel extends StatelessWidget {
           vertical: Space.xs,
         ),
         decoration: BoxDecoration(
-          color: OrbisColors.raised,
+          color: OrblitColors.raised,
           borderRadius: BorderRadius.circular(Radii.control),
-          border: Border.all(color: OrbisColors.ember),
+          border: Border.all(color: OrblitColors.ember),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(panel.kind.icon, size: 13, color: OrbisColors.ember),
+            Icon(panel.kind.icon, size: 13, color: OrblitColors.ember),
             const SizedBox(width: Space.sm),
             Text(
               panel.label,
-              style: OrbisText.label.copyWith(color: OrbisColors.ink),
+              style: OrblitText.label.copyWith(color: OrblitColors.ink),
             ),
           ],
         ),

@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/clipboard.dart';
-import 'package:orbis_editor/src/editor/commands.dart';
-import 'package:orbis_editor/src/editor/history.dart';
-import 'package:orbis_editor/src/editor/scene.dart';
-import 'package:orbis_editor/src/editor/workspace.dart';
+import 'package:orblit_editor/src/editor/clipboard.dart';
+import 'package:orblit_editor/src/editor/commands.dart';
+import 'package:orblit_editor/src/editor/history.dart';
+import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/workspace.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 /// Ids that are unique but readable, so a failure says what it means.
@@ -293,7 +293,7 @@ void main() {
         '',
         '/Users/somebody/notes.txt',
         '{"kind": "something else"}',
-        '{"kind": "orbis.objects"',
+        '{"kind": "orblit.objects"',
       ]) {
         expect(loaded.takeText(text), isFalse, reason: 'for "$text"');
       }
@@ -305,7 +305,7 @@ void main() {
       final text =
           (SceneClipboard()..take(EditorScene.starter(), ['cube'])).toText();
       expect(text, contains('"Cube"'));
-      expect(text, contains('orbis.objects'));
+      expect(text, contains('orblit.objects'));
     });
   });
 

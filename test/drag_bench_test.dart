@@ -2,14 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/commands.dart';
-import 'package:orbis_editor/src/editor/editor_shell.dart';
-import 'package:orbis_editor/src/editor/scene.dart';
-import 'package:orbis_editor/src/editor/scene_document.dart';
-import 'package:orbis_editor/src/editor/viewport.dart';
-import 'package:orbis_editor/src/launcher/project.dart';
-import 'package:orbis_editor/src/theme/orbis_theme.dart';
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_editor/src/editor/commands.dart';
+import 'package:orblit_editor/src/editor/editor_shell.dart';
+import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/scene_document.dart';
+import 'package:orblit_editor/src/editor/viewport.dart';
+import 'package:orblit_editor/src/launcher/project.dart';
+import 'package:orblit_editor/src/theme/orblit_theme.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 // ignore_for_file: avoid_print
@@ -41,7 +41,7 @@ void main() {
     String? label,
     Size size = const Size(1440, 900),
   }) async {
-    final root = Directory.systemTemp.createTempSync('orbis_drag');
+    final root = Directory.systemTemp.createTempSync('orblit_drag');
     Directory('${root.path}/scenes').createSync(recursive: true);
 
     final scene = EditorScene([
@@ -57,8 +57,8 @@ void main() {
     File('${root.path}/scenes/main.oscene')
         .writeAsStringSync(SceneDocument.encode(scene, name: 'main'));
     if (panels != null) {
-      Directory('${root.path}/.orbis').createSync(recursive: true);
-      File('${root.path}/.orbis/layout.json').writeAsStringSync(
+      Directory('${root.path}/.orblit').createSync(recursive: true);
+      File('${root.path}/.orblit/layout.json').writeAsStringSync(
         layoutOf(panels),
       );
     }
@@ -66,7 +66,7 @@ void main() {
     await tester.binding.setSurfaceSize(size);
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(MaterialApp(
-      theme: orbisTheme(),
+      theme: orblitTheme(),
       home: EditorShell(
         project: Project(
           name: 'T',

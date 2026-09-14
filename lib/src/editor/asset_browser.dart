@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'asset_preview.dart';
 import 'assets.dart';
@@ -113,14 +113,14 @@ class _AssetBrowserState extends State<AssetBrowser> {
     final agreed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: OrbisColors.surface,
-        title: Text('Delete ${asset.name}?', style: OrbisText.title),
+        backgroundColor: OrblitColors.surface,
+        title: Text('Delete ${asset.name}?', style: OrblitText.title),
         content: Text(
           asset.isFolder
               ? 'This deletes the folder and everything in it. It does not go '
                   'to the Trash, and undo does not cover files.'
               : 'This does not go to the Trash, and undo does not cover files.',
-          style: OrbisText.body,
+          style: OrblitText.body,
         ),
         actions: [
           TextButton(
@@ -212,8 +212,8 @@ class _AssetBrowserState extends State<AssetBrowser> {
         onCreate: _promptCreate,
         child: Container(
           decoration: const BoxDecoration(
-            color: OrbisColors.surface,
-            border: Border(top: BorderSide(color: OrbisColors.lineSoft)),
+            color: OrblitColors.surface,
+            border: Border(top: BorderSide(color: OrblitColors.lineSoft)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -323,7 +323,7 @@ class _Header extends StatelessWidget {
       height: 30,
       padding: const EdgeInsets.only(left: Space.sm, right: Space.xs),
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: OrbisColors.lineSoft)),
+        border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: Row(
         children: [
@@ -340,13 +340,13 @@ class _Header extends StatelessWidget {
             child: Text(
               crumb.isEmpty ? '/' : crumb,
               overflow: TextOverflow.ellipsis,
-              style: OrbisText.mono.copyWith(fontSize: 11),
+              style: OrblitText.mono.copyWith(fontSize: 11),
             ),
           ),
           const Spacer(),
           Text(
             '$count item${count == 1 ? '' : 's'}',
-            style: OrbisText.caption.copyWith(fontSize: 11),
+            style: OrblitText.caption.copyWith(fontSize: 11),
           ),
           const SizedBox(width: Space.xs),
           // The same menu the right-click opens. Here as well, because a
@@ -413,7 +413,7 @@ class _IconAction extends StatelessWidget {
             child: Icon(
               icon,
               size: 14,
-              color: enabled ? OrbisColors.inkMid : OrbisColors.lineSoft,
+              color: enabled ? OrblitColors.inkMid : OrblitColors.lineSoft,
             ),
           ),
         ),
@@ -446,7 +446,7 @@ class _FolderTree extends StatelessWidget {
     return Container(
       width: 176,
       decoration: const BoxDecoration(
-        border: Border(right: BorderSide(color: OrbisColors.lineSoft)),
+        border: Border(right: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: ListView(
         padding: const EdgeInsets.symmetric(vertical: Space.xs),
@@ -512,8 +512,8 @@ class _FolderRowState extends State<_FolderRow> {
   @override
   Widget build(BuildContext context) {
     final colour = widget.selected || _catching
-        ? OrbisColors.ember
-        : (_hovering ? OrbisColors.ink : OrbisColors.inkMid);
+        ? OrblitColors.ember
+        : (_hovering ? OrblitColors.ink : OrblitColors.inkMid);
 
     final row = MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -528,8 +528,8 @@ class _FolderRowState extends State<_FolderRow> {
             right: Space.sm,
           ),
           color: widget.selected || _catching
-              ? OrbisColors.emberWash
-              : (_hovering ? OrbisColors.raised : Colors.transparent),
+              ? OrblitColors.emberWash
+              : (_hovering ? OrblitColors.raised : Colors.transparent),
           child: Row(
             children: [
               Icon(widget.icon, size: 13, color: colour),
@@ -538,7 +538,7 @@ class _FolderRowState extends State<_FolderRow> {
                 child: Text(
                   widget.name,
                   overflow: TextOverflow.ellipsis,
-                  style: OrbisText.label.copyWith(fontSize: 11.5, color: colour),
+                  style: OrblitText.label.copyWith(fontSize: 11.5, color: colour),
                 ),
               ),
             ],
@@ -598,10 +598,10 @@ class _Grid extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('This folder is empty.', style: OrbisText.caption),
+                Text('This folder is empty.', style: OrblitText.caption),
                 const SizedBox(height: Space.xs),
                 Text('Right-click to add something.',
-                    style: OrbisText.caption),
+                    style: OrblitText.caption),
               ],
             ),
           )
@@ -631,14 +631,14 @@ class _Grid extends StatelessWidget {
             IgnorePointer(
               child: Container(
                 decoration: BoxDecoration(
-                  color: OrbisColors.emberWash,
-                  border: Border.all(color: OrbisColors.ember),
+                  color: OrblitColors.emberWash,
+                  border: Border.all(color: OrblitColors.ember),
                   borderRadius: BorderRadius.circular(Radii.control),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   'Drop to make a prefab',
-                  style: OrbisText.label.copyWith(color: OrbisColors.ink),
+                  style: OrblitText.label.copyWith(color: OrblitColors.ink),
                 ),
               ),
             ),
@@ -755,12 +755,12 @@ class _AssetMenuState extends State<AssetMenu> {
   }
 
   static final MenuStyle _style = MenuStyle(
-    backgroundColor: const WidgetStatePropertyAll(OrbisColors.raised),
+    backgroundColor: const WidgetStatePropertyAll(OrblitColors.raised),
     surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
     shape: WidgetStatePropertyAll(
       RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(Radii.panel),
-        side: const BorderSide(color: OrbisColors.line),
+        side: const BorderSide(color: OrblitColors.line),
       ),
     ),
   );
@@ -768,22 +768,22 @@ class _AssetMenuState extends State<AssetMenu> {
   Widget _item(String label, IconData icon, VoidCallback? onPressed) {
     return MenuItemButton(
       onPressed: onPressed,
-      leadingIcon: Icon(icon, size: 14, color: OrbisColors.inkMid),
-      child: Text(label, style: OrbisText.label),
+      leadingIcon: Icon(icon, size: 14, color: OrblitColors.inkMid),
+      child: Text(label, style: OrblitText.label),
     );
   }
 
   Widget _make(NewAsset what) => MenuItemButton(
     onPressed: () => widget.onCreate(what),
-    leadingIcon: Icon(what.icon, size: 14, color: OrbisColors.inkMid),
+    leadingIcon: Icon(what.icon, size: 14, color: OrblitColors.inkMid),
     child: Row(
       children: [
-        Text(what.label, style: OrbisText.label),
+        Text(what.label, style: OrblitText.label),
         // The extension is what somebody is really choosing between, so
         // it is shown rather than left to be guessed from the name.
         if (what.extension.isNotEmpty) ...[
           const SizedBox(width: Space.md),
-          Text(what.extension, style: OrbisText.caption),
+          Text(what.extension, style: OrblitText.caption),
         ],
       ],
     ),
@@ -808,18 +808,18 @@ class _AssetMenuState extends State<AssetMenu> {
           _item('Open', Icons.open_in_new, _onOpen),
           _item('Rename', Icons.drive_file_rename_outline, _onRename),
           _item('Delete', Icons.delete_outline, _onDelete),
-          const Divider(height: 9, color: OrbisColors.line),
+          const Divider(height: 9, color: OrblitColors.line),
         ],
         _make(NewAsset.folder),
-        const Divider(height: 9, color: OrbisColors.line),
+        const Divider(height: 9, color: OrblitColors.line),
         for (final group in NewAssetGroup.values)
           SubmenuButton(
             menuStyle: _style,
-            leadingIcon: Icon(group.icon, size: 14, color: OrbisColors.inkMid),
+            leadingIcon: Icon(group.icon, size: 14, color: OrblitColors.inkMid),
             menuChildren: [for (final what in group.members) _make(what)],
-            child: Text(group.label, style: OrbisText.label),
+            child: Text(group.label, style: OrblitText.label),
           ),
-        const Divider(height: 9, color: OrbisColors.line),
+        const Divider(height: 9, color: OrblitColors.line),
         // The documents, which are what somebody opens rather than what they
         // write: a scene and a screen, not a file to type into.
         _make(NewAsset.canvas),
@@ -883,12 +883,12 @@ class _TileState extends State<_Tile> {
             padding: const EdgeInsets.symmetric(vertical: Space.sm),
             decoration: BoxDecoration(
               color: widget.selected
-                  ? OrbisColors.emberWash
-                  : (_hovering ? OrbisColors.raised : Colors.transparent),
+                  ? OrblitColors.emberWash
+                  : (_hovering ? OrblitColors.raised : Colors.transparent),
               borderRadius: BorderRadius.circular(Radii.control),
               border: Border.all(
                 color: widget.selected
-                    ? OrbisColors.ember
+                    ? OrblitColors.ember
                     : Colors.transparent,
               ),
             ),
@@ -904,11 +904,11 @@ class _TileState extends State<_Tile> {
                     maxLines: 2,
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
-                    style: OrbisText.label.copyWith(
+                    style: OrblitText.label.copyWith(
                       fontSize: 11,
                       color: widget.selected
-                          ? OrbisColors.ink
-                          : OrbisColors.inkMid,
+                          ? OrblitColors.ink
+                          : OrblitColors.inkMid,
                     ),
                   ),
                 ),
@@ -960,8 +960,8 @@ class _Thumbnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colour = asset.isFolder
-        ? OrbisColors.inkMid
-        : (selected ? OrbisColors.ember : OrbisColors.inkDim);
+        ? OrblitColors.inkMid
+        : (selected ? OrblitColors.ember : OrblitColors.inkDim);
 
     if (!showsPicture(asset)) {
       return SizedBox(
@@ -978,7 +978,7 @@ class _Thumbnail extends StatelessWidget {
         // Checked, so a texture with transparency reads as transparent
         // rather than as a hole or as black.
         child: ColoredBox(
-          color: OrbisColors.ground,
+          color: OrblitColors.ground,
           child: Image.file(
             File(asset.path),
             fit: BoxFit.cover,
@@ -1013,18 +1013,18 @@ class _DragLabel extends StatelessWidget {
           vertical: Space.xs,
         ),
         decoration: BoxDecoration(
-          color: OrbisColors.raised,
+          color: OrblitColors.raised,
           borderRadius: BorderRadius.circular(Radii.control),
-          border: Border.all(color: OrbisColors.ember),
+          border: Border.all(color: OrblitColors.ember),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(asset.kind.icon, size: 13, color: OrbisColors.ember),
+            Icon(asset.kind.icon, size: 13, color: OrblitColors.ember),
             const SizedBox(width: Space.sm),
             Text(
               asset.name,
-              style: OrbisText.label.copyWith(color: OrbisColors.ink),
+              style: OrblitText.label.copyWith(color: OrblitColors.ink),
             ),
           ],
         ),

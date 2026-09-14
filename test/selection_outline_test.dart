@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/scene.dart';
-import 'package:orbis_editor/src/editor/selection_outline.dart';
-import 'package:orbis_editor/src/editor/viewport.dart';
+import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/selection_outline.dart';
+import 'package:orblit_editor/src/editor/viewport.dart';
 
 /// The selection, as the renderer is told to outline it.
 void main() {

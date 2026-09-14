@@ -1,7 +1,7 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'create_view.dart';
 import 'examples_view.dart';
@@ -71,7 +71,7 @@ class _LauncherScreenState extends State<LauncherScreen> {
     final project = _store.open(directory);
     if (project == null) {
       if (!mounted) return;
-      _complain('No Orbis project there',
+      _complain('No Orblit project there',
           'That folder has no $projectFileName in it.');
       return;
     }
@@ -100,7 +100,7 @@ class _LauncherScreenState extends State<LauncherScreen> {
             ),
           Expanded(
             child: Container(
-              color: OrbisColors.ground,
+              color: OrblitColors.ground,
               child: switch (_view) {
                 _View.projects => ProjectsView(
                     loading: _loading,
@@ -158,8 +158,8 @@ class _Rail extends StatelessWidget {
     return Container(
       width: 232,
       decoration: const BoxDecoration(
-        color: OrbisColors.surface,
-        border: Border(right: BorderSide(color: OrbisColors.lineSoft)),
+        color: OrblitColors.surface,
+        border: Border(right: BorderSide(color: OrblitColors.lineSoft)),
       ),
       padding: const EdgeInsets.fromLTRB(Space.lg, Space.xxl, Space.lg, Space.lg),
       child: Column(
@@ -177,11 +177,11 @@ class _Rail extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Orbis',
-                        style: OrbisText.title, overflow: TextOverflow.ellipsis),
+                    Text('Orblit',
+                        style: OrblitText.title, overflow: TextOverflow.ellipsis),
                     Text(
                       'Engine 0.1.0 · pre-alpha',
-                      style: OrbisText.caption.copyWith(fontSize: 11),
+                      style: OrblitText.caption.copyWith(fontSize: 11),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -209,7 +209,7 @@ class _Rail extends StatelessWidget {
             onTap: () => onView(_View.examples),
           ),
           const Spacer(),
-          OrbisButton(
+          OrblitButton(
             label: 'Open a folder…',
             icon: Icons.folder_open_outlined,
             tone: ButtonTone.quiet,
@@ -236,7 +236,7 @@ class _Mark extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [OrbisColors.ember, OrbisColors.emberDeep],
+          colors: [OrblitColors.ember, OrblitColors.emberDeep],
         ),
         borderRadius: BorderRadius.circular(Radii.control),
       ),
@@ -270,8 +270,8 @@ class _RailItemState extends State<_RailItem> {
   @override
   Widget build(BuildContext context) {
     final colour = widget.selected
-        ? OrbisColors.ember
-        : (_hovering ? OrbisColors.ink : OrbisColors.inkMid);
+        ? OrblitColors.ember
+        : (_hovering ? OrblitColors.ink : OrblitColors.inkMid);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -287,8 +287,8 @@ class _RailItemState extends State<_RailItem> {
             // Selection is a wash rather than a fill: the rail should read as
             // one surface with something marked on it, not as stacked buttons.
             color: widget.selected
-                ? OrbisColors.emberWash
-                : (_hovering ? OrbisColors.raised : Colors.transparent),
+                ? OrblitColors.emberWash
+                : (_hovering ? OrblitColors.raised : Colors.transparent),
             borderRadius: BorderRadius.circular(Radii.control),
           ),
           child: Row(
@@ -297,7 +297,7 @@ class _RailItemState extends State<_RailItem> {
               const SizedBox(width: Space.md),
               Text(
                 widget.label,
-                style: OrbisText.label.copyWith(
+                style: OrblitText.label.copyWith(
                   color: colour,
                   fontWeight:
                       widget.selected ? FontWeight.w600 : FontWeight.w500,
@@ -323,18 +323,18 @@ class _Complaint extends StatelessWidget {
       backgroundColor: Colors.transparent,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 380),
-        child: OrbisPanel(
+        child: OrblitPanel(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(title, style: OrbisText.title),
+              Text(title, style: OrblitText.title),
               const SizedBox(height: Space.sm),
-              Text(detail, style: OrbisText.body),
+              Text(detail, style: OrblitText.body),
               const SizedBox(height: Space.lg),
               Align(
                 alignment: Alignment.centerRight,
-                child: OrbisButton(
+                child: OrblitButton(
                   label: 'Close',
                   onPressed: () => Navigator.of(context).pop(),
                 ),

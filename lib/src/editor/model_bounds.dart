@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 import 'package:path/path.dart' as p;
 import 'package:vector_math/vector_math_64.dart';
 

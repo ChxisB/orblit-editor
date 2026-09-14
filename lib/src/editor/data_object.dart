@@ -140,7 +140,7 @@ class DataObject {
 
   final List<DataField> fields;
 
-  static const String marker = 'orbis.data';
+  static const String marker = 'orblit.data';
   static const int formatVersion = 1;
   static const String extension = '.odata';
 
@@ -251,21 +251,21 @@ class DataObject {
           DataType.number => [
               'inline double ${field.key}(double fallback = 0) {',
               '  static const double *at =',
-              '      ::orbis::number_at(asset, "${field.key}", 0.0);',
+              '      ::orblit::number_at(asset, "${field.key}", 0.0);',
               '  return at ? *at : fallback;',
               '}',
             ],
           DataType.toggle => [
               'inline bool ${field.key}(bool fallback = false) {',
               '  static const bool *at =',
-              '      ::orbis::toggle_at(asset, "${field.key}", false);',
+              '      ::orblit::toggle_at(asset, "${field.key}", false);',
               '  return at ? *at : fallback;',
               '}',
             ],
           DataType.text || DataType.colour || DataType.asset => [
               'inline const char *${field.key}() {',
               '  static const char *const *at =',
-              '      ::orbis::text_at(asset, "${field.key}");',
+              '      ::orblit::text_at(asset, "${field.key}");',
               '  return at ? *at : nullptr;',
               '}',
             ],
@@ -275,9 +275,9 @@ class DataObject {
           DataType.vector => [
               'inline double ${field.key}(int axis, double fallback = 0) {',
               '  static const double *at[3] = {',
-              '      ::orbis::number_at(asset, "${field.key}.x", 0.0),',
-              '      ::orbis::number_at(asset, "${field.key}.y", 0.0),',
-              '      ::orbis::number_at(asset, "${field.key}.z", 0.0)};',
+              '      ::orblit::number_at(asset, "${field.key}.x", 0.0),',
+              '      ::orblit::number_at(asset, "${field.key}.y", 0.0),',
+              '      ::orblit::number_at(asset, "${field.key}.z", 0.0)};',
               '  if (axis < 0 || axis > 2 || !at[axis]) return fallback;',
               '  return *at[axis];',
               '}',
@@ -293,7 +293,7 @@ class DataObject {
       '',
       '#pragma once',
       '',
-      '#include "orbis_script.h"',
+      '#include "orblit_script.h"',
       '',
       '/// Each value is resolved to its address once and read through the',
       '/// pointer after that: the read costs a load from memory, and the',

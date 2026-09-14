@@ -2,14 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/data_object.dart';
-import 'package:orbis_editor/src/editor/data_store.dart';
+import 'package:orblit_editor/src/editor/data_object.dart';
+import 'package:orblit_editor/src/editor/data_store.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
   late Directory root;
 
-  setUp(() => root = Directory.systemTemp.createTempSync('orbis_data'));
+  setUp(() => root = Directory.systemTemp.createTempSync('orblit_data'));
   tearDown(() => root.deleteSync(recursive: true));
 
   DataObject full() => DataObject(
@@ -43,7 +43,7 @@ void main() {
 
     test('is not read from something that is not one', () {
       expect(DataObject.read('nonsense'), isNull);
-      expect(DataObject.read('{"kind":"orbis.prefab"}'), isNull);
+      expect(DataObject.read('{"kind":"orblit.prefab"}'), isNull);
     });
 
     test('a value of the wrong shape falls back rather than failing', () {
@@ -58,7 +58,7 @@ void main() {
 
     test('a field with no type is left out, not guessed at', () {
       final back = DataObject.read('''
-{"kind":"orbis.data","fields":[
+{"kind":"orblit.data","fields":[
   {"key":"a","type":"number","value":1},
   {"key":"b","value":2}
 ]}''')!;

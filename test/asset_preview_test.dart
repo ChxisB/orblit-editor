@@ -4,11 +4,11 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/asset_browser.dart';
-import 'package:orbis_editor/src/editor/asset_preview.dart';
-import 'package:orbis_editor/src/editor/assets.dart';
-import 'package:orbis_editor/src/theme/orbis_theme.dart';
-import 'package:orbis_filament/orbis_filament.dart';
+import 'package:orblit_editor/src/editor/asset_browser.dart';
+import 'package:orblit_editor/src/editor/asset_preview.dart';
+import 'package:orblit_editor/src/editor/assets.dart';
+import 'package:orblit_editor/src/theme/orblit_theme.dart';
+import 'package:orblit_filament/orblit_filament.dart';
 import 'package:path/path.dart' as p;
 
 /// A real two-by-two PNG, for the same reason the browser's own test uses
@@ -48,7 +48,7 @@ void main() {
   late Directory root;
 
   setUp(() {
-    root = Directory.systemTemp.createTempSync('orbis_preview');
+    root = Directory.systemTemp.createTempSync('orblit_preview');
   });
   tearDown(() => root.deleteSync(recursive: true));
 
@@ -57,7 +57,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
       MaterialApp(
-        theme: orbisTheme(),
+        theme: orblitTheme(),
         home: Scaffold(body: AssetBrowser(tree: AssetTree(root.path))),
       ),
     );
@@ -75,7 +75,7 @@ void main() {
 
   /// How far the preview camera has put itself from what it is looking at.
   double distance(WidgetTester tester) {
-    final view = tester.widget<OrbisView>(find.byType(OrbisView));
+    final view = tester.widget<OrblitView>(find.byType(OrblitView));
     final camera = view.scene!.camera;
     return (camera.position - camera.target).length;
   }
@@ -117,7 +117,7 @@ void main() {
       // The file itself, not a picture of it made earlier. That is the whole
       // difference between a preview and a thumbnail somebody has to remember
       // to regenerate.
-      final view = tester.widget<OrbisView>(find.byType(OrbisView));
+      final view = tester.widget<OrblitView>(find.byType(OrblitView));
       expect(view.scene!.objects.single.mesh, path);
     });
 
@@ -157,7 +157,7 @@ void main() {
       await select(tester, 'crate.obj');
 
       expect(distance(tester), greaterThan(0));
-      expect(find.byType(OrbisView), findsOneWidget);
+      expect(find.byType(OrblitView), findsOneWidget);
     });
 
     testWidgetsWithRenderer(
@@ -192,7 +192,7 @@ void main() {
         await show(tester);
         await select(tester, 'barrel.gltf');
 
-        expect(find.byType(OrbisView), findsNothing);
+        expect(find.byType(OrblitView), findsNothing);
         expect(
           find.textContaining('not available on this platform'),
           findsOneWidget,
@@ -208,7 +208,7 @@ void main() {
       await show(tester);
       await select(tester, 'player.ts');
 
-      expect(find.byType(OrbisView), findsNothing);
+      expect(find.byType(OrblitView), findsNothing);
       // Naming the kind confirms the editor knows what the file is, which is
       // the question somebody has when nothing is drawn.
       expect(find.textContaining(AssetKind.script.label), findsWidgets);
@@ -226,7 +226,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(AssetPreview), findsNothing);
-      expect(find.byType(OrbisView), findsNothing);
+      expect(find.byType(OrblitView), findsNothing);
     });
 
     testWidgets('survives the dock being dragged short', (tester) async {
@@ -241,7 +241,7 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(
         MaterialApp(
-          theme: orbisTheme(),
+          theme: orblitTheme(),
           home: Scaffold(body: AssetBrowser(tree: AssetTree(root.path))),
         ),
       );

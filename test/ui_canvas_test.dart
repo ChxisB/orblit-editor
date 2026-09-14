@@ -2,17 +2,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/inspector.dart' show FieldRow;
-import 'package:orbis_editor/src/editor/ui_canvas.dart';
-import 'package:orbis_editor/src/editor/ui_editor.dart';
-import 'package:orbis_editor/src/theme/orbis_theme.dart';
-import 'package:orbis_ui/orbis_ui.dart';
+import 'package:orblit_editor/src/editor/inspector.dart' show FieldRow;
+import 'package:orblit_editor/src/editor/ui_canvas.dart';
+import 'package:orblit_editor/src/editor/ui_editor.dart';
+import 'package:orblit_editor/src/theme/orblit_theme.dart';
+import 'package:orblit_ui/orblit_ui.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
   late Directory root;
 
-  setUp(() => root = Directory.systemTemp.createTempSync('orbis_ui'));
+  setUp(() => root = Directory.systemTemp.createTempSync('orblit_ui'));
   tearDown(() => root.deleteSync(recursive: true));
 
   const menu = UiDocument(
@@ -25,7 +25,7 @@ void main() {
           type: 'text',
           classes: 'text-3xl',
           css: 'left: 80px; top: 60px',
-          text: 'Orbis',
+          text: 'Orblit',
         ),
         UiNode(
           type: 'row',
@@ -50,7 +50,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(MaterialApp(
-      theme: orbisTheme(),
+      theme: orblitTheme(),
       home: Scaffold(
         body: UiCanvasView(
           document: menu,
@@ -67,7 +67,7 @@ void main() {
     testWidgets('shows the interface itself', (tester) async {
       await showCanvas(tester);
 
-      expect(find.text('Orbis'), findsOneWidget);
+      expect(find.text('Orblit'), findsOneWidget);
       expect(find.text('Play'), findsOneWidget);
     });
 
@@ -81,7 +81,7 @@ void main() {
 
       // The words are there. The guides are not — and not hidden: with no
       // decorator the chrome was never built.
-      expect(find.text('Orbis'), findsOneWidget);
+      expect(find.text('Orblit'), findsOneWidget);
       expect(find.text('Play'), findsOneWidget);
       expect(
         find.byWidgetPredicate((w) => w is CustomPaint && w.painter != null),
@@ -174,7 +174,7 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       final editor = UiEditor(path: path, document: held);
-      await tester.pumpWidget(MaterialApp(theme: orbisTheme(), home: editor));
+      await tester.pumpWidget(MaterialApp(theme: orblitTheme(), home: editor));
       await tester.pumpAndSettle();
       return editor;
     }
@@ -235,7 +235,7 @@ void main() {
 
       expect(guides, findsNothing);
       // And the interface is still there, which is the point of the toggle.
-      expect(onCanvas('Orbis'), findsOneWidget);
+      expect(onCanvas('Orblit'), findsOneWidget);
     });
 
     int outlinesOn(WidgetTester tester) => tester
@@ -279,7 +279,7 @@ void main() {
       await open(tester);
 
       final pointer =
-          await tester.startGesture(tester.getCenter(onCanvas('Orbis')));
+          await tester.startGesture(tester.getCenter(onCanvas('Orblit')));
       await tester.pump(const Duration(milliseconds: 40));
 
       // Past the slop first. Flutter does not call a drag a drag until the
@@ -290,12 +290,12 @@ void main() {
         await tester.pump(const Duration(milliseconds: 16));
       }
 
-      final wasAt = tester.getTopLeft(onCanvas('Orbis'));
+      final wasAt = tester.getTopLeft(onCanvas('Orblit'));
       for (var i = 0; i < 10; i++) {
         await pointer.moveBy(const Offset(12, 6));
         await tester.pump(const Duration(milliseconds: 16));
       }
-      final nowAt = tester.getTopLeft(onCanvas('Orbis'));
+      final nowAt = tester.getTopLeft(onCanvas('Orblit'));
       await pointer.up();
       await tester.pumpAndSettle();
 
@@ -310,7 +310,7 @@ void main() {
       await open(tester);
 
       final before = menu.root.children.first.placed!;
-      await dragBy(tester, onCanvas('Orbis'), const Offset(120, 60));
+      await dragBy(tester, onCanvas('Orblit'), const Offset(120, 60));
       await tester.tap(find.widgetWithText(Container, 'Save').first);
       await tester.pumpAndSettle();
 
@@ -329,7 +329,7 @@ void main() {
     testWidgets('a whole drag is one undo step', (tester) async {
       await open(tester);
 
-      await dragBy(tester, onCanvas('Orbis'), const Offset(80, 0));
+      await dragBy(tester, onCanvas('Orblit'), const Offset(80, 0));
       await tester.tap(find.widgetWithText(Container, 'Undo').first);
       await tester.pumpAndSettle();
 
@@ -383,7 +383,7 @@ void main() {
       await open(tester);
 
       // Select the title on the canvas, then retype it.
-      await tester.tap(onCanvas('Orbis'));
+      await tester.tap(onCanvas('Orblit'));
       await tester.pumpAndSettle();
 
       await tester.enterText(
@@ -391,12 +391,12 @@ void main() {
           of: find.widgetWithText(FieldRow, 'Words'),
           matching: find.byType(TextField),
         ),
-        'Orbis Engine',
+        'Orblit Engine',
       );
       await tester.pumpAndSettle();
 
       // Typed into the panel, changed on the canvas.
-      expect(onCanvas('Orbis Engine'), findsOneWidget);
+      expect(onCanvas('Orblit Engine'), findsOneWidget);
     });
   });
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../platform/command_shortcuts.dart';
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import 'scene.dart';
 import 'workspace.dart';
 
@@ -167,8 +167,8 @@ class _OutlinerState extends State<Outliner> {
     return Container(
       width: 248,
       decoration: const BoxDecoration(
-        color: OrbisColors.surface,
-        border: Border(right: BorderSide(color: OrbisColors.lineSoft)),
+        color: OrblitColors.surface,
+        border: Border(right: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -177,16 +177,16 @@ class _OutlinerState extends State<Outliner> {
             height: 32,
             padding: const EdgeInsets.only(left: Space.md, right: Space.sm),
             decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: OrbisColors.lineSoft)),
+              border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
             ),
             child: Row(
               children: [
-                Text('HIERARCHY', style: OrbisText.section),
+                Text('HIERARCHY', style: OrblitText.section),
                 const Spacer(),
                 Text(
                   '${widget.workspace.entries.length} '
                   'scene${widget.workspace.entries.length == 1 ? '' : 's'}',
-                  style: OrbisText.mono.copyWith(fontSize: 10.5),
+                  style: OrblitText.mono.copyWith(fontSize: 10.5),
                 ),
               ],
             ),
@@ -336,12 +336,12 @@ class _RowState extends State<_Row> {
         : (scene?.displayIconOf(object) ?? object.icon);
 
     final colour = widget.selected
-        ? OrbisColors.ember
+        ? OrblitColors.ember
         // An unloaded scene is dimmer, because it is a place rather than a
         // thing you can currently change.
         : (_isScene && !_isLoaded
-            ? OrbisColors.inkDim
-            : (_hovering ? OrbisColors.ink : OrbisColors.inkMid));
+            ? OrblitColors.inkDim
+            : (_hovering ? OrblitColors.ink : OrblitColors.inkMid));
 
     final row = DragTarget<ObjectDrag>(
       onWillAcceptWithDetails: (details) => _accepts(details.data.id),
@@ -376,24 +376,24 @@ class _RowState extends State<_Row> {
               ),
               decoration: BoxDecoration(
                 color: widget.selected
-                    ? OrbisColors.emberWash
+                    ? OrblitColors.emberWash
                     : (dropping == DropKind.inside
-                        ? OrbisColors.raised
+                        ? OrblitColors.raised
                         : (_hovering
-                            ? OrbisColors.raised
+                            ? OrblitColors.raised
                             : Colors.transparent)),
                 // A line for a reorder, a fill for a reparent: the two answers
                 // look different because they are different.
                 border: Border(
                   top: BorderSide(
                     color: dropping == DropKind.before
-                        ? OrbisColors.ember
+                        ? OrblitColors.ember
                         : Colors.transparent,
                     width: 2,
                   ),
                   bottom: BorderSide(
                     color: dropping == DropKind.after
-                        ? OrbisColors.ember
+                        ? OrblitColors.ember
                         : Colors.transparent,
                     width: 2,
                   ),
@@ -412,7 +412,7 @@ class _RowState extends State<_Row> {
                                   ? Icons.chevron_right
                                   : Icons.expand_more,
                               size: 15,
-                              color: OrbisColors.inkDim,
+                              color: OrblitColors.inkDim,
                             ),
                           )
                         : null,
@@ -430,7 +430,7 @@ class _RowState extends State<_Row> {
                             child: Text(
                               name,
                               overflow: TextOverflow.ellipsis,
-                              style: OrbisText.label.copyWith(
+                              style: OrblitText.label.copyWith(
                                 color: colour,
                                 fontWeight: _isScene || widget.selected
                                     ? FontWeight.w600
@@ -447,7 +447,7 @@ class _RowState extends State<_Row> {
                               child: Icon(
                                 Icons.edit_outlined,
                                 size: 11,
-                                color: OrbisColors.ember,
+                                color: OrblitColors.ember,
                               ),
                             ),
                         ],
@@ -457,14 +457,14 @@ class _RowState extends State<_Row> {
                   if (_isScene && !_isLoaded && !_hovering)
                     Text(
                       'not loaded',
-                      style: OrbisText.caption.copyWith(fontSize: 10),
+                      style: OrblitText.caption.copyWith(fontSize: 10),
                     ),
                   if (_isScene && _isLoaded && entry.neverWritten)
                     Padding(
                       padding: const EdgeInsets.only(right: 4),
                       child: Text('•',
-                          style: OrbisText.mono
-                              .copyWith(color: OrbisColors.ember)),
+                          style: OrblitText.mono
+                              .copyWith(color: OrblitColors.ember)),
                     ),
                   if (_hovering)
                     _RowAction(
@@ -518,7 +518,7 @@ class _RowAction extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 3),
-          child: Icon(icon, size: 13, color: OrbisColors.inkDim),
+          child: Icon(icon, size: 13, color: OrblitColors.inkDim),
         ),
       ),
     );
@@ -542,16 +542,16 @@ class _DragLabel extends StatelessWidget {
           vertical: Space.xs,
         ),
         decoration: BoxDecoration(
-          color: OrbisColors.raised,
+          color: OrblitColors.raised,
           borderRadius: BorderRadius.circular(Radii.control),
-          border: Border.all(color: OrbisColors.ember),
+          border: Border.all(color: OrblitColors.ember),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 13, color: OrbisColors.ember),
+            Icon(icon, size: 13, color: OrblitColors.ember),
             const SizedBox(width: Space.sm),
-            Text(name, style: OrbisText.label.copyWith(color: OrbisColors.ink)),
+            Text(name, style: OrblitText.label.copyWith(color: OrblitColors.ink)),
           ],
         ),
       ),

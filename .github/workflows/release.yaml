@@ -3,7 +3,7 @@ name: Editor release
 # Builds the editor for macOS and attaches the archive, with a checksum, to a
 # GitHub release.
 #
-# Triggered by an orbis-editor-* tag, or run by hand against an existing tag.
+# Triggered by an orblit-editor-* tag, or run by hand against an existing tag.
 # A tag with "citest" in the name builds and packages the whole thing but does
 # not publish, so the packaging can be checked without cutting a release —
 # packaging is exactly the sort of thing whose first real use is a release day.
@@ -18,11 +18,11 @@ name: Editor release
 
 on:
   push:
-    tags: ['orbis-editor-*']
+    tags: ['orblit-editor-*']
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to build and attach the archive to (e.g. orbis-editor-0.1.0)'
+        description: 'Tag to build and attach the archive to (e.g. orblit-editor-0.1.0)'
         required: true
 
 permissions:
@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          path: orbis-editor
+          path: orblit-editor
           ref: ${{ inputs.tag || github.ref }}
       # Pinned to the same tag name in the engine, so a release is built
       # against a known renderer rather than whatever main happened to be.
@@ -51,11 +51,11 @@ jobs:
         with:
           # No token: these repositories are public, so the default
           # GITHUB_TOKEN reads them. Nothing here needs a secret.
-          repository: Orbis-Engine/orbis
-          path: orbis
+          repository: Orblit-Engine/orblit
+          path: orblit
 
       - name: Match the engine to the tag
-        working-directory: orbis
+        working-directory: orblit
         run: |
           tag="${{ inputs.tag || github.ref_name }}"
           if git rev-parse "refs/tags/$tag" > /dev/null 2>&1; then
@@ -73,23 +73,23 @@ jobs:
       - name: Cache Filament SDK
         uses: actions/cache@v4
         with:
-          path: orbis/packages/orbis_filament/darwin/third_party
-          key: filament-${{ runner.os }}-${{ hashFiles('orbis/packages/orbis_filament/darwin/setup.sh') }}
+          path: orblit/packages/orblit_filament/darwin/third_party
+          key: filament-${{ runner.os }}-${{ hashFiles('orblit/packages/orblit_filament/darwin/setup.sh') }}
 
       # Same as CI: the material compilation runs from the podspec under
       # CocoaPods, and Swift Package Manager has no equivalent hook.
       - name: Fetch Filament and compile materials
-        run: bash orbis/packages/orbis_filament/darwin/setup.sh
+        run: bash orblit/packages/orblit_filament/darwin/setup.sh
 
       - name: Build
-        working-directory: orbis-editor
+        working-directory: orblit-editor
         run: flutter build macos --release
 
       - name: Sign
         if: ${{ env.CERT != '' }}
         env:
           CERT_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
-        working-directory: orbis-editor
+        working-directory: orblit-editor
         run: |
           set -euo pipefail
           # A throwaway keychain rather than the login one: the runner is
@@ -118,7 +118,7 @@ jobs:
 
           # Inside out: the frameworks have to be signed before the bundle
           # that contains them, or the outer signature is invalidated by them.
-          app=build/macos/Build/Products/Release/orbis_editor.app
+          app=build/macos/Build/Products/Release/orblit_editor.app
           find "$app/Contents/Frameworks" -name '*.framework' -o -name '*.dylib' \
             | while read -r item; do
                 codesign --force --timestamp --options runtime \
@@ -134,10 +134,10 @@ jobs:
         env:
           NOTARY_PASSWORD: ${{ secrets.MACOS_NOTARY_PASSWORD }}
           TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
-        working-directory: orbis-editor
+        working-directory: orblit-editor
         run: |
           set -euo pipefail
-          app=build/macos/Build/Products/Release/orbis_editor.app
+          app=build/macos/Build/Products/Release/orblit_editor.app
           ditto -c -k --keepParent "$app" "$RUNNER_TEMP/notarize.zip"
           xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" \
             --apple-id "$APPLE_ID" --password "$NOTARY_PASSWORD" \
@@ -148,11 +148,11 @@ jobs:
           xcrun stapler staple "$app"
 
       - name: Archive
-        working-directory: orbis-editor
+        working-directory: orblit-editor
         run: |
           set -euo pipefail
           tag="${{ inputs.tag || github.ref_name }}"
-          app=build/macos/Build/Products/Release/orbis_editor.app
+          app=build/macos/Build/Products/Release/orblit_editor.app
           mkdir -p "$RUNNER_TEMP/out"
           # ditto rather than zip: it keeps the symlinks and the resource
           # forks a signed bundle depends on, and a plain zip breaks the
@@ -164,7 +164,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: orbis-editor-macos
+          name: orblit-editor-macos
           path: ${{ runner.temp }}/out/*
 
       - name: Publish

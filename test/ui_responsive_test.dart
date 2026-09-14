@@ -2,17 +2,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/ui_canvas.dart';
-import 'package:orbis_editor/src/editor/ui_editor.dart';
-import 'package:orbis_editor/src/theme/orbis_theme.dart';
-import 'package:orbis_editor/src/widgets/controls.dart';
-import 'package:orbis_ui/orbis_ui.dart';
+import 'package:orblit_editor/src/editor/ui_canvas.dart';
+import 'package:orblit_editor/src/editor/ui_editor.dart';
+import 'package:orblit_editor/src/theme/orblit_theme.dart';
+import 'package:orblit_editor/src/widgets/controls.dart';
+import 'package:orblit_ui/orblit_ui.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
   late Directory root;
 
-  setUp(() => root = Directory.systemTemp.createTempSync('orbis_ui_wide'));
+  setUp(() => root = Directory.systemTemp.createTempSync('orblit_ui_wide'));
   tearDown(() => root.deleteSync(recursive: true));
 
   /// A canvas whose one row is a column until there is room for a row. The
@@ -28,7 +28,7 @@ void main() {
           type: 'text',
           classes: 'text-3xl',
           css: 'left: 80px; top: 60px',
-          text: 'Orbis',
+          text: 'Orblit',
         ),
         UiNode(
           type: 'box',
@@ -53,7 +53,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(MaterialApp(
-      theme: orbisTheme(),
+      theme: orblitTheme(),
       home: Scaffold(
         body: UiCanvasView(
           document: menu,
@@ -88,7 +88,7 @@ void main() {
 
     testWidgets('text grows with the screen and stops growing', (tester) async {
       double sizeOfTitle() =>
-          tester.widget<Text>(find.text('Orbis')).style!.fontSize!;
+          tester.widget<Text>(find.text('Orblit')).style!.fontSize!;
 
       await showCanvas(tester, previewSize: const Size(390, 844));
       final onPhone = sizeOfTitle();
@@ -119,7 +119,7 @@ void main() {
         await tester.binding.setSurfaceSize(const Size(1400, 900));
         addTearDown(() => tester.binding.setSurfaceSize(null));
         await tester.pumpWidget(MaterialApp(
-          theme: orbisTheme(),
+          theme: orblitTheme(),
           home: Scaffold(
             body: UiCanvasView(document: fixed, previewSize: screen),
           ),
@@ -146,7 +146,7 @@ void main() {
 
       final title = find.descendant(
         of: find.byType(UiCanvasView),
-        matching: find.text('Orbis'),
+        matching: find.text('Orblit'),
       );
       final pointer = await tester.startGesture(tester.getCenter(title));
       await tester.pump(const Duration(milliseconds: 40));
@@ -180,7 +180,7 @@ void main() {
 
       final title = find.descendant(
         of: find.byType(UiCanvasView),
-        matching: find.text('Orbis'),
+        matching: find.text('Orblit'),
       );
       final pointer = await tester.startGesture(tester.getCenter(title));
       await tester.pump(const Duration(milliseconds: 40));
@@ -211,7 +211,7 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       await tester.pumpWidget(MaterialApp(
-        theme: orbisTheme(),
+        theme: orblitTheme(),
         home: UiEditor(path: path, document: held),
       ));
       await tester.pumpAndSettle();
@@ -234,8 +234,8 @@ void main() {
 
     bool gridIsUp(WidgetTester tester) =>
         tester
-            .widget<OrbisButton>(
-                find.widgetWithText(OrbisButton, 'Column grid'))
+            .widget<OrblitButton>(
+                find.widgetWithText(OrblitButton, 'Column grid'))
             .tone ==
         ButtonTone.primary;
 

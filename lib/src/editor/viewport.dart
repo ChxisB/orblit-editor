@@ -4,14 +4,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:orbis_filament/orbis_filament.dart';
-import 'package:orbis_mesh/orbis_mesh.dart';
-import 'package:orbis_ui/orbis_ui.dart';
+import 'package:orblit_filament/orblit_filament.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
+import 'package:orblit_ui/orblit_ui.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 import '../platform/command_shortcuts.dart';
 import '../platform/renderer_support.dart';
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import 'commands.dart';
 import 'drawing.dart';
 import 'gizmo.dart';
@@ -178,9 +178,9 @@ class OrbitCamera {
     );
   }
 
-  OrbisCamera toRenderCamera() {
+  OrblitCamera toRenderCamera() {
     final horizontal = distance * math.cos(pitch);
-    return OrbisCamera(
+    return OrblitCamera(
       position: Vector3(
         target.x + horizontal * math.sin(yaw),
         target.y + distance * math.sin(pitch),
@@ -1354,7 +1354,7 @@ class _SceneViewportState extends State<SceneViewport>
       decoration: BoxDecoration(
         color: const Color(0xFF14181F),
         borderRadius: BorderRadius.circular(Radii.panel),
-        border: Border.all(color: OrbisColors.lineSoft),
+        border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: DragTarget<String>(
         onWillAcceptWithDetails: (_) => widget.onDropAsset != null,
@@ -1379,8 +1379,8 @@ class _SceneViewportState extends State<SceneViewport>
                 child: IgnorePointer(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: OrbisColors.emberWash,
-                      border: Border.all(color: OrbisColors.ember, width: 2),
+                      color: OrblitColors.emberWash,
+                      border: Border.all(color: OrblitColors.ember, width: 2),
                       borderRadius: BorderRadius.circular(Radii.panel),
                     ),
                   ),
@@ -1823,7 +1823,7 @@ class _SceneViewportState extends State<SceneViewport>
         },
         child: !_rendererAvailable
             ? const _Placeholder()
-            : OrbisView(
+            : OrblitView(
                 // One scene at a time, so the viewport shows one document and
                 // there is never a question about which one an object belongs
                 // to.
@@ -1850,7 +1850,7 @@ class _SceneViewportState extends State<SceneViewport>
                           selected: widget.selected,
                           primary: widget.primary,
                         )
-                      : OrbisOutline.none,
+                      : OrblitOutline.none,
                 ),
                 onSceneNotes: widget.onSceneNotes,
               ),
@@ -1883,16 +1883,16 @@ class _ToolButton extends StatelessWidget {
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            color: selected ? OrbisColors.ember : OrbisColors.raised,
+            color: selected ? OrblitColors.ember : OrblitColors.raised,
             borderRadius: BorderRadius.circular(Radii.control),
             border: Border.all(
-              color: selected ? OrbisColors.ember : OrbisColors.lineSoft,
+              color: selected ? OrblitColors.ember : OrblitColors.lineSoft,
             ),
           ),
           child: Icon(
             mode.icon,
             size: 15,
-            color: selected ? Colors.white : OrbisColors.inkDim,
+            color: selected ? Colors.white : OrblitColors.inkDim,
           ),
         ),
       ),
@@ -1914,11 +1914,11 @@ class _Placeholder extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.view_in_ar_outlined,
-                  size: 34, color: OrbisColors.inkDim),
+                  size: 34, color: OrblitColors.inkDim),
               const SizedBox(height: Space.md),
-              Text('Viewport', style: OrbisText.label),
+              Text('Viewport', style: OrblitText.label),
               const SizedBox(height: Space.xs),
-              Text(rendererUnavailableMessage, style: OrbisText.caption),
+              Text(rendererUnavailableMessage, style: OrblitText.caption),
             ],
           ),
         ),
@@ -1947,20 +1947,20 @@ class _ViewportChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: 3),
       decoration: BoxDecoration(
         color: on == null
-            ? OrbisColors.surface.withValues(alpha: 0.8)
+            ? OrblitColors.surface.withValues(alpha: 0.8)
             : (lit
-                ? OrbisColors.emberWash
-                : OrbisColors.surface.withValues(alpha: 0.8)),
+                ? OrblitColors.emberWash
+                : OrblitColors.surface.withValues(alpha: 0.8)),
         borderRadius: BorderRadius.circular(Radii.control),
         border: Border.all(
-          color: lit ? OrbisColors.ember : OrbisColors.lineSoft,
+          color: lit ? OrblitColors.ember : OrblitColors.lineSoft,
         ),
       ),
       child: Text(
         label,
-        style: OrbisText.caption.copyWith(
+        style: OrblitText.caption.copyWith(
           fontSize: 11,
-          color: lit ? OrbisColors.ember : null,
+          color: lit ? OrblitColors.ember : null,
         ),
       ),
     );
@@ -1983,7 +1983,7 @@ class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = OrbisColors.line.withValues(alpha: 0.35)
+      ..color = OrblitColors.line.withValues(alpha: 0.35)
       ..strokeWidth = 1;
     const spacing = 32.0;
 
@@ -2128,7 +2128,7 @@ class _SelectionPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.5
-          ..color = OrbisColors.ember,
+          ..color = OrblitColors.ember,
       );
   }
 
@@ -2152,9 +2152,9 @@ class _CameraPreview extends StatelessWidget {
       width: 240,
       height: 135,
       decoration: BoxDecoration(
-        color: OrbisColors.ground,
+        color: OrblitColors.ground,
         borderRadius: BorderRadius.circular(Radii.control),
-        border: Border.all(color: OrbisColors.line),
+        border: Border.all(color: OrblitColors.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2163,7 +2163,7 @@ class _CameraPreview extends StatelessWidget {
             height: 20,
             padding: const EdgeInsets.symmetric(horizontal: Space.sm),
             alignment: Alignment.centerLeft,
-            child: Text('CAMERA', style: OrbisText.section),
+            child: Text('CAMERA', style: OrblitText.section),
           ),
           Expanded(
             child: ClipRRect(

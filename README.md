@@ -1,6 +1,6 @@
-# orbis-editor
+# orblit-editor
 
-The [Orbis](https://github.com/Orbis-Engine/orbis) editor.
+The [Orblit](https://github.com/Orblit-Engine/orblit) editor.
 
 ```sh
 flutter run -d macos
@@ -31,7 +31,7 @@ now — an interface where everything is highlighted has highlighted nothing.
 Spacing is on a four-point scale, because editors go wrong when each panel picks
 its own padding.
 
-`lib/src/theme/orbis_theme.dart` is the whole system.
+`lib/src/theme/orblit_theme.dart` is the whole system.
 
 ## Licence
 

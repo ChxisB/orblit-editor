@@ -4,12 +4,12 @@ import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:orbis_examples/orbis_examples.dart';
-import 'package:orbis_filament/orbis_filament.dart';
+import 'package:orblit_examples/orblit_examples.dart';
+import 'package:orblit_filament/orblit_filament.dart';
 import 'package:path/path.dart' as p;
 
 import '../platform/renderer_support.dart';
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 
 /// The engine's worked examples, in the launcher.
 ///
@@ -212,7 +212,7 @@ class _ExamplesViewState extends State<ExamplesView>
       // The engine repository, which is where the fetch scripts live and what
       // their paths are relative to. Beside this one, in the same way the
       // examples already find their assets.
-      final root = Directory(p.normalize(p.join(Directory.current.path, '..', 'orbis')));
+      final root = Directory(p.normalize(p.join(Directory.current.path, '..', 'orblit')));
       if (!root.existsSync()) {
         setState(() => _progress = 'no engine repository beside this one');
         return;
@@ -272,7 +272,7 @@ class _ExamplesViewState extends State<ExamplesView>
           _dragging = details.localPosition;
         },
         onPanEnd: (_) => _dragging = null,
-        child: OrbisView(
+        child: OrblitView(
           scene: _showing.scene(_camera.toRenderCamera(), _seconds),
           onViewport: (id) {
             // The benchmark asks the renderer what a frame costs, and only
@@ -315,9 +315,9 @@ class _List extends StatelessWidget {
       width: 240,
       margin: const EdgeInsets.only(right: Space.lg, bottom: Space.lg),
       decoration: BoxDecoration(
-        color: OrbisColors.surface,
+        color: OrblitColors.surface,
         borderRadius: BorderRadius.circular(Radii.panel),
-        border: Border.all(color: OrbisColors.lineSoft),
+        border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: Space.sm),
@@ -356,8 +356,8 @@ class _RowState extends State<_Row> {
   @override
   Widget build(BuildContext context) {
     final colour = widget.selected
-        ? OrbisColors.ember
-        : (_hovered ? OrbisColors.ink : OrbisColors.inkMid);
+        ? OrblitColors.ember
+        : (_hovered ? OrblitColors.ink : OrblitColors.inkMid);
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -376,8 +376,8 @@ class _RowState extends State<_Row> {
           ),
           decoration: BoxDecoration(
             color: widget.selected
-                ? OrbisColors.emberWash
-                : (_hovered ? OrbisColors.raised : Colors.transparent),
+                ? OrblitColors.emberWash
+                : (_hovered ? OrblitColors.raised : Colors.transparent),
             borderRadius: BorderRadius.circular(Radii.control),
           ),
           child: Column(
@@ -385,7 +385,7 @@ class _RowState extends State<_Row> {
             children: [
               Text(
                 widget.example.name,
-                style: OrbisText.body.copyWith(
+                style: OrblitText.body.copyWith(
                   color: colour,
                   fontWeight: widget.selected ? FontWeight.w600 : null,
                 ),
@@ -393,7 +393,7 @@ class _RowState extends State<_Row> {
               const SizedBox(height: 2),
               Text(
                 widget.example.blurb,
-                style: OrbisText.caption.copyWith(fontSize: 11),
+                style: OrblitText.caption.copyWith(fontSize: 11),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -431,7 +431,7 @@ class _Title extends StatelessWidget {
     // reads as a strip over the picture rather than as a page heading with a
     // picture under it.
     return Container(
-      color: full ? OrbisColors.surface : null,
+      color: full ? OrblitColors.surface : null,
       padding: full
           ? const EdgeInsets.fromLTRB(Space.sm, Space.sm, Space.sm, Space.sm)
           : const EdgeInsets.fromLTRB(0, Space.xxl, Space.lg, Space.md),
@@ -445,7 +445,7 @@ class _Title extends StatelessWidget {
               iconSize: 18,
               tooltip: 'Back to the examples',
               onPressed: () => onFull(false),
-              icon: const Icon(Icons.arrow_back, color: OrbisColors.ink),
+              icon: const Icon(Icons.arrow_back, color: OrblitColors.ink),
             ),
             const SizedBox(width: Space.xs),
           ],
@@ -456,11 +456,11 @@ class _Title extends StatelessWidget {
               children: [
                 Text(
                   example.name,
-                  style: full ? OrbisText.label : OrbisText.title,
+                  style: full ? OrblitText.label : OrblitText.title,
                 ),
                 if (!full) ...[
                   const SizedBox(height: 2),
-                  Text(example.blurb, style: OrbisText.caption),
+                  Text(example.blurb, style: OrblitText.caption),
                 ],
               ],
             ),
@@ -516,7 +516,7 @@ class _Sider extends StatelessWidget {
     final glyph = Icon(
       icon,
       size: 17,
-      color: open ? OrbisColors.ink : OrbisColors.inkDim,
+      color: open ? OrblitColors.ink : OrblitColors.inkDim,
     );
 
     return IconButton(
@@ -544,34 +544,34 @@ class _Panel extends StatelessWidget {
       width: 320,
       margin: const EdgeInsets.only(bottom: Space.lg, right: Space.lg),
       decoration: BoxDecoration(
-        color: OrbisColors.surface,
+        color: OrblitColors.surface,
         borderRadius: BorderRadius.circular(Radii.panel),
-        border: Border.all(color: OrbisColors.lineSoft),
+        border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: ListView(
         padding: const EdgeInsets.all(Space.md),
         children: [
-          Text('SETTINGS', style: OrbisText.section),
+          Text('SETTINGS', style: OrblitText.section),
           const SizedBox(height: Space.sm),
           example.settings(context, onChanged),
           const SizedBox(height: Space.xl),
-          Text('HOW', style: OrbisText.section),
+          Text('HOW', style: OrblitText.section),
           const SizedBox(height: Space.sm),
           // The lines that matter, not the whole file. What an example is for
           // is the handful of statements that do the thing.
           Container(
             padding: const EdgeInsets.all(Space.md),
             decoration: BoxDecoration(
-              color: OrbisColors.ground,
+              color: OrblitColors.ground,
               borderRadius: BorderRadius.circular(Radii.control),
-              border: Border.all(color: OrbisColors.lineSoft),
+              border: Border.all(color: OrblitColors.lineSoft),
             ),
             child: SelectableText(
               example.code.trim(),
-              style: OrbisText.mono.copyWith(
+              style: OrblitText.mono.copyWith(
                 fontSize: 11.5,
                 height: 1.5,
-                color: OrbisColors.inkMid,
+                color: OrblitColors.inkMid,
               ),
             ),
           ),
@@ -588,7 +588,7 @@ class _RendererUnavailable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: OrbisColors.ground,
+      color: OrblitColors.ground,
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(Space.xl),
@@ -596,13 +596,13 @@ class _RendererUnavailable extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.desktop_access_disabled_outlined,
-                  size: 26, color: OrbisColors.inkDim),
+                  size: 26, color: OrblitColors.inkDim),
               const SizedBox(height: Space.md),
               Text(
                 '$rendererUnavailableMessage\n'
                 'The settings and the code are still here.',
                 textAlign: TextAlign.center,
-                style: OrbisText.caption,
+                style: OrblitText.caption,
               ),
             ],
           ),
@@ -643,7 +643,7 @@ class _Note extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xE0161A21),
           borderRadius: BorderRadius.circular(Radii.control),
-          border: Border.all(color: OrbisColors.ember.withValues(alpha: 0.4)),
+          border: Border.all(color: OrblitColors.ember.withValues(alpha: 0.4)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -655,13 +655,13 @@ class _Note extends StatelessWidget {
                 const Icon(
                   Icons.info_outline,
                   size: 15,
-                  color: OrbisColors.ember,
+                  color: OrblitColors.ember,
                 ),
                 const SizedBox(width: Space.sm),
                 Flexible(
                   child: Text(
                     saying,
-                    style: OrbisText.body.copyWith(fontSize: 12),
+                    style: OrblitText.body.copyWith(fontSize: 12),
                   ),
                 ),
               ],
@@ -674,7 +674,7 @@ class _Note extends StatelessWidget {
               Text(
                 '${wanted.what} — ${wanted.size}\n'
                 '${wanted.from} · ${wanted.licence}',
-                style: OrbisText.caption.copyWith(fontSize: 11, height: 1.4),
+                style: OrblitText.caption.copyWith(fontSize: 11, height: 1.4),
               ),
               const SizedBox(height: Space.sm),
               Row(
@@ -695,7 +695,7 @@ class _Note extends StatelessWidget {
                         progress,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: OrbisText.caption.copyWith(fontSize: 11),
+                        style: OrblitText.caption.copyWith(fontSize: 11),
                       ),
                     ),
                   ],

@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 
 import 'scene.dart' show EditorScene;
 

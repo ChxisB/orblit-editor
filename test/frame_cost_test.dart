@@ -2,13 +2,13 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/geometry_store.dart';
-import 'package:orbis_editor/src/editor/boundary.dart';
-import 'package:orbis_editor/src/editor/grid.dart';
-import 'package:orbis_editor/src/editor/scene.dart';
-import 'package:orbis_editor/src/editor/snapping.dart';
-import 'package:orbis_filament/orbis_filament.dart';
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_editor/src/editor/geometry_store.dart';
+import 'package:orblit_editor/src/editor/boundary.dart';
+import 'package:orblit_editor/src/editor/grid.dart';
+import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/snapping.dart';
+import 'package:orblit_filament/orblit_filament.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 /// What a piece of per-frame work costs, in milliseconds.
@@ -63,7 +63,7 @@ void main() {
 
   timed('the whole scene, no grid', 200, () {
     scene.toRenderScene(
-      OrbisCamera(position: Vector3(0, 5, 10), target: Vector3.zero()),
+      OrblitCamera(position: Vector3(0, 5, 10), target: Vector3.zero()),
     );
   });
 
@@ -76,7 +76,7 @@ void main() {
   );
   timed('the whole scene, with the grid', 200, () {
     scene.toRenderScene(
-      OrbisCamera(position: Vector3(0, 5, 10), target: Vector3.zero()),
+      OrblitCamera(position: Vector3(0, 5, 10), target: Vector3.zero()),
       grid: grid,
     );
   });
@@ -84,7 +84,7 @@ void main() {
   timed('packing it for the channel, no grid', 200, () {
     scene
         .toRenderScene(
-          OrbisCamera(position: Vector3(0, 5, 10), target: Vector3.zero()),
+          OrblitCamera(position: Vector3(0, 5, 10), target: Vector3.zero()),
         )
         .toMessage(0);
   });
@@ -92,7 +92,7 @@ void main() {
   timed('packing it for the channel, with the grid', 200, () {
     scene
         .toRenderScene(
-          OrbisCamera(position: Vector3(0, 5, 10), target: Vector3.zero()),
+          OrblitCamera(position: Vector3(0, 5, 10), target: Vector3.zero()),
           grid: grid,
         )
         .toMessage(0);
@@ -104,7 +104,7 @@ void main() {
 
   // What every frame of a drag runs, because every frame of a drag is a
   // change and every change asks whether any geometry has to be written.
-  final root = Directory.systemTemp.createTempSync('orbis_cost');
+  final root = Directory.systemTemp.createTempSync('orblit_cost');
   addTearDown(() => root.deleteSync(recursive: true));
   final store = GeometryStore(root.path);
   for (final object in scene.objects) {
@@ -121,7 +121,7 @@ void main() {
   // difference is a number rather than a claim.
   timed('  ...asking the filesystem, as it did', 200, () {
     for (final object in scene.objects) {
-      File('${root.path}/.orbis/geometry/${object.id}.glb').existsSync();
+      File('${root.path}/.orblit/geometry/${object.id}.glb').existsSync();
     }
   });
 

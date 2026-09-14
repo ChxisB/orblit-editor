@@ -4,11 +4,11 @@ import 'src/editor/editor_shell.dart';
 import 'src/launcher/launcher_screen.dart';
 import 'src/launcher/project.dart';
 import 'src/launcher/splash.dart';
-import 'src/theme/orbis_theme.dart';
+import 'src/theme/orblit_theme.dart';
 
 /// Opens the editor, on a project if one was named.
 ///
-/// `orbis_editor ~/Documents/Orbis/Thing` the way `blender file.blend` and
+/// `orblit_editor ~/Documents/Orblit/Thing` the way `blender file.blend` and
 /// `code .` work — and the only way to reach the editor without clicking,
 /// which matters for anything driving it from a script.
 void main(List<String> arguments) {
@@ -17,9 +17,9 @@ void main(List<String> arguments) {
   if (path != null && project == null) {
     // Said out loud rather than falling back to the launcher in silence,
     // which looks like the argument was ignored.
-    debugPrint('Orbis: "$path" is not a project folder.');
+    debugPrint('Orblit: "$path" is not a project folder.');
   }
-  runApp(OrbisEditorApp(initialProject: project));
+  runApp(OrblitEditorApp(initialProject: project));
 }
 
 /// The folder to open out of what the app was launched with.
@@ -42,22 +42,22 @@ String? projectPathIn(List<String> arguments) {
   return null;
 }
 
-class OrbisEditorApp extends StatelessWidget {
-  const OrbisEditorApp({super.key, this.initialProject});
+class OrblitEditorApp extends StatelessWidget {
+  const OrblitEditorApp({super.key, this.initialProject});
 
   final Project? initialProject;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Orbis',
+      title: 'Orblit',
       debugShowCheckedModeBanner: false,
-      theme: orbisTheme(),
+      theme: orblitTheme(),
       // The mark first, over whatever is starting behind it. Something has to
       // be on screen while the window, the renderer and the project list are
       // all still coming up, and a blank frame reads as an app that failed to
       // open.
-      home: OrbisSplash(
+      home: OrblitSplash(
         child: EditorRoot(initialProject: initialProject),
       ),
     );

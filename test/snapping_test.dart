@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/snapping.dart';
+import 'package:orblit_editor/src/editor/snapping.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 void main() {

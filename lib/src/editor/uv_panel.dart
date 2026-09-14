@@ -1,10 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'inspector.dart' show ChoiceRow, SliderRow;
 import 'mesh_edit.dart';
@@ -83,7 +83,7 @@ class UvPanel extends StatelessWidget {
           children: [
             for (final one in UvGesture.values) ...[
               Expanded(
-                child: OrbisButton(
+                child: OrblitButton(
                   label: one.label,
                   icon: one.icon,
                   expand: true,
@@ -101,16 +101,16 @@ class UvPanel extends StatelessWidget {
           aspectRatio: 1,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: OrbisColors.ground,
+              color: OrblitColors.ground,
               borderRadius: BorderRadius.circular(Radii.control),
-              border: Border.all(color: OrbisColors.lineSoft),
+              border: Border.all(color: OrblitColors.lineSoft),
             ),
             child: owner == null || chosen.isEmpty
                 ? Center(
                     child: Text(
                       'Select faces to see where their texture sits.',
                       textAlign: TextAlign.center,
-                      style: OrbisText.caption.copyWith(fontSize: 11),
+                      style: OrblitText.caption.copyWith(fontSize: 11),
                     ),
                   )
                 : _UvCanvas(
@@ -131,7 +131,7 @@ class UvPanel extends StatelessWidget {
               : chosen.any((face) => face.uv.isManual)
                   ? '${chosen.length} selected · drawn by hand'
                   : '${chosen.length} selected · following the rule',
-          style: OrbisText.caption.copyWith(fontSize: 11),
+          style: OrblitText.caption.copyWith(fontSize: 11),
         ),
         const SizedBox(height: Space.xs),
         Wrap(
@@ -139,7 +139,7 @@ class UvPanel extends StatelessWidget {
           runSpacing: Space.xs,
           children: [
             for (final action in UvAction.values)
-              OrbisButton(
+              OrblitButton(
                 label: action.label,
                 icon: action.icon,
                 tone: ButtonTone.quiet,
@@ -491,7 +491,7 @@ class UvRuleControls extends StatelessWidget {
               (label: 'Swap axes', on: uv.swap),
             ]) ...[
               Expanded(
-                child: OrbisButton(
+                child: OrblitButton(
                   label: one.label,
                   expand: true,
                   tone: one.on ? ButtonTone.primary : ButtonTone.quiet,

@@ -1,4 +1,4 @@
-name: orbis_editor
+name: orblit_editor
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -37,40 +37,40 @@ dependencies:
   # A path dependency while the renderer and the editor change together: a
   # git dependency here would mean a push and a pub upgrade between writing a
   # renderer change and seeing it. Assumes the sibling checkout in
-  # Orbis-Engine/orbis.
-  orbis_filament:
-    path: ../orbis/packages/orbis_filament
-  orbis_weather:
-    path: ../orbis/packages/orbis_weather
+  # Orblit-Engine/orblit.
+  orblit_filament:
+    path: ../orblit/packages/orblit_filament
+  orblit_weather:
+    path: ../orblit/packages/orblit_weather
 
   # Where a light's watts, metres and degrees become the lumens, lux and
   # radians a renderer takes. The editor authors the first and sends the
   # second, and converting in both places is how the two drift apart.
-  orbis_light:
-    path: ../orbis/packages/orbis_light
+  orblit_light:
+    path: ../orblit/packages/orblit_light
 
   # Compiling a C++ script, and the header it is compiled against. The editor
   # only builds and checks; loading and running one is the runtime's job, and
   # the same package does both so the thing the editor checks against is the
   # thing the runtime loads.
-  orbis_native:
-    path: ../orbis/packages/orbis_native
+  orblit_native:
+    path: ../orblit/packages/orblit_native
 
   # The interface model and the widgets it builds. The same package a game
   # draws its interface with, so what the canvas shows is what ships.
-  orbis_ui:
-    path: ../orbis/packages/orbis_ui
+  orblit_ui:
+    path: ../orblit/packages/orblit_ui
 
   # Geometry built in the editor. The shapes, and the operations that turn one
   # into something that was not a shape any more.
-  orbis_mesh:
-    path: ../orbis/packages/orbis_mesh
+  orblit_mesh:
+    path: ../orblit/packages/orblit_mesh
 
   # The worked examples, shown in the launcher beside the projects. The same
   # package the gallery app uses, so an example only has to be written once
   # and the editor never drifts from what the gallery shows.
-  orbis_examples:
-    path: ../orbis/packages/orbis_examples
+  orblit_examples:
+    path: ../orblit/packages/orblit_examples
   path: ^1.9.0
   path_provider: ^2.1.5
 

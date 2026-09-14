@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import 'console.dart';
 
 /// What the editor has said, in the order it said it.
@@ -69,7 +69,7 @@ class _ConsolePanelState extends State<ConsolePanel> {
     ].reversed.toList();
 
     final panel = Container(
-        decoration: const BoxDecoration(color: OrbisColors.surface),
+        decoration: const BoxDecoration(color: OrblitColors.surface),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -81,7 +81,7 @@ class _ConsolePanelState extends State<ConsolePanel> {
                         widget.log.entries.isEmpty
                             ? 'Nothing to report.'
                             : 'Nothing at these levels.',
-                        style: OrbisText.caption,
+                        style: OrblitText.caption,
                       ),
                     )
                   : ListView.builder(
@@ -110,7 +110,7 @@ class _ConsolePanelState extends State<ConsolePanel> {
       height: 30,
       padding: const EdgeInsets.only(left: Space.md, right: Space.xs),
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: OrbisColors.lineSoft)),
+        border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: Row(
         children: [
@@ -165,9 +165,9 @@ class _Filter extends StatelessWidget {
   final VoidCallback onTap;
 
   static Color colourOf(LogLevel level) => switch (level) {
-        LogLevel.info => OrbisColors.inkMid,
-        LogLevel.warning => OrbisColors.warn,
-        LogLevel.error => OrbisColors.bad,
+        LogLevel.info => OrblitColors.inkMid,
+        LogLevel.warning => OrblitColors.warn,
+        LogLevel.error => OrblitColors.bad,
       };
 
   static IconData iconOf(LogLevel level) => switch (level) {
@@ -178,7 +178,7 @@ class _Filter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colour = on ? colourOf(level) : OrbisColors.inkDim;
+    final colour = on ? colourOf(level) : OrblitColors.inkDim;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -187,10 +187,10 @@ class _Filter extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: 3),
           decoration: BoxDecoration(
-            color: on ? OrbisColors.raised : Colors.transparent,
+            color: on ? OrblitColors.raised : Colors.transparent,
             borderRadius: BorderRadius.circular(Radii.control),
             border: Border.all(
-              color: on ? OrbisColors.line : Colors.transparent,
+              color: on ? OrblitColors.line : Colors.transparent,
             ),
           ),
           child: Row(
@@ -200,7 +200,7 @@ class _Filter extends StatelessWidget {
               const SizedBox(width: 5),
               Text(
                 '${level.label} $count',
-                style: OrbisText.caption.copyWith(fontSize: 11, color: colour),
+                style: OrblitText.caption.copyWith(fontSize: 11, color: colour),
               ),
             ],
           ),
@@ -231,7 +231,7 @@ class _Action extends StatelessWidget {
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(Space.xs),
-            child: Icon(icon, size: 14, color: OrbisColors.inkDim),
+            child: Icon(icon, size: 14, color: OrblitColors.inkDim),
           ),
         ),
       ),
@@ -272,7 +272,7 @@ class _RowState extends State<_Row> {
       child: GestureDetector(
         onTap: hasDetail ? widget.onTap : null,
         child: Container(
-          color: _hovering ? OrbisColors.raised : Colors.transparent,
+          color: _hovering ? OrblitColors.raised : Colors.transparent,
           padding: const EdgeInsets.symmetric(
             horizontal: Space.md,
             vertical: 3,
@@ -299,10 +299,10 @@ class _RowState extends State<_Row> {
                   Expanded(
                     child: Text(
                       entry.message,
-                      style: OrbisText.body.copyWith(
+                      style: OrblitText.body.copyWith(
                         fontSize: 12,
                         color: entry.level == LogLevel.info
-                            ? OrbisColors.inkMid
+                            ? OrblitColors.inkMid
                             : colour,
                       ),
                     ),
@@ -316,21 +316,21 @@ class _RowState extends State<_Row> {
                         vertical: 1,
                       ),
                       decoration: BoxDecoration(
-                        color: OrbisColors.raised,
+                        color: OrblitColors.raised,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         '×${entry.repeats}',
-                        style: OrbisText.caption.copyWith(fontSize: 10),
+                        style: OrblitText.caption.copyWith(fontSize: 10),
                       ),
                     ),
                   ],
                   const SizedBox(width: Space.sm),
                   Text(
                     _clock(entry.at),
-                    style: OrbisText.mono.copyWith(
+                    style: OrblitText.mono.copyWith(
                       fontSize: 10,
-                      color: OrbisColors.inkDim,
+                      color: OrblitColors.inkDim,
                     ),
                   ),
                 ],
@@ -340,9 +340,9 @@ class _RowState extends State<_Row> {
                   padding: const EdgeInsets.fromLTRB(21, Space.xs, 0, Space.sm),
                   child: SelectableText(
                     entry.detail,
-                    style: OrbisText.mono.copyWith(
+                    style: OrblitText.mono.copyWith(
                       fontSize: 11,
-                      color: OrbisColors.inkMid,
+                      color: OrblitColors.inkMid,
                     ),
                   ),
                 ),

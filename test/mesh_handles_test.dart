@@ -2,15 +2,15 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/gizmo.dart';
-import 'package:orbis_editor/src/editor/commands.dart';
-import 'package:orbis_editor/src/editor/history.dart';
-import 'package:orbis_editor/src/editor/mesh_edit.dart';
-import 'package:orbis_editor/src/editor/scene.dart';
-import 'package:orbis_editor/src/editor/snapping.dart';
-import 'package:orbis_editor/src/editor/viewport.dart';
-import 'package:orbis_editor/src/editor/workspace.dart';
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_editor/src/editor/gizmo.dart';
+import 'package:orblit_editor/src/editor/commands.dart';
+import 'package:orblit_editor/src/editor/history.dart';
+import 'package:orblit_editor/src/editor/mesh_edit.dart';
+import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/snapping.dart';
+import 'package:orblit_editor/src/editor/viewport.dart';
+import 'package:orblit_editor/src/editor/workspace.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 
 /// What one drag reported.
 typedef Reported = ({Mesh mesh, ElementSelection selection, String what, bool merge});
