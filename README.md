@@ -1,6 +1,6 @@
 # orblit-editor
 
-The [Orblit](https://github.com/Orblit-Engine/orblit) editor.
+The [Orblit](https://github.com/ChxisB/orblit) editor.
 
 ```sh
 flutter run -d macos

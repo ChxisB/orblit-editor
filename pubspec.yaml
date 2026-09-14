@@ -37,7 +37,7 @@ dependencies:
   # A path dependency while the renderer and the editor change together: a
   # git dependency here would mean a push and a pub upgrade between writing a
   # renderer change and seeing it. Assumes the sibling checkout in
-  # Orblit-Engine/orblit.
+  # ChxisB/orblit.
   orblit_filament:
     path: ../orblit/packages/orblit_filament
   orblit_weather:
