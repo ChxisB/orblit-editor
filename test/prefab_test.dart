@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/commands.dart';
-import 'package:orbis_editor/src/editor/history.dart';
-import 'package:orbis_editor/src/editor/prefab.dart';
-import 'package:orbis_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/commands.dart';
+import 'package:orblit_editor/src/editor/history.dart';
+import 'package:orblit_editor/src/editor/prefab.dart';
+import 'package:orblit_editor/src/editor/scene.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 /// A lamp post: a group with a post and a lamp under it.
@@ -96,8 +96,8 @@ void main() {
 
     test('is not read from something that is not one', () {
       expect(Prefab.read('not json at all'), isNull);
-      expect(Prefab.read('{"kind":"orbis.objects"}'), isNull);
-      expect(Prefab.read('{"kind":"orbis.prefab","objects":[]}'), isNull);
+      expect(Prefab.read('{"kind":"orblit.objects"}'), isNull);
+      expect(Prefab.read('{"kind":"orblit.prefab","objects":[]}'), isNull);
     });
 
     test('a missing root falls back to the one with no parent', () {

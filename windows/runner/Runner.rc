@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "dev.orbis" "\0"
-            VALUE "FileDescription", "Orbis Editor" "\0"
+            VALUE "CompanyName", "dev.orblit" "\0"
+            VALUE "FileDescription", "Orblit Editor" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "orbis_editor" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 dev.orbis. All rights reserved." "\0"
-            VALUE "OriginalFilename", "orbis_editor.exe" "\0"
-            VALUE "ProductName", "Orbis Editor" "\0"
+            VALUE "InternalName", "orblit_editor" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 dev.orblit. All rights reserved." "\0"
+            VALUE "OriginalFilename", "orblit_editor.exe" "\0"
+            VALUE "ProductName", "Orblit Editor" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

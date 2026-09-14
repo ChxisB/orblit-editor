@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/asset_browser.dart';
-import 'package:orbis_editor/src/editor/assets.dart';
-import 'package:orbis_editor/src/theme/orbis_theme.dart';
+import 'package:orblit_editor/src/editor/asset_browser.dart';
+import 'package:orblit_editor/src/editor/assets.dart';
+import 'package:orblit_editor/src/theme/orblit_theme.dart';
 import 'package:path/path.dart' as p;
 
 /// A real two-by-two PNG. Written rather than faked, because `Image.file` on
@@ -20,7 +20,7 @@ void main() {
   late Directory root;
 
   setUp(() {
-    root = Directory.systemTemp.createTempSync('orbis_assets');
+    root = Directory.systemTemp.createTempSync('orblit_assets');
   });
   tearDown(() => root.deleteSync(recursive: true));
 
@@ -28,7 +28,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1000, 700));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(MaterialApp(
-      theme: orbisTheme(),
+      theme: orblitTheme(),
       home: Scaffold(body: AssetBrowser(tree: AssetTree(root.path))),
     ));
     await tester.pumpAndSettle();

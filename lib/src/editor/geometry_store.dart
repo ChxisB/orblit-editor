@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 import 'package:path/path.dart' as p;
 
 import 'scene.dart';
@@ -25,7 +25,7 @@ class GeometryStore {
   /// Where the written files go: inside the project, out of the way, and
   /// disposable. Nothing here is authored — every one of them can be written
   /// again from the scene.
-  Directory get folder => Directory(p.join(projectRoot, '.orbis', 'geometry'));
+  Directory get folder => Directory(p.join(projectRoot, '.orblit', 'geometry'));
 
   /// What was last written for an object.
   ///
@@ -83,7 +83,7 @@ class GeometryStore {
       }
     }
 
-    final relative = p.join('.orbis', 'geometry', '${object.id}.glb');
+    final relative = p.join('.orblit', 'geometry', '${object.id}.glb');
 
     try {
       folder.createSync(recursive: true);

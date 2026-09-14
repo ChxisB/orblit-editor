@@ -1,4 +1,4 @@
-import 'package:orbis_filament/orbis_filament.dart';
+import 'package:orblit_filament/orblit_filament.dart';
 
 import 'scene.dart';
 
@@ -20,7 +20,7 @@ import 'scene.dart';
 ///
 /// Objects in the project's shared set are drawn alongside every scene, so
 /// they are looked up there as well as in the scene that is open.
-OrbisOutline selectionOutline({
+OrblitOutline selectionOutline({
   required EditorScene? scene,
   EditorScene? shared,
   required Set<String> selected,
@@ -39,6 +39,6 @@ OrbisOutline selectionOutline({
     for (final id in selected) ?keyOf(id),
   };
   final active = keyOf(primary);
-  if (keys.isEmpty && active == null) return OrbisOutline.none;
-  return OrbisOutline(keys: keys, primary: active);
+  if (keys.isEmpty && active == null) return OrblitOutline.none;
+  return OrblitOutline(keys: keys, primary: active);
 }

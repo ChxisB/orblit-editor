@@ -1,13 +1,13 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/gizmo.dart';
-import 'package:orbis_editor/src/editor/history.dart';
-import 'package:orbis_editor/src/editor/scene.dart';
-import 'package:orbis_editor/src/editor/snapping.dart';
-import 'package:orbis_editor/src/editor/viewport.dart';
-import 'package:orbis_editor/src/editor/workspace.dart';
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_editor/src/editor/gizmo.dart';
+import 'package:orblit_editor/src/editor/history.dart';
+import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/snapping.dart';
+import 'package:orblit_editor/src/editor/viewport.dart';
+import 'package:orblit_editor/src/editor/workspace.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 void main() {

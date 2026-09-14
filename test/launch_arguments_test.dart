@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/main.dart' show projectPathIn;
+import 'package:orblit_editor/main.dart' show projectPathIn;
 
 /// Opening a project by naming it, which is how `blender file.blend` and
 /// `code .` work and the only way to reach the editor without clicking.

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 import 'boundary.dart';
 
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'inspector.dart' show ChoiceRow, SliderRow;
 
@@ -105,7 +105,7 @@ class MeshPanel extends StatelessWidget {
             boundary.kind == BoundaryKind.mesh && !hasShape
                 ? 'No geometry here, so this falls back to the box.'
                 : boundary.kind.hint,
-            style: OrbisText.caption.copyWith(fontSize: 11),
+            style: OrblitText.caption.copyWith(fontSize: 11),
           ),
           if (!boundary.isNothing) ...[
             SliderRow(
@@ -143,7 +143,7 @@ class MeshPanel extends StatelessWidget {
             Text(
               '${size.x.toStringAsFixed(2)} × ${size.y.toStringAsFixed(2)} × '
               '${size.z.toStringAsFixed(2)} m',
-              style: OrbisText.mono.copyWith(fontSize: 10.5),
+              style: OrblitText.mono.copyWith(fontSize: 10.5),
             ),
           ],
         ],
@@ -165,10 +165,10 @@ class MeshPanel extends StatelessWidget {
           Text(
             'Extruding, cutting, materials and export are in the modelling '
             'panel.',
-            style: OrbisText.caption.copyWith(fontSize: 11),
+            style: OrblitText.caption.copyWith(fontSize: 11),
           ),
           const SizedBox(height: Space.xs),
-          OrbisButton(
+          OrblitButton(
             label: 'Modelling tools',
             icon: Icons.handyman_outlined,
             expand: true,
@@ -192,12 +192,12 @@ class MeshPanel extends StatelessWidget {
             Text(
               'Edited since it was drawn, so the outline no longer describes '
               'it. Its corners are still here if you undo back.',
-              style: OrbisText.caption.copyWith(fontSize: 11),
+              style: OrblitText.caption.copyWith(fontSize: 11),
             )
           else ...[
             Text(
               '${drawn.points.length} corners',
-              style: OrbisText.caption.copyWith(fontSize: 11),
+              style: OrblitText.caption.copyWith(fontSize: 11),
             ),
             SliderRow(
               label: 'Height',
@@ -214,7 +214,7 @@ class MeshPanel extends StatelessWidget {
                 live: true,
               ),
             ),
-            OrbisButton(
+            OrblitButton(
               label: 'Turn it over',
               icon: Icons.flip_outlined,
               expand: true,
@@ -249,7 +249,7 @@ class MeshPanel extends StatelessWidget {
               child: Text(
                 'Edited. These are what it was made from — changing one now '
                 'would throw away the geometry.',
-                style: OrbisText.caption.copyWith(fontSize: 11),
+                style: OrblitText.caption.copyWith(fontSize: 11),
               ),
             ),
           // Size first: it is what somebody reaches for, and it means the same
@@ -410,9 +410,9 @@ class _Section extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(Space.sm, 0, Space.sm, Space.sm),
       decoration: BoxDecoration(
-        color: OrbisColors.ground,
+        color: OrblitColors.ground,
         borderRadius: BorderRadius.circular(Radii.panel),
-        border: Border.all(color: OrbisColors.lineSoft),
+        border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -422,9 +422,9 @@ class _Section extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: Space.md),
             child: Row(
               children: [
-                Icon(icon, size: 13, color: OrbisColors.inkDim),
+                Icon(icon, size: 13, color: OrblitColors.inkDim),
                 const SizedBox(width: Space.sm),
-                Text(title.toUpperCase(), style: OrbisText.section),
+                Text(title.toUpperCase(), style: OrblitText.section),
               ],
             ),
           ),

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_light/orbis_light.dart';
-import 'package:orbis_weather/orbis_weather.dart';
-import 'package:orbis_editor/src/editor/colour.dart';
-import 'package:orbis_editor/src/editor/scene.dart';
-import 'package:orbis_editor/src/editor/scene_document.dart';
-import 'package:orbis_editor/src/launcher/project.dart';
+import 'package:orblit_light/orblit_light.dart';
+import 'package:orblit_weather/orblit_weather.dart';
+import 'package:orblit_editor/src/editor/colour.dart';
+import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/scene_document.dart';
+import 'package:orblit_editor/src/launcher/project.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 void main() {

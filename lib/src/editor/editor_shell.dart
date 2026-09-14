@@ -8,7 +8,7 @@ import 'package:vector_math/vector_math_64.dart' show Matrix4, Vector3;
 
 import '../launcher/project.dart';
 import '../platform/command_shortcuts.dart';
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'asset_browser.dart';
 import 'assets.dart';
@@ -43,8 +43,8 @@ import 'snapping.dart';
 import 'surface.dart';
 import 'uv_panel.dart';
 import 'scene_document.dart';
-import 'package:orbis_mesh/orbis_mesh.dart';
-import 'package:orbis_ui/orbis_ui.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
+import 'package:orblit_ui/orblit_ui.dart';
 
 import 'viewport.dart';
 import 'workspace.dart';
@@ -273,7 +273,7 @@ class _EditorShellState extends State<EditorShell> {
             padding: const EdgeInsets.only(bottom: Space.xs),
             child: Text(
               'Texture coordinates belong to faces. Press G until Faces is on.',
-              style: OrbisText.caption.copyWith(fontSize: 11),
+              style: OrblitText.caption.copyWith(fontSize: 11),
             ),
           ),
         UvPanel(
@@ -1444,13 +1444,13 @@ class _EditorShellState extends State<EditorShell> {
     final answer = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: OrbisColors.surface,
-        title: Text('Save ${open.title} first?', style: OrbisText.title),
+        backgroundColor: OrblitColors.surface,
+        title: Text('Save ${open.title} first?', style: OrblitText.title),
         content: Text(
           open.path == null
               ? 'It has never been written to disk. Closing it loses it.'
               : 'It has changes that have not been written to disk.',
-          style: OrbisText.body,
+          style: OrblitText.body,
         ),
         actions: [
           TextButton(
@@ -1805,7 +1805,7 @@ class _EditorShellState extends State<EditorShell> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: OrbisColors.raised,
+        backgroundColor: OrblitColors.raised,
         behavior: SnackBarBehavior.floating,
         width: 460,
         duration: const Duration(seconds: 4),
@@ -1939,7 +1939,7 @@ class _EditorShellState extends State<EditorShell> {
   /// Where the layout is kept: with the project, since it is about this
   /// project's panels rather than about the editor.
   File get _layoutFile =>
-      File(p.join(widget.project.directory, '.orbis', 'layout.json'));
+      File(p.join(widget.project.directory, '.orblit', 'layout.json'));
 
   DockLayout? _readLayout() {
     try {
@@ -2316,10 +2316,10 @@ class _EditorShellState extends State<EditorShell> {
     await showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: OrbisColors.surface,
+        backgroundColor: OrblitColors.surface,
         title: Text(
           built.ok ? '$name built, with warnings' : '$name did not build',
-          style: OrbisText.title,
+          style: OrblitText.title,
         ),
         content: SizedBox(
           width: 640,
@@ -2327,7 +2327,7 @@ class _EditorShellState extends State<EditorShell> {
           child: SingleChildScrollView(
             child: SelectableText(
               built.output.isEmpty ? 'The compiler said nothing.' : built.output,
-              style: OrbisText.mono.copyWith(fontSize: 11.5),
+              style: OrblitText.mono.copyWith(fontSize: 11.5),
             ),
           ),
         ),
@@ -2827,7 +2827,7 @@ class _EditorShellState extends State<EditorShell> {
         child: Focus(
           autofocus: true,
           child: Scaffold(
-            backgroundColor: OrbisColors.ground,
+            backgroundColor: OrblitColors.ground,
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -2943,7 +2943,7 @@ class _SplitterState extends State<_Splitter> {
         onVerticalDragUpdate: (details) => widget.onDrag(details.delta.dy),
         child: Container(
           height: 6,
-          color: _hovering ? OrbisColors.line : Colors.transparent,
+          color: _hovering ? OrblitColors.line : Colors.transparent,
         ),
       ),
     );
@@ -3013,12 +3013,12 @@ class _TopBar extends StatelessWidget {
       height: 44,
       padding: const EdgeInsets.symmetric(horizontal: Space.md),
       decoration: const BoxDecoration(
-        color: OrbisColors.surface,
-        border: Border(bottom: BorderSide(color: OrbisColors.lineSoft)),
+        color: OrblitColors.surface,
+        border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: Row(
         children: [
-          OrbisButton(
+          OrblitButton(
             label: project.name,
             icon: Icons.chevron_left,
             tone: ButtonTone.quiet,
@@ -3088,7 +3088,7 @@ class _TopBar extends StatelessWidget {
             onTap: () {},
           ),
           const Spacer(),
-          Text('pre-alpha', style: OrbisText.caption),
+          Text('pre-alpha', style: OrblitText.caption),
         ],
       ),
     );
@@ -3135,9 +3135,9 @@ class _TransportButtonState extends State<_TransportButton> {
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: widget.active
-                  ? OrbisColors.emberWash
+                  ? OrblitColors.emberWash
                   : (_hovering && widget.enabled
-                      ? OrbisColors.raised
+                      ? OrblitColors.raised
                       : Colors.transparent),
               borderRadius: BorderRadius.circular(Radii.control),
             ),
@@ -3145,10 +3145,10 @@ class _TransportButtonState extends State<_TransportButton> {
               widget.icon,
               size: 17,
               color: !widget.enabled
-                  ? OrbisColors.line
+                  ? OrblitColors.line
                   : (widget.active
-                      ? OrbisColors.ember
-                      : (_hovering ? OrbisColors.ink : OrbisColors.inkMid)),
+                      ? OrblitColors.ember
+                      : (_hovering ? OrblitColors.ink : OrblitColors.inkMid)),
             ),
           ),
         ),
@@ -3186,8 +3186,8 @@ class _StatusBar extends StatelessWidget {
       height: 24,
       padding: const EdgeInsets.symmetric(horizontal: Space.md),
       decoration: const BoxDecoration(
-        color: OrbisColors.surface,
-        border: Border(top: BorderSide(color: OrbisColors.lineSoft)),
+        color: OrblitColors.surface,
+        border: Border(top: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: Row(
         children: [
@@ -3195,28 +3195,28 @@ class _StatusBar extends StatelessWidget {
             child: Text(
               message,
               overflow: TextOverflow.ellipsis,
-              style: OrbisText.caption.copyWith(fontSize: 11),
+              style: OrblitText.caption.copyWith(fontSize: 11),
             ),
           ),
           const Spacer(),
           Text(
             dirty ? '$file •' : file,
-            style: OrbisText.mono.copyWith(
+            style: OrblitText.mono.copyWith(
               fontSize: 11,
-              color: dirty ? OrbisColors.ember : OrbisColors.inkDim,
+              color: dirty ? OrblitColors.ember : OrblitColors.inkDim,
             ),
           ),
           const SizedBox(width: Space.lg),
-          Text('$objects objects', style: OrbisText.mono.copyWith(fontSize: 11)),
+          Text('$objects objects', style: OrblitText.mono.copyWith(fontSize: 11)),
           const SizedBox(width: Space.lg),
           Text(
             rate == null ? '— fps' : '${rate!.round()} fps',
-            style: OrbisText.mono.copyWith(
+            style: OrblitText.mono.copyWith(
               fontSize: 11,
               // Below about fifty a frame is late often enough to feel it.
               color: rate != null && rate! < 50
-                  ? OrbisColors.warn
-                  : OrbisColors.inkDim,
+                  ? OrblitColors.warn
+                  : OrblitColors.inkDim,
             ),
           ),
           if (frameMs != null) ...[
@@ -3225,9 +3225,9 @@ class _StatusBar extends StatelessWidget {
               // Which half of the frame the time went in, because "slow" and
               // "slow at what" are different questions.
               '${frameMs!.toStringAsFixed(1)} ms ${gpuBound ? "gpu" : "cpu"}',
-              style: OrbisText.mono.copyWith(
+              style: OrblitText.mono.copyWith(
                 fontSize: 11,
-                color: OrbisColors.inkDim,
+                color: OrblitColors.inkDim,
               ),
             ),
           ],
@@ -3261,47 +3261,47 @@ class _AddMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return MenuAnchor(
       style: MenuStyle(
-        backgroundColor: WidgetStatePropertyAll(OrbisColors.raised),
+        backgroundColor: WidgetStatePropertyAll(OrblitColors.raised),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(Radii.panel),
-            side: const BorderSide(color: OrbisColors.line),
+            side: const BorderSide(color: OrblitColors.line),
           ),
         ),
       ),
       menuChildren: [
         SubmenuButton(
           menuStyle: MenuStyle(
-            backgroundColor: WidgetStatePropertyAll(OrbisColors.raised),
+            backgroundColor: WidgetStatePropertyAll(OrblitColors.raised),
             surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
             shape: WidgetStatePropertyAll(
               RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(Radii.panel),
-                side: const BorderSide(color: OrbisColors.line),
+                side: const BorderSide(color: OrblitColors.line),
               ),
             ),
           ),
           leadingIcon: const Icon(Icons.category_outlined,
-              size: 14, color: OrbisColors.inkMid),
+              size: 14, color: OrblitColors.inkMid),
           menuChildren: [
             for (final shape in ShapeKind.values)
               MenuItemButton(
                 onPressed: () => onAddShape(shape),
-                child: Text(shape.label, style: OrbisText.label),
+                child: Text(shape.label, style: OrblitText.label),
               ),
           ],
-          child: Text('Shape', style: OrbisText.label),
+          child: Text('Shape', style: OrblitText.label),
         ),
-        const Divider(height: 9, color: OrbisColors.line),
+        const Divider(height: 9, color: OrblitColors.line),
         for (final (kind, label, icon) in _items)
           MenuItemButton(
             onPressed: () => onAdd(kind),
-            leadingIcon: Icon(icon, size: 14, color: OrbisColors.inkMid),
-            child: Text(label, style: OrbisText.label),
+            leadingIcon: Icon(icon, size: 14, color: OrblitColors.inkMid),
+            child: Text(label, style: OrblitText.label),
           ),
       ],
-      builder: (context, controller, child) => OrbisButton(
+      builder: (context, controller, child) => OrblitButton(
         label: 'Add',
         icon: Icons.add,
         tone: ButtonTone.quiet,
@@ -3339,12 +3339,12 @@ class _SceneMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return MenuAnchor(
       style: MenuStyle(
-        backgroundColor: WidgetStatePropertyAll(OrbisColors.raised),
+        backgroundColor: WidgetStatePropertyAll(OrblitColors.raised),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(Radii.panel),
-            side: const BorderSide(color: OrbisColors.line),
+            side: const BorderSide(color: OrblitColors.line),
           ),
         ),
       ),
@@ -3352,44 +3352,44 @@ class _SceneMenu extends StatelessWidget {
         MenuItemButton(
           onPressed: onNewScene,
           leadingIcon: const Icon(Icons.note_add_outlined,
-              size: 14, color: OrbisColors.inkMid),
-          child: Text('New scene', style: OrbisText.label),
+              size: 14, color: OrblitColors.inkMid),
+          child: Text('New scene', style: OrblitText.label),
         ),
         MenuItemButton(
           onPressed: onSave,
           leadingIcon: const Icon(Icons.save_outlined,
-              size: 14, color: OrbisColors.inkMid),
-          child: Text('Save', style: OrbisText.label),
+              size: 14, color: OrblitColors.inkMid),
+          child: Text('Save', style: OrblitText.label),
         ),
         MenuItemButton(
           onPressed: onSaveAs,
           leadingIcon: const Icon(Icons.drive_file_move_outline,
-              size: 14, color: OrbisColors.inkMid),
-          child: Text('Save as…', style: OrbisText.label),
+              size: 14, color: OrblitColors.inkMid),
+          child: Text('Save as…', style: OrblitText.label),
         ),
-        const Divider(height: 9, color: OrbisColors.line),
+        const Divider(height: 9, color: OrblitColors.line),
         MenuItemButton(
           onPressed: onOpenInCode,
           leadingIcon: const Icon(Icons.code,
-              size: 14, color: OrbisColors.inkMid),
+              size: 14, color: OrblitColors.inkMid),
           // Named after what is installed, so it says where it is going
           // rather than promising an editor that is not there.
           child: Text(
             'Open project in ${CodeEditor.available ?? 'VS Code'}',
-            style: OrbisText.label,
+            style: OrblitText.label,
           ),
         ),
         MenuItemButton(
           onPressed: onReveal,
           leadingIcon: const Icon(Icons.folder_open_outlined,
-              size: 14, color: OrbisColors.inkMid),
+              size: 14, color: OrblitColors.inkMid),
           child: Text(
             Platform.isMacOS ? 'Show in Finder' : 'Show project folder',
-            style: OrbisText.label,
+            style: OrblitText.label,
           ),
         ),
       ],
-      builder: (context, controller, child) => OrbisButton(
+      builder: (context, controller, child) => OrblitButton(
         // The dot is the unsaved marker, in the place somebody looks for it.
         label: dirty ? 'Scene •' : 'Scene',
         icon: Icons.description_outlined,
@@ -3427,12 +3427,12 @@ class _EditMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return MenuAnchor(
       style: MenuStyle(
-        backgroundColor: WidgetStatePropertyAll(OrbisColors.raised),
+        backgroundColor: WidgetStatePropertyAll(OrblitColors.raised),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(Radii.panel),
-            side: const BorderSide(color: OrbisColors.line),
+            side: const BorderSide(color: OrblitColors.line),
           ),
         ),
       ),
@@ -3462,7 +3462,7 @@ class _EditMenu extends StatelessWidget {
           selectionCount > 0 ? onDuplicate : null,
         ),
       ],
-      builder: (context, controller, child) => OrbisButton(
+      builder: (context, controller, child) => OrblitButton(
         label: 'Edit',
         icon: Icons.content_copy,
         tone: ButtonTone.quiet,
@@ -3484,19 +3484,19 @@ class _EditMenu extends StatelessWidget {
       leadingIcon: Icon(
         icon,
         size: 14,
-        color: enabled ? OrbisColors.inkMid : OrbisColors.line,
+        color: enabled ? OrblitColors.inkMid : OrblitColors.line,
       ),
       trailingIcon: Text(
         shortcut,
-        style: OrbisText.mono.copyWith(
+        style: OrblitText.mono.copyWith(
           fontSize: 11,
-          color: enabled ? OrbisColors.inkDim : OrbisColors.line,
+          color: enabled ? OrblitColors.inkDim : OrblitColors.line,
         ),
       ),
       child: Text(
         label,
-        style: OrbisText.label.copyWith(
-          color: enabled ? OrbisColors.ink : OrbisColors.line,
+        style: OrblitText.label.copyWith(
+          color: enabled ? OrblitColors.ink : OrblitColors.line,
         ),
       ),
     );
@@ -3532,12 +3532,12 @@ class _ViewMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return MenuAnchor(
       style: MenuStyle(
-        backgroundColor: WidgetStatePropertyAll(OrbisColors.raised),
+        backgroundColor: WidgetStatePropertyAll(OrblitColors.raised),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(Radii.panel),
-            side: const BorderSide(color: OrbisColors.line),
+            side: const BorderSide(color: OrblitColors.line),
           ),
         ),
       ),
@@ -3549,29 +3549,29 @@ class _ViewMenu extends StatelessWidget {
           leadingIcon: Icon(
             layout.locked ? Icons.lock_outline : Icons.lock_open_outlined,
             size: 14,
-            color: layout.locked ? OrbisColors.ember : OrbisColors.inkMid,
+            color: layout.locked ? OrblitColors.ember : OrblitColors.inkMid,
           ),
           child: Text(
             layout.locked ? 'Unlock the layout' : 'Lock the layout',
-            style: OrbisText.label,
+            style: OrblitText.label,
           ),
         ),
-        const Divider(height: 9, color: OrbisColors.line),
+        const Divider(height: 9, color: OrblitColors.line),
         MenuItemButton(
           onPressed: () =>
               onLayout(DockLayout.standard().copyWith(locked: layout.locked)),
           leadingIcon: const Icon(Icons.view_quilt_outlined,
-              size: 14, color: OrbisColors.inkMid),
-          child: Text('One view', style: OrbisText.label),
+              size: 14, color: OrblitColors.inkMid),
+          child: Text('One view', style: OrblitText.label),
         ),
         MenuItemButton(
           onPressed: () =>
               onLayout(DockLayout.fourViews().copyWith(locked: layout.locked)),
           leadingIcon: const Icon(Icons.grid_view_outlined,
-              size: 14, color: OrbisColors.inkMid),
-          child: Text('Four views', style: OrbisText.label),
+              size: 14, color: OrblitColors.inkMid),
+          child: Text('Four views', style: OrblitText.label),
         ),
-        const Divider(height: 9, color: OrbisColors.line),
+        const Divider(height: 9, color: OrblitColors.line),
         // Opening one that is already open shows it rather than adding a
         // second, which is why every one of these can be pressed at any time.
         for (final (kind, id) in _openable)
@@ -3583,13 +3583,13 @@ class _ViewMenu extends StatelessWidget {
               kind.icon,
               size: 14,
               color: layout.holds(id)
-                  ? OrbisColors.ember
-                  : OrbisColors.inkMid,
+                  ? OrblitColors.ember
+                  : OrblitColors.inkMid,
             ),
-            child: Text(kind.label, style: OrbisText.label),
+            child: Text(kind.label, style: OrblitText.label),
           ),
       ],
-      builder: (context, controller, child) => OrbisButton(
+      builder: (context, controller, child) => OrblitButton(
         label: layout.locked ? 'View •' : 'View',
         icon: Icons.dashboard_outlined,
         tone: ButtonTone.quiet,

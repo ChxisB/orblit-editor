@@ -2,11 +2,11 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
-import 'package:orbis_filament/orbis_filament.dart';
-import 'package:orbis_light/orbis_light.dart';
-import 'package:orbis_weather/orbis_weather.dart';
+import 'package:orblit_filament/orblit_filament.dart';
+import 'package:orblit_light/orblit_light.dart';
+import 'package:orblit_weather/orblit_weather.dart';
 
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 
 import 'boundary.dart';
 import 'grid.dart';
@@ -1185,8 +1185,8 @@ class EditorScene {
   /// both have something to say, which is the rule that makes a shared set
   /// useful rather than something to work around — put a manager there once
   /// and every scene has it, and any scene can still overrule it.
-  OrbisScene toRenderScene(
-    OrbisCamera camera, {
+  OrblitScene toRenderScene(
+    OrblitCamera camera, {
     String? projectRoot,
     EditorScene? shared,
     String? Function(SceneObject)? geometryOf,
@@ -1228,7 +1228,7 @@ class EditorScene {
     final ambientLux =
         (driven ? sky.ambient : ambient) * (air?.scattered ?? 1) * (1 + flash * 40);
 
-    return OrbisScene(
+    return OrblitScene(
       materials: [
         if (grid != null) grid.material,
         // One material per distinct texture rather than one per object, keyed
@@ -1249,9 +1249,9 @@ class EditorScene {
                   sway: object.sway,
                 ),
         })
-          OrbisMaterial(
+          OrblitMaterial(
             key: _materialKeyOf(surface.texture, surface.sway),
-            baseColourMap: OrbisTexture(surface.texture),
+            baseColourMap: OrblitTexture(surface.texture),
             wind: _windFor(surface.sway, air, bearing),
           ),
       ],
@@ -1264,7 +1264,7 @@ class EditorScene {
         for (final scene in [this, ?shared])
           for (final object in scene._objects)
             if (object.isDrawable)
-              OrbisObject(
+              OrblitObject(
                 key: object.renderKey,
                 transform: scene.worldOf(object.id),
                 colour: linearFromColour(object.colour),
@@ -1310,9 +1310,9 @@ class EditorScene {
   }
 
   /// The camera, set for the light this scene actually has in it.
-  OrbisCamera _metered(
-    OrbisCamera camera,
-    List<OrbisLight> lights,
+  OrblitCamera _metered(
+    OrblitCamera camera,
+    List<OrblitLight> lights,
     double ambientLux,
   ) {
     final exposure =
@@ -1335,10 +1335,10 @@ class EditorScene {
   /// Directional light only. A lamp lights the corner it is in rather than the
   /// scene, and a camera set for the corner would blow out everywhere else —
   /// which is exactly what a real one does, too.
-  double _incidentLux(List<OrbisLight> lights, double ambientLux) {
+  double _incidentLux(List<OrblitLight> lights, double ambientLux) {
     var total = ambientLux;
     for (final light in lights) {
-      if (light.kind != OrbisLightKind.directional) continue;
+      if (light.kind != OrblitLightKind.directional) continue;
       // Angled by how high it is: a sun on the horizon lays far less on the
       // ground than one overhead, and metering as though it did would leave
       // every dusk under-exposed.
@@ -1353,12 +1353,12 @@ class EditorScene {
   /// like; the sheets are what a bank of cloud looks like lying in a valley.
   /// A condition asks for both, because weather with no haze behind it reads
   /// as cut-outs hanging in clear air.
-  OrbisFog _fogFrom(WeatherState? now, SceneObject? object) {
-    if (now == null || object == null) return OrbisFog.none;
+  OrblitFog _fogFrom(WeatherState? now, SceneObject? object) {
+    if (now == null || object == null) return OrblitFog.none;
 
     final heading = WeatherState.windFrom(object.windDirection);
 
-    return OrbisFog(
+    return OrblitFog(
       colour: now.fogColour.linear,
       density: now.fogDensity,
       height: now.fogHeight,
@@ -1388,12 +1388,12 @@ class EditorScene {
   /// with some of each — which is what the temperature between them looks
   /// like — is one curtain part of the way from streaks to flakes rather than
   /// two curtains fighting.
-  OrbisPrecipitation _precipitationFrom(
+  OrblitPrecipitation _precipitationFrom(
     WeatherState? now,
     SceneObject? object,
   ) {
     if (now == null || object == null || !now.isWet) {
-      return OrbisPrecipitation.none;
+      return OrblitPrecipitation.none;
     }
 
     final total = now.rain + now.snow;
@@ -1402,7 +1402,7 @@ class EditorScene {
 
     final heading = WeatherState.windFrom(object.windDirection);
 
-    return OrbisPrecipitation(
+    return OrblitPrecipitation(
       colour: linearFromColour(
         Color.lerp(const Color(0xFFB8C6D6), const Color(0xFFF2F5F8), asSnow)!,
       ),
@@ -1431,10 +1431,10 @@ class EditorScene {
   /// was tinted a colour somebody chose, while the sun was drawn somewhere
   /// else entirely, and nothing in the picture agreed with anything else.
   /// Here the cloud is lit by the same direction the scene is.
-  OrbisSky _skyFrom({
+  OrblitSky _skyFrom({
     required Tint base,
     required double ambientLux,
-    required List<OrbisLight> lights,
+    required List<OrblitLight> lights,
     required SceneObject? lit,
     required SkyState? body,
     required WeatherState? air,
@@ -1448,7 +1448,7 @@ class EditorScene {
     // the scene rather than from the clock. A sun drawn in one place and a
     // cloud lit from another is the single thing that gives a sky away.
     final beam = lights
-        .where((light) => light.kind == OrbisLightKind.directional)
+        .where((light) => light.kind == OrblitLightKind.directional)
         .firstOrNull;
     final toBody = beam == null
         ? Vector3(0.35, 0.78, 0.52)
@@ -1478,7 +1478,7 @@ class EditorScene {
       glow * 0.55,
     );
 
-    return OrbisSky(
+    return OrblitSky(
       colour: ground,
       zenith: zenith,
       horizon: horizon,
@@ -1523,13 +1523,13 @@ class EditorScene {
   /// The kind is a shape, not a preset: which one is chosen decides how high
   /// the base sits, how deep the layer is and how far its noise is folded,
   /// and none of those can be reached by turning a cover slider.
-  OrbisClouds _cloudsFrom(
+  OrblitClouds _cloudsFrom(
     WeatherState? now,
     SceneObject? object,
     Vector3 bodyColour,
   ) {
     if (now == null || object == null || now.cloudCover <= 0.01) {
-      return OrbisClouds.none;
+      return OrblitClouds.none;
     }
 
     // A condition that has no cloud of its own still gets one if somebody
@@ -1541,7 +1541,7 @@ class EditorScene {
           CloudKind.none => CloudKind.cumulus,
           final chosen => chosen,
         };
-    if (kind == CloudKind.none) return OrbisClouds.none;
+    if (kind == CloudKind.none) return OrblitClouds.none;
 
     final heading = WeatherState.windFrom(object.windDirection);
 
@@ -1553,14 +1553,14 @@ class EditorScene {
     );
 
     final clouds = switch (kind) {
-      CloudKind.none => OrbisClouds.none,
-      CloudKind.cumulus => OrbisClouds.cumulus(cover: now.cloudCover, wind: wind),
+      CloudKind.none => OrblitClouds.none,
+      CloudKind.cumulus => OrblitClouds.cumulus(cover: now.cloudCover, wind: wind),
       CloudKind.stratocumulus =>
-        OrbisClouds.stratocumulus(cover: now.cloudCover, wind: wind),
-      CloudKind.stratus => OrbisClouds.stratus(cover: now.cloudCover, wind: wind),
-      CloudKind.cirrus => OrbisClouds.cirrus(cover: now.cloudCover, wind: wind),
+        OrblitClouds.stratocumulus(cover: now.cloudCover, wind: wind),
+      CloudKind.stratus => OrblitClouds.stratus(cover: now.cloudCover, wind: wind),
+      CloudKind.cirrus => OrblitClouds.cirrus(cover: now.cloudCover, wind: wind),
       CloudKind.cumulonimbus =>
-        OrbisClouds.cumulonimbus(cover: now.cloudCover, wind: wind),
+        OrblitClouds.cumulonimbus(cover: now.cloudCover, wind: wind),
     };
 
     // The kind is the shape; the height is a setting on top of it, and the
@@ -1580,7 +1580,7 @@ class EditorScene {
 
   /// One authored light, in the units the renderer takes.
   ///
-  /// The conversion happens in `orbis_light` rather than here. Watts, metres
+  /// The conversion happens in `orblit_light` rather than here. Watts, metres
   /// and degrees are what a light is stated in; lumens, lux and radians are
   /// what a renderer is told. Doing that arithmetic in the editor as well
   /// would be a second place for it to drift.
@@ -1590,7 +1590,7 @@ class EditorScene {
   /// sky is standing in for, and what the weather is, are questions about the
   /// project rather than about the scene this light happens to live in — a sun
   /// in the shared set is still the sun of whichever scene is open.
-  OrbisLight _lightFor(
+  OrblitLight _lightFor(
     SceneObject object, {
     SkyState? sky,
     WeatherState? air,
@@ -1655,13 +1655,13 @@ class EditorScene {
     final body = driven ? sky.body : object.body;
     final isMoon = body == CelestialBody.moon;
 
-    return OrbisLight(
+    return OrblitLight(
       key: object.renderKey,
       kind: switch (light.kind) {
-        RendererLightKind.directional => OrbisLightKind.directional,
-        RendererLightKind.point => OrbisLightKind.point,
-        RendererLightKind.spot => OrbisLightKind.spot,
-        RendererLightKind.area => OrbisLightKind.area,
+        RendererLightKind.directional => OrblitLightKind.directional,
+        RendererLightKind.point => OrblitLightKind.point,
+        RendererLightKind.spot => OrblitLightKind.spot,
+        RendererLightKind.area => OrblitLightKind.area,
       },
       colour: light.color,
       intensity: light.intensity,
@@ -1678,7 +1678,7 @@ class EditorScene {
       haloSize: isMoon ? 3 : 12,
       haloFalloff: isMoon ? 240 : 70,
       castShadows: light.castShadows,
-      // Only an area light has a size, and `orbis_light` leaves both at zero
+      // Only an area light has a size, and `orblit_light` leaves both at zero
       // for the kinds that do not. Passing that zero through would give the
       // renderer a panel with no area to integrate, which is a light that
       // emits nothing — so the renderer's own default stands in instead.
@@ -1699,11 +1699,11 @@ class EditorScene {
       Object.hash(texture, sway) & 0x3fffffff;
 
   /// The wind a surface of this compliance feels, from whatever the air is
-  /// doing. Still air and a rigid surface both come out as [OrbisWind.none],
+  /// doing. Still air and a rigid surface both come out as [OrblitWind.none],
   /// which is the early return in the vertex stage.
-  static OrbisWind _windFor(double sway, WeatherState? air, double bearing) {
-    if (sway <= 0 || air == null || air.windSpeed <= 0) return OrbisWind.none;
-    return OrbisWind(bearing: bearing, speed: air.windSpeed, strength: sway);
+  static OrblitWind _windFor(double sway, WeatherState? air, double bearing) {
+    if (sway <= 0 || air == null || air.windSpeed <= 0) return OrblitWind.none;
+    return OrblitWind(bearing: bearing, speed: air.windSpeed, strength: sway);
   }
 
   static String? _resolveMesh(String? reference, String? root) {

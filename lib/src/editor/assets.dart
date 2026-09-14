@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 
-import 'package:orbis_ui/orbis_ui.dart';
+import 'package:orblit_ui/orblit_ui.dart';
 
 import 'data_object.dart';
 
@@ -444,7 +444,7 @@ enum NewAsset {
 // Everything this puts in the world it puts through `spawn`. The engine asks
 // for a frame, this runs, and what it says is what is drawn.
 
-import { spawn, onFrame } from "orbis/scene";
+import { spawn, onFrame } from "orblit/scene";
 
 spawn({
   id: "thing",
@@ -476,7 +476,7 @@ onFrame((seconds) => {
 // and no lifecycle: the reconciler is on the other side of this, and the
 // interface is described again after every event.
 
-import { mount } from "orbis";
+import { mount } from "orblit";
 
 const state = { count: 0 };
 
@@ -539,7 +539,7 @@ mount(() => <Panel />);
 //
 // The same four questions every script answers, whatever it is written in:
 // what contract it was built against, what to do when it starts, what to do
-// each frame, and what to do when it stops. ORBIS_SCRIPT answers the first and
+// each frame, and what to do when it stops. ORBLIT_SCRIPT answers the first and
 // hands you the host.
 //
 // Worth writing in C++ when the loop touches everything every frame. Anything
@@ -548,30 +548,30 @@ mount(() => <Panel />);
 #include "NAME.h"
 
 namespace {
-OrbisComponent drift;
-OrbisTransforms transforms;
+OrblitComponent drift;
+OrblitTransforms transforms;
 double elapsed = 0;
 }  // namespace
 
-ORBIS_SCRIPT {
-  transforms = orbis::host()->transform_register(orbis::world());
-  drift = orbis::component<Drift>("Drift");
-  orbis::log("started");
+ORBLIT_SCRIPT {
+  transforms = orblit::host()->transform_register(orblit::world());
+  drift = orblit::component<Drift>("Drift");
+  orblit::log("started");
 }
 
-extern "C" void orbis_step(double delta) {
+extern "C" void orblit_step(double delta) {
   elapsed += delta;
 
-  const OrbisComponent wanted[] = {transforms.local, drift};
-  OrbisQuery *query = orbis::host()->query_create(orbis::world(), wanted, 2);
+  const OrblitComponent wanted[] = {transforms.local, drift};
+  OrblitQuery *query = orblit::host()->query_create(orblit::world(), wanted, 2);
 
-  const uint32_t chunks = orbis::host()->query_chunk_count(query);
+  const uint32_t chunks = orblit::host()->query_chunk_count(query);
   for (uint32_t chunk = 0; chunk < chunks; ++chunk) {
-    const uint32_t length = orbis::host()->query_chunk_length(query, chunk);
+    const uint32_t length = orblit::host()->query_chunk_length(query, chunk);
     auto *local = static_cast<float *>(
-        orbis::host()->query_chunk_column(query, chunk, 0));
+        orblit::host()->query_chunk_column(query, chunk, 0));
     auto *drifts = static_cast<Drift *>(
-        orbis::host()->query_chunk_column(query, chunk, 1));
+        orblit::host()->query_chunk_column(query, chunk, 1));
 
     // One crossing for the whole run, then plain C++ over the engine's own
     // memory. Calling in once per entity is what the column layout exists to
@@ -581,10 +581,10 @@ extern "C" void orbis_step(double delta) {
     }
   }
 
-  orbis::host()->query_destroy(query);
+  orblit::host()->query_destroy(query);
 }
 
-extern "C" void orbis_stop(void) { orbis::log("stopped"); }
+extern "C" void orblit_stop(void) { orblit::log("stopped"); }
 ''',
   ),
 
@@ -596,14 +596,14 @@ extern "C" void orbis_stop(void) { orbis::log("stopped"); }
     starter: '''
 // What NAME offers to whatever else is compiled with it.
 //
-// Declarations only. The engine calls orbis_start, orbis_step and orbis_stop
+// Declarations only. The engine calls orblit_start, orblit_step and orblit_stop
 // through their C names; this is for the code either side of that boundary —
 // a component layout two scripts share, a helper the source keeps out of
 // itself.
 
 #pragma once
 
-#include "orbis_script.h"
+#include "orblit_script.h"
 
 /// A component's layout, declared once so two files reading the same column
 /// cannot disagree about what is in it.

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart' show Color;
-import 'package:orbis_light/orbis_light.dart' show Tint;
+import 'package:orblit_light/orblit_light.dart' show Tint;
 
 /// The boundary between a colour somebody picks and a colour the engine holds.
 ///

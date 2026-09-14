@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/platform/renderer_support.dart';
+import 'package:orblit_editor/src/platform/renderer_support.dart';
 
 void main() {
   tearDown(() => debugDefaultTargetPlatformOverride = null);

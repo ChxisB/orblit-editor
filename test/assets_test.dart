@@ -1,17 +1,17 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/assets.dart';
+import 'package:orblit_editor/src/editor/assets.dart';
 import 'package:path/path.dart' as p;
 
 void main() {
   late Directory root;
 
   setUp(() {
-    root = Directory.systemTemp.createTempSync('orbis_assets');
+    root = Directory.systemTemp.createTempSync('orblit_assets');
     Directory(p.join(root.path, 'assets', 'meshes')).createSync(recursive: true);
     Directory(p.join(root.path, 'scenes')).createSync(recursive: true);
-    File(p.join(root.path, 'scenes', 'main.orbisscene')).writeAsStringSync('{}');
+    File(p.join(root.path, 'scenes', 'main.orblitscene')).writeAsStringSync('{}');
     File(p.join(root.path, 'assets', 'meshes', 'crate.glb'))
         .writeAsBytesSync(List.filled(2048, 0));
     File(p.join(root.path, 'assets', 'rock.png')).writeAsBytesSync([1, 2, 3]);

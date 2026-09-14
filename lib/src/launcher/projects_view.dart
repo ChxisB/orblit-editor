@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'launcher_screen.dart' show ago;
 import 'project.dart';
@@ -36,18 +36,18 @@ class ProjectsView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Projects', style: OrbisText.display),
+                  Text('Projects', style: OrblitText.display),
                   const SizedBox(height: Space.xs),
                   Text(
                     projects.isEmpty
                         ? 'Nothing here yet.'
                         : '${projects.length} recent',
-                    style: OrbisText.caption,
+                    style: OrblitText.caption,
                   ),
                 ],
               ),
               const Spacer(),
-              OrbisButton(
+              OrblitButton(
                 label: 'New project',
                 icon: Icons.add,
                 tone: ButtonTone.primary,
@@ -116,10 +116,10 @@ class _ProjectRowState extends State<ProjectRow> {
           duration: const Duration(milliseconds: 90),
           padding: const EdgeInsets.all(Space.md),
           decoration: BoxDecoration(
-            color: _hovering ? OrbisColors.raised : OrbisColors.surface,
+            color: _hovering ? OrblitColors.raised : OrblitColors.surface,
             borderRadius: BorderRadius.circular(Radii.panel),
             border: Border.all(
-              color: _hovering ? OrbisColors.line : OrbisColors.lineSoft,
+              color: _hovering ? OrblitColors.line : OrblitColors.lineSoft,
             ),
           ),
           child: Row(
@@ -137,17 +137,17 @@ class _ProjectRowState extends State<ProjectRow> {
                           child: Text(
                             widget.project.name,
                             overflow: TextOverflow.ellipsis,
-                            style: OrbisText.title.copyWith(
+                            style: OrblitText.title.copyWith(
                               fontSize: 14,
                               color: missing
-                                  ? OrbisColors.inkDim
-                                  : OrbisColors.ink,
+                                  ? OrblitColors.inkDim
+                                  : OrblitColors.ink,
                             ),
                           ),
                         ),
                         if (missing) ...[
                           const SizedBox(width: Space.sm),
-                          const _Tag('moved', tone: OrbisColors.warn),
+                          const _Tag('moved', tone: OrblitColors.warn),
                         ],
                       ],
                     ),
@@ -155,13 +155,13 @@ class _ProjectRowState extends State<ProjectRow> {
                     Text(
                       widget.project.displayPath,
                       overflow: TextOverflow.ellipsis,
-                      style: OrbisText.mono,
+                      style: OrblitText.mono,
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: Space.md),
-              Text(ago(widget.project.lastOpened), style: OrbisText.caption),
+              Text(ago(widget.project.lastOpened), style: OrblitText.caption),
               SizedBox(
                 width: 34,
                 child: _hovering
@@ -192,14 +192,14 @@ class _Thumbnail extends StatelessWidget {
       width: 42,
       height: 42,
       decoration: BoxDecoration(
-        color: OrbisColors.ground,
+        color: OrblitColors.ground,
         borderRadius: BorderRadius.circular(Radii.control),
-        border: Border.all(color: OrbisColors.lineSoft),
+        border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: Icon(
         missing ? Icons.link_off : Icons.view_in_ar_outlined,
         size: 19,
-        color: missing ? OrbisColors.inkDim : OrbisColors.emberDeep,
+        color: missing ? OrblitColors.inkDim : OrblitColors.emberDeep,
       ),
     );
   }
@@ -222,7 +222,7 @@ class _Tag extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: OrbisText.caption.copyWith(fontSize: 10, color: tone),
+        style: OrblitText.caption.copyWith(fontSize: 10, color: tone),
       ),
     );
   }
@@ -263,13 +263,13 @@ class _IconActionState extends State<_IconAction> {
             height: 26,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: _hovering ? OrbisColors.hover : Colors.transparent,
+              color: _hovering ? OrblitColors.hover : Colors.transparent,
               borderRadius: BorderRadius.circular(Radii.control),
             ),
             child: Icon(
               widget.icon,
               size: 14,
-              color: _hovering ? OrbisColors.ink : OrbisColors.inkDim,
+              color: _hovering ? OrblitColors.ink : OrblitColors.inkDim,
             ),
           ),
         ),
@@ -295,24 +295,24 @@ class _Empty extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: OrbisColors.surface,
+                color: OrblitColors.surface,
                 borderRadius: BorderRadius.circular(Radii.panel),
-                border: Border.all(color: OrbisColors.lineSoft),
+                border: Border.all(color: OrblitColors.lineSoft),
               ),
               child: const Icon(Icons.view_in_ar_outlined,
-                  size: 28, color: OrbisColors.inkDim),
+                  size: 28, color: OrblitColors.inkDim),
             ),
             const SizedBox(height: Space.lg),
-            Text('No projects yet', style: OrbisText.title),
+            Text('No projects yet', style: OrblitText.title),
             const SizedBox(height: Space.sm),
             Text(
               'Make one, or open a folder that already has an '
               '$projectFileName in it.',
               textAlign: TextAlign.center,
-              style: OrbisText.body,
+              style: OrblitText.body,
             ),
             const SizedBox(height: Space.xl),
-            OrbisButton(
+            OrblitButton(
               label: 'New project',
               icon: Icons.add,
               tone: ButtonTone.primary,

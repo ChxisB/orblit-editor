@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 
 /// The mark, held for a moment before the editor arrives.
 ///
@@ -14,8 +14,8 @@ import '../theme/orbis_theme.dart';
 /// done *or* a short minimum has passed, whichever is later — so on a fast
 /// machine it is a beat rather than a wait, and it never adds time that was
 /// not already being spent.
-class OrbisSplash extends StatefulWidget {
-  const OrbisSplash({
+class OrblitSplash extends StatefulWidget {
+  const OrblitSplash({
     super.key,
     required this.child,
     this.hold = const Duration(milliseconds: 1100),
@@ -35,10 +35,10 @@ class OrbisSplash extends StatefulWidget {
   final Future<void>? ready;
 
   @override
-  State<OrbisSplash> createState() => _OrbisSplashState();
+  State<OrblitSplash> createState() => _OrblitSplashState();
 }
 
-class _OrbisSplashState extends State<OrbisSplash>
+class _OrblitSplashState extends State<OrblitSplash>
     with SingleTickerProviderStateMixin {
   late final AnimationController _fade = AnimationController(
     vsync: this,
@@ -118,7 +118,7 @@ class _Mark extends StatelessWidget {
         onTap: onSkip,
         behavior: HitTestBehavior.opaque,
         child: ColoredBox(
-          color: OrbisColors.ground,
+          color: OrblitColors.ground,
           child: Stack(
             children: [
               // A wash behind the mark, in the engine's own colour, so the
@@ -142,13 +142,13 @@ class _Mark extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(Space.xxl),
                     child: Image.asset(
-                      'assets/brand/orbis-logo-full.png',
+                      'assets/brand/orblit-logo-full.png',
                       fit: BoxFit.contain,
                       filterQuality: FilterQuality.medium,
                       // If the asset is missing the editor should still open.
                       errorBuilder: (context, error, stack) => Text(
-                        'ORBIS',
-                        style: OrbisText.display,
+                        'ORBLIT',
+                        style: OrblitText.display,
                       ),
                     ),
                   ),
@@ -161,7 +161,7 @@ class _Mark extends StatelessWidget {
                 child: Center(
                   child: Text(
                     'Engine 0.1.0 · pre-alpha',
-                    style: OrbisText.caption.copyWith(fontSize: 11.5),
+                    style: OrblitText.caption.copyWith(fontSize: 11.5),
                   ),
                 ),
               ),

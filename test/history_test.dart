@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/commands.dart';
-import 'package:orbis_editor/src/editor/history.dart';
-import 'package:orbis_editor/src/editor/scene.dart';
-import 'package:orbis_editor/src/editor/workspace.dart';
+import 'package:orblit_editor/src/editor/commands.dart';
+import 'package:orblit_editor/src/editor/history.dart';
+import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/workspace.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 /// One scene in a workspace, which is what a history now edits through.

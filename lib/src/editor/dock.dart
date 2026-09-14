@@ -639,7 +639,7 @@ class DockLayout {
       '$prefix${DateTime.now().microsecondsSinceEpoch}_${_next++}';
 
   String toText() => '${const JsonEncoder.withIndent('  ').convert({
-        'kind': 'orbis.layout',
+        'kind': 'orblit.layout',
         'formatVersion': formatVersion,
         'locked': locked,
         'root': root.toJson(),
@@ -657,7 +657,7 @@ class DockLayout {
     } on FormatException {
       return null;
     }
-    if (parsed is! Map<String, Object?> || parsed['kind'] != 'orbis.layout') {
+    if (parsed is! Map<String, Object?> || parsed['kind'] != 'orblit.layout') {
       return null;
     }
 

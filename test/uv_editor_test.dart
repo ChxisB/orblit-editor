@@ -3,22 +3,22 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/editor_shell.dart';
-import 'package:orbis_editor/src/editor/modelling_panel.dart';
-import 'package:orbis_editor/src/launcher/project.dart';
-import 'package:orbis_editor/src/editor/scene.dart';
-import 'package:orbis_editor/src/editor/uv_panel.dart';
-import 'package:orbis_editor/src/editor/viewport.dart';
-import 'package:orbis_editor/src/platform/command_shortcuts.dart';
-import 'package:orbis_editor/src/theme/orbis_theme.dart';
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_editor/src/editor/editor_shell.dart';
+import 'package:orblit_editor/src/editor/modelling_panel.dart';
+import 'package:orblit_editor/src/launcher/project.dart';
+import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/uv_panel.dart';
+import 'package:orblit_editor/src/editor/viewport.dart';
+import 'package:orblit_editor/src/platform/command_shortcuts.dart';
+import 'package:orblit_editor/src/theme/orblit_theme.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 void main() {
   late Directory root;
 
   setUp(() {
-    root = Directory.systemTemp.createTempSync('orbis_uv');
+    root = Directory.systemTemp.createTempSync('orblit_uv');
     Directory('${root.path}/scenes').createSync(recursive: true);
   });
 
@@ -31,7 +31,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(MaterialApp(
-      theme: orbisTheme(),
+      theme: orblitTheme(),
       home: EditorShell(
         project: Project(
           name: 'Test',

@@ -4,13 +4,13 @@ import 'dart:math' as math;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:orbis_filament/orbis_filament.dart';
-import 'package:orbis_mesh/orbis_mesh.dart' show boundsOfGlb, boundsOfGltf;
+import 'package:orblit_filament/orblit_filament.dart';
+import 'package:orblit_mesh/orblit_mesh.dart' show boundsOfGlb, boundsOfGltf;
 import 'package:path/path.dart' as p;
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 import '../platform/renderer_support.dart';
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import 'assets.dart';
 
 /// What the selected asset actually looks like.
@@ -112,8 +112,8 @@ class _AssetPreviewState extends State<AssetPreview>
     return Container(
       width: 236,
       decoration: const BoxDecoration(
-        color: OrbisColors.surface,
-        border: Border(left: BorderSide(color: OrbisColors.lineSoft)),
+        color: OrblitColors.surface,
+        border: Border(left: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -194,9 +194,9 @@ class _AssetPreviewState extends State<AssetPreview>
           _dragging = details.localPosition;
         },
         onPanEnd: (_) => _dragging = null,
-        child: OrbisView(
-          scene: OrbisScene(
-            camera: OrbisCamera(
+        child: OrblitView(
+          scene: OrblitScene(
+            camera: OrblitCamera(
               position: Vector3(
                 centre.x + flat * math.sin(yaw),
                 centre.y + away * math.sin(_pitch),
@@ -206,7 +206,7 @@ class _AssetPreviewState extends State<AssetPreview>
               fieldOfView: 45,
             ),
             objects: [
-              OrbisObject(
+              OrblitObject(
                 key: 1,
                 mesh: asset.path,
                 transform: Matrix4.identity(),
@@ -218,29 +218,29 @@ class _AssetPreviewState extends State<AssetPreview>
             // reason: one light leaves half of a shape unreadable, and this
             // panel exists to make a shape readable.
             lights: [
-              OrbisLight(
+              OrblitLight(
                 key: 1,
-                kind: OrbisLightKind.directional,
+                kind: OrblitLightKind.directional,
                 direction: Vector3(-0.4, -0.8, -0.45)..normalize(),
                 intensity: 80000,
               ),
-              OrbisLight(
+              OrblitLight(
                 key: 2,
-                kind: OrbisLightKind.directional,
+                kind: OrblitLightKind.directional,
                 direction: Vector3(0.6, -0.35, 0.5)..normalize(),
                 colour: Vector3(0.72, 0.79, 1),
                 intensity: 26000,
                 castShadows: false,
               ),
-              OrbisLight(
+              OrblitLight(
                 key: 3,
-                kind: OrbisLightKind.directional,
+                kind: OrblitLightKind.directional,
                 direction: Vector3(0.15, -0.2, -0.9)..normalize(),
                 intensity: 18000,
                 castShadows: false,
               ),
             ],
-            sky: OrbisSky(
+            sky: OrblitSky(
               colour: Vector3(0.055, 0.065, 0.086),
               ambient: 14000,
               drawn: false,
@@ -272,7 +272,7 @@ class _Title extends StatelessWidget {
       height: 30,
       padding: const EdgeInsets.only(left: Space.sm, right: Space.xs),
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: OrbisColors.lineSoft)),
+        border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: Row(
         children: [
@@ -280,7 +280,7 @@ class _Title extends StatelessWidget {
             child: Text(
               asset?.name ?? 'Preview',
               overflow: TextOverflow.ellipsis,
-              style: OrbisText.label.copyWith(color: OrbisColors.inkMid),
+              style: OrblitText.label.copyWith(color: OrblitColors.inkMid),
             ),
           ),
           if (showsTurn)
@@ -292,7 +292,7 @@ class _Title extends StatelessWidget {
               onPressed: () => onTurn(!turning),
               icon: Icon(
                 turning ? Icons.pause : Icons.play_arrow,
-                color: OrbisColors.inkDim,
+                color: OrblitColors.inkDim,
               ),
             ),
         ],
@@ -327,7 +327,7 @@ class _Picture extends StatelessWidget {
     return Container(
       // The chequer behind it, so that transparency reads as transparency
       // rather than as whatever colour the panel happens to be.
-      color: OrbisColors.ground,
+      color: OrblitColors.ground,
       padding: const EdgeInsets.all(Space.sm),
       child: Center(
         child: CustomPaint(
@@ -386,7 +386,7 @@ class _Facts extends StatelessWidget {
         vertical: Space.xs,
       ),
       decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: OrbisColors.lineSoft)),
+        border: Border(top: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -422,9 +422,9 @@ class _Fact extends StatelessWidget {
             width: 54,
             child: Text(
               label,
-              style: OrbisText.label.copyWith(
+              style: OrblitText.label.copyWith(
                 fontSize: 11,
-                color: OrbisColors.inkDim,
+                color: OrblitColors.inkDim,
               ),
             ),
           ),
@@ -432,9 +432,9 @@ class _Fact extends StatelessWidget {
             child: Text(
               value,
               overflow: TextOverflow.ellipsis,
-              style: OrbisText.body.copyWith(
+              style: OrblitText.body.copyWith(
                 fontSize: 11,
-                color: OrbisColors.inkMid,
+                color: OrblitColors.inkMid,
               ),
             ),
           ),
@@ -476,7 +476,7 @@ class _Empty extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 if (icon != null && room) ...[
-                  Icon(icon, size: 26, color: OrbisColors.inkDim),
+                  Icon(icon, size: 26, color: OrblitColors.inkDim),
                   const SizedBox(height: Space.sm),
                 ],
                 Flexible(
@@ -485,9 +485,9 @@ class _Empty extends StatelessWidget {
                     textAlign: TextAlign.center,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
-                    style: OrbisText.body.copyWith(
+                    style: OrblitText.body.copyWith(
                       fontSize: 11,
-                      color: OrbisColors.inkDim,
+                      color: OrblitColors.inkDim,
                     ),
                   ),
                 ),

@@ -1,6 +1,6 @@
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/frame_rate.dart';
+import 'package:orblit_editor/src/editor/frame_rate.dart';
 
 void main() {
   FrameTiming timingOf({

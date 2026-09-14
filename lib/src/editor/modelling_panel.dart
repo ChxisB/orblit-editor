@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:orbis_mesh/orbis_mesh.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
 
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'drawing.dart';
 import 'inspector.dart' show ChoiceRow, ColourRow, SliderRow;
@@ -113,7 +113,7 @@ class ModellingPanel extends StatelessWidget {
             padding: const EdgeInsets.all(Space.sm),
             child: Text(
               'Select a shape to work on it, or draw one.',
-              style: OrbisText.caption.copyWith(fontSize: 11),
+              style: OrblitText.caption.copyWith(fontSize: 11),
             ),
           )
         else ...[
@@ -137,7 +137,7 @@ class ModellingPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          OrbisButton(
+          OrblitButton(
             label: snapping.on
                 ? 'Snapping to ${_gridLabel(snapping.step)}'
                 : 'Snapping off',
@@ -166,14 +166,14 @@ class ModellingPanel extends StatelessWidget {
                 SnapTo.centre => 'Its middle, so it straddles the line.',
                 SnapTo.top => 'Its top, for hanging it from something.',
               },
-              style: OrbisText.caption.copyWith(fontSize: 11),
+              style: OrblitText.caption.copyWith(fontSize: 11),
             ),
             const SizedBox(height: Space.xs),
             Text(
               'The brackets change the size. The arrows move by whole '
               'squares — hold shift for up and down, option for ten at a '
               'time.',
-              style: OrbisText.caption.copyWith(fontSize: 11),
+              style: OrblitText.caption.copyWith(fontSize: 11),
             ),
           ],
         ],
@@ -203,7 +203,7 @@ class ModellingPanel extends StatelessWidget {
             children: [
               for (final one in [ViewportTool.polyShape, ViewportTool.cut]) ...[
                 Expanded(
-                  child: OrbisButton(
+                  child: OrblitButton(
                     label: one.label,
                     icon: one.icon,
                     expand: true,
@@ -226,7 +226,7 @@ class ModellingPanel extends StatelessWidget {
               '${drawing.points.length} '
               '${drawing.points.length == 1 ? "point" : "points"} · enter '
               'finishes, backspace takes one back, escape gives up.',
-              style: OrbisText.caption.copyWith(fontSize: 11),
+              style: OrblitText.caption.copyWith(fontSize: 11),
             ),
           ],
         ],
@@ -258,7 +258,7 @@ class ModellingPanel extends StatelessWidget {
               children: [
                 for (final one in ElementMode.values) ...[
                   Expanded(
-                    child: OrbisButton(
+                    child: OrblitButton(
                       label: one.label,
                       icon: one.icon,
                       expand: true,
@@ -273,7 +273,7 @@ class ModellingPanel extends StatelessWidget {
               ],
             ),
             const SizedBox(height: Space.xs),
-            OrbisButton(
+            OrblitButton(
               label: seeThrough ? 'Seeing through' : 'See through',
               icon: seeThrough
                   ? Icons.visibility_outlined
@@ -291,7 +291,7 @@ class ModellingPanel extends StatelessWidget {
                       '${mode == ElementMode.face
                           ? 'move them, shift-drag to extrude'
                           : 'move them'}',
-              style: OrbisText.caption.copyWith(fontSize: 11),
+              style: OrblitText.caption.copyWith(fontSize: 11),
             ),
           ],
           const SizedBox(height: Space.sm),
@@ -306,10 +306,10 @@ class ModellingPanel extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 3, bottom: 3),
                 child: Text(
                   group.label.toUpperCase(),
-                  style: OrbisText.caption.copyWith(
+                  style: OrblitText.caption.copyWith(
                     fontSize: 9.5,
                     letterSpacing: 0.6,
-                    color: OrbisColors.inkDim,
+                    color: OrblitColors.inkDim,
                   ),
                 ),
               ),
@@ -355,7 +355,7 @@ class ModellingPanel extends StatelessWidget {
               child: Text(
                 'One material, the renderer\'s own. Add a slot to paint '
                 'faces with something else.',
-                style: OrbisText.caption.copyWith(fontSize: 11),
+                style: OrblitText.caption.copyWith(fontSize: 11),
               ),
             ),
           for (var i = 0; i < surfaces.length; i++) ...[
@@ -373,7 +373,7 @@ class ModellingPanel extends StatelessWidget {
             ),
             const SizedBox(height: Space.xs),
           ],
-          OrbisButton(
+          OrblitButton(
             label: 'Add material',
             icon: Icons.add,
             expand: true,
@@ -430,10 +430,10 @@ class ModellingPanel extends StatelessWidget {
               MeshFormat.ply => 'Triangles with their normals and '
                   'coordinates.',
             },
-            style: OrbisText.caption.copyWith(fontSize: 11),
+            style: OrblitText.caption.copyWith(fontSize: 11),
           ),
           const SizedBox(height: Space.xs),
-          OrbisButton(
+          OrblitButton(
             label: 'Export shape',
             icon: Icons.save_alt,
             expand: true,
@@ -472,9 +472,9 @@ class _SurfaceRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(Space.xs),
       decoration: BoxDecoration(
-        color: OrbisColors.ground,
+        color: OrblitColors.ground,
         borderRadius: BorderRadius.circular(Radii.control),
-        border: Border.all(color: OrbisColors.lineSoft),
+        border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -487,7 +487,7 @@ class _SurfaceRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: surface.colour,
                   borderRadius: BorderRadius.circular(3),
-                  border: Border.all(color: OrbisColors.lineSoft),
+                  border: Border.all(color: OrblitColors.lineSoft),
                 ),
               ),
               const SizedBox(width: Space.xs),
@@ -495,18 +495,18 @@ class _SurfaceRow extends StatelessWidget {
                 child: Text(
                   surface.name,
                   overflow: TextOverflow.ellipsis,
-                  style: OrbisText.body.copyWith(fontSize: 11.5),
+                  style: OrblitText.body.copyWith(fontSize: 11.5),
                 ),
               ),
               Text(
                 faces == 0 ? 'unused' : '$faces',
-                style: OrbisText.caption.copyWith(fontSize: 10.5),
+                style: OrblitText.caption.copyWith(fontSize: 10.5),
               ),
               const SizedBox(width: Space.xs),
               // Only when there is something to paint. A button that does
               // nothing teaches somebody nothing about when it would.
               if (painting)
-                OrbisButton(
+                OrblitButton(
                   label: 'Paint',
                   icon: Icons.format_paint_outlined,
                   tone: ButtonTone.primary,
@@ -568,7 +568,7 @@ class _ActionRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          OrbisButton(
+          OrblitButton(
             label: action.label,
             icon: action.icon,
             expand: true,
@@ -609,9 +609,9 @@ class _Section extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.fromLTRB(Space.sm, 0, Space.sm, Space.sm),
       decoration: BoxDecoration(
-        color: OrbisColors.ground,
+        color: OrblitColors.ground,
         borderRadius: BorderRadius.circular(Radii.panel),
-        border: Border.all(color: OrbisColors.lineSoft),
+        border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -621,9 +621,9 @@ class _Section extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: Space.md),
             child: Row(
               children: [
-                Icon(icon, size: 13, color: OrbisColors.inkDim),
+                Icon(icon, size: 13, color: OrblitColors.inkDim),
                 const SizedBox(width: Space.sm),
-                Text(title.toUpperCase(), style: OrbisText.section),
+                Text(title.toUpperCase(), style: OrblitText.section),
               ],
             ),
           ),

@@ -35,7 +35,7 @@ class Prefab {
   /// twice without the two arguing over an id.
   final List<SceneObject> objects;
 
-  static const String marker = 'orbis.prefab';
+  static const String marker = 'orblit.prefab';
   static const int formatVersion = 1;
 
   static const String extension = '.oprefab';

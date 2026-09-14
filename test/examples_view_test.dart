@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/launcher/examples_view.dart';
-import 'package:orbis_editor/src/theme/orbis_theme.dart';
-import 'package:orbis_examples/orbis_examples.dart';
+import 'package:orblit_editor/src/launcher/examples_view.dart';
+import 'package:orblit_editor/src/theme/orblit_theme.dart';
+import 'package:orblit_examples/orblit_examples.dart';
 
 void main() {
   Future<void> show(WidgetTester tester) async {
@@ -10,7 +10,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(MaterialApp(
-      theme: orbisTheme(),
+      theme: orblitTheme(),
       home: const Scaffold(body: ExamplesView()),
     ));
     await tester.pump();
@@ -121,7 +121,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1500, 950));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(MaterialApp(
-      theme: orbisTheme(),
+      theme: orblitTheme(),
       home: Scaffold(body: ExamplesView(examples: examples)),
     ));
     await tester.pump();
@@ -201,7 +201,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1500, 950));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(MaterialApp(
-      theme: orbisTheme(),
+      theme: orblitTheme(),
       home: Scaffold(body: ExamplesView(examples: [needy])),
     ));
     await tester.pump();
@@ -224,7 +224,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(1500, 950));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(MaterialApp(
-      theme: orbisTheme(),
+      theme: orblitTheme(),
       home: Scaffold(body: ExamplesView(examples: [happy])),
     ));
     await tester.pump();

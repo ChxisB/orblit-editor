@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/scene.dart';
-import 'package:orbis_filament/orbis_filament.dart';
+import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_filament/orblit_filament.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 void main() {
-  OrbisCamera camera() =>
-      OrbisCamera(position: Vector3(0, 2, 6), target: Vector3.zero());
+  OrblitCamera camera() =>
+      OrblitCamera(position: Vector3(0, 2, 6), target: Vector3.zero());
 
   group('a texture on an object', () {
     test('becomes a material the object is drawn with', () {

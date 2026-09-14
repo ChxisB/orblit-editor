@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 /// Whether the 3D renderer can run on this platform.
 ///
-/// The renderer — Filament, reached through `orbis_filament` — is being
+/// The renderer — Filament, reached through `orblit_filament` — is being
 /// ported to Linux and Windows alongside the rest of the editor, and has not
 /// landed yet; every panel that would otherwise show a viewport needs to know
 /// not to try. One flag rather than each place spelling out the check for

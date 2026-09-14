@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 
 import '../platform/host_paths.dart';
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'project.dart';
 
@@ -37,7 +37,7 @@ class _CreateViewState extends State<CreateView> {
     text: p.join(
       homeDirectory() ?? Directory.current.path,
       'Documents',
-      'Orbis',
+      'Orblit',
     ),
   );
 
@@ -58,7 +58,7 @@ class _CreateViewState extends State<CreateView> {
         .toLowerCase()
         .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
         .replaceAll(RegExp(r'^-+|-+$'), '');
-    return p.join(_location.text, slug.isEmpty ? 'orbis-project' : slug);
+    return p.join(_location.text, slug.isEmpty ? 'orblit-project' : slug);
   }
 
   Future<void> _browse() async {
@@ -99,14 +99,14 @@ class _CreateViewState extends State<CreateView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('New project', style: OrbisText.display),
+            Text('New project', style: OrblitText.display),
             const SizedBox(height: Space.xs),
             Text('A folder, a scene, and somewhere to put assets.',
-                style: OrbisText.caption),
+                style: OrblitText.caption),
             const SizedBox(height: Space.xl),
 
             const SectionLabel('Name'),
-            OrbisField(
+            OrblitField(
               controller: _name,
               autofocus: true,
               onSubmitted: (_) => _create(),
@@ -114,10 +114,10 @@ class _CreateViewState extends State<CreateView> {
             const SizedBox(height: Space.lg),
 
             const SectionLabel('Location'),
-            OrbisField(
+            OrblitField(
               controller: _location,
               mono: true,
-              suffix: OrbisButton(
+              suffix: OrblitButton(
                 label: 'Browse',
                 tone: ButtonTone.quiet,
                 onPressed: _browse,
@@ -127,7 +127,7 @@ class _CreateViewState extends State<CreateView> {
             Row(
               children: [
                 const Icon(Icons.subdirectory_arrow_right,
-                    size: 13, color: OrbisColors.inkDim),
+                    size: 13, color: OrblitColors.inkDim),
                 const SizedBox(width: Space.xs),
                 Expanded(
                   child: AnimatedBuilder(
@@ -135,7 +135,7 @@ class _CreateViewState extends State<CreateView> {
                     builder: (context, _) => Text(
                       _destination,
                       overflow: TextOverflow.ellipsis,
-                      style: OrbisText.mono,
+                      style: OrblitText.mono,
                     ),
                   ),
                 ),
@@ -155,13 +155,13 @@ class _CreateViewState extends State<CreateView> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                OrbisButton(
+                OrblitButton(
                   label: 'Cancel',
                   tone: ButtonTone.quiet,
                   onPressed: _creating ? null : widget.onCancel,
                 ),
                 const SizedBox(width: Space.sm),
-                OrbisButton(
+                OrblitButton(
                   label: _creating ? 'Creating…' : 'Create project',
                   icon: Icons.check,
                   tone: ButtonTone.primary,
@@ -208,13 +208,13 @@ class _TemplateCardState extends State<_TemplateCard> {
           padding: const EdgeInsets.all(Space.md),
           decoration: BoxDecoration(
             color: widget.selected
-                ? OrbisColors.emberWash
-                : (_hovering ? OrbisColors.raised : OrbisColors.surface),
+                ? OrblitColors.emberWash
+                : (_hovering ? OrblitColors.raised : OrblitColors.surface),
             borderRadius: BorderRadius.circular(Radii.panel),
             border: Border.all(
               color: widget.selected
-                  ? OrbisColors.ember
-                  : (_hovering ? OrbisColors.line : OrbisColors.lineSoft),
+                  ? OrblitColors.ember
+                  : (_hovering ? OrblitColors.line : OrblitColors.lineSoft),
             ),
           ),
           child: Row(
@@ -228,8 +228,8 @@ class _TemplateCardState extends State<_TemplateCard> {
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: widget.selected
-                        ? OrbisColors.ember
-                        : OrbisColors.line,
+                        ? OrblitColors.ember
+                        : OrblitColors.line,
                     width: 1.5,
                   ),
                 ),
@@ -240,7 +240,7 @@ class _TemplateCardState extends State<_TemplateCard> {
                           height: 7,
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
-                            color: OrbisColors.ember,
+                            color: OrblitColors.ember,
                           ),
                         ),
                       )
@@ -254,15 +254,15 @@ class _TemplateCardState extends State<_TemplateCard> {
                   children: [
                     Text(
                       widget.template.label,
-                      style: OrbisText.label.copyWith(
-                        color: OrbisColors.ink,
+                      style: OrblitText.label.copyWith(
+                        color: OrblitColors.ink,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(widget.template.description,
-                        style: OrbisText.caption),
+                        style: OrblitText.caption),
                   ],
                 ),
               ),

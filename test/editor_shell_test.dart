@@ -4,27 +4,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/asset_browser.dart';
-import 'package:orbis_editor/src/editor/clipboard.dart';
-import 'package:orbis_editor/src/editor/data_object.dart';
-import 'package:orbis_editor/src/editor/console_panel.dart';
-import 'package:orbis_editor/src/editor/data_panel.dart';
-import 'package:orbis_editor/src/editor/dock.dart';
-import 'package:orbis_editor/src/editor/game_view.dart';
-import 'package:orbis_editor/src/editor/editor_shell.dart';
-import 'package:orbis_editor/src/editor/inspector.dart';
-import 'package:orbis_editor/src/editor/modelling_panel.dart';
-import 'package:orbis_editor/src/editor/surface.dart';
-import 'package:orbis_editor/src/editor/outliner.dart';
-import 'package:orbis_editor/src/editor/scene.dart';
-import 'package:orbis_editor/src/editor/scene_document.dart';
-import 'package:orbis_editor/src/editor/viewport.dart';
-import 'package:orbis_editor/src/launcher/project.dart';
-import 'package:orbis_editor/src/platform/command_shortcuts.dart';
-import 'package:orbis_mesh/orbis_mesh.dart';
-import 'package:orbis_ui/orbis_ui.dart';
-import 'package:orbis_editor/src/theme/orbis_theme.dart';
-import 'package:orbis_editor/src/widgets/controls.dart';
+import 'package:orblit_editor/src/editor/asset_browser.dart';
+import 'package:orblit_editor/src/editor/clipboard.dart';
+import 'package:orblit_editor/src/editor/data_object.dart';
+import 'package:orblit_editor/src/editor/console_panel.dart';
+import 'package:orblit_editor/src/editor/data_panel.dart';
+import 'package:orblit_editor/src/editor/dock.dart';
+import 'package:orblit_editor/src/editor/game_view.dart';
+import 'package:orblit_editor/src/editor/editor_shell.dart';
+import 'package:orblit_editor/src/editor/inspector.dart';
+import 'package:orblit_editor/src/editor/modelling_panel.dart';
+import 'package:orblit_editor/src/editor/surface.dart';
+import 'package:orblit_editor/src/editor/outliner.dart';
+import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/scene_document.dart';
+import 'package:orblit_editor/src/editor/viewport.dart';
+import 'package:orblit_editor/src/launcher/project.dart';
+import 'package:orblit_editor/src/platform/command_shortcuts.dart';
+import 'package:orblit_mesh/orblit_mesh.dart';
+import 'package:orblit_ui/orblit_ui.dart';
+import 'package:orblit_editor/src/theme/orblit_theme.dart';
+import 'package:orblit_editor/src/widgets/controls.dart';
 import 'package:path/path.dart' as p;
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
@@ -51,7 +51,7 @@ void main() {
       return null;
     });
 
-    root = Directory.systemTemp.createTempSync('orbis_shell');
+    root = Directory.systemTemp.createTempSync('orblit_shell');
     Directory(p.join(root.path, 'scenes')).createSync();
   });
 
@@ -68,7 +68,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(MaterialApp(
-      theme: orbisTheme(),
+      theme: orblitTheme(),
       home: EditorShell(
         project: Project(
           name: 'Test',
@@ -375,7 +375,7 @@ void main() {
 
     // The starter scene is still there rather than an empty one.
     expect(row('Props'), findsOneWidget);
-    expect(find.textContaining('newer Orbis'), findsOneWidget);
+    expect(find.textContaining('newer Orblit'), findsOneWidget);
   });
 
   testWidgets('an existing scene file is what opens', (tester) async {
@@ -1035,7 +1035,7 @@ void main() {
     // What lands in a text editor is the scene's own encoding, not a blob.
     expect(systemClipboard, isNotNull);
     expect(systemClipboard, contains('"Crate"'));
-    expect(systemClipboard, contains('orbis.objects'));
+    expect(systemClipboard, contains('orblit.objects'));
   });
 
   testWidgets('a copy from elsewhere can be pasted in', (tester) async {
@@ -1138,7 +1138,7 @@ void main() {
       final made = prefabs();
       expect(made, hasLength(1));
       expect(p.basename(made.single.path), 'Cube.oprefab');
-      expect(made.single.readAsStringSync(), contains('orbis.prefab'));
+      expect(made.single.readAsStringSync(), contains('orblit.prefab'));
     });
 
     testWidgets('what it was made from becomes an instance', (tester) async {
@@ -1226,7 +1226,7 @@ void main() {
       // settling waits out the four seconds it is on screen for.
       await tester.pump();
 
-      expect(source.readAsStringSync(), contains('orbis.prefab'));
+      expect(source.readAsStringSync(), contains('orblit.prefab'));
       expect(find.textContaining('updated 2 other instances'), findsOneWidget);
       await tester.pumpAndSettle();
     });
@@ -2094,7 +2094,7 @@ void main() {
       // The toolbar button, not the word "Viewport" wherever else it appears
       // — and it gains a dot when the layout is locked.
       await tester.tap(find.byWidgetPredicate(
-        (widget) => widget is OrbisButton && widget.label.startsWith('View'),
+        (widget) => widget is OrblitButton && widget.label.startsWith('View'),
       ));
       await tester.pumpAndSettle();
       await tester.tap(find.descendant(
@@ -2159,7 +2159,7 @@ void main() {
       await open(tester);
       await viewMenu(tester, 'Four views');
       expect(
-        File(p.join(root.path, '.orbis', 'layout.json')).existsSync(),
+        File(p.join(root.path, '.orblit', 'layout.json')).existsSync(),
         isTrue,
       );
 
@@ -2186,8 +2186,8 @@ void main() {
 
     testWidgets('a saved layout that cannot be read is not fatal',
         (tester) async {
-      Directory(p.join(root.path, '.orbis')).createSync(recursive: true);
-      File(p.join(root.path, '.orbis', 'layout.json'))
+      Directory(p.join(root.path, '.orblit')).createSync(recursive: true);
+      File(p.join(root.path, '.orblit', 'layout.json'))
           .writeAsStringSync('not a layout at all');
 
       await open(tester);
@@ -2420,7 +2420,7 @@ void main() {
 
       // An object is the built-in cube or a glTF file, and there is no third
       // way in — so geometry built here becomes a file.
-      final built = Directory(p.join(root.path, '.orbis', 'geometry'));
+      final built = Directory(p.join(root.path, '.orblit', 'geometry'));
       expect(built.existsSync(), isTrue);
       expect(built.listSync().where((f) => f.path.endsWith('.glb')),
           isNotEmpty);

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/console.dart';
+import 'package:orblit_editor/src/editor/console.dart';
 
 void main() {
   late EditorLog log;
@@ -92,7 +92,7 @@ void main() {
 
       FlutterError.reportError(FlutterErrorDetails(
         exception: StateError('a widget went wrong'),
-        library: 'orbis test',
+        library: 'orblit test',
       ));
 
       final entry = log.entries.single;
@@ -142,7 +142,7 @@ void main() {
       FlutterError.onError = (_) {};
       FlutterError.reportError(FlutterErrorDetails(
         exception: StateError('after'),
-        library: 'orbis test',
+        library: 'orblit test',
       ));
       FlutterError.onError = quiet;
 

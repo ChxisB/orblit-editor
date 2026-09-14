@@ -29,7 +29,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // Matches the macOS runner: room for a launcher's project list without
   // scrolling, and an editor's three regions side by side.
   Win32Window::Size size(1280, 800);
-  if (!window.Create(L"Orbis Editor", origin, size)) {
+  if (!window.Create(L"Orblit Editor", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);

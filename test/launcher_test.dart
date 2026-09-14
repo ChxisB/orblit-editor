@@ -3,15 +3,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/launcher/create_view.dart';
-import 'package:orbis_editor/src/launcher/project.dart';
-import 'package:orbis_editor/src/launcher/projects_view.dart';
-import 'package:orbis_editor/src/theme/orbis_theme.dart';
-import 'package:orbis_editor/src/widgets/controls.dart';
+import 'package:orblit_editor/src/launcher/create_view.dart';
+import 'package:orblit_editor/src/launcher/project.dart';
+import 'package:orblit_editor/src/launcher/projects_view.dart';
+import 'package:orblit_editor/src/theme/orblit_theme.dart';
+import 'package:orblit_editor/src/widgets/controls.dart';
 import 'package:path/path.dart' as p;
 
 Widget host(Widget child) => MaterialApp(
-      theme: orbisTheme(),
+      theme: orblitTheme(),
       home: Scaffold(body: child),
     );
 
@@ -39,7 +39,7 @@ void main() {
       expect(find.text('New project'), findsNWidgets(2));
 
       await tester.tap(find.text('No projects yet'));
-      await tester.tap(find.byType(OrbisButton).last);
+      await tester.tap(find.byType(OrblitButton).last);
       await tester.pump();
       expect(created, isTrue);
     });
@@ -133,7 +133,7 @@ void main() {
   group('a project on disk', () {
     late Directory temp;
 
-    setUp(() => temp = Directory.systemTemp.createTempSync('orbis_test'));
+    setUp(() => temp = Directory.systemTemp.createTempSync('orblit_test'));
     tearDown(() => temp.deleteSync(recursive: true));
 
     test('is a folder with a project file, scenes and assets', () async {

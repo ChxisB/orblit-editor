@@ -15,7 +15,7 @@ import '../platform/host_paths.dart';
 /// One file at the root, named so a folder is recognisably a project without
 /// opening it, and versioned so an editor that meets a newer one can say so
 /// rather than misread it.
-const String projectFileName = 'orbis.project.json';
+const String projectFileName = 'orblit.project.json';
 const int projectFormatVersion = 1;
 
 /// What a new project starts as.
@@ -196,7 +196,7 @@ class ProjectStore {
     File(p.join(directory.path, 'scenes', 'main$sceneExtension'))
         .writeAsStringSync(SceneDocument.encode(sceneFor(template)));
     File(p.join(directory.path, '.gitignore'))
-        .writeAsStringSync('build/\n.orbis/\n');
+        .writeAsStringSync('build/\n.orblit/\n');
 
     await remember(project);
     return project;
@@ -209,7 +209,7 @@ class ProjectStore {
         .toLowerCase()
         .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
         .replaceAll(RegExp(r'^-+|-+$'), '');
-    return slug.isEmpty ? 'orbis-project' : slug;
+    return slug.isEmpty ? 'orblit-project' : slug;
   }
 
   Future<File> _recentsFile() async {

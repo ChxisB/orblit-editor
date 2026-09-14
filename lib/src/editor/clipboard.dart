@@ -103,8 +103,8 @@ class SceneClipboard {
 
   // ---- the system clipboard ----
 
-  /// What marks text as Orbis objects rather than any other JSON.
-  static const String _marker = 'orbis.objects';
+  /// What marks text as Orblit objects rather than any other JSON.
+  static const String _marker = 'orblit.objects';
 
   /// The clipboard as text, for the system clipboard.
   ///
@@ -124,7 +124,7 @@ class SceneClipboard {
 
   /// Reads objects out of text, or leaves the clipboard alone.
   ///
-  /// Returns whether it was Orbis objects. Anything else on the system
+  /// Returns whether it was Orblit objects. Anything else on the system
   /// clipboard — a path, a paragraph, JSON meaning something else — is not an
   /// error, it is simply not ours.
   bool takeText(String? text) {

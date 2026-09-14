@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/orbis_theme.dart';
+import '../theme/orblit_theme.dart';
 
 /// How much weight a button carries.
 enum ButtonTone {
@@ -19,8 +19,8 @@ enum ButtonTone {
 /// Material's defaults are built for touch: tall, rounded, with a ripple. An
 /// editor is used with a mouse for hours, so these are shorter, squarer, and
 /// respond by changing colour rather than by animating.
-class OrbisButton extends StatefulWidget {
-  const OrbisButton({
+class OrblitButton extends StatefulWidget {
+  const OrblitButton({
     super.key,
     required this.label,
     this.onPressed,
@@ -38,34 +38,34 @@ class OrbisButton extends StatefulWidget {
   final bool expand;
 
   @override
-  State<OrbisButton> createState() => _OrbisButtonState();
+  State<OrblitButton> createState() => _OrblitButtonState();
 }
 
-class _OrbisButtonState extends State<OrbisButton> {
+class _OrblitButtonState extends State<OrblitButton> {
   bool _hovering = false;
   bool _pressed = false;
 
   bool get _enabled => widget.onPressed != null;
 
   Color get _background {
-    if (!_enabled) return OrbisColors.raised.withValues(alpha: 0.5);
+    if (!_enabled) return OrblitColors.raised.withValues(alpha: 0.5);
     return switch (widget.tone) {
       ButtonTone.primary =>
-        _pressed ? OrbisColors.emberDeep : OrbisColors.ember,
-      ButtonTone.normal => _hovering ? OrbisColors.hover : OrbisColors.raised,
+        _pressed ? OrblitColors.emberDeep : OrblitColors.ember,
+      ButtonTone.normal => _hovering ? OrblitColors.hover : OrblitColors.raised,
       ButtonTone.quiet =>
-        _hovering ? OrbisColors.raised : Colors.transparent,
+        _hovering ? OrblitColors.raised : Colors.transparent,
     };
   }
 
   Color get _foreground {
-    if (!_enabled) return OrbisColors.inkDim;
+    if (!_enabled) return OrblitColors.inkDim;
     return switch (widget.tone) {
       // Near-black on ember rather than white: the accent is bright enough
       // that white text on it is the lower-contrast choice, not the higher.
       ButtonTone.primary => const Color(0xFF1A1206),
-      ButtonTone.normal => OrbisColors.ink,
-      ButtonTone.quiet => _hovering ? OrbisColors.ink : OrbisColors.inkMid,
+      ButtonTone.normal => OrblitColors.ink,
+      ButtonTone.quiet => _hovering ? OrblitColors.ink : OrblitColors.inkMid,
     };
   }
 
@@ -87,7 +87,7 @@ class _OrbisButtonState extends State<OrbisButton> {
             child: Text(
               widget.label,
               overflow: TextOverflow.ellipsis,
-              style: OrbisText.label.copyWith(
+              style: OrblitText.label.copyWith(
                 color: _foreground,
                 fontWeight: FontWeight.w500,
               ),
@@ -96,7 +96,7 @@ class _OrbisButtonState extends State<OrbisButton> {
         else
           Text(
             widget.label,
-            style: OrbisText.label.copyWith(
+            style: OrblitText.label.copyWith(
               color: _foreground,
               fontWeight: FontWeight.w500,
             ),
@@ -124,8 +124,8 @@ class _OrbisButtonState extends State<OrbisButton> {
               color: widget.tone == ButtonTone.primary
                   ? Colors.transparent
                   : (_hovering && _enabled
-                      ? OrbisColors.line
-                      : OrbisColors.lineSoft),
+                      ? OrblitColors.line
+                      : OrblitColors.lineSoft),
             ),
           ),
           child: content,
@@ -136,8 +136,8 @@ class _OrbisButtonState extends State<OrbisButton> {
 }
 
 /// A titled region.
-class OrbisPanel extends StatelessWidget {
-  const OrbisPanel({
+class OrblitPanel extends StatelessWidget {
+  const OrblitPanel({
     super.key,
     required this.child,
     this.title,
@@ -154,9 +154,9 @@ class OrbisPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: OrbisColors.surface,
+        color: OrblitColors.surface,
         borderRadius: BorderRadius.circular(Radii.panel),
-        border: Border.all(color: OrbisColors.lineSoft),
+        border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -168,12 +168,12 @@ class OrbisPanel extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: Space.lg),
               decoration: const BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: OrbisColors.lineSoft),
+                  bottom: BorderSide(color: OrblitColors.lineSoft),
                 ),
               ),
               child: Row(
                 children: [
-                  Text(title!.toUpperCase(), style: OrbisText.section),
+                  Text(title!.toUpperCase(), style: OrblitText.section),
                   const Spacer(),
                   ?trailing,
                 ],
@@ -187,8 +187,8 @@ class OrbisPanel extends StatelessWidget {
 }
 
 /// A single-line text input.
-class OrbisField extends StatelessWidget {
-  const OrbisField({
+class OrblitField extends StatelessWidget {
+  const OrblitField({
     super.key,
     required this.controller,
     this.hint,
@@ -219,15 +219,15 @@ class OrbisField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = mono
-        ? OrbisText.monoValue
-        : OrbisText.body.copyWith(color: OrbisColors.ink, fontSize: 13);
+        ? OrblitText.monoValue
+        : OrblitText.body.copyWith(color: OrblitColors.ink, fontSize: 13);
 
     return Container(
       height: 32,
       decoration: BoxDecoration(
-        color: OrbisColors.ground,
+        color: OrblitColors.ground,
         borderRadius: BorderRadius.circular(Radii.control),
-        border: Border.all(color: OrbisColors.line),
+        border: Border.all(color: OrblitColors.line),
       ),
       child: Row(
         children: [
@@ -239,7 +239,7 @@ class OrbisField extends StatelessWidget {
               onSubmitted: onSubmitted,
               onChanged: onChanged,
               style: style,
-              cursorColor: OrbisColors.ember,
+              cursorColor: OrblitColors.ember,
               cursorWidth: 1.5,
               decoration: InputDecoration(
                 isDense: true,
@@ -249,7 +249,7 @@ class OrbisField extends StatelessWidget {
                   vertical: Space.sm,
                 ),
                 hintText: hint,
-                hintStyle: style.copyWith(color: OrbisColors.inkDim),
+                hintStyle: style.copyWith(color: OrblitColors.inkDim),
               ),
             ),
           ),
@@ -275,7 +275,7 @@ class SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: padding ?? const EdgeInsets.only(bottom: Space.sm),
-      child: Text(text.toUpperCase(), style: OrbisText.section),
+      child: Text(text.toUpperCase(), style: OrblitText.section),
     );
   }
 }
@@ -340,8 +340,8 @@ class _NamePromptState extends State<_NamePrompt> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: OrbisColors.surface,
-      title: Text(widget.title, style: OrbisText.title),
+      backgroundColor: OrblitColors.surface,
+      title: Text(widget.title, style: OrblitText.title),
       content: SizedBox(
         // Bounded on both axes: an AlertDialog gives its content whatever room
         // it asks for, and a Column that asks for infinity gets it.
@@ -353,13 +353,13 @@ class _NamePromptState extends State<_NamePrompt> {
             TextField(
               controller: _controller,
               autofocus: true,
-              style: OrbisText.body,
-              cursorColor: OrbisColors.ember,
+              style: OrblitText.body,
+              cursorColor: OrblitColors.ember,
               onSubmitted: (_) => _accept(),
             ),
             if (widget.hint != null) ...[
               const SizedBox(height: Space.sm),
-              Text(widget.hint!, style: OrbisText.caption),
+              Text(widget.hint!, style: OrblitText.caption),
             ],
           ],
         ),
@@ -438,7 +438,7 @@ class _ValueFieldState extends State<ValueField> {
 
   @override
   Widget build(BuildContext context) {
-    return OrbisField(
+    return OrblitField(
       controller: _controller,
       focusNode: _focus,
       hint: widget.hint,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/editor/dock.dart';
+import 'package:orblit_editor/src/editor/dock.dart';
 
 void main() {
   /// The ids of the panels in a group, for reading assertions easily.
@@ -265,13 +265,13 @@ void main() {
 
     test('is not read from something that is not one', () {
       expect(DockLayout.read('nonsense'), isNull);
-      expect(DockLayout.read('{"kind":"orbis.ui"}'), isNull);
-      expect(DockLayout.read('{"kind":"orbis.layout"}'), isNull);
+      expect(DockLayout.read('{"kind":"orblit.ui"}'), isNull);
+      expect(DockLayout.read('{"kind":"orblit.layout"}'), isNull);
     });
 
     test('a panel kind it does not know is left out rather than guessed', () {
       final layout = DockLayout.read('''
-{"kind":"orbis.layout","root":{"id":"g","panels":[
+{"kind":"orblit.layout","root":{"id":"g","panels":[
   {"id":"a","kind":"outliner"},
   {"id":"b","kind":"holodeck"}
 ]}}''')!;

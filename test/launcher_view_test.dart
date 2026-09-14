@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orbis_editor/src/launcher/launcher_screen.dart';
-import 'package:orbis_editor/src/theme/orbis_theme.dart';
+import 'package:orblit_editor/src/launcher/launcher_screen.dart';
+import 'package:orblit_editor/src/theme/orblit_theme.dart';
 
 void main() {
   // The window the editor actually opens at. The default test surface is
@@ -12,7 +12,7 @@ void main() {
   Future<void> atEditorSize(WidgetTester tester, Widget child) async {
     await tester.binding.setSurfaceSize(const Size(1280, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(MaterialApp(theme: orbisTheme(), home: child));
+    await tester.pumpWidget(MaterialApp(theme: orblitTheme(), home: child));
     await tester.pumpAndSettle();
   }
 
