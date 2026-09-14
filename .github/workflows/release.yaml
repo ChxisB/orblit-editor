@@ -45,8 +45,8 @@ jobs:
           path: orbis-editor
           ref: ${{ inputs.tag || github.ref }}
       # Pinned to the same tag name in the engine, so a release is built
-      # against a known renderer rather than whatever master happened to be.
-      # Falls back to master when no matching tag exists there.
+      # against a known renderer rather than whatever main happened to be.
+      # Falls back to the engine's default branch when no matching tag exists.
       - uses: actions/checkout@v4
         with:
           # No token: these repositories are public, so the default
@@ -62,7 +62,7 @@ jobs:
             git checkout "$tag"
             echo "engine at $tag"
           else
-            echo "no $tag in the engine; building against $(git rev-parse --short HEAD) on master"
+            echo "no $tag in the engine; building against $(git rev-parse --short HEAD) on main"
           fi
 
       - uses: subosito/flutter-action@v2
