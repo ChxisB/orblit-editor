@@ -36,11 +36,36 @@ jobs:
       - uses: actions/checkout@v4
         with:
           path: orblit-editor
+
+      # Which branch of the engine to build against.
+      #
+      # Its default, unless the engine has a branch named exactly the same as
+      # this one -- in which case that is the pair, and building against the
+      # default would be building against a repository that does not have the
+      # change yet. A change that spans both repositories is the ordinary case
+      # here, not the exception: this pubspec depends on the engine by path
+      # precisely so the two move together, and pinning CI to the default
+      # branch makes every coordinated change red until the engine half lands.
+      # Which trains people to ignore a red build on exactly the pull requests
+      # that most need reading.
+      - id: engine
+        run: |
+          branch="${{ github.head_ref || github.ref_name }}"
+          if git ls-remote --exit-code --heads \
+              https://github.com/ChxisB/orblit.git "$branch" > /dev/null; then
+            echo "Building against ChxisB/orblit@$branch"
+            echo "ref=$branch" >> "$GITHUB_OUTPUT"
+          else
+            echo "No matching engine branch; using its default"
+            echo "ref=" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/checkout@v4
         with:
           # No token: these repositories are public, so the default
           # GITHUB_TOKEN reads them. Nothing here needs a secret.
           repository: ChxisB/orblit
+          ref: ${{ steps.engine.outputs.ref }}
           path: orblit
 
       - uses: subosito/flutter-action@v2
