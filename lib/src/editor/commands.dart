@@ -6,8 +6,11 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 import 'history.dart';
 import 'package:orblit_mesh/orblit_mesh.dart';
 
+import 'package:orblit_scene/orblit_scene.dart' as doc;
+
 import 'boundary.dart';
 import 'scene.dart';
+import 'scene_document.dart';
 import 'surface.dart';
 
 /// Which of an object's three vectors an edit is touching.
@@ -1724,5 +1727,57 @@ class SetBoundary extends EditorCommand {
     if (object == null || was == null) return;
     object.boundary = was;
     host.sceneFor(sceneId)?.invalidate();
+  }
+}
+
+/// A change stated as the difference between two documents.
+///
+/// Every other command in this file names the field it touches: a colour, a
+/// transform, a parent. That is the right shape for an edit somebody makes
+/// with a mouse, and the wrong shape for one that arrives whole — a scene
+/// pasted in, a file reloaded from disk underneath somebody, a generated
+/// layout, an import. For those the change is not a field, it is "this
+/// document became that one", and a diff says so exactly.
+///
+/// It is also the shape an edit has to be in to leave this machine. A field
+/// command is a Dart object; a diff is a list of operations that serialise,
+/// which is what a second editor on the same scene would have to be sent.
+///
+/// The blunt instrument, deliberately. It rebuilds the objects rather than
+/// mutating the ones that are there — what the renderer knows each by is
+/// carried across, so it is not blunt where it would cost a frame, but the
+/// outliner is rebuilt and a drag should not go through here.
+class ApplySceneDiff extends EditorCommand {
+  ApplySceneDiff({
+    required this.sceneId,
+    required this.label,
+    required this.diff,
+  });
+
+  /// The change from what is there now to what should be.
+  ///
+  /// Both directions are in it: the inverse is what undo applies, so there is
+  /// no second description of the change to fall out of step with the first.
+  final doc.SceneDiff diff;
+
+  @override
+  final String sceneId;
+
+  @override
+  final String label;
+
+  @override
+  void apply(SceneHost host) => _move(host, diff);
+
+  @override
+  void revert(SceneHost host) => _move(host, diff.inverse);
+
+  void _move(SceneHost host, doc.SceneDiff by) {
+    final scene = host.sceneFor(sceneId);
+    if (scene == null) return;
+    SceneDocument.reconcile(
+      scene,
+      by.applyTo(SceneDocument.documentOf(scene)),
+    );
   }
 }
