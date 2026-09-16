@@ -43,6 +43,13 @@ dependencies:
   orblit_weather:
     path: ../orblit/packages/orblit_weather
 
+  # The scene format itself, which used to live in this file and now does not.
+  # One reader, one writer and one list of migrations, shared with the runtime
+  # and with anything else that opens a scene -- the editor is where they are
+  # authored, not where they are defined.
+  orblit_scene:
+    path: ../orblit/packages/orblit_scene
+
   # Where a light's watts, metres and degrees become the lumens, lux and
   # radians a renderer takes. The editor authors the first and sends the
   # second, and converting in both places is how the two drift apart.

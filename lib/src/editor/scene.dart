@@ -30,6 +30,7 @@ class SceneObject {
     required this.id,
     required this.name,
     required this.kind,
+    int? renderKey,
     this.parentId,
     Vector3? position,
     Vector3? rotation,
@@ -61,7 +62,8 @@ class SceneObject {
     this.interfaceAsset,
     this.prefab,
     List<String>? data,
-  })  : data = data ?? [],
+  })  : renderKey = renderKey ?? _nextRenderKey++,
+        data = data ?? [],
         boundary = boundary ?? Boundary(),
         surfaces = surfaces ?? [],
         weather = weather ?? WeatherState.of(condition),
@@ -77,7 +79,12 @@ class SceneObject {
   /// frame of a drag and a string would be encoded, copied and hashed each
   /// time. Assigned once and never reused, so a pasted copy gets a key of its
   /// own instead of inheriting the entity of the thing it was copied from.
-  final int renderKey = _nextRenderKey++;
+  ///
+  /// It can be handed one, and exactly one thing does: rebuilding the scene
+  /// from a document, where an object with the same id is the same object —
+  /// giving it a new key there would make the renderer throw away everything
+  /// it had built for it, every time anybody undid anything.
+  final int renderKey;
 
   static int _nextRenderKey = 1;
 
@@ -915,6 +922,23 @@ class EditorScene {
     invalidate();
     // Back into insertion order, which is the order an undo has to replay.
     return removed.reversed.toList();
+  }
+
+  /// Swaps every object in this scene for [objects], keeping the scene itself.
+  ///
+  /// For the one caller that has a whole new set of them: a change stated as a
+  /// difference between two documents, which is worked out on documents and
+  /// then has to land somewhere. Everything else edits the objects it already
+  /// has, and should — this is the blunt instrument, and using it for a drag
+  /// would rebuild the outliner sixty times a second.
+  void replaceAll(List<SceneObject> objects) {
+    _objects
+      ..clear()
+      ..addAll(objects);
+    _byId
+      ..clear()
+      ..addEntries([for (final object in objects) MapEntry(object.id, object)]);
+    invalidate();
   }
 
   void restore(List<({SceneObject object, int index})> entries) {
