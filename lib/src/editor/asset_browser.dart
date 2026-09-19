@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:orblit_asset/orblit_asset.dart';
 import 'package:path/path.dart' as p;
 
 import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'asset_preview.dart';
 import 'assets.dart';
+import 'cook_status.dart';
 import 'scene.dart';
 
 /// The project's files, along the bottom.
@@ -26,9 +28,18 @@ class AssetBrowser extends StatefulWidget {
     this.onProblem,
     this.onMakePrefab,
     this.onBuild,
+    this.cookStatus,
   });
 
   final AssetTree tree;
+
+  /// Where each asset stands with the cook, for the mark beside each file.
+  ///
+  /// Optional, because the browser is worth having before a project has been
+  /// cooked once and in tests that are about folders rather than about
+  /// builds. Without one the panel simply draws no marks.
+  final CookStatusIndex? cookStatus;
+
   /// How tall to be, or null to fill whatever it is put in.
   ///
   /// Null is the ordinary case now that panels are docked: a panel in a
@@ -83,24 +94,43 @@ class _AssetBrowserState extends State<AssetBrowser> {
   void initState() {
     super.initState();
     _listen();
+    widget.cookStatus?.addListener(_onCookStatus);
+    // Not awaited: the panel should be drawable before the first answer, and
+    // on a large project the first answer is a second or two away.
+    unawaited(widget.cookStatus?.refresh() ?? Future.value());
   }
 
   void _listen() {
     _changes?.cancel();
     _changes = widget.tree.changes.listen((_) {
-      if (mounted) setState(() => _revision++);
+      if (!mounted) return;
+      setState(() => _revision++);
+      // Anything that changed a file may have changed what the cook would do
+      // with it. The index coalesces this, so a save that touches forty files
+      // is one answer rather than forty.
+      unawaited(widget.cookStatus?.refresh() ?? Future.value());
     });
+  }
+
+  void _onCookStatus() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
     _changes?.cancel();
+    widget.cookStatus?.removeListener(_onCookStatus);
     super.dispose();
   }
 
   @override
   void didUpdateWidget(AssetBrowser oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.cookStatus != widget.cookStatus) {
+      oldWidget.cookStatus?.removeListener(_onCookStatus);
+      widget.cookStatus?.addListener(_onCookStatus);
+      unawaited(widget.cookStatus?.refresh() ?? Future.value());
+    }
     if (oldWidget.tree.root != widget.tree.root) {
       _directory = widget.tree.root;
       _selected = null;
@@ -118,7 +148,7 @@ class _AssetBrowserState extends State<AssetBrowser> {
         content: Text(
           asset.isFolder
               ? 'This deletes the folder and everything in it. It does not go '
-                  'to the Trash, and undo does not cover files.'
+                    'to the Trash, and undo does not cover files.'
               : 'This does not go to the Trash, and undo does not cover files.',
           style: OrblitText.body,
         ),
@@ -221,9 +251,9 @@ class _AssetBrowserState extends State<AssetBrowser> {
               _Header(
                 crumb: widget.tree.relative(_directory),
                 count: entries.length,
+                cookStatus: widget.cookStatus,
                 previewing: _previewing,
-                onPreview: () =>
-                    setState(() => _previewing = !_previewing),
+                onPreview: () => setState(() => _previewing = !_previewing),
                 canGoUp: !p.equals(_directory, widget.tree.root),
                 onUp: () => setState(() {
                   _directory = p.dirname(_directory);
@@ -255,6 +285,7 @@ class _AssetBrowserState extends State<AssetBrowser> {
                       child: _Grid(
                         key: ValueKey('$_directory/$_revision'),
                         entries: entries,
+                        cookStatus: widget.cookStatus,
                         selected: _selected,
                         onSelect: (asset) {
                           setState(() {
@@ -265,11 +296,11 @@ class _AssetBrowserState extends State<AssetBrowser> {
                         },
                         onDelete: _confirmDelete,
                         onRename: _promptRename,
-                      onBuild: widget.onBuild,
+                        onBuild: widget.onBuild,
                         onDropObject: widget.onMakePrefab == null
                             ? null
                             : (object) =>
-                                widget.onMakePrefab!(object, _directory),
+                                  widget.onMakePrefab!(object, _directory),
                         onOpen: (asset) {
                           if (!asset.isFolder) {
                             widget.onOpenAsset?.call(asset);
@@ -294,8 +325,9 @@ class _AssetBrowserState extends State<AssetBrowser> {
     );
   }
 
-  Widget _sized(Widget child) =>
-      widget.height == null ? child : SizedBox(height: widget.height, child: child);
+  Widget _sized(Widget child) => widget.height == null
+      ? child
+      : SizedBox(height: widget.height, child: child);
 }
 
 class _Header extends StatelessWidget {
@@ -307,10 +339,12 @@ class _Header extends StatelessWidget {
     required this.onPreview,
     required this.onUp,
     required this.onRefresh,
+    this.cookStatus,
   });
 
   final String crumb;
   final int count;
+  final CookStatusIndex? cookStatus;
   final bool canGoUp;
   final bool previewing;
   final VoidCallback onPreview;
@@ -344,6 +378,10 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          if (cookStatus != null) ...[
+            _CookSummary(status: cookStatus!),
+            const SizedBox(width: Space.sm),
+          ],
           Text(
             '$count item${count == 1 ? '' : 's'}',
             style: OrblitText.caption.copyWith(fontSize: 11),
@@ -538,7 +576,10 @@ class _FolderRowState extends State<_FolderRow> {
                 child: Text(
                   widget.name,
                   overflow: TextOverflow.ellipsis,
-                  style: OrblitText.label.copyWith(fontSize: 11.5, color: colour),
+                  style: OrblitText.label.copyWith(
+                    fontSize: 11.5,
+                    color: colour,
+                  ),
                 ),
               ),
             ],
@@ -576,9 +617,11 @@ class _Grid extends StatelessWidget {
     required this.onRename,
     this.onBuild,
     this.onDropObject,
+    this.cookStatus,
   });
 
   final List<Asset> entries;
+  final CookStatusIndex? cookStatus;
   final String? selected;
   final ValueChanged<Asset> onSelect;
   final ValueChanged<Asset> onOpen;
@@ -600,8 +643,10 @@ class _Grid extends StatelessWidget {
               children: [
                 Text('This folder is empty.', style: OrblitText.caption),
                 const SizedBox(height: Space.xs),
-                Text('Right-click to add something.',
-                    style: OrblitText.caption),
+                Text(
+                  'Right-click to add something.',
+                  style: OrblitText.caption,
+                ),
               ],
             ),
           )
@@ -665,6 +710,7 @@ class _Grid extends StatelessWidget {
         final asset = entries[index];
         return _Tile(
           asset: asset,
+          cookState: asset.isFolder ? null : cookStatus?[asset.path],
           selected: asset.path == selected,
           onTap: () => onSelect(asset),
           onDoubleTap: () => onOpen(asset),
@@ -791,7 +837,8 @@ class _AssetMenuState extends State<AssetMenu> {
 
   @override
   Widget build(BuildContext context) {
-    final acting = _onOpen != null ||
+    final acting =
+        _onOpen != null ||
         _onRename != null ||
         _onDelete != null ||
         _onBuild != null;
@@ -839,9 +886,15 @@ class _Tile extends StatefulWidget {
     required this.onDelete,
     required this.onRename,
     this.onBuild,
+    this.cookState,
   });
 
   final Asset asset;
+
+  /// Where this file stands with the cook, or null when nothing has been
+  /// asked — a folder, a file outside the assets folder, a project nobody
+  /// has cooked.
+  final CookState? cookState;
   final bool selected;
   final VoidCallback onTap;
   final VoidCallback onDoubleTap;
@@ -860,9 +913,12 @@ class _TileState extends State<_Tile> {
   Widget build(BuildContext context) {
     final asset = widget.asset;
 
+    final state = widget.cookState;
     final tile = Tooltip(
-      message: '${asset.name}\n${asset.kind.label}'
-          '${asset.bytes == null ? '' : ' · ${asset.size}'}',
+      message:
+          '${asset.name}\n${asset.kind.label}'
+          '${asset.bytes == null ? '' : ' · ${asset.size}'}'
+          '${state == null ? '' : '\n${state.label}. ${state.explanation}'}',
       waitDuration: const Duration(milliseconds: 600),
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
@@ -895,7 +951,10 @@ class _TileState extends State<_Tile> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _Thumbnail(asset: asset, selected: widget.selected),
+                _CookMark(
+                  state: state,
+                  child: _Thumbnail(asset: asset, selected: widget.selected),
+                ),
                 const SizedBox(height: Space.xs),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -932,6 +991,114 @@ class _TileState extends State<_Tile> {
   }
 }
 
+/// A small dot in the corner of a tile, saying where the file stands with the
+/// cook.
+///
+/// A dot rather than a badge or a strip of text. There are four hundred of
+/// these in a folder of textures, the thing being said is one of three, and
+/// anything larger would compete with the picture it sits on — which is what
+/// somebody is actually looking at when they are looking for a file.
+///
+/// Ringed in the panel's own colour so that it reads on a dark thumbnail and
+/// on a bright one alike. A dot that disappears against half the textures in
+/// the project says nothing about those textures.
+class _CookMark extends StatelessWidget {
+  const _CookMark({required this.state, required this.child});
+
+  final CookState? state;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colour = state?.mark;
+    if (colour == null) return child;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        child,
+        Positioned(
+          top: 0,
+          right: 0,
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: colour,
+              shape: BoxShape.circle,
+              border: Border.all(color: OrblitColors.surface, width: 1.5),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// What the cook has left to do, in the header.
+///
+/// Only what is outstanding: the number cooked is the number nobody has to
+/// act on, and a header that reads "396 cooked, 4 need cooking" buries the
+/// four. Nothing at all is shown when there is nothing to do, which is the
+/// state a project should mostly be in.
+class _CookSummary extends StatelessWidget {
+  const _CookSummary({required this.status});
+
+  final CookStatusIndex status;
+
+  @override
+  Widget build(BuildContext context) {
+    if (status.problem != null) {
+      return Tooltip(
+        message: 'The cook could not be asked.\n${status.problem}',
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 13, color: OrblitColors.bad),
+            const SizedBox(width: 4),
+            Text(
+              'Cook unknown',
+              style: OrblitText.caption.copyWith(
+                fontSize: 11,
+                color: OrblitColors.bad,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (status.asking) {
+      return Text(
+        'Checking assets…',
+        style: OrblitText.caption.copyWith(fontSize: 11),
+      );
+    }
+
+    final counts = status.counts;
+    final stale = counts[CookState.stale] ?? 0;
+    final failed = counts[CookState.failed] ?? 0;
+    if (stale == 0 && failed == 0) return const SizedBox.shrink();
+
+    final parts = [
+      if (failed > 0) '$failed would not cook',
+      if (stale > 0) '$stale to cook',
+    ];
+    return Tooltip(
+      message:
+          'For ${status.target.name}. '
+          '${counts[CookState.cooked] ?? 0} already cooked.',
+      child: Text(
+        parts.join(' · '),
+        style: OrblitText.caption.copyWith(
+          fontSize: 11,
+          color: failed > 0 ? OrblitColors.bad : OrblitColors.warn,
+        ),
+      ),
+    );
+  }
+}
+
 /// What an asset looks like, where that can be shown, and its kind where it
 /// cannot.
 ///
@@ -948,9 +1115,7 @@ class _Thumbnail extends StatelessWidget {
   final bool selected;
 
   /// What Flutter's own decoders handle.
-  static const _decodable = {
-    '.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp',
-  };
+  static const _decodable = {'.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp'};
 
   static bool showsPicture(Asset asset) =>
       !asset.isFolder &&
