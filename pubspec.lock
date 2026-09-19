@@ -340,14 +340,14 @@ packages:
       path: "../orblit/packages/orblit_examples"
       relative: true
     source: path
-    version: "0.29.0"
+    version: "0.31.0"
   orblit_filament:
     dependency: "direct main"
     description:
       path: "../orblit/packages/orblit_filament"
       relative: true
     source: path
-    version: "0.29.1"
+    version: "0.30.0"
   orblit_light:
     dependency: "direct main"
     description:
