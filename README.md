@@ -35,5 +35,9 @@ its own padding.
 
 ## Licence
 
-MIT, © 2026 Chris Beckett. The editor links the renderer, so builds carry Filament's
-Apache 2.0 licence too — see [LICENSE](LICENSE).
+FSL-1.1-MIT, © 2026 Chris Beckett — use it, fork it and ship games with it,
+commercial ones included, but don't offer it as a competing product. Each
+release becomes MIT two years after it's published.
+
+The editor links the renderer, so builds carry Filament's Apache 2.0 licence
+too — see [LICENSE](LICENSE).
