@@ -340,14 +340,14 @@ packages:
       path: "../orblit/packages/orblit_examples"
       relative: true
     source: path
-    version: "0.26.0"
+    version: "0.29.0"
   orblit_filament:
     dependency: "direct main"
     description:
       path: "../orblit/packages/orblit_filament"
       relative: true
     source: path
-    version: "0.27.0"
+    version: "0.29.1"
   orblit_light:
     dependency: "direct main"
     description:
@@ -376,6 +376,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  orblit_rig:
+    dependency: transitive
+    description:
+      path: "../orblit/packages/orblit_rig"
+      relative: true
+    source: path
+    version: "0.1.0"
   orblit_scene:
     dependency: "direct main"
     description:
@@ -389,14 +396,14 @@ packages:
       path: "../orblit/packages/orblit_sprite"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.2.0"
   orblit_stage:
     dependency: transitive
     description:
       path: "../orblit/packages/orblit_stage"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.2.0"
   orblit_ui:
     dependency: "direct main"
     description:
