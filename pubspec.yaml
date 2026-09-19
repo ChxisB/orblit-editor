@@ -43,6 +43,14 @@ dependencies:
   orblit_weather:
     path: ../orblit/packages/orblit_weather
 
+  # The cook: what each asset is, whether the cache already holds it for this
+  # machine, and why one would not cook. The browser only *asks* -- the answer
+  # has to come from the same cache and the same importers the build uses, or
+  # a mark beside an asset would eventually disagree with the build it is
+  # meant to describe.
+  orblit_asset:
+    path: ../orblit/packages/orblit_asset
+
   # The scene format itself, which used to live in this file and now does not.
   # One reader, one writer and one list of migrations, shared with the runtime
   # and with anything else that opens a scene -- the editor is where they are

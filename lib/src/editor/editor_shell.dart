@@ -18,6 +18,7 @@ import 'boundary.dart';
 import 'commands.dart';
 import 'console.dart';
 import 'console_panel.dart';
+import 'cook_status.dart';
 import 'data_panel.dart';
 import 'data_store.dart';
 import 'dock.dart';
@@ -74,6 +75,15 @@ class _EditorShellState extends State<EditorShell> {
   late final Workspace _workspace = Workspace(widget.project.directory);
   late final History _history = History(_workspace);
   late final AssetTree _assets = AssetTree(widget.project.directory);
+
+  /// Where each asset stands with the cook, for the marks in the browser.
+  ///
+  /// One per window rather than one per browser panel: two panels open on the
+  /// same project are looking at the same cache, and hashing the project
+  /// twice to tell them the same thing would be work done to say nothing new.
+  late final CookStatusIndex _cookStatus = CookStatusIndex(
+    projectDirectory: widget.project.directory,
+  );
 
   late final DataStore _data = DataStore(widget.project.directory);
 
@@ -980,6 +990,7 @@ class _EditorShellState extends State<EditorShell> {
       ..removeListener(_onChanged)
       ..dispose();
     _assets.dispose();
+    _cookStatus.dispose();
     _frames
       ..removeListener(_onChanged)
       ..dispose();
@@ -2130,6 +2141,7 @@ class _EditorShellState extends State<EditorShell> {
         ),
       PanelKind.project => AssetBrowser(
             tree: _assets,
+            cookStatus: _cookStatus,
                         onOpenAsset: (asset) {
             // A scene opens here; anything somebody would
             // type into goes where they type.
