@@ -322,179 +322,198 @@ class _RowState extends State<_Row> {
 
   @override
   Widget build(BuildContext context) {
-    final object = widget.row.object;
-    final entry = widget.row.entry;
-    final scene = entry.scene;
-
-    // Through the scene rather than off the object, so a light that follows
-    // the sky says Moon here at the same moment the viewport goes dark.
-    final name = object == null
-        ? entry.title
-        : (scene?.displayNameOf(object) ?? object.name);
-    final icon = object == null
-        ? (_isLoaded ? Icons.public : Icons.public_off)
-        : (scene?.displayIconOf(object) ?? object.icon);
-
-    final colour = widget.selected
-        ? OrblitColors.ember
-        // An unloaded scene is dimmer, because it is a place rather than a
-        // thing you can currently change.
-        : (_isScene && !_isLoaded
-            ? OrblitColors.inkDim
-            : (_hovering ? OrblitColors.ink : OrblitColors.inkMid));
-
     final row = DragTarget<ObjectDrag>(
       onWillAcceptWithDetails: (details) => _accepts(details.data.id),
-      onMove: (details) {
-        final box = context.findRenderObject() as RenderBox?;
-        if (box == null) return;
-        final kind = _kindFor(box.globalToLocal(details.offset));
-        if (kind != _dropping) setState(() => _dropping = kind);
-      },
+      onMove: _onMove,
       onLeave: (_) => setState(() => _dropping = null),
-      onAcceptWithDetails: (details) {
-        final kind = _dropping ?? DropKind.inside;
-        setState(() => _dropping = null);
-        widget.onDrop(details.data.id, kind);
-      },
-      builder: (context, candidate, _) {
-        final dropping = candidate.isEmpty ? null : _dropping;
-
-        return MouseRegion(
-          cursor: SystemMouseCursors.click,
-          onEnter: (_) => setState(() => _hovering = true),
-          onExit: (_) => setState(() => _hovering = false),
-          // The disclosure arrow sits outside the tap area rather than inside
-          // it. A double-tap handler above the arrow makes every single tap on
-          // it wait for the double-tap timeout, which is a real lag on the
-          // commonest thing anybody does in a tree.
-          child: Container(
-              height: _height,
-              padding: EdgeInsets.only(
-                left: Space.xs + widget.row.depth * 13.0,
-                right: Space.xs,
-              ),
-              decoration: BoxDecoration(
-                color: widget.selected
-                    ? OrblitColors.emberWash
-                    : (dropping == DropKind.inside
-                        ? OrblitColors.raised
-                        : (_hovering
-                            ? OrblitColors.raised
-                            : Colors.transparent)),
-                // A line for a reorder, a fill for a reparent: the two answers
-                // look different because they are different.
-                border: Border(
-                  top: BorderSide(
-                    color: dropping == DropKind.before
-                        ? OrblitColors.ember
-                        : Colors.transparent,
-                    width: 2,
-                  ),
-                  bottom: BorderSide(
-                    color: dropping == DropKind.after
-                        ? OrblitColors.ember
-                        : Colors.transparent,
-                    width: 2,
-                  ),
-                ),
-              ),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 16,
-                    child: widget.row.hasChildren
-                        ? GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: widget.onToggle,
-                            child: Icon(
-                              widget.collapsed
-                                  ? Icons.chevron_right
-                                  : Icons.expand_more,
-                              size: 15,
-                              color: OrblitColors.inkDim,
-                            ),
-                          )
-                        : null,
-                  ),
-                  Expanded(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: widget.onTap,
-                      onDoubleTap: widget.onDoubleTap,
-                      child: Row(
-                        children: [
-                          Icon(icon, size: 14, color: colour),
-                          const SizedBox(width: Space.sm),
-                          Expanded(
-                            child: Text(
-                              name,
-                              overflow: TextOverflow.ellipsis,
-                              style: OrblitText.label.copyWith(
-                                color: colour,
-                                fontWeight: _isScene || widget.selected
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                          // A quiet mark on the one of several whose fields
-                          // the inspector is showing, so a multiple selection
-                          // does not look like it lost track of itself.
-                          if (widget.primary && widget.selected)
-                            Padding(
-                              padding: const EdgeInsets.only(left: Space.xs),
-                              child: Icon(
-                                Icons.edit_outlined,
-                                size: 11,
-                                color: OrblitColors.ember,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (_isScene && !_isLoaded && !_hovering)
-                    Text(
-                      'not loaded',
-                      style: OrblitText.caption.copyWith(fontSize: 10),
-                    ),
-                  if (_isScene && _isLoaded && entry.neverWritten)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 4),
-                      child: Text('•',
-                          style: OrblitText.mono
-                              .copyWith(color: OrblitColors.ember)),
-                    ),
-                  if (_hovering)
-                    _RowAction(
-                      icon: Icons.close,
-                      tooltip: _isScene ? 'Close $name' : 'Delete $name',
-                      onTap: widget.onDelete,
-                    ),
-                ],
-              ),
-            ),
-        );
-      },
+      onAcceptWithDetails: _onDrop,
+      builder: (context, candidate, _) =>
+          _content(candidate.isEmpty ? null : _dropping),
     );
 
     // A scene's row is a drop target and a heading, not something to drag.
     if (_isScene) {
       return Tooltip(
-        message: _isLoaded
-            ? name
-            : 'Double-click to load $name',
+        message: _isLoaded ? _name : 'Double-click to load $_name',
         waitDuration: const Duration(milliseconds: 700),
         child: row,
       );
     }
 
     return Draggable<ObjectDrag>(
-      data: ObjectDrag(object!.id, name),
+      data: ObjectDrag(widget.row.object!.id, _name),
       dragAnchorStrategy: pointerDragAnchorStrategy,
-      feedback: _DragLabel(name: name, icon: icon),
+      feedback: _DragLabel(name: _name, icon: _icon),
       child: row,
+    );
+  }
+
+  // Through the scene rather than off the object, so a light that follows
+  // the sky says Moon here at the same moment the viewport goes dark.
+  String get _name {
+    final object = widget.row.object;
+    final entry = widget.row.entry;
+    final scene = entry.scene;
+
+    return object == null
+        ? entry.title
+        : (scene?.displayNameOf(object) ?? object.name);
+  }
+
+  IconData get _icon {
+    final object = widget.row.object;
+    final scene = widget.row.entry.scene;
+
+    return object == null
+        ? (_isLoaded ? Icons.public : Icons.public_off)
+        : (scene?.displayIconOf(object) ?? object.icon);
+  }
+
+  Color get _colour {
+    return widget.selected
+        ? OrblitColors.ember
+        // An unloaded scene is dimmer, because it is a place rather than a
+        // thing you can currently change.
+        : (_isScene && !_isLoaded
+            ? OrblitColors.inkDim
+            : (_hovering ? OrblitColors.ink : OrblitColors.inkMid));
+  }
+
+  void _onMove(DragTargetDetails<ObjectDrag> details) {
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    final kind = _kindFor(box.globalToLocal(details.offset));
+    if (kind != _dropping) setState(() => _dropping = kind);
+  }
+
+  void _onDrop(DragTargetDetails<ObjectDrag> details) {
+    final kind = _dropping ?? DropKind.inside;
+    setState(() => _dropping = null);
+    widget.onDrop(details.data.id, kind);
+  }
+
+  // The row itself, and the line that says where a drop would land.
+  Widget _content(DropKind? dropping) {
+    final entry = widget.row.entry;
+    final name = _name;
+    final icon = _icon;
+    final colour = _colour;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      // The disclosure arrow sits outside the tap area rather than inside
+      // it. A double-tap handler above the arrow makes every single tap on
+      // it wait for the double-tap timeout, which is a real lag on the
+      // commonest thing anybody does in a tree.
+      child: Container(
+          height: _height,
+          padding: EdgeInsets.only(
+            left: Space.xs + widget.row.depth * 13.0,
+            right: Space.xs,
+          ),
+          decoration: BoxDecoration(
+            color: widget.selected
+                ? OrblitColors.emberWash
+                : (dropping == DropKind.inside
+                    ? OrblitColors.raised
+                    : (_hovering
+                        ? OrblitColors.raised
+                        : Colors.transparent)),
+            // A line for a reorder, a fill for a reparent: the two answers
+            // look different because they are different.
+            border: Border(
+              top: BorderSide(
+                color: dropping == DropKind.before
+                    ? OrblitColors.ember
+                    : Colors.transparent,
+                width: 2,
+              ),
+              bottom: BorderSide(
+                color: dropping == DropKind.after
+                    ? OrblitColors.ember
+                    : Colors.transparent,
+                width: 2,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                child: widget.row.hasChildren
+                    ? GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: widget.onToggle,
+                        child: Icon(
+                          widget.collapsed
+                              ? Icons.chevron_right
+                              : Icons.expand_more,
+                          size: 15,
+                          color: OrblitColors.inkDim,
+                        ),
+                      )
+                    : null,
+              ),
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: widget.onTap,
+                  onDoubleTap: widget.onDoubleTap,
+                  child: Row(
+                    children: [
+                      Icon(icon, size: 14, color: colour),
+                      const SizedBox(width: Space.sm),
+                      Expanded(
+                        child: Text(
+                          name,
+                          overflow: TextOverflow.ellipsis,
+                          style: OrblitText.label.copyWith(
+                            color: colour,
+                            fontWeight: _isScene || widget.selected
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                      // A quiet mark on the one of several whose fields
+                      // the inspector is showing, so a multiple selection
+                      // does not look like it lost track of itself.
+                      if (widget.primary && widget.selected)
+                        Padding(
+                          padding: const EdgeInsets.only(left: Space.xs),
+                          child: Icon(
+                            Icons.edit_outlined,
+                            size: 11,
+                            color: OrblitColors.ember,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              if (_isScene && !_isLoaded && !_hovering)
+                Text(
+                  'not loaded',
+                  style: OrblitText.caption.copyWith(fontSize: 10),
+                ),
+              if (_isScene && _isLoaded && entry.neverWritten)
+                Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: Text('•',
+                      style: OrblitText.mono
+                          .copyWith(color: OrblitColors.ember)),
+                ),
+              if (_hovering)
+                _RowAction(
+                  icon: Icons.close,
+                  tooltip: _isScene ? 'Close $name' : 'Delete $name',
+                  onTap: widget.onDelete,
+                ),
+            ],
+          ),
+        ),
     );
   }
 }

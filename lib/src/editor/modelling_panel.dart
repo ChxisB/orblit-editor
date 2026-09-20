@@ -131,7 +131,7 @@ class ModellingPanel extends StatelessWidget {
   /// property of how somebody is working rather than of any one object — the
   /// same answer for everything they place.
   Widget _gridSection() {
-    return _Section(
+    return OrblitSection(
       title: 'Grid',
       icon: Icons.grid_4x4,
       child: Column(
@@ -158,16 +158,14 @@ class ModellingPanel extends StatelessWidget {
               ),
             ),
             const SizedBox(height: Space.xs),
-            Text(
-              switch (snapping.to) {
-                SnapTo.pivot => 'Wherever the shape\'s own origin is.',
-                SnapTo.base => 'Its underside, so it stands on the line '
+            Text(switch (snapping.to) {
+              SnapTo.pivot => 'Wherever the shape\'s own origin is.',
+              SnapTo.base =>
+                'Its underside, so it stands on the line '
                     'rather than through it.',
-                SnapTo.centre => 'Its middle, so it straddles the line.',
-                SnapTo.top => 'Its top, for hanging it from something.',
-              },
-              style: OrblitText.caption.copyWith(fontSize: 11),
-            ),
+              SnapTo.centre => 'Its middle, so it straddles the line.',
+              SnapTo.top => 'Its top, for hanging it from something.',
+            }, style: OrblitText.caption.copyWith(fontSize: 11)),
             const SizedBox(height: Space.xs),
             Text(
               'The brackets change the size. The arrows move by whole '
@@ -193,7 +191,7 @@ class ModellingPanel extends StatelessWidget {
   /// shape selected — drawing one is how somebody gets a shape in the first
   /// place.
   Widget _drawSection() {
-    return _Section(
+    return OrblitSection(
       title: 'Draw',
       icon: Icons.polyline_outlined,
       child: Column(
@@ -238,7 +236,7 @@ class ModellingPanel extends StatelessWidget {
     final editing = context_ == EditContext.element;
     final offered = MeshTools.availableIn(editing ? mode : null, selection);
 
-    return _Section(
+    return OrblitSection(
       title: 'Geometry',
       icon: Icons.build_outlined,
       child: Column(
@@ -262,9 +260,7 @@ class ModellingPanel extends StatelessWidget {
                       label: one.label,
                       icon: one.icon,
                       expand: true,
-                      tone: one == mode
-                          ? ButtonTone.primary
-                          : ButtonTone.quiet,
+                      tone: one == mode ? ButtonTone.primary : ButtonTone.quiet,
                       onPressed: () => onMode(one),
                     ),
                   ),
@@ -286,11 +282,9 @@ class ModellingPanel extends StatelessWidget {
             Text(
               selection.isEmpty
                   ? 'Click ${mode.label.toLowerCase()} in the viewport. '
-                      'Shift to add. G changes mode, escape leaves.'
+                        'Shift to add. G changes mode, escape leaves.'
                   : '${selection.countIn(mode)} selected — drag the handles to '
-                      '${mode == ElementMode.face
-                          ? 'move them, shift-drag to extrude'
-                          : 'move them'}',
+                        '${mode == ElementMode.face ? 'move them, shift-drag to extrude' : 'move them'}',
               style: OrblitText.caption.copyWith(fontSize: 11),
             ),
           ],
@@ -313,8 +307,9 @@ class ModellingPanel extends StatelessWidget {
                   ),
                 ),
               ),
-              for (final action in offered.where((one) => one.group == group))
-                ...[
+              for (final action in offered.where(
+                (one) => one.group == group,
+              )) ...[
                 _ActionRow(
                   action: action,
                   amount: amounts[action.label] ?? action.amount?.value ?? 1,
@@ -339,11 +334,12 @@ class ModellingPanel extends StatelessWidget {
     for (final face in mesh?.faces ?? const <Face>[]) {
       worn[face.material] = (worn[face.material] ?? 0) + 1;
     }
-    final painting = context_ == EditContext.element &&
+    final painting =
+        context_ == EditContext.element &&
         mode == ElementMode.face &&
         selection.faces.isNotEmpty;
 
-    return _Section(
+    return OrblitSection(
       title: 'Materials',
       icon: Icons.palette_outlined,
       child: Column(
@@ -378,13 +374,10 @@ class ModellingPanel extends StatelessWidget {
             icon: Icons.add,
             expand: true,
             tone: ButtonTone.quiet,
-            onPressed: () => onSurfaces(
-              [
-                ...surfaces,
-                Surface(name: 'Material ${surfaces.length + 1}'),
-              ],
-              live: false,
-            ),
+            onPressed: () => onSurfaces([
+              ...surfaces,
+              Surface(name: 'Material ${surfaces.length + 1}'),
+            ], live: false),
           ),
         ],
       ),
@@ -397,7 +390,6 @@ class ModellingPanel extends StatelessWidget {
   /// itself the outline cannot describe it any more, and a height slider that
   /// silently threw away an extrude would be worse than not having one.
 
-
   /// The way out.
   ///
   /// Not because the engine needs it — it reads its own files — but because a
@@ -405,7 +397,7 @@ class ModellingPanel extends StatelessWidget {
   /// somewhere else, and a tool that can only be a dead end is one people
   /// stop putting real work into.
   Widget _exportSection() {
-    return _Section(
+    return OrblitSection(
       title: 'Export',
       icon: Icons.ios_share_outlined,
       child: Column(
@@ -420,18 +412,17 @@ class ModellingPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: Space.xs),
-          Text(
-            switch (format) {
-              MeshFormat.obj =>
-                'Keeps faces as they were drawn, and brings a .mtl.',
-              MeshFormat.glb => 'What the engine itself loads.',
-              MeshFormat.stl => 'Triangles and nothing else. What a printer '
+          Text(switch (format) {
+            MeshFormat.obj =>
+              'Keeps faces as they were drawn, and brings a .mtl.',
+            MeshFormat.glb => 'What the engine itself loads.',
+            MeshFormat.stl =>
+              'Triangles and nothing else. What a printer '
                   'takes.',
-              MeshFormat.ply => 'Triangles with their normals and '
+            MeshFormat.ply =>
+              'Triangles with their normals and '
                   'coordinates.',
-            },
-            style: OrblitText.caption.copyWith(fontSize: 11),
-          ),
+          }, style: OrblitText.caption.copyWith(fontSize: 11)),
           const SizedBox(height: Space.xs),
           OrblitButton(
             label: 'Export shape',
@@ -587,50 +578,6 @@ class _ActionRow extends StatelessWidget {
               decimals: takes.max <= 2 ? 2 : 0,
               onChanged: onAmount,
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Section extends StatelessWidget {
-  const _Section({
-    required this.title,
-    required this.icon,
-    required this.child,
-  });
-
-  final String title;
-  final IconData icon;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(Space.sm, 0, Space.sm, Space.sm),
-      decoration: BoxDecoration(
-        color: OrblitColors.ground,
-        borderRadius: BorderRadius.circular(Radii.panel),
-        border: Border.all(color: OrblitColors.lineSoft),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            height: 30,
-            padding: const EdgeInsets.symmetric(horizontal: Space.md),
-            child: Row(
-              children: [
-                Icon(icon, size: 13, color: OrblitColors.inkDim),
-                const SizedBox(width: Space.sm),
-                Text(title.toUpperCase(), style: OrblitText.section),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.sm),
-            child: child,
-          ),
         ],
       ),
     );

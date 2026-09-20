@@ -11,6 +11,10 @@ import '../widgets/controls.dart';
 import 'inspector.dart' show FieldRow, SliderRow;
 import 'ui_canvas.dart';
 
+part 'ui_editor_tree.dart';
+part 'ui_editor_side.dart';
+part 'ui_editor_controls.dart';
+
 /// The elements somebody can put on a canvas.
 ///
 /// A short list on purpose. Every one of these is a real Flutter widget with
@@ -22,8 +26,12 @@ enum UiElement {
   stack('Stack', Icons.layers_outlined, 'stack', ''),
   box('Box', Icons.crop_square, 'box', 'p-4 bg-slate-800 rounded-lg'),
   text('Text', Icons.text_fields, 'text', 'text-base text-slate-100'),
-  button('Button', Icons.smart_button_outlined, 'button',
-      'px-4 py-2 bg-ember-500 text-white rounded'),
+  button(
+    'Button',
+    Icons.smart_button_outlined,
+    'button',
+    'px-4 py-2 bg-ember-500 text-white rounded',
+  ),
   field('Field', Icons.input, 'field', 'px-3 py-2 bg-slate-900 rounded'),
   image('Image', Icons.image_outlined, 'image', 'w-32 h-32'),
   spacer('Spacer', Icons.expand, 'spacer', '');
@@ -41,15 +49,15 @@ enum UiElement {
   final String classes;
 
   UiNode make() => UiNode(
-        type: type,
-        classes: classes,
-        text: switch (this) {
-          UiElement.text => 'Text',
-          UiElement.button => 'Button',
-          UiElement.field => '',
-          _ => null,
-        },
-      );
+    type: type,
+    classes: classes,
+    text: switch (this) {
+      UiElement.text => 'Text',
+      UiElement.button => 'Button',
+      UiElement.field => '',
+      _ => null,
+    },
+  );
 }
 
 /// Laying out an interface.
@@ -247,7 +255,9 @@ class _UiEditorState extends State<UiEditor> {
     );
 
     _change(
-      _document.copyWith(root: _document.root.replaceAt(path, _spanning(split))),
+      _document.copyWith(
+        root: _document.root.replaceAt(path, _spanning(split)),
+      ),
       select: path,
     );
     setState(() => _columns = true);
@@ -273,7 +283,6 @@ class _UiEditorState extends State<UiEditor> {
     return node.copyWith(css: [...rest, 'right: 0'].join('; '));
   }
 
-
   /// Moves an element while it is being dragged.
   ///
   /// The whole drag is one step. Without this an undo would walk back through
@@ -287,8 +296,10 @@ class _UiEditorState extends State<UiEditor> {
     // throws away a fraction of a pixel each time, and a slow drag ends up
     // behind the pointer by however long somebody took over it.
     final next = _document.copyWith(
-      root: _document.root
-          .replaceAt(path, element.placeAt(to.dx, to.dy, round: false)),
+      root: _document.root.replaceAt(
+        path,
+        element.placeAt(to.dx, to.dy, round: false),
+      ),
     );
 
     if (_before == null) {
@@ -353,7 +364,10 @@ class _UiEditorState extends State<UiEditor> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: OrblitColors.surface,
-        title: Text('Save ${p.basename(widget.path)}?', style: OrblitText.title),
+        title: Text(
+          'Save ${p.basename(widget.path)}?',
+          style: OrblitText.title,
+        ),
         content: Text(
           'It has changes that are not on disk.',
           style: OrblitText.body,
@@ -395,22 +409,30 @@ class _UiEditorState extends State<UiEditor> {
       },
       child: Actions(
         actions: {
-          _SaveIntent: CallbackAction<_SaveIntent>(onInvoke: (_) {
-            _save();
-            return null;
-          }),
-          _UndoIntent: CallbackAction<_UndoIntent>(onInvoke: (_) {
-            _undo();
-            return null;
-          }),
-          _RedoIntent: CallbackAction<_RedoIntent>(onInvoke: (_) {
-            _redo();
-            return null;
-          }),
-          _DeleteIntent: CallbackAction<_DeleteIntent>(onInvoke: (_) {
-            if (_selected != null) _remove(_selected!);
-            return null;
-          }),
+          _SaveIntent: CallbackAction<_SaveIntent>(
+            onInvoke: (_) {
+              _save();
+              return null;
+            },
+          ),
+          _UndoIntent: CallbackAction<_UndoIntent>(
+            onInvoke: (_) {
+              _undo();
+              return null;
+            },
+          ),
+          _RedoIntent: CallbackAction<_RedoIntent>(
+            onInvoke: (_) {
+              _redo();
+              return null;
+            },
+          ),
+          _DeleteIntent: CallbackAction<_DeleteIntent>(
+            onInvoke: (_) {
+              if (_selected != null) _remove(_selected!);
+              return null;
+            },
+          ),
         },
         child: Focus(
           autofocus: true,
@@ -442,8 +464,7 @@ class _UiEditorState extends State<UiEditor> {
                           showOutlines: _outlines,
                           showGuides: _guides,
                           showColumns: _columns && !_previewing,
-                          onSelect: (path) =>
-                              setState(() => _selected = path),
+                          onSelect: (path) => setState(() => _selected = path),
                           onHover: (path) => setState(() => _hovered = path),
                           onMove: _move,
                           onMoved: _moveDone,
@@ -558,77 +579,6 @@ class _UiEditorState extends State<UiEditor> {
   }
 }
 
-/// What the canvas is being laid out at, and which prefixed classes that
-/// puts in play.
-///
-/// The one thing a responsive canvas has to say out loud. A `md:` class that
-/// appears to do nothing is somebody's afternoon, and the answer is always
-/// that the canvas is narrower than they thought.
-class _Showing extends StatelessWidget {
-  const _Showing({required this.document, required this.preview});
-
-  final UiDocument document;
-  final Size? preview;
-
-  @override
-  Widget build(BuildContext context) {
-    final size = UiCanvasView.layoutFor(document, preview);
-    final at = const UiTheme().breakpoints.labelAt(size.width);
-
-    return Tooltip(
-      message: 'Laid out at ${size.width.round()} × ${size.height.round()}. '
-          'Classes prefixed $at: and narrower are in effect.',
-      waitDuration: const Duration(milliseconds: 400),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '${size.width.round()} × ${size.height.round()}',
-            style: OrblitText.label.copyWith(
-              fontSize: 11,
-              color: OrblitColors.inkDim,
-            ),
-          ),
-          const SizedBox(width: Space.sm),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            decoration: BoxDecoration(
-              color: OrblitColors.raised,
-              borderRadius: BorderRadius.circular(Radii.control),
-              border: Border.all(color: OrblitColors.line),
-            ),
-            child: Text(
-              at,
-              style: OrblitText.label.copyWith(
-                fontSize: 10.5,
-                color: OrblitColors.inkMid,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A class list with any direction it named taken out.
-///
-/// The type says `row` now, and a leftover `stack` or `md:row` in the classes
-/// is applied over the top of it — the element would keep its old layout and
-/// the change would look like it did nothing.
-String _flowing(String classes) {
-  const directions = {'col', 'column', 'stack', 'row'};
-  final kept = [
-    for (final name in classes.split(RegExp(r'\s+')))
-      if (name.isNotEmpty)
-        if (!directions.contains(name) &&
-            !directions.contains(name.split(':').last))
-          name,
-  ];
-  if (!kept.any((name) => name.startsWith('gap-'))) kept.add('gap-4');
-  return kept.join(' ');
-}
-
 class _SaveIntent extends Intent {
   const _SaveIntent();
 }
@@ -643,707 +593,4 @@ class _RedoIntent extends Intent {
 
 class _DeleteIntent extends Intent {
   const _DeleteIntent();
-}
-
-/// The elements on the canvas, as a tree.
-class _Tree extends StatelessWidget {
-  const _Tree({
-    required this.root,
-    required this.selected,
-    required this.hovered,
-    required this.onSelect,
-    required this.onHover,
-    required this.onRemove,
-  });
-
-  final UiNode root;
-  final List<int>? selected;
-  final List<int>? hovered;
-  final ValueChanged<List<int>> onSelect;
-  final ValueChanged<List<int>?> onHover;
-  final ValueChanged<List<int>> onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    final rows = root.walk().toList();
-
-    return Container(
-      width: 248,
-      decoration: const BoxDecoration(
-        color: OrblitColors.surface,
-        border: Border(right: BorderSide(color: OrblitColors.lineSoft)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            height: 30,
-            padding: const EdgeInsets.symmetric(horizontal: Space.md),
-            alignment: Alignment.centerLeft,
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
-            ),
-            child: Text('ELEMENTS', style: OrblitText.section),
-          ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: Space.xs),
-              itemCount: rows.length,
-              itemBuilder: (context, index) {
-                final row = rows[index];
-                return _TreeRow(
-                  node: row.node,
-                  path: row.path,
-                  selected: UiCanvasView.samePath(selected, row.path),
-                  hovered: UiCanvasView.samePath(hovered, row.path),
-                  onTap: () => onSelect(row.path),
-                  onHover: onHover,
-                  onRemove: row.path.isEmpty ? null : () => onRemove(row.path),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TreeRow extends StatelessWidget {
-  const _TreeRow({
-    required this.node,
-    required this.path,
-    required this.selected,
-    required this.hovered,
-    required this.onTap,
-    required this.onHover,
-    required this.onRemove,
-  });
-
-  final UiNode node;
-  final List<int> path;
-  final bool selected;
-  final bool hovered;
-  final VoidCallback onTap;
-  final ValueChanged<List<int>?> onHover;
-  final VoidCallback? onRemove;
-
-  static IconData _iconFor(String type) {
-    for (final element in UiElement.values) {
-      if (element.type == type) return element.icon;
-    }
-    return Icons.crop_square;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colour = selected
-        ? OrblitColors.ember
-        : (hovered ? OrblitColors.ink : OrblitColors.inkMid);
-
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => onHover(path),
-      onExit: (_) => onHover(null),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          height: 24,
-          padding: EdgeInsets.only(
-            left: Space.sm + path.length * 13.0,
-            right: Space.xs,
-          ),
-          color: selected
-              ? OrblitColors.emberWash
-              : (hovered ? OrblitColors.raised : Colors.transparent),
-          child: Row(
-            children: [
-              Icon(_iconFor(node.type), size: 13, color: colour),
-              const SizedBox(width: Space.sm),
-              Expanded(
-                child: Text(
-                  // The words when it has any, since "Start game" says more
-                  // about which button this is than "button" does.
-                  node.text?.trim().isNotEmpty ?? false
-                      ? node.text!.trim()
-                      : node.type,
-                  overflow: TextOverflow.ellipsis,
-                  style: OrblitText.label.copyWith(fontSize: 11.5, color: colour),
-                ),
-              ),
-              if (hovered && onRemove != null)
-                GestureDetector(
-                  onTap: onRemove,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 3),
-                    child: Icon(Icons.close, size: 12,
-                        color: OrblitColors.inkDim),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The palette, the element's properties and the canvas's.
-class _Side extends StatelessWidget {
-  const _Side({
-    required this.document,
-    required this.element,
-    required this.device,
-    required this.landscape,
-    required this.preview,
-    required this.onCanvas,
-    required this.onElement,
-    required this.onAdd,
-    required this.onSplit,
-    required this.onDevice,
-    required this.onLandscape,
-  });
-
-  final UiDocument document;
-  final UiNode? element;
-
-  /// The device chosen, upright, and whether it is being held sideways.
-  final Size? device;
-  final bool landscape;
-
-  /// The two of them together: what the canvas is actually laid out at.
-  final Size? preview;
-
-  final ValueChanged<UiCanvas> onCanvas;
-  final void Function(UiNode Function(UiNode)) onElement;
-  final ValueChanged<UiElement> onAdd;
-  final ValueChanged<int> onSplit;
-  final ValueChanged<Size?> onDevice;
-  final ValueChanged<bool> onLandscape;
-
-  /// Whether a container turns into a column on a narrow screen.
-  static bool _stacks(UiNode node) =>
-      node.classes.split(RegExp(r'\s+')).contains('md:row');
-
-  /// The containers a split means anything for.
-  ///
-  /// Splitting a piece of text into three columns is not a layout, it is a
-  /// question nobody asked.
-  static const _containers = {'column', 'row', 'stack', 'box'};
-
-  /// Screens worth one press. Every one is a real device rather than a round
-  /// number, and between them they cross every breakpoint there is — which is
-  /// the point of having them one press apart.
-  static const _devices = <String, Size?>{
-    'Canvas': null,
-    'Phone': Size(390, 844),
-    'Tablet': Size(834, 1112),
-    'Laptop': Size(1440, 900),
-    'Desktop': Size(1920, 1080),
-    'TV': Size(3840, 2160),
-  };
-
-  /// Sizes worth having one press away. Every one is a real screen somebody
-  /// ships to, rather than a round number.
-  /// What each fit means, since the name is three words and the behaviour is
-  /// the thing somebody is choosing between.
-  static const _fitExplains = <CanvasFit, String>{
-    CanvasFit.responsive: 'Laid out at whatever size the screen is. Prefixed '
-        'classes decide what changes, and text and spacing grow with the '
-        'screen instead of the whole picture being magnified.',
-    CanvasFit.width: 'The width always fills the screen. The bottom of a '
-        'taller screen is empty and a shorter one cuts the bottom off.',
-    CanvasFit.height: 'The height always fits. A wider screen has space at '
-        'the sides and a narrower one cuts them off.',
-    CanvasFit.contain: 'All of it fits, with space where the shape does not '
-        'match. Nothing is ever cut off.',
-    CanvasFit.none: 'Not scaled. Pixels are pixels, however big the screen is.',
-  };
-
-  static const _sizes = <String, (double, double)>{
-    '1920 × 1080': (1920, 1080),
-    '2560 × 1440': (2560, 1440),
-    '1280 × 720': (1280, 720),
-    '390 × 844': (390, 844),
-    '1024 × 768': (1024, 768),
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final selected = element;
-
-    return Container(
-      width: 296,
-      decoration: const BoxDecoration(
-        color: OrblitColors.surface,
-        border: Border(left: BorderSide(color: OrblitColors.lineSoft)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            height: 30,
-            padding: const EdgeInsets.symmetric(horizontal: Space.md),
-            alignment: Alignment.centerLeft,
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
-            ),
-            child: Text('INTERFACE', style: OrblitText.section),
-          ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: Space.sm),
-              children: [
-                _Group(
-                  title: 'Add',
-                  icon: Icons.add,
-                  child: Wrap(
-                    spacing: Space.xs,
-                    runSpacing: Space.xs,
-                    children: [
-                      for (final what in UiElement.values)
-                        _Chip(
-                          label: what.label,
-                          icon: what.icon,
-                          onTap: () => onAdd(what),
-                        ),
-                    ],
-                  ),
-                ),
-                if (selected != null) ...[
-                  _Group(
-                    title: selected.type,
-                    icon: _TreeRow._iconFor(selected.type),
-                    child: Column(
-                      children: [
-                        if (selected.text != null ||
-                            selected.type == 'text' ||
-                            selected.type == 'button')
-                          FieldRow(
-                            label: 'Words',
-                            child: ValueField(
-                              value: selected.text ?? '',
-                              onChanged: (value) => onElement(
-                                (node) => node.copyWith(text: value),
-                              ),
-                            ),
-                          ),
-                        FieldRow(
-                          label: 'Classes',
-                          child: ValueField(
-                            value: selected.classes,
-                            mono: true,
-                            hint: 'p-4 flex-1 md:row lg:text-2xl',
-                            onChanged: (value) => onElement(
-                              (node) => node.copyWith(classes: value),
-                            ),
-                          ),
-                        ),
-                        FieldRow(
-                          label: 'CSS',
-                          child: ValueField(
-                            value: selected.css,
-                            mono: true,
-                            hint: 'padding: 8px 12px',
-                            onChanged: (value) =>
-                                onElement((node) => node.copyWith(css: value)),
-                          ),
-                        ),
-                        if (_containers.contains(selected.type))
-                          FieldRow(
-                            label: 'Narrow',
-                            child: _Chip(
-                              label: _stacks(selected) ? 'Stacks' : 'Row',
-                              tooltip: 'Whether this turns into a column on a '
-                                  'screen narrower than the md breakpoint. '
-                                  'Written as the classes col md:row, so it '
-                                  'can be changed by hand as well.',
-                              selected: _stacks(selected),
-                              onTap: () => onElement(
-                                (node) => node.copyWith(
-                                  classes: _stacks(node)
-                                      ? _flowing(node.classes)
-                                      : '${_flowing(node.classes)} col md:row'
-                                            .trim(),
-                                ),
-                              ),
-                            ),
-                          ),
-                        if (_containers.contains(selected.type))
-                          FieldRow(
-                            label: 'Split',
-                            child: Row(
-                              children: [
-                                for (final count in const [2, 3, 4]) ...[
-                                  _Chip(
-                                    label: '$count',
-                                    tooltip: 'Make this a row of $count equal '
-                                        'columns. What is in it goes into the '
-                                        'first one.',
-                                    onTap: () => onSplit(count),
-                                  ),
-                                  const SizedBox(width: Space.xs),
-                                ],
-                              ],
-                            ),
-                          ),
-                        FieldRow(
-                          label: 'Handler',
-                          child: ValueField(
-                            value: '${selected.props['onPressed'] ?? ''}',
-                            mono: true,
-                            hint: 'what script calls',
-                            onChanged: (value) => onElement(
-                              (node) => node.copyWith(
-                                props: {
-                                  ...node.props,
-                                  if (value.trim().isNotEmpty)
-                                    'onPressed': value.trim()
-                                  else
-                                    ...{},
-                                }..removeWhere((key, _) =>
-                                    key == 'onPressed' && value.trim().isEmpty),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                _Group(
-                  title: 'Canvas',
-                  icon: Icons.aspect_ratio,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Wrap(
-                        spacing: Space.xs,
-                        runSpacing: Space.xs,
-                        children: [
-                          for (final entry in _sizes.entries)
-                            _Chip(
-                              label: entry.key,
-                              selected: document.canvas.width == entry.value.$1 &&
-                                  document.canvas.height == entry.value.$2,
-                              onTap: () => onCanvas(
-                                document.canvas.copyWith(
-                                  width: entry.value.$1,
-                                  height: entry.value.$2,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: Space.sm),
-                      Text('ON SCREEN', style: OrblitText.section),
-                      const SizedBox(height: Space.xs),
-                      // Chips that wrap rather than four segments sharing one
-                      // row: "Match height" does not fit in a quarter of a
-                      // 296-wide panel, and a label clipped in half is a
-                      // control nobody can read.
-                      Wrap(
-                        spacing: Space.xs,
-                        runSpacing: Space.xs,
-                        children: [
-                          for (final fit in CanvasFit.values)
-                            _Chip(
-                              label: fit.label,
-                              tooltip: _fitExplains[fit],
-                              selected: document.canvas.fit == fit,
-                              onTap: () =>
-                                  onCanvas(document.canvas.copyWith(fit: fit)),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: Space.sm),
-                      SliderRow(
-                        label: 'Safe area',
-                        value: document.canvas.safeArea * 100,
-                        min: 0,
-                        max: 20,
-                        unit: '%',
-                        onChanged: (value) => onCanvas(
-                          document.canvas.copyWith(safeArea: value / 100),
-                        ),
-                      ),
-                      const SizedBox(height: Space.sm),
-                      Text('PREVIEW ON', style: OrblitText.section),
-                      const SizedBox(height: Space.xs),
-                      // A view rather than a property of the file. A
-                      // responsive interface is a different layout at every
-                      // width, so one that could only be looked at in its own
-                      // reference size would be the one screen nobody worried
-                      // about.
-                      Wrap(
-                        spacing: Space.xs,
-                        runSpacing: Space.xs,
-                        children: [
-                          for (final entry in _devices.entries)
-                            _Chip(
-                              label: entry.key,
-                              tooltip: entry.value == null
-                                  ? 'The size this was drawn against.'
-                                  : '${entry.value!.width.round()} × '
-                                      '${entry.value!.height.round()} upright',
-                              // Against the device, not the size being shown:
-                              // a phone held sideways is still the phone.
-                              selected: device == entry.value,
-                              onTap: () => onDevice(entry.value),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: Space.xs),
-                      // Held which way. Its own control rather than two more
-                      // device chips, because every device has both and a
-                      // list with each of them twice is a list nobody reads.
-                      Row(
-                        children: [
-                          for (final sideways in const [false, true]) ...[
-                            _Chip(
-                              label: sideways ? 'Landscape' : 'Portrait',
-                              selected: landscape == sideways,
-                              onTap: () => onLandscape(sideways),
-                            ),
-                            const SizedBox(width: Space.xs),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                _Group(
-                  title: 'Grid',
-                  icon: Icons.view_week_outlined,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      SliderRow(
-                        label: 'Columns',
-                        value: document.canvas.columns.toDouble(),
-                        min: 1,
-                        max: 24,
-                        onChanged: (value) => onCanvas(
-                          document.canvas.copyWith(columns: value.round()),
-                        ),
-                      ),
-                      SliderRow(
-                        label: 'Gutter',
-                        value: document.canvas.gutter,
-                        min: 0,
-                        max: 80,
-                        unit: 'px',
-                        onChanged: (value) =>
-                            onCanvas(document.canvas.copyWith(gutter: value)),
-                      ),
-                      // What is actually drawn, which on a phone is fewer
-                      // than what is authored. Said out loud because a grid
-                      // that quietly changed its mind is a grid somebody
-                      // mistakes for their own layout.
-                      _GridCount(document: document, preview: preview),
-                      // The grid sits inside the safe area, so the outer
-                      // margin and the edge a television eats are one
-                      // measurement rather than two that disagree.
-                      const SizedBox(height: Space.sm),
-                      Text('FLUID RANGE', style: OrblitText.section),
-                      const SizedBox(height: Space.xs),
-                      SliderRow(
-                        label: 'Smallest',
-                        value: document.canvas.minScale * 100,
-                        min: 40,
-                        max: 100,
-                        unit: '%',
-                        onChanged: (value) => onCanvas(
-                          document.canvas.copyWith(minScale: value / 100),
-                        ),
-                      ),
-                      SliderRow(
-                        label: 'Largest',
-                        value: document.canvas.maxScale * 100,
-                        min: 100,
-                        max: 300,
-                        unit: '%',
-                        onChanged: (value) => onCanvas(
-                          document.canvas.copyWith(maxScale: value / 100),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// How many columns the grid is drawing, when it is not the authored number.
-class _GridCount extends StatelessWidget {
-  const _GridCount({required this.document, required this.preview});
-
-  final UiDocument document;
-  final Size? preview;
-
-  @override
-  Widget build(BuildContext context) {
-    final width = UiCanvasView.layoutFor(document, preview).width;
-    final drawn = document.canvas.columnsAt(width);
-    final authored = document.canvas.columns;
-
-    return Padding(
-      padding: const EdgeInsets.only(top: Space.xs),
-      child: Text(
-        drawn == authored
-            ? '$authored across this screen'
-            : (drawn == 0
-                  ? 'No room for a column at this width'
-                  : '$drawn across this screen — $authored is too fine here'),
-        style: OrblitText.label.copyWith(
-          fontSize: 10.5,
-          color: OrblitColors.inkDim,
-        ),
-      ),
-    );
-  }
-}
-
-class _Group extends StatelessWidget {
-  const _Group({required this.title, required this.icon, required this.child});
-
-  final String title;
-  final IconData icon;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(Space.sm, 0, Space.sm, Space.sm),
-      decoration: BoxDecoration(
-        color: OrblitColors.ground,
-        borderRadius: BorderRadius.circular(Radii.panel),
-        border: Border.all(color: OrblitColors.lineSoft),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            height: 30,
-            padding: const EdgeInsets.symmetric(horizontal: Space.md),
-            child: Row(
-              children: [
-                Icon(icon, size: 13, color: OrblitColors.inkDim),
-                const SizedBox(width: Space.sm),
-                Text(title.toUpperCase(), style: OrblitText.section),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.sm),
-            child: child,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({
-    required this.label,
-    required this.onTap,
-    this.icon,
-    this.tooltip,
-    this.selected = false,
-  });
-
-  final String label;
-  final VoidCallback onTap;
-  final IconData? icon;
-  final String? tooltip;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    final chip = _chip();
-    return tooltip == null
-        ? chip
-        : Tooltip(
-            message: tooltip!,
-            waitDuration: const Duration(milliseconds: 400),
-            child: chip,
-          );
-  }
-
-  Widget _chip() {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: Space.sm,
-            vertical: Space.xs,
-          ),
-          decoration: BoxDecoration(
-            color: selected ? OrblitColors.emberWash : OrblitColors.raised,
-            borderRadius: BorderRadius.circular(Radii.control),
-            border: Border.all(
-              color: selected ? OrblitColors.ember : OrblitColors.line,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 12, color: OrblitColors.inkMid),
-                const SizedBox(width: 5),
-              ],
-              // Flexible so a long label ellipsizes inside its own chip. An
-              // overflowing Row in a fixed-width panel is a striped bar
-              // across the inspector and, one step further, a layout that
-              // throws — see the unbounded-width traps this editor has hit
-              // before.
-              Flexible(
-                child: Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  style: OrblitText.label.copyWith(
-                    fontSize: 11,
-                    color: selected ? OrblitColors.ember : OrblitColors.inkMid,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Toggle extends StatelessWidget {
-  const _Toggle({
-    required this.label,
-    required this.icon,
-    required this.on,
-    required this.onChanged,
-  });
-
-  final String label;
-  final IconData icon;
-  final bool on;
-  final ValueChanged<bool>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return OrblitButton(
-      label: label,
-      icon: icon,
-      tone: on ? ButtonTone.primary : ButtonTone.quiet,
-      onPressed: onChanged == null ? null : () => onChanged!(!on),
-    );
-  }
 }

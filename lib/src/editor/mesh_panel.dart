@@ -35,6 +35,7 @@ class MeshPanel extends StatelessWidget {
   final Mesh? geometry;
 
   final ValueChanged<Shape> onShape;
+
   /// The outline this shape was drawn from, if it was drawn.
   final PolyShape? outline;
 
@@ -82,7 +83,7 @@ class MeshPanel extends StatelessWidget {
     final size = box.max - box.min;
     final hasShape = (geometry ?? shape?.build()) != null;
 
-    return _Section(
+    return OrblitSection(
       title: 'Boundary',
       icon: Icons.select_all_outlined,
       child: Column(
@@ -94,8 +95,9 @@ class MeshPanel extends StatelessWidget {
             selected: boundary.kind.label,
             onSelect: (label) => onBoundary(
               boundary.copyWith(
-                kind: BoundaryKind.values
-                    .firstWhere((one) => one.label == label),
+                kind: BoundaryKind.values.firstWhere(
+                  (one) => one.label == label,
+                ),
               ),
               live: false,
             ),
@@ -182,7 +184,7 @@ class MeshPanel extends StatelessWidget {
 
   Widget _outlineSection() {
     final drawn = outline!;
-    return _Section(
+    return OrblitSection(
       title: 'Drawn shape',
       icon: Icons.polyline_outlined,
       child: Column(
@@ -237,7 +239,7 @@ class MeshPanel extends StatelessWidget {
   Widget _shapeSection() {
     final current = shape!;
 
-    return _Section(
+    return OrblitSection(
       title: current.kind.label,
       icon: Icons.category_outlined,
       child: Column(
@@ -267,10 +269,10 @@ class MeshPanel extends StatelessWidget {
               decimals: 2,
               onChanged: _parametric
                   ? (value) => onShape(switch (axis) {
-                        'Width' => current.copyWith(width: value),
-                        'Height' => current.copyWith(height: value),
-                        _ => current.copyWith(depth: value),
-                      })
+                      'Width' => current.copyWith(width: value),
+                      'Height' => current.copyWith(height: value),
+                      _ => current.copyWith(depth: value),
+                    })
                   : (_) {},
             ),
           ..._parametersFor(current),
@@ -283,157 +285,233 @@ class MeshPanel extends StatelessWidget {
   ///
   /// A cylinder has sides and a torus has a tube radius; showing every field
   /// for every shape is twenty controls of which two matter.
-  List<Widget> _parametersFor(Shape current) {
-    Widget slider(
-      String label,
-      double value,
-      double min,
-      double max,
-      Shape Function(double) change, {
-      int decimals = 0,
-    }) =>
-        SliderRow(
-          label: label,
-          value: value,
-          min: min,
-          max: max,
-          decimals: decimals,
-          onChanged: _parametric ? (v) => onShape(change(v)) : (_) {},
-        );
+  List<Widget> _parametersFor(Shape current) => switch (current.kind) {
+    ShapeKind.plane => _plane(current),
+    ShapeKind.sphere => _sphere(current),
+    ShapeKind.cylinder => _cylinder(current),
+    ShapeKind.cone => _cone(current),
+    ShapeKind.pipe => _pipe(current),
+    ShapeKind.torus => _torus(current),
+    ShapeKind.arch => _arch(current),
+    ShapeKind.door => _door(current),
+    ShapeKind.stairs => _stairs(current),
+    _ => const [],
+  };
 
-    Widget toggle(String label, bool on, Shape Function(bool) change) =>
-        ChoiceRow(
-          label: label,
-          options: const ['Off', 'On'],
-          selected: on ? 'On' : 'Off',
-          onSelect: _parametric ? (v) => onShape(change(v == 'On')) : (_) {},
-        );
+  // Every parametric control is one of these two rows, and neither does
+  // anything while a mesh the shape no longer describes is on screen.
+  Widget _slider(
+    String label,
+    double value,
+    double min,
+    double max,
+    Shape Function(double) change, {
+    int decimals = 0,
+  }) => SliderRow(
+    label: label,
+    value: value,
+    min: min,
+    max: max,
+    decimals: decimals,
+    onChanged: _parametric ? (v) => onShape(change(v)) : (_) {},
+  );
 
-    return switch (current.kind) {
-      ShapeKind.plane => [
-          slider('Cuts across', current.widthCuts.toDouble(), 0, 24,
-              (v) => current.copyWith(widthCuts: v.round())),
-          slider('Cuts along', current.heightCuts.toDouble(), 0, 24,
-              (v) => current.copyWith(heightCuts: v.round())),
-        ],
-      ShapeKind.sphere => [
-          slider('Divisions', current.subdivisions.toDouble(), 1, 5,
-              (v) => current.copyWith(subdivisions: v.round())),
-          toggle('Smooth', current.smooth, (v) => current.copyWith(smooth: v)),
-        ],
-      ShapeKind.cylinder => [
-          slider('Sides', current.sides.toDouble(), 3, 64,
-              (v) => current.copyWith(sides: v.round())),
-          slider('Height cuts', current.heightCuts.toDouble(), 0, 24,
-              (v) => current.copyWith(heightCuts: v.round())),
-          toggle('Ends', current.capped, (v) => current.copyWith(capped: v)),
-          toggle('Smooth', current.smooth, (v) => current.copyWith(smooth: v)),
-        ],
-      ShapeKind.cone => [
-          slider('Sides', current.sides.toDouble(), 3, 64,
-              (v) => current.copyWith(sides: v.round())),
-          toggle('Base', current.capped, (v) => current.copyWith(capped: v)),
-          toggle('Smooth', current.smooth, (v) => current.copyWith(smooth: v)),
-        ],
-      ShapeKind.pipe => [
-          slider('Thickness', current.thickness, 0.01, 2,
-              (v) => current.copyWith(thickness: v), decimals: 2),
-          slider('Sides', current.sides.toDouble(), 3, 64,
-              (v) => current.copyWith(sides: v.round())),
-          slider('Height cuts', current.heightCuts.toDouble(), 0, 24,
-              (v) => current.copyWith(heightCuts: v.round())),
-          toggle('Rims', current.capped, (v) => current.copyWith(capped: v)),
-        ],
-      ShapeKind.torus => [
-          slider('Rows', current.rings.toDouble(), 3, 64,
-              (v) => current.copyWith(rings: v.round())),
-          slider('Columns', current.columns.toDouble(), 3, 64,
-              (v) => current.copyWith(columns: v.round())),
-          slider('Tube', current.tubeRadius, 0.01, 2,
-              (v) => current.copyWith(tubeRadius: v), decimals: 2),
-          slider('Sweep', current.circumference, 1, 360,
-              (v) => current.copyWith(circumference: v)),
-        ],
-      ShapeKind.arch => [
-          slider('Thickness', current.thickness, 0.01, 2,
-              (v) => current.copyWith(thickness: v), decimals: 2),
-          slider('Segments', current.sides.toDouble(), 2, 64,
-              (v) => current.copyWith(sides: v.round())),
-          slider('Sweep', current.circumference, 1, 360,
-              (v) => current.copyWith(circumference: v)),
-          toggle('End caps', current.capped,
-              (v) => current.copyWith(capped: v)),
-        ],
-      ShapeKind.door => [
-          slider('Opening top', current.pedimentHeight, 0.05, 4,
-              (v) => current.copyWith(pedimentHeight: v), decimals: 2),
-          slider('Side width', current.sideWidth, 0.05, 4,
-              (v) => current.copyWith(sideWidth: v), decimals: 2),
-        ],
-      ShapeKind.stairs => [
-          ChoiceRow(
-            label: 'Steps by',
-            options: const ['Count', 'Height'],
-            selected: current.byCount ? 'Count' : 'Height',
-            onSelect: _parametric
-                ? (v) => onShape(current.copyWith(byCount: v == 'Count'))
-                : (_) {},
-          ),
-          if (current.byCount)
-            slider('Steps', current.steps.toDouble(), 1, 64,
-                (v) => current.copyWith(steps: v.round()))
-          else
-            slider('Step height', current.stepHeight, 0.05, 1,
-                (v) => current.copyWith(stepHeight: v), decimals: 2),
-        ],
-      _ => const [],
-    };
-  }
+  Widget _toggle(String label, bool on, Shape Function(bool) change) =>
+      ChoiceRow(
+        label: label,
+        options: const ['Off', 'On'],
+        selected: on ? 'On' : 'Off',
+        onSelect: _parametric ? (v) => onShape(change(v == 'On')) : (_) {},
+      );
 
-}
+  List<Widget> _plane(Shape current) => [
+    _slider(
+      'Cuts across',
+      current.widthCuts.toDouble(),
+      0,
+      24,
+      (v) => current.copyWith(widthCuts: v.round()),
+    ),
+    _slider(
+      'Cuts along',
+      current.heightCuts.toDouble(),
+      0,
+      24,
+      (v) => current.copyWith(heightCuts: v.round()),
+    ),
+  ];
 
-/// One action: what it does, and how much of it.
-/// A titled block, matching the inspector's other sections.
-class _Section extends StatelessWidget {
-  const _Section({
-    required this.title,
-    required this.icon,
-    required this.child,
-  });
+  List<Widget> _sphere(Shape current) => [
+    _slider(
+      'Divisions',
+      current.subdivisions.toDouble(),
+      1,
+      5,
+      (v) => current.copyWith(subdivisions: v.round()),
+    ),
+    _toggle('Smooth', current.smooth, (v) => current.copyWith(smooth: v)),
+  ];
 
-  final String title;
-  final IconData icon;
-  final Widget child;
+  List<Widget> _cylinder(Shape current) => [
+    _slider(
+      'Sides',
+      current.sides.toDouble(),
+      3,
+      64,
+      (v) => current.copyWith(sides: v.round()),
+    ),
+    _slider(
+      'Height cuts',
+      current.heightCuts.toDouble(),
+      0,
+      24,
+      (v) => current.copyWith(heightCuts: v.round()),
+    ),
+    _toggle('Ends', current.capped, (v) => current.copyWith(capped: v)),
+    _toggle('Smooth', current.smooth, (v) => current.copyWith(smooth: v)),
+  ];
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(Space.sm, 0, Space.sm, Space.sm),
-      decoration: BoxDecoration(
-        color: OrblitColors.ground,
-        borderRadius: BorderRadius.circular(Radii.panel),
-        border: Border.all(color: OrblitColors.lineSoft),
+  List<Widget> _cone(Shape current) => [
+    _slider(
+      'Sides',
+      current.sides.toDouble(),
+      3,
+      64,
+      (v) => current.copyWith(sides: v.round()),
+    ),
+    _toggle('Base', current.capped, (v) => current.copyWith(capped: v)),
+    _toggle('Smooth', current.smooth, (v) => current.copyWith(smooth: v)),
+  ];
+
+  List<Widget> _pipe(Shape current) => [
+    _slider(
+      'Thickness',
+      current.thickness,
+      0.01,
+      2,
+      (v) => current.copyWith(thickness: v),
+      decimals: 2,
+    ),
+    _slider(
+      'Sides',
+      current.sides.toDouble(),
+      3,
+      64,
+      (v) => current.copyWith(sides: v.round()),
+    ),
+    _slider(
+      'Height cuts',
+      current.heightCuts.toDouble(),
+      0,
+      24,
+      (v) => current.copyWith(heightCuts: v.round()),
+    ),
+    _toggle('Rims', current.capped, (v) => current.copyWith(capped: v)),
+  ];
+
+  List<Widget> _torus(Shape current) => [
+    _slider(
+      'Rows',
+      current.rings.toDouble(),
+      3,
+      64,
+      (v) => current.copyWith(rings: v.round()),
+    ),
+    _slider(
+      'Columns',
+      current.columns.toDouble(),
+      3,
+      64,
+      (v) => current.copyWith(columns: v.round()),
+    ),
+    _slider(
+      'Tube',
+      current.tubeRadius,
+      0.01,
+      2,
+      (v) => current.copyWith(tubeRadius: v),
+      decimals: 2,
+    ),
+    _slider(
+      'Sweep',
+      current.circumference,
+      1,
+      360,
+      (v) => current.copyWith(circumference: v),
+    ),
+  ];
+
+  List<Widget> _arch(Shape current) => [
+    _slider(
+      'Thickness',
+      current.thickness,
+      0.01,
+      2,
+      (v) => current.copyWith(thickness: v),
+      decimals: 2,
+    ),
+    _slider(
+      'Segments',
+      current.sides.toDouble(),
+      2,
+      64,
+      (v) => current.copyWith(sides: v.round()),
+    ),
+    _slider(
+      'Sweep',
+      current.circumference,
+      1,
+      360,
+      (v) => current.copyWith(circumference: v),
+    ),
+    _toggle('End caps', current.capped, (v) => current.copyWith(capped: v)),
+  ];
+
+  List<Widget> _door(Shape current) => [
+    _slider(
+      'Opening top',
+      current.pedimentHeight,
+      0.05,
+      4,
+      (v) => current.copyWith(pedimentHeight: v),
+      decimals: 2,
+    ),
+    _slider(
+      'Side width',
+      current.sideWidth,
+      0.05,
+      4,
+      (v) => current.copyWith(sideWidth: v),
+      decimals: 2,
+    ),
+  ];
+
+  List<Widget> _stairs(Shape current) => [
+    ChoiceRow(
+      label: 'Steps by',
+      options: const ['Count', 'Height'],
+      selected: current.byCount ? 'Count' : 'Height',
+      onSelect: _parametric
+          ? (v) => onShape(current.copyWith(byCount: v == 'Count'))
+          : (_) {},
+    ),
+    if (current.byCount)
+      _slider(
+        'Steps',
+        current.steps.toDouble(),
+        1,
+        64,
+        (v) => current.copyWith(steps: v.round()),
+      )
+    else
+      _slider(
+        'Step height',
+        current.stepHeight,
+        0.05,
+        1,
+        (v) => current.copyWith(stepHeight: v),
+        decimals: 2,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            height: 30,
-            padding: const EdgeInsets.symmetric(horizontal: Space.md),
-            child: Row(
-              children: [
-                Icon(icon, size: 13, color: OrblitColors.inkDim),
-                const SizedBox(width: Space.sm),
-                Text(title.toUpperCase(), style: OrblitText.section),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.sm),
-            child: child,
-          ),
-        ],
-      ),
-    );
-  }
+  ];
+
 }

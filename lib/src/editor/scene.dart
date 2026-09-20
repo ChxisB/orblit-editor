@@ -16,512 +16,12 @@ import 'colour.dart';
 
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
+part 'scene_object.dart';
+part 'scene_render.dart';
+
 /// What kind of thing an object is, which decides what components it has and
 /// therefore what the inspector shows.
 enum ObjectKind { scene, mesh, light, camera, group, weather, canvas, shape }
-
-/// One object in the edited scene.
-///
-/// Identified by an id rather than by name, because a rename is an ordinary
-/// edit and everything that refers to an object — the selection, the undo
-/// stack, a parent link — has to survive one.
-class SceneObject {
-  SceneObject({
-    required this.id,
-    required this.name,
-    required this.kind,
-    int? renderKey,
-    this.parentId,
-    Vector3? position,
-    Vector3? rotation,
-    Vector3? scale,
-    this.colour = const Color(0xFFD9634F),
-    this.power = 1000,
-    this.lightType = LightType.sun,
-    this.spotSize = 45,
-    this.spotBlend = 0.15,
-    this.sourceRadius = 0.1,
-    this.sunAngle = 0.526,
-    this.body = CelestialBody.sun,
-    WeatherState? weather,
-    this.condition = WeatherCondition.clear,
-    this.cloudKind,
-    this.windDirection = 135,
-    this.transitionSeconds = 8,
-    this.sway = 0,
-    this.castShadows = true,
-    this.receiveShadows = true,
-    this.visible = true,
-    this.meshAsset,
-    this.materialAsset,
-    this.shape,
-    this.geometry,
-    List<Surface>? surfaces,
-    this.outline,
-    Boundary? boundary,
-    this.interfaceAsset,
-    this.prefab,
-    List<String>? data,
-  })  : renderKey = renderKey ?? _nextRenderKey++,
-        data = data ?? [],
-        boundary = boundary ?? Boundary(),
-        surfaces = surfaces ?? [],
-        weather = weather ?? WeatherState.of(condition),
-        position = position ?? Vector3.zero(),
-        rotation = rotation ?? Vector3.zero(),
-        scale = scale ?? Vector3(1, 1, 1);
-
-  final String id;
-
-  /// What the renderer knows this object by.
-  ///
-  /// A number rather than the id, because it crosses to native code on every
-  /// frame of a drag and a string would be encoded, copied and hashed each
-  /// time. Assigned once and never reused, so a pasted copy gets a key of its
-  /// own instead of inheriting the entity of the thing it was copied from.
-  ///
-  /// It can be handed one, and exactly one thing does: rebuilding the scene
-  /// from a document, where an object with the same id is the same object —
-  /// giving it a new key there would make the renderer throw away everything
-  /// it had built for it, every time anybody undid anything.
-  final int renderKey;
-
-  static int _nextRenderKey = 1;
-
-  String name;
-
-  final ObjectKind kind;
-
-  /// The object this one hangs off, or null for a root.
-  String? parentId;
-
-  /// Local to the parent, not to the world. Moving a parent carries its
-  /// children, which is the whole reason a hierarchy is worth having.
-  final Vector3 position;
-
-  /// Euler angles in degrees, XYZ order — the units the inspector shows, kept
-  /// as the source of truth so a value typed in comes back out unchanged
-  /// instead of round-tripping through a quaternion and drifting.
-  final Vector3 rotation;
-
-  final Vector3 scale;
-
-  Color colour;
-
-  /// Light power, in the units its [lightType] is stated in: watts per square
-  /// metre for a sun, which has no total to state, and watts for everything
-  /// else. Ignored by anything that is not a light.
-  double power;
-
-  /// What kind of light this is. Decides what [power] means, whether the cone
-  /// applies, and what the renderer is asked for.
-  LightType lightType;
-
-  /// The full cone angle of a spot in degrees, and how much of it is falloff
-  /// rather than full brightness — zero for a hard edge, one for a cone that
-  /// is all gradient.
-  double spotSize;
-  double spotBlend;
-
-  /// How large the emitting source is, in metres.
-  ///
-  /// Not a brightness control: the power is unchanged and spread over a bigger
-  /// surface. What it changes is the shadow — a point source gives a knife
-  /// edge, and anything with size gives a penumbra that widens with distance.
-  double sourceRadius;
-
-  /// What the air is doing, for the object that is the weather.
-  ///
-  /// The values rather than the name: a condition is where they came from and
-  /// they are free to be moved afterwards. Held as one object because weather
-  /// changes, and a change needs both ends of it in one place — eight fields
-  /// on the object would be eight things to keep in step through a
-  /// transition.
-  WeatherState weather;
-
-  /// The condition last applied, which is what the panel shows as chosen.
-  WeatherCondition condition;
-
-  /// Which shape of cloud the sky has, or null to take the condition's own.
-  ///
-  /// Separate from the condition because the same weather makes very
-  /// different skies: a fair afternoon can be cauliflower cumulus with blue
-  /// between them or one flat sheet, and a scene should be able to say which.
-  /// Null rather than a default so that changing the condition still changes
-  /// the sky for anybody who has not made a choice.
-  CloudKind? cloudKind;
-
-  /// Which way the wind blows, in degrees. Not part of a condition: a storm
-  /// is windy wherever it is, and which way is a fact about the place.
-  double windDirection;
-
-  /// How long a change of condition takes to arrive, in seconds.
-  double transitionSeconds;
-
-  /// How much this object answers the wind, where nought is rigid.
-  ///
-  /// On the object rather than on the weather, because it is a fact about the
-  /// thing rather than about the air: the same gust moves a canopy and leaves
-  /// a wall alone. One is foliage, a quarter is a heavy branch, nought is
-  /// everything that does not move — which is almost everything, and is why
-  /// it is the default.
-  double sway;
-
-  /// The weather this object is on its way from, and when it set off.
-  ///
-  /// Not saved and not part of the document: a scene reopened tomorrow is in
-  /// the weather it was saved in, not halfway into it.
-  WeatherState? blendFrom;
-  double blendSince = 0;
-
-  /// Which body a directional light is, when nothing else is deciding.
-  ///
-  /// A day cycle decides for itself — whatever is above the horizon — and this
-  /// is what the light is between cycles, or in a scene that has none.
-  CelestialBody body;
-
-  /// The sun's angular diameter in degrees, which is the same idea for a light
-  /// that has no position. Defaults to the real sun's.
-  ///
-  /// It is why a shadow outdoors is crisp at your feet and soft at its far
-  /// end, and setting it to zero is the quickest way to make a scene look
-  /// computer-generated.
-  double sunAngle;
-
-  bool castShadows;
-
-  /// Whether shadows land on this object.
-  bool receiveShadows;
-
-  /// Whether it is drawn, and whether it lights anything.
-  ///
-  /// Hidden is not deleted: it keeps its place in the tree, its children, and
-  /// the key the renderer knows it by, so showing it again is immediate.
-  bool visible;
-
-  /// The mesh this object draws, as a path relative to the project.
-  ///
-  /// Null means the built-in cube. A referenced mesh is *still* drawn as a
-  /// cube for now — the reference is recorded and shown, and the renderer
-  /// honours it once glTF loading exists. Naming it here rather than pretending
-  /// to load it keeps the file honest about what the scene says.
-  String? meshAsset;
-
-  /// A texture this object is drawn with, as a project-relative path, or null
-  /// to keep whatever its mesh brought.
-  ///
-  /// The case this exists for: asset packs that ship a model and its colour
-  /// map as two files. The glTF names no texture, so the model loads grey,
-  /// and until now the only fix was a round trip through a modelling package
-  /// to bind the two together and export them again. The renderer can do
-  /// that binding itself — a material named on an object overrides the
-  /// materials its file brought, on every primitive — so this records which
-  /// texture, and the scene builds the material from it.
-  String? materialAsset;
-
-  /// What this object is, while it is still a shape.
-  ///
-  /// A box is a width, a height and a depth until somebody pulls a face off
-  /// it. Changing the width of a box should change its width, not move eight
-  /// corners — and that stays true right up to the moment they edit it, at
-  /// which point the shape is what it *was* and [geometry] is what it is.
-  Shape? shape;
-
-  /// The geometry, once it stopped being a shape.
-  ///
-  /// Null while the object is still parametric, which is most of the time and
-  /// is much the smaller thing to save. Set the moment anybody extrudes a
-  /// face, and from then on the shape's numbers are history rather than truth.
-  Mesh? geometry;
-
-  /// Whether editing this would throw the shape's parameters away.
-  bool get isParametric => shape != null && geometry == null;
-
-  /// The geometry as it stands, whichever of the two it came from.
-  /// An outline somebody drew and pulled up, kept so it can be redrawn.
-  ///
-  /// Beside [shape] rather than one of its kinds, because a shape is a set of
-  /// numbers and this is a set of points — and beside [geometry] rather than
-  /// replaced by it, so a wall can still be moved by dragging the corner it
-  /// belongs to a week later. Editing the mesh directly fills in [geometry],
-  /// and from then on that wins: an outline cannot describe a face that has
-  /// been extruded.
-  PolyShape? outline;
-
-  /// The geometry as it stands: edited if it has been, otherwise built from
-  /// whatever describes it.
-  ///
-  /// Cached, because building it is not free and this is asked several times
-  /// a frame — the selection outline wants it, the click test wants it, and
-  /// the writer that hands it to the renderer wants it. Rebuilding a
-  /// twenty-step staircase sixty times a second to draw a line round it is
-  /// the kind of waste that only shows up as "the editor feels slow".
-  ///
-  /// The cache is keyed on the two things that can produce one, by identity.
-  /// A shape or an outline is replaced rather than mutated when it changes —
-  /// every edit goes through a command that hands over a new one — so
-  /// identity is exactly the right test and costs a pointer compare.
-  Mesh? get currentMesh {
-    final made = geometry;
-    if (made != null) return made;
-
-    if (identical(_builtFrom, outline ?? shape) && _built != null) {
-      return _built;
-    }
-    _builtFrom = outline ?? shape;
-    _built = outline?.build() ?? shape?.build();
-    return _built;
-  }
-
-  Mesh? _built;
-  Object? _builtFrom;
-
-  /// Where this object begins and ends, as far as anything but the eye is
-  /// concerned.
-  ///
-  /// A mesh by default, because that is right for anything however odd — a
-  /// doorway is a hole you can walk through rather than a wall you cannot —
-  /// and because a box is only ever right by luck for a shape somebody drew.
-  Boundary boundary;
-
-  /// The boundary as geometry, cached the same way and for the same reason.
-  ///
-  /// Two things can change it: the shape underneath, and the boundary's own
-  /// settings. Both are compared by identity, and both are replaced rather
-  /// than edited in place.
-  Mesh? get boundaryMesh {
-    final shape = currentMesh;
-    if (identical(_shellFrom, shape) && identical(_shellFor, boundary)) {
-      return _shell;
-    }
-    _shellFrom = shape;
-    _shellFor = boundary;
-    _shell = boundary.meshFrom(shape);
-    return _shell;
-  }
-
-  Mesh? _shell;
-  Mesh? _shellFrom;
-  Boundary? _shellFor;
-
-  /// The boundary's edges, for drawing it.
-  ///
-  /// Cached beside the mesh because `allEdges` builds a fresh set every time
-  /// it is asked, and the thing asking is a painter running every frame.
-  List<MeshEdge> get boundaryEdges {
-    final shell = boundaryMesh;
-    if (!identical(_edgesFrom, shell)) {
-      _edgesFrom = shell;
-      _edges = shell == null ? const [] : shell.allEdges.toList();
-    }
-    return _edges;
-  }
-
-  List<MeshEdge> _edges = const [];
-  Mesh? _edgesFrom;
-
-  /// The box this object actually occupies, in its own space.
-  ///
-  /// What a click is tested against and what the selection outline is drawn
-  /// round. It used to be a two-metre cube for everything, which was right
-  /// when everything *was* the placeholder cube — a shape half a metre across
-  /// was picked and outlined four times its own size, and a model imported at
-  /// any other scale was worse.
-  ///
-  /// [reported] is what a file said about itself, for the objects whose
-  /// geometry the editor does not hold.
-  ({Vector3 min, Vector3 max}) localBounds({
-    ({Vector3 min, Vector3 max})? reported,
-  }) {
-    final mesh = currentMesh;
-    if (mesh != null && !mesh.isEmpty) return mesh.bounds;
-    if (reported != null) return reported;
-    // The placeholder the renderer draws when it has nothing else, which is
-    // genuinely two metres across.
-    return (min: Vector3.all(-1), max: Vector3.all(1));
-  }
-
-  /// The materials this shape's faces can be painted with.
-  ///
-  /// Ordered, because `Face.material` is a position in this list. Removing
-  /// one would repoint every face after it, so nothing removes from the
-  /// middle — a slot is emptied by being painted over, not by going.
-  final List<Surface> surfaces;
-
-  /// The interface this canvas shows, as a path relative to the project.
-  ///
-  /// A reference, like a mesh and like a data object. The `.oui` is the
-  /// document and this says which one is on screen — so one interface can be
-  /// on two scenes, and changing it changes both.
-  String? interfaceAsset;
-
-  /// The prefab this came from, as a path relative to the project.
-  ///
-  /// Null for an ordinary object. Set on every object in an instance, root
-  /// and children alike, because a change three levels down still has to know
-  /// which asset it belongs to. Unpacking clears it, and from then on this is
-  /// an ordinary object that happens to look like a prefab.
-  String? prefab;
-
-  /// Whether this object came from a prefab and still remembers it.
-  bool get isPrefabInstance => prefab != null;
-
-  /// Data objects this one is configured by, as paths relative to the project.
-  ///
-  /// A reference rather than a copy, which is the whole point: forty crates
-  /// pointing at one `weight.odata` change together, and the value is edited
-  /// where it lives instead of being typed onto forty objects and missed on
-  /// thirty-nine. What is *in* the data object is not this object's business —
-  /// the file is the source of truth, and the editor, a script and a person
-  /// with a text editor all read the same one.
-  final List<String> data;
-
-  IconData get icon => switch (kind) {
-        ObjectKind.scene => Icons.public,
-        ObjectKind.group => Icons.folder_outlined,
-        ObjectKind.mesh => Icons.view_in_ar_outlined,
-        ObjectKind.light => Icons.wb_sunny_outlined,
-        ObjectKind.camera => Icons.videocam_outlined,
-        ObjectKind.weather => Icons.cloud_outlined,
-        ObjectKind.canvas => Icons.web_asset,
-        ObjectKind.shape => Icons.category_outlined,
-      };
-
-  /// Whether this object is drawn.
-  bool get isDrawable =>
-      kind == ObjectKind.mesh || kind == ObjectKind.shape;
-
-  /// Where the object sits relative to its parent.
-  Matrix4 get localTransform => Matrix4.identity()
-    ..setTranslation(position)
-    ..multiply(rotationFromDegrees(rotation))
-    ..multiply(Matrix4.diagonal3(scale));
-
-  /// A copy with a new identity, for pasting.
-  SceneObject copyAs({required String id, String? parentId}) =>
-      _copyWith(id: id, parentId: parentId);
-
-  SceneObject copy() => _copyWith(id: id, parentId: parentId);
-
-  /// One place both copies are made, so a field added to an object cannot be
-  /// remembered by paste and forgotten by the clipboard.
-  SceneObject _copyWith({required String id, String? parentId}) => SceneObject(
-        id: id,
-        name: name,
-        kind: kind,
-        parentId: parentId,
-        position: position.clone(),
-        rotation: rotation.clone(),
-        scale: scale.clone(),
-        colour: colour,
-        power: power,
-        lightType: lightType,
-        spotSize: spotSize,
-        spotBlend: spotBlend,
-        sourceRadius: sourceRadius,
-        sunAngle: sunAngle,
-        body: body,
-        weather: weather,
-        condition: condition,
-        cloudKind: cloudKind,
-        windDirection: windDirection,
-        transitionSeconds: transitionSeconds,
-        sway: sway,
-        castShadows: castShadows,
-        receiveShadows: receiveShadows,
-        visible: visible,
-        meshAsset: meshAsset,
-        materialAsset: materialAsset,
-        shape: shape,
-        geometry: geometry?.copy(),
-        outline: outline?.copy(),
-        boundary: boundary.copyWith(offset: boundary.offset.clone()),
-        surfaces: [...surfaces],
-        interfaceAsset: interfaceAsset,
-        prefab: prefab,
-        data: List<String>.from(data),
-      );
-}
-
-/// A rotation from XYZ degrees, applied X then Y then Z.
-///
-/// Built from three explicit axis rotations rather than from a library's Euler
-/// constructor. vector_math's takes its three angles in an order that does not
-/// match its argument names, so a rotation built with it and read back with
-/// the obvious inverse comes out with the axes permuted — silently, and only
-/// visible once something is animated. Owning both directions makes the
-/// convention checkable, and [eulerDegreesOf] is its exact inverse.
-Matrix4 rotationFromDegrees(Vector3 degreesXyz) =>
-    Matrix4.rotationZ(radians(degreesXyz.z))
-      ..multiply(Matrix4.rotationY(radians(degreesXyz.y)))
-      ..multiply(Matrix4.rotationX(radians(degreesXyz.x)));
-
-/// A transform's rotation, back into the XYZ degrees the inspector shows.
-///
-/// Scale is divided out first. Reading the angles straight off the upper 3x3
-/// works only while the scale is one, and gives quietly wrong angles the
-/// moment somebody resizes the object.
-Vector3 eulerDegreesOf(Matrix4 transform) {
-  final m = transform.getRotation();
-
-  // A column's length is that axis's scale, because the rotation part is
-  // orthonormal before scaling.
-  double column(int index) => Vector3(
-        m.entry(0, index),
-        m.entry(1, index),
-        m.entry(2, index),
-      ).length;
-
-  final scales = [column(0), column(1), column(2)];
-  double r(int row, int col) {
-    final scale = scales[col];
-    // A zero-scaled axis carries no direction; treating it as unscaled keeps
-    // the matrix well-formed rather than filling it with infinities.
-    return scale < 1e-12 ? (row == col ? 1.0 : 0.0) : m.entry(row, col) / scale;
-  }
-
-  // The inverse of Rz * Ry * Rx. Clamped before asin: a value a hair outside
-  // [-1, 1] from rounding returns NaN, and a NaN in a transform makes the
-  // object vanish with nothing to say why.
-  final sinPitch = (-r(2, 0)).clamp(-1.0, 1.0);
-  final y = math.asin(sinPitch);
-
-  final double x, z;
-  if (sinPitch.abs() < 0.9999) {
-    x = math.atan2(r(2, 1), r(2, 2));
-    z = math.atan2(r(1, 0), r(0, 0));
-  } else {
-    // Gimbal lock: the object points straight up or down, so two of the three
-    // angles turn about the same axis and only their sum survives. It all goes
-    // into one of them.
-    x = math.atan2(-r(0, 1), r(1, 1));
-    z = 0;
-  }
-
-  return Vector3(degrees(x), degrees(y), degrees(z));
-}
-
-/// Sets an object's local transform so it lands on a given world matrix.
-///
-/// What keeps a thing where it looks when its parent changes — on a reparent,
-/// and on a paste into a scene whose parent chain is different. Without it,
-/// dropping something into a folder teleports it.
-void placeInWorld(EditorScene scene, SceneObject object, Matrix4 world) {
-  final parentId = object.parentId;
-  final local = parentId == null || !scene.contains(parentId)
-      ? world
-      : Matrix4.inverted(scene.worldOf(parentId)).multiplied(world);
-
-  final position = Vector3.zero();
-  final rotation = Quaternion.identity();
-  final scale = Vector3.zero();
-  local.decompose(position, rotation, scale);
-
-  object.position.setFrom(position);
-  object.rotation.setFrom(eulerDegreesOf(local));
-  object.scale.setFrom(scale);
-  scene.invalidate();
-}
 
 /// An object being dragged.
 ///
@@ -558,8 +58,8 @@ class EditorScene {
     this.timeOfDay = 10,
     this.dayCycle = false,
     this.hoursPerSecond = 0.5,
-  })  : _objects = objects,
-        skyColour = skyColour ?? const Color(0xFF1A2029) {
+  }) : _objects = objects,
+       skyColour = skyColour ?? const Color(0xFF1A2029) {
     for (final object in objects) {
       if (_byId.containsKey(object.id)) {
         throw SceneError('Two objects share the id "${object.id}".');
@@ -576,8 +76,10 @@ class EditorScene {
   }
 
   /// The objects sharing a parent, in the order they are drawn in the tree.
-  List<SceneObject> siblingsOf(String? parentId) =>
-      [for (final o in _objects) if (o.parentId == parentId) o];
+  List<SceneObject> siblingsOf(String? parentId) => [
+    for (final o in _objects)
+      if (o.parentId == parentId) o,
+  ];
 
   /// Moves an object to a new parent at a given position among its siblings.
   ///
@@ -610,7 +112,9 @@ class EditorScene {
       final last = siblings.isEmpty ? null : siblings.last;
       final tail = last == null
           ? null
-          : (descendantsOf(last.id).isEmpty ? last : descendantsOf(last.id).last);
+          : (descendantsOf(last.id).isEmpty
+                ? last
+                : descendantsOf(last.id).last);
       final anchor = tail == null ? -1 : _objects.indexOf(tail);
       _objects.insert(anchor + 1, object);
     } else {
@@ -625,30 +129,59 @@ class EditorScene {
   /// The ground is a flattened box rather than a plane because the renderer
   /// draws boxes and nothing else yet; when meshes load it becomes a mesh.
   factory EditorScene.starter() => EditorScene([
-        // Watts per square metre, because that is what a sun's strength is
-        // stated in. A hundred and ten of them is about seventy-five thousand
-        // lux, which is a bright but not blinding afternoon.
-        SceneObject(id: 'sun', name: 'Sun', kind: ObjectKind.light,
-            rotation: Vector3(-55, 35, 0),
-            colour: const Color(0xFFFFF3E0), power: 110),
-        SceneObject(id: 'ground', name: 'Ground', kind: ObjectKind.mesh,
-            position: Vector3(0, -1.05, 0), scale: Vector3(8, 0.05, 8),
-            colour: const Color(0xFF3B424C)),
-        SceneObject(id: 'props', name: 'Props', kind: ObjectKind.group),
-        SceneObject(id: 'cube', name: 'Cube', kind: ObjectKind.mesh,
-            parentId: 'props', rotation: Vector3(0, 25, 0),
-            colour: const Color(0xFFD9634F)),
-        SceneObject(id: 'crate', name: 'Crate', kind: ObjectKind.mesh,
-            parentId: 'props', position: Vector3(2.2, -0.65, 0.6),
-            scale: Vector3(0.7, 0.7, 0.7),
-            colour: const Color(0xFFE5B84F)),
-        SceneObject(id: 'camera', name: 'Camera', kind: ObjectKind.camera,
-            position: Vector3(6, 4, 8), rotation: Vector3(-20, 35, 0)),
-        // A fair day rather than a clear one, so the object in the tree is
-        // visibly doing something the moment somebody selects it.
-        SceneObject(id: 'weather', name: 'Weather',
-            kind: ObjectKind.weather, condition: WeatherCondition.fair),
-      ]);
+    // Watts per square metre, because that is what a sun's strength is
+    // stated in. A hundred and ten of them is about seventy-five thousand
+    // lux, which is a bright but not blinding afternoon.
+    SceneObject(
+      id: 'sun',
+      name: 'Sun',
+      kind: ObjectKind.light,
+      rotation: Vector3(-55, 35, 0),
+      colour: const Color(0xFFFFF3E0),
+      power: 110,
+    ),
+    SceneObject(
+      id: 'ground',
+      name: 'Ground',
+      kind: ObjectKind.mesh,
+      position: Vector3(0, -1.05, 0),
+      scale: Vector3(8, 0.05, 8),
+      colour: const Color(0xFF3B424C),
+    ),
+    SceneObject(id: 'props', name: 'Props', kind: ObjectKind.group),
+    SceneObject(
+      id: 'cube',
+      name: 'Cube',
+      kind: ObjectKind.mesh,
+      parentId: 'props',
+      rotation: Vector3(0, 25, 0),
+      colour: const Color(0xFFD9634F),
+    ),
+    SceneObject(
+      id: 'crate',
+      name: 'Crate',
+      kind: ObjectKind.mesh,
+      parentId: 'props',
+      position: Vector3(2.2, -0.65, 0.6),
+      scale: Vector3(0.7, 0.7, 0.7),
+      colour: const Color(0xFFE5B84F),
+    ),
+    SceneObject(
+      id: 'camera',
+      name: 'Camera',
+      kind: ObjectKind.camera,
+      position: Vector3(6, 4, 8),
+      rotation: Vector3(-20, 35, 0),
+    ),
+    // A fair day rather than a clear one, so the object in the tree is
+    // visibly doing something the moment somebody selects it.
+    SceneObject(
+      id: 'weather',
+      name: 'Weather',
+      kind: ObjectKind.weather,
+      condition: WeatherCondition.fair,
+    ),
+  ]);
 
   /// What the scene is called, which need not match its file name.
   String name;
@@ -676,6 +209,7 @@ class EditorScene {
   /// Off, the scene sits at its hour and the body above it is whichever one
   /// the light says it is. On, the hour advances and the sky decides.
   bool dayCycle;
+
   double hoursPerSecond;
 
   /// Seconds since the editor started animating this scene.
@@ -772,16 +306,19 @@ class EditorScene {
   /// The icon that goes with that name.
   IconData displayIconOf(SceneObject object) =>
       identical(object, celestial) && activeBody == CelestialBody.moon
-          ? Icons.nightlight_outlined
-          : object.icon;
+      ? Icons.nightlight_outlined
+      : object.icon;
 
   final List<SceneObject> _objects;
+
   final Map<String, SceneObject> _byId = {};
 
   /// Bumped by every structural change, so derived work can tell whether the
   /// answer it cached is still the answer.
   int _generation = 0;
+
   int _cachedGeneration = -1;
+
   final Map<String, Matrix4> _worldCache = {};
 
   List<SceneObject> get objects => List.unmodifiable(_objects);
@@ -796,11 +333,15 @@ class EditorScene {
   void invalidate() => _generation++;
 
   /// Objects with no parent, in order.
-  List<SceneObject> get roots =>
-      [for (final o in _objects) if (o.parentId == null) o];
+  List<SceneObject> get roots => [
+    for (final o in _objects)
+      if (o.parentId == null) o,
+  ];
 
-  List<SceneObject> childrenOf(String id) =>
-      [for (final o in _objects) if (o.parentId == id) o];
+  List<SceneObject> childrenOf(String id) => [
+    for (final o in _objects)
+      if (o.parentId == id) o,
+  ];
 
   /// Every object under [id], deepest last.
   List<SceneObject> descendantsOf(String id) {
@@ -1009,8 +550,9 @@ class EditorScene {
       // not the room — which is the whole difference between a box round a
       // thing and the thing.
       final shell = object.boundaryMesh;
-      final where =
-          shell == null || shell.isEmpty ? hit : _meshHit(shell, from, along);
+      final where = shell == null || shell.isEmpty
+          ? hit
+          : _meshHit(shell, from, along);
       if (where == null || where >= closest) continue;
 
       closest = where;
@@ -1190,550 +732,6 @@ class EditorScene {
       centre: (minimum + maximum)..scale(0.5),
       radius: math.max((maximum - minimum).length / 2, 1),
     );
-  }
-
-  /// Everything the renderer draws, viewed from [camera].
-  ///
-  /// The viewport's camera is passed in rather than taken from the scene's
-  /// Camera object: the scene view and the game camera are separate things,
-  /// and moving one should not move the other.
-  ///
-  /// [projectRoot] resolves mesh references, which are stored relative to the
-  /// project so a scene file survives the folder being moved or shared, and
-  /// have to be absolute by the time the renderer opens them.
-  /// Everything the renderer draws, viewed from [camera].
-  ///
-  /// [shared] is what every scene in the project has in it: its objects and
-  /// its lights are drawn alongside this scene's own, and its weather and its
-  /// sun stand in where this scene has none. The loaded scene wins wherever
-  /// both have something to say, which is the rule that makes a shared set
-  /// useful rather than something to work around — put a manager there once
-  /// and every scene has it, and any scene can still overrule it.
-  OrblitScene toRenderScene(
-    OrblitCamera camera, {
-    String? projectRoot,
-    EditorScene? shared,
-    String? Function(SceneObject)? geometryOf,
-    GridPlan? grid,
-  }) {
-    final sky = skyState;
-    final driven = dayCycle;
-
-    // What is above the scene, and what the air is doing, from whichever of
-    // the two has one.
-    final lit = celestial ?? shared?.celestial;
-    final air = weatherNow ?? shared?.weatherNow;
-    // Which way it blows, from whichever object is the weather — the same
-    // source the fog and the rain already read, so a scene's trees lean the
-    // way its rain falls.
-    final bearing = (weather ?? shared?.weather)?.windDirection ?? 135;
-    final flash = air == null || air.lightning <= 0
-        ? 0.0
-        : WeatherState.flashAt(clock, air.lightning);
-
-    final lights = [
-      for (final scene in [this, ?shared])
-        for (final object in scene._objects)
-          // A hidden light is left out rather than sent dark. Filament shades
-          // one directional light and a budget of punctual ones, and a light
-          // nobody can see should not be the one that fills the budget.
-          if (object.kind == ObjectKind.light && scene.isShown(object.id))
-            scene._lightFor(
-              object,
-              sky: driven && identical(object, lit) ? sky : null,
-              air: identical(object, lit) ? air : null,
-              flash: identical(object, lit) ? flash : 0,
-            ),
-    ];
-
-    // A covered sky is one enormous diffuser: less of the light arrives from
-    // one direction and more of it from everywhere. A strike lights the whole
-    // of it at once, which is why lightning has no shadows worth the name.
-    final ambientLux =
-        (driven ? sky.ambient : ambient) * (air?.scattered ?? 1) * (1 + flash * 40);
-
-    return OrblitScene(
-      materials: [
-        if (grid != null) grid.material,
-        // One material per distinct texture rather than one per object, keyed
-        // by the texture so two objects sharing a colour map share the
-        // instance — and so the key is stable from frame to frame, which is
-        // what lets the renderer keep the instance rather than rebuild it.
-        // Keyed by the texture *and* how much the surface sways, because
-        // two objects sharing a colour map do not necessarily share a
-        // response to the wind: the same bark is on the trunk that barely
-        // moves and the branch that does. Sharing by texture alone would
-        // make one of them wrong.
-        for (final surface in {
-          for (final scene in [this, ?shared])
-            for (final object in scene._objects)
-              if (object.isDrawable && object.materialAsset != null)
-                (
-                  texture: _resolveMesh(object.materialAsset, projectRoot)!,
-                  sway: object.sway,
-                ),
-        })
-          OrblitMaterial(
-            key: _materialKeyOf(surface.texture, surface.sway),
-            baseColourMap: OrblitTexture(surface.texture),
-            wind: _windFor(surface.sway, air, bearing),
-          ),
-      ],
-      objects: [
-        // First, so it is under everything in the list as well as in the
-        // world. Not a scene object: it is never saved, never selected and
-        // never in the outliner, because it is a drawing aid rather than a
-        // thing somebody put there.
-        if (grid != null) grid.object,
-        for (final scene in [this, ?shared])
-          for (final object in scene._objects)
-            if (object.isDrawable)
-              OrblitObject(
-                key: object.renderKey,
-                transform: scene.worldOf(object.id),
-                colour: linearFromColour(object.colour),
-                // Geometry built here first, then whatever file the object
-                // names. A shape somebody is dragging a face on should draw
-                // as what it is now, not as the mesh it used to reference.
-                mesh: _resolveMesh(
-                  (object.kind == ObjectKind.shape
-                          ? geometryOf?.call(object)
-                          : null) ??
-                      object.meshAsset,
-                  projectRoot,
-                ),
-                material: object.materialAsset == null
-                    ? null
-                    : _materialKeyOf(
-                        _resolveMesh(object.materialAsset, projectRoot)!,
-                        object.sway,
-                      ),
-                castShadows: object.castShadows,
-                receiveShadows: object.receiveShadows,
-                visible: scene.isShown(object.id),
-              ),
-      ],
-      lights: lights,
-      sky: _skyFrom(
-        base: _greyed(
-          driven ? sky.skyColour : skyColour.tint,
-          (air?.greying ?? 0) * 0.8,
-        ),
-        ambientLux: ambientLux,
-        lights: lights,
-        lit: lit,
-        body: driven ? sky : null,
-        air: air,
-        weather: weather ?? shared?.weather,
-        flash: flash,
-      ),
-      fog: _fogFrom(air, weather ?? shared?.weather),
-      precipitation: _precipitationFrom(air, weather ?? shared?.weather),
-      camera: driven ? _metered(camera, lights, ambientLux) : camera,
-    );
-  }
-
-  /// The camera, set for the light this scene actually has in it.
-  OrblitCamera _metered(
-    OrblitCamera camera,
-    List<OrblitLight> lights,
-    double ambientLux,
-  ) {
-    final exposure =
-        CameraExposure.forIlluminance(_incidentLux(lights, ambientLux));
-    return camera.copyWith(
-      aperture: exposure.aperture,
-      shutterSpeed: exposure.shutterSpeed,
-      sensitivity: exposure.sensitivity,
-    );
-  }
-
-  /// How much light is actually falling on this scene, in lux.
-  ///
-  /// Read off the lights being sent rather than off what the day cycle
-  /// intends, because those are not always the same thing. A scene whose light
-  /// is a bulb rather than a sun, or one somebody has turned up, still has to
-  /// be exposed for what it has — metering off the hour instead is how a night
-  /// ends up a white rectangle with the shapes barely showing through it.
-  ///
-  /// Directional light only. A lamp lights the corner it is in rather than the
-  /// scene, and a camera set for the corner would blow out everywhere else —
-  /// which is exactly what a real one does, too.
-  double _incidentLux(List<OrblitLight> lights, double ambientLux) {
-    var total = ambientLux;
-    for (final light in lights) {
-      if (light.kind != OrblitLightKind.directional) continue;
-      // Angled by how high it is: a sun on the horizon lays far less on the
-      // ground than one overhead, and metering as though it did would leave
-      // every dusk under-exposed.
-      total += light.intensity * math.max(0, -light.direction.y);
-    }
-    return total;
-  }
-
-  /// The air, as the weather has it this instant.
-  ///
-  /// Two things through one setting. The even haze is what distance looks
-  /// like; the sheets are what a bank of cloud looks like lying in a valley.
-  /// A condition asks for both, because weather with no haze behind it reads
-  /// as cut-outs hanging in clear air.
-  OrblitFog _fogFrom(WeatherState? now, SceneObject? object) {
-    if (now == null || object == null) return OrblitFog.none;
-
-    final heading = WeatherState.windFrom(object.windDirection);
-
-    return OrblitFog(
-      colour: now.fogColour.linear,
-      density: now.fogDensity,
-      height: now.fogHeight,
-      heightFalloff: now.fogFalloff,
-      structure: now.mist,
-      // Metres a second, which is what wind is measured in. Turning that into
-      // how fast a pattern scrolls is the renderer's business, because only it
-      // knows how big the pattern is.
-      wind: Vector2(
-        heading.x * now.windSpeed,
-        heading.z * now.windSpeed,
-      ),
-      // Turns of the noise per metre: the reciprocal of how big a cloud is,
-      // stated the way somebody would measure it rather than the way the
-      // shader wants it.
-      featureSize: 1 / math.max(now.mistSize, 0.5),
-      // How deep the bank is, out of how fast the haze thins with altitude.
-      // The two describe the same layer, and authoring them apart would let
-      // somebody set a shallow haze with a bank standing out of the top of it.
-      thickness: (1 / math.max(now.fogFalloff, 0.05)).clamp(1.0, 40.0),
-    );
-  }
-
-  /// What is coming down, if anything is.
-  ///
-  /// Rain and snow are the same curtain at different settings, so a scene
-  /// with some of each — which is what the temperature between them looks
-  /// like — is one curtain part of the way from streaks to flakes rather than
-  /// two curtains fighting.
-  OrblitPrecipitation _precipitationFrom(
-    WeatherState? now,
-    SceneObject? object,
-  ) {
-    if (now == null || object == null || !now.isWet) {
-      return OrblitPrecipitation.none;
-    }
-
-    final total = now.rain + now.snow;
-    final asSnow = (now.snow / total).clamp(0.0, 1.0);
-    double between(double wet, double white) => wet + (white - wet) * asSnow;
-
-    final heading = WeatherState.windFrom(object.windDirection);
-
-    return OrblitPrecipitation(
-      colour: linearFromColour(
-        Color.lerp(const Color(0xFFB8C6D6), const Color(0xFFF2F5F8), asSnow)!,
-      ),
-      amount: total.clamp(0.0, 1.0),
-      // Nine metres a second for rain, under one for snow. It is the whole
-      // difference in how the two read.
-      fall: between(9, 0.8),
-      // Snow is taken by the wind far more than rain is: it weighs nothing
-      // and it has all day.
-      wind: Vector2(
-        heading.x * now.windSpeed * between(0.6, 1.6),
-        heading.z * now.windSpeed * between(0.6, 1.6),
-      ),
-      dropsPerMetre: between(8, 3.5),
-      // How far a drop travels while the shutter is open. A streak, or a
-      // flake.
-      stretch: between(30, 5),
-      threshold: between(0.7, 0.55),
-    );
-  }
-
-  /// The sky: its gradient, the body in it, the cloud, and any strike.
-  ///
-  /// One object because it is one shader on one dome. Splitting it was the
-  /// mistake behind two rounds of cloud that did not read as sky: the cloud
-  /// was tinted a colour somebody chose, while the sun was drawn somewhere
-  /// else entirely, and nothing in the picture agreed with anything else.
-  /// Here the cloud is lit by the same direction the scene is.
-  OrblitSky _skyFrom({
-    required Tint base,
-    required double ambientLux,
-    required List<OrblitLight> lights,
-    required SceneObject? lit,
-    required SkyState? body,
-    required WeatherState? air,
-    required SceneObject? weather,
-    required double flash,
-  }) {
-    final ground = base.linear;
-    final strike = _strikeFrom(air, weather);
-
-    // Which way the body is, taken from the light that is actually lighting
-    // the scene rather than from the clock. A sun drawn in one place and a
-    // cloud lit from another is the single thing that gives a sky away.
-    final beam = lights
-        .where((light) => light.kind == OrblitLightKind.directional)
-        .firstOrNull;
-    final toBody = beam == null
-        ? Vector3(0.35, 0.78, 0.52)
-        : (-beam.direction)
-      ..normalize();
-
-    // The body's own colour, at a brightness that says which body it is. The
-    // moon is the sun's light at a millionth of the strength and the exposure
-    // opens right up for it, so it needs saying here or the night has a
-    // second sun in it.
-    final night = toBody.y < 0.999 && body != null && body.body == CelestialBody.moon;
-    final bodyColour =
-        (beam == null ? Vector3(1.0, 0.96, 0.90) : beam.colour.clone())
-          ..scale(night ? 0.30 : 1.0);
-
-    // Overhead is the deepest part of a sky and the horizon the palest,
-    // because the horizon is where the most air is and every metre of it
-    // scatters. When the body is low the horizon takes its colour, which is
-    // the whole of a sunset.
-    final zenith = ground.clone()..scale(0.82);
-    final glow = body == null
-        ? 0.30
-        : (1 - (body.altitude / 0.45)).clamp(0.0, 1.0).toDouble();
-    final horizon = _mix(
-      _mix(ground, Vector3(0.72, 0.80, 0.92), 0.30),
-      bodyColour,
-      glow * 0.55,
-    );
-
-    return OrblitSky(
-      colour: ground,
-      zenith: zenith,
-      horizon: horizon,
-      ambient: ambientLux,
-      // Nothing to draw a disk for if the scene has no light above it, and
-      // one nobody can see should not appear in the sky either.
-      showBody: lit != null,
-      bodyDirection: toBody,
-      bodyColour: bodyColour,
-      // A degree across rather than the sun's own half-degree. A physically
-      // sized disc is four pixels on a normal screen, and a sun nobody can
-      // pick out of the glare is not worth drawing.
-      bodySize: 0.011,
-      flash: strike.flash,
-      flashDirection: strike.direction,
-      flashSeed: strike.seed,
-      clouds: _cloudsFrom(air, weather, bodyColour),
-    );
-  }
-
-  /// Component-wise interpolation, which vector_math does not offer for
-  /// colours and which reads worse written out three times.
-  static Vector3 _mix(Vector3 from, Vector3 to, double t) => Vector3(
-    from.x + (to.x - from.x) * t,
-    from.y + (to.y - from.y) * t,
-    from.z + (to.z - from.z) * t,
-  );
-
-  /// The strike this instant, or none if the sky is not that kind of sky.
-  Strike _strikeFrom(WeatherState? now, SceneObject? object) =>
-      now == null || object == null || now.lightning <= 0
-      ? Strike.none
-      : WeatherState.strikeAt(clock, now.lightning);
-
-  /// The cloud in the sky, which is not the same thing as the fog.
-  ///
-  /// Fog is the air between here and the horizon; cloud is a layer a long way
-  /// overhead that the light comes through. A scene can have either without
-  /// the other, and one setting doing both would be wrong for every scene
-  /// that wants one of them.
-  ///
-  /// The kind is a shape, not a preset: which one is chosen decides how high
-  /// the base sits, how deep the layer is and how far its noise is folded,
-  /// and none of those can be reached by turning a cover slider.
-  OrblitClouds _cloudsFrom(
-    WeatherState? now,
-    SceneObject? object,
-    Vector3 bodyColour,
-  ) {
-    if (now == null || object == null || now.cloudCover <= 0.01) {
-      return OrblitClouds.none;
-    }
-
-    // A condition that has no cloud of its own still gets one if somebody
-    // has turned the cover up, because the alternative is a slider that does
-    // nothing until the condition is changed too. The chosen kind wins over
-    // both, including when it is None.
-    final kind = object.cloudKind ??
-        switch (CloudKind.forCondition(object.condition)) {
-          CloudKind.none => CloudKind.cumulus,
-          final chosen => chosen,
-        };
-    if (kind == CloudKind.none) return OrblitClouds.none;
-
-    final heading = WeatherState.windFrom(object.windDirection);
-
-    // Carried faster than anything at ground level, because there is nothing
-    // up there to slow the wind down.
-    final wind = Vector2(
-      heading.x * now.windSpeed * 2.5,
-      heading.z * now.windSpeed * 2.5,
-    );
-
-    final clouds = switch (kind) {
-      CloudKind.none => OrblitClouds.none,
-      CloudKind.cumulus => OrblitClouds.cumulus(cover: now.cloudCover, wind: wind),
-      CloudKind.stratocumulus =>
-        OrblitClouds.stratocumulus(cover: now.cloudCover, wind: wind),
-      CloudKind.stratus => OrblitClouds.stratus(cover: now.cloudCover, wind: wind),
-      CloudKind.cirrus => OrblitClouds.cirrus(cover: now.cloudCover, wind: wind),
-      CloudKind.cumulonimbus =>
-        OrblitClouds.cumulonimbus(cover: now.cloudCover, wind: wind),
-    };
-
-    // The kind is the shape; the height is a setting on top of it, and the
-    // scene always has one.
-    return clouds.copyWith(
-      altitude: now.cloudHeight,
-      // What the sky puts back into the shadowed side, warmed by whatever is
-      // above it. A cloud lit only from one side has a black underside, and
-      // no real one does.
-      colour: _mix(clouds.colour, bodyColour, 0.18),
-    );
-  }
-
-  /// A colour dragged towards the flat grey of a covered sky.
-  static Tint _greyed(Tint colour, double amount) =>
-      Tint.lerp(colour, const Tint.hex(0x9BA3AB), amount);
-
-  /// One authored light, in the units the renderer takes.
-  ///
-  /// The conversion happens in `orblit_light` rather than here. Watts, metres
-  /// and degrees are what a light is stated in; lumens, lux and radians are
-  /// what a renderer is told. Doing that arithmetic in the editor as well
-  /// would be a second place for it to drift.
-  /// One light, in the units the renderer takes.
-  ///
-  /// Told what is happening to it rather than working it out. Which light the
-  /// sky is standing in for, and what the weather is, are questions about the
-  /// project rather than about the scene this light happens to live in — a sun
-  /// in the shared set is still the sun of whichever scene is open.
-  OrblitLight _lightFor(
-    SceneObject object, {
-    SkyState? sky,
-    WeatherState? air,
-    double flash = 0,
-  }) {
-    final world = worldOf(object.id);
-
-    // A day cycle owns the one light everything is lit from above by: where it
-    // is, what colour it is and how strong. The object keeps what it was
-    // authored with, so turning the cycle off puts it back rather than leaving
-    // it wherever the clock stopped.
-    final driven = sky != null;
-
-    // Cloud sits between the scene and whatever is above it, so it only
-    // touches that one light. A lamp indoors does not care what the sky is
-    // doing, and neither should a stage light somebody has aimed by hand.
-    final now = air;
-
-    final described = Light(
-      type: object.lightType,
-      color: _greyed(
-        sky?.lightColour ?? object.colour.tint,
-        now?.greying ?? 0,
-      ).linear,
-      // Cloud does not switch the sun off. A heavy overcast still passes a
-      // good tenth of it, which is why a wet afternoon is grey rather than
-      // dark: the camera opens up and the world stays legible.
-      //
-      // A strike goes the other way, briefly and by a lot. It comes through
-      // the light that is already above the scene rather than as a second
-      // one: a flash is the sky lighting up, and the sky is what that light
-      // is standing in for.
-      power: (sky?.power ?? object.power) *
-          (now?.transmitted ?? 1) *
-          (1 + flash * 60),
-      radius: object.sourceRadius,
-      spotSize: object.spotSize,
-      spotBlend: object.spotBlend,
-      // The whole difference between a bright day and a dull one. The sun is
-      // a disc half a degree across; cloud turns it into a source the size of
-      // the sky, and shadows lose their edges long before they lose their
-      // depth.
-      sunAngle: object.sunAngle * (now?.spread ?? 1),
-      castShadows: object.castShadows,
-      // An area light arrives as a point of the same luminous power, so the
-      // size it would have emitted from becomes the size of the source that
-      // stands in for it — the falloff and the total are right, and the
-      // penumbra is at least a believable width.
-      sizeX: object.sourceRadius * 2,
-      sizeY: object.sourceRadius * 2,
-    );
-    final light = described.toRenderer();
-
-    // Down the local -Z axis, which is where a light points: the same
-    // convention as a camera, so a light parented to a rig turns with it.
-    final direction = sky?.direction ??
-        (world.getRotation() * Vector3(0, 0, -1)
-          ..normalize());
-
-    // What tells a sun from a moon at a glance, once both are white discs of
-    // the same width: a sun is wrapped in glare and a moon is not.
-    final body = driven ? sky.body : object.body;
-    final isMoon = body == CelestialBody.moon;
-
-    return OrblitLight(
-      key: object.renderKey,
-      kind: switch (light.kind) {
-        RendererLightKind.directional => OrblitLightKind.directional,
-        RendererLightKind.point => OrblitLightKind.point,
-        RendererLightKind.spot => OrblitLightKind.spot,
-        RendererLightKind.area => OrblitLightKind.area,
-      },
-      colour: light.color,
-      intensity: light.intensity,
-      position: world.getTranslation(),
-      direction: direction,
-      // A sun's influence is infinite, which is not a number a renderer can
-      // be given. It ignores the falloff of a directional light anyway, so
-      // zero here means "not asked" rather than "no reach".
-      falloffRadius: light.falloffRadius.isFinite ? light.falloffRadius : 0,
-      innerConeAngle: light.innerConeAngle,
-      outerConeAngle: light.outerConeAngle,
-      sunAngularRadius: light.sunAngularRadius,
-      sourceRadius: light.sourceRadius,
-      haloSize: isMoon ? 3 : 12,
-      haloFalloff: isMoon ? 240 : 70,
-      castShadows: light.castShadows,
-      // Only an area light has a size, and `orblit_light` leaves both at zero
-      // for the kinds that do not. Passing that zero through would give the
-      // renderer a panel with no area to integrate, which is a light that
-      // emits nothing — so the renderer's own default stands in instead.
-      width: light.width > 0 ? light.width : 1,
-      height: light.height > 0 ? light.height : 1,
-    );
-  }
-
-  /// A stored mesh reference as a path the renderer can open.
-  /// The key a texture's material is kept under.
-  ///
-  /// Derived from the path rather than handed out in order, because the
-  /// renderer keeps a material for as long as its key is mentioned: a key
-  /// that shifted when another object lost its texture would rebuild every
-  /// instance after it. Non-negative, because the grid's material sits below
-  /// zero and must not collide.
-  static int _materialKeyOf(String texture, double sway) =>
-      Object.hash(texture, sway) & 0x3fffffff;
-
-  /// The wind a surface of this compliance feels, from whatever the air is
-  /// doing. Still air and a rigid surface both come out as [OrblitWind.none],
-  /// which is the early return in the vertex stage.
-  static OrblitWind _windFor(double sway, WeatherState? air, double bearing) {
-    if (sway <= 0 || air == null || air.windSpeed <= 0) return OrblitWind.none;
-    return OrblitWind(bearing: bearing, speed: air.windSpeed, strength: sway);
-  }
-
-  static String? _resolveMesh(String? reference, String? root) {
-    if (reference == null) return null;
-    if (root == null || p.isAbsolute(reference)) return reference;
-    return p.join(root, reference);
   }
 
   /// sRGB to linear, because the shading maths is linear and a colour handed
