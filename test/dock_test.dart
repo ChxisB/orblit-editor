@@ -16,7 +16,9 @@ void main() {
       return null;
     }
 
-    return [for (final panel in find(node)?.panels ?? const []) panel.id];
+    return [
+      for (final panel in find(node)?.panels ?? const <DockPanel>[]) panel.id,
+    ];
   }
 
   int splitsIn(DockNode node) {
@@ -36,8 +38,7 @@ void main() {
     });
 
     test('the scene and the game share one space', () {
-      expect(panelsIn(DockLayout.standard().root, 'centre'),
-          ['scene', 'game']);
+      expect(panelsIn(DockLayout.standard().root, 'centre'), ['scene', 'game']);
     });
 
     test('four views is four scene panels', () {
@@ -66,8 +67,11 @@ void main() {
     });
 
     test('onto the centre makes it another tab', () {
-      final now =
-          DockLayout.standard().dock('inspector', 'left', DockSide.centre);
+      final now = DockLayout.standard().dock(
+        'inspector',
+        'left',
+        DockSide.centre,
+      );
 
       expect(panelsIn(now.root, 'left'), ['outliner', 'inspector']);
       // And the one just dropped is the one showing.
@@ -173,9 +177,9 @@ void main() {
     });
 
     test('one that is not there is added', () {
-      final now = DockLayout.standard().close('console').add(
-            const DockPanel(id: 'console', kind: PanelKind.console),
-          );
+      final now = DockLayout.standard()
+          .close('console')
+          .add(const DockPanel(id: 'console', kind: PanelKind.console));
       expect(now.holds('console'), isTrue);
     });
   });
@@ -241,8 +245,10 @@ void main() {
 
     test('a locked layout refuses to be resized', () {
       final locked = DockLayout.fourViews().copyWith(locked: true);
-      expect(identical(locked.resize('viewsTop', 0, 0.9).root, locked.root),
-          isTrue);
+      expect(
+        identical(locked.resize('viewsTop', 0, 0.9).root, locked.root),
+        isTrue,
+      );
     });
   });
 
@@ -252,8 +258,10 @@ void main() {
       final now = DockLayout.read(was.toText())!;
 
       expect(now.locked, isTrue);
-      expect([for (final p in now.panels) p.id],
-          [for (final p in was.panels) p.id]);
+      expect(
+        [for (final p in now.panels) p.id],
+        [for (final p in was.panels) p.id],
+      );
       expect(splitsIn(now.root), splitsIn(was.root));
     });
 

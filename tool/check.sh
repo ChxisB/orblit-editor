@@ -5,6 +5,19 @@ cd "$(dirname "$0")/.."
 
 failures=0
 
+# No very long file. Nothing is over the limit any more, so there is no list
+# of exceptions to keep: the next file to reach it will be a new one, and it
+# fails here rather than growing the way editor_shell.dart grew to 3,646.
+LIMIT=1000
+over=$(find lib test -name '*.dart' | xargs wc -l | awk -v l="$LIMIT" \
+         '$1 > l && $2 != "total" {print "  FAIL  " $2 " is " $1 " lines, over " l}')
+if [ -z "$over" ]; then
+  echo "  ok    no source over $LIMIT lines"
+else
+  echo "$over"
+  failures=$((failures+1))
+fi
+
 if flutter analyze > /tmp/orblit_editor_analyze.log 2>&1; then
   echo "  ok    analyze"
 else

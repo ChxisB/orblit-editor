@@ -53,8 +53,7 @@ class _OrblitButtonState extends State<OrblitButton> {
       ButtonTone.primary =>
         _pressed ? OrblitColors.emberDeep : OrblitColors.ember,
       ButtonTone.normal => _hovering ? OrblitColors.hover : OrblitColors.raised,
-      ButtonTone.quiet =>
-        _hovering ? OrblitColors.raised : Colors.transparent,
+      ButtonTone.quiet => _hovering ? OrblitColors.raised : Colors.transparent,
     };
   }
 
@@ -73,8 +72,9 @@ class _OrblitButtonState extends State<OrblitButton> {
   Widget build(BuildContext context) {
     final content = Row(
       mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
-      mainAxisAlignment:
-          widget.expand ? MainAxisAlignment.start : MainAxisAlignment.center,
+      mainAxisAlignment: widget.expand
+          ? MainAxisAlignment.start
+          : MainAxisAlignment.center,
       children: [
         if (widget.icon != null) ...[
           Icon(widget.icon, size: 15, color: _foreground),
@@ -124,8 +124,8 @@ class _OrblitButtonState extends State<OrblitButton> {
               color: widget.tone == ButtonTone.primary
                   ? Colors.transparent
                   : (_hovering && _enabled
-                      ? OrblitColors.line
-                      : OrblitColors.lineSoft),
+                        ? OrblitColors.line
+                        : OrblitColors.lineSoft),
             ),
           ),
           child: content,
@@ -179,7 +179,60 @@ class OrblitPanel extends StatelessWidget {
                 ],
               ),
             ),
-          Flexible(child: Padding(padding: padding, child: child)),
+          Flexible(
+            child: Padding(padding: padding, child: child),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A titled card, for one group of fields inside a side panel.
+///
+/// The inspector, the mesh panel, the modelling panel and the UI editor each
+/// stack several of these down a column, and they have to agree: a panel whose
+/// cards sit on different margins or whose headings are different heights
+/// reads as broken rather than as varied.
+class OrblitSection extends StatelessWidget {
+  const OrblitSection({
+    super.key,
+    required this.title,
+    required this.icon,
+    required this.child,
+  });
+
+  final String title;
+  final IconData icon;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(Space.sm, 0, Space.sm, Space.sm),
+      decoration: BoxDecoration(
+        color: OrblitColors.ground,
+        borderRadius: BorderRadius.circular(Radii.panel),
+        border: Border.all(color: OrblitColors.lineSoft),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            height: 30,
+            padding: const EdgeInsets.symmetric(horizontal: Space.md),
+            child: Row(
+              children: [
+                Icon(icon, size: 13, color: OrblitColors.inkDim),
+                const SizedBox(width: Space.sm),
+                Text(title.toUpperCase(), style: OrblitText.section),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.sm),
+            child: child,
+          ),
         ],
       ),
     );
@@ -295,12 +348,8 @@ Future<String?> promptForName(
 }) {
   return showDialog<String>(
     context: context,
-    builder: (context) => _NamePrompt(
-      title: title,
-      initial: initial,
-      hint: hint,
-      action: action,
-    ),
+    builder: (context) =>
+        _NamePrompt(title: title, initial: initial, hint: hint, action: action),
   );
 }
 
@@ -409,8 +458,9 @@ class ValueField extends StatefulWidget {
 }
 
 class _ValueFieldState extends State<ValueField> {
-  late final TextEditingController _controller =
-      TextEditingController(text: widget.value);
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.value,
+  );
   final FocusNode _focus = FocusNode();
 
   @override
