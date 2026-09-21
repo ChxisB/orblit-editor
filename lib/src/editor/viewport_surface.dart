@@ -171,121 +171,183 @@ extension _Surface on _SceneViewportState {
     _syncClock();
   }
 
-  void _onHover(PointerHoverEvent event) {
-    if (widget.drawing?.tool.isDrawing ?? false) {
-      _hoverDraw(event.localPosition);
-      return;
-    }
-    if (widget.editing != null) {
-      final under = _elementAt(event.localPosition);
-      if (under != _hoveredElement) {
-        setState(() => _hoveredElement = under);
+  // ---- the pointer, in order ----
+
+  /// Who gets a gesture, first to last.
+  ///
+  /// The mode's tool, then anything being drawn, then the gizmos, then the
+  /// selection, then the camera. Each takes what it wants and says so, and
+  /// the first to take something is the only one that sees it.
+  Iterable<ViewportStage> _stages() sync* {
+    if (widget.modeInput case final tool?) yield (name: 'tool', input: tool);
+    yield (name: 'drawing', input: _drawingInput);
+    if (_gizmoTarget case final target?) {
+      for (final type in _gizmoTypes.all) {
+        final input = type.input;
+        if (input == null || !type.appliesTo(target)) continue;
+        yield (name: 'gizmo:${type.name}', input: (g) => input(target, g));
       }
-      return;
     }
-    _hover(event.localPosition);
+    yield (name: 'selection', input: _selectionInput);
+    yield (name: 'orbit', input: _orbitInput);
   }
 
-  void _onExit(PointerExitEvent _) {
-    setState(() {
-      _hovered = null;
-      _hoveredElement = null;
-    });
+  ViewportGesture _gesture(ViewportPhase phase, Offset at) {
+    final size = _surface;
+    return ViewportGesture(
+      phase,
+      at,
+      add: isCommandModifierPressed || HardwareKeyboard.instance.isShiftPressed,
+      projection: size == null || size.isEmpty
+          ? null
+          : ViewportProjection(camera: widget.camera, size: size),
+    );
   }
+
+  void _onHover(PointerHoverEvent event) =>
+      _input.handle(_gesture(ViewportPhase.hover, event.localPosition));
+
+  void _onExit(PointerExitEvent event) => _input.leave(event.localPosition);
 
   void _onTapUp(TapUpDetails details) {
     // A click in a view is how that view becomes the one the keyboard
     // is talking to. Focus that followed the pointer instead would take
     // it away from a name half-typed in the inspector.
     _flyFocus.requestFocus();
-
-    // A tool that is being drawn takes every click: putting a point
-    // down and selecting something are different enough that guessing
-    // between them would get one of them wrong constantly.
-    if (widget.drawing?.tool.isDrawing ?? false) {
-      _drawAt(details.localPosition);
-      return;
-    }
-
-    // While somebody is editing a mesh, a click is about its parts.
-    // Picking a different object out from under them mid-extrude is not
-    // something anybody means by clicking on their own geometry.
-    if (widget.editing != null) {
-      widget.onPickElement?.call(
-        _elementAt(details.localPosition),
-        add:
-            isCommandModifierPressed ||
-            HardwareKeyboard.instance.isShiftPressed,
-      );
-      return;
-    }
-    _pick(details.localPosition);
+    _input.handle(_gesture(ViewportPhase.tap, details.localPosition));
   }
 
   void _onPanStart(DragStartDetails details) {
     // Already handled as a trackpad gesture.
     if (_onTrackpad) return;
-    // Drawing is clicks, not drags: a drag here would orbit the view
-    // out from under the plane being drawn on.
-    if (widget.drawing?.tool.isDrawing ?? false) return;
-    // A handle first: a drag that starts on one is a transform, and
-    // anywhere else is the view turning. Nothing to hold down and no
-    // mode to be in — the handles are the mode.
-    if (_grab(details.localPosition)) return;
-    // While a mesh is being edited, a drag that missed the handles is a
-    // marquee rather than the camera turning. The camera is still there
-    // on the right button and on the trackpad, and having to hold
-    // something down to select is the wrong way round for the one thing
-    // somebody is doing constantly.
-    if (widget.editing != null && widget.onSelectElements != null) {
-      setState(() {
-        _boxFrom = details.localPosition;
-        _boxTo = details.localPosition;
-      });
-      return;
-    }
-    _dragAnchor = details.localPosition;
+    _input.handle(_gesture(ViewportPhase.dragStart, details.localPosition));
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
     if (_onTrackpad) return;
-    if (_dragging != null) {
-      _dragTo(details.localPosition);
-      return;
-    }
-    if (_boxFrom != null) {
-      setState(() => _boxTo = details.localPosition);
-      return;
-    }
-    final anchor = _dragAnchor;
-    if (anchor == null) return;
-    widget.onCameraChanged(
-      widget.camera.orbit(details.localPosition - anchor),
-    );
-    _dragAnchor = details.localPosition;
+    _input.handle(_gesture(ViewportPhase.dragUpdate, details.localPosition));
   }
 
-  void _onPanEnd(DragEndDetails _) {
-    if (_boxFrom != null) {
-      _takeBox(
-        isCommandModifierPressed ||
-            HardwareKeyboard.instance.isShiftPressed,
-      );
-      setState(() {
-        _boxFrom = null;
-        _boxTo = null;
-      });
+  void _onPanEnd(DragEndDetails details) =>
+      _input.handle(_gesture(ViewportPhase.dragEnd, details.localPosition));
+
+  void _onPanCancel() => _input.cancel();
+
+  /// A tool that is being drawn takes every click: putting a point down and
+  /// selecting something are different enough that guessing between them
+  /// would get one of them wrong constantly.
+  bool _drawingInput(ViewportGesture gesture) {
+    if (!(widget.drawing?.tool.isDrawing ?? false)) return false;
+    switch (gesture.phase) {
+      case ViewportPhase.hover:
+        _hoverDraw(gesture.at);
+      case ViewportPhase.tap:
+        _drawAt(gesture.at);
+      case ViewportPhase.leave:
+        return false;
+      // Drawing is clicks, not drags: a drag here would orbit the view out
+      // from under the plane being drawn on. Taken, and nothing done with it.
+      case ViewportPhase.dragStart ||
+          ViewportPhase.dragUpdate ||
+          ViewportPhase.dragEnd ||
+          ViewportPhase.dragCancel:
+        break;
     }
-    _release();
-    _dragAnchor = null;
+    return true;
   }
 
-  void _onPanCancel() {
-    setState(() {
-      _boxFrom = null;
-      _boxTo = null;
-    });
-    _release();
-    _dragAnchor = null;
+  /// The move and turn handles.
+  ///
+  /// A drag that starts on one is a transform, and anywhere else is not.
+  /// Nothing to hold down and no mode to be in — the handles are the mode.
+  bool _transformInput(ViewportGesture gesture) {
+    switch (gesture.phase) {
+      case ViewportPhase.hover:
+        _hover(gesture.at);
+        return _hovered != null;
+      case ViewportPhase.leave:
+        if (_hovered != null) setState(() => _hovered = null);
+        return false;
+      case ViewportPhase.tap:
+        return false;
+      case ViewportPhase.dragStart:
+        return _grab(gesture.at);
+      case ViewportPhase.dragUpdate:
+        _dragTo(gesture.at);
+        return true;
+      case ViewportPhase.dragEnd || ViewportPhase.dragCancel:
+        _release();
+        return true;
+    }
+  }
+
+  /// Choosing what to work on: objects, or while a mesh is being edited, its
+  /// parts.
+  bool _selectionInput(ViewportGesture gesture) {
+    final editing = widget.editing != null;
+    switch (gesture.phase) {
+      case ViewportPhase.hover:
+        if (!editing) return false;
+        final under = _elementAt(gesture.at);
+        if (under != _hoveredElement) {
+          setState(() => _hoveredElement = under);
+        }
+        return true;
+      case ViewportPhase.leave:
+        if (_hoveredElement != null) setState(() => _hoveredElement = null);
+        return false;
+      case ViewportPhase.tap:
+        // While somebody is editing a mesh, a click is about its parts.
+        // Picking a different object out from under them mid-extrude is not
+        // something anybody means by clicking on their own geometry.
+        if (editing) {
+          widget.onPickElement?.call(_elementAt(gesture.at), add: gesture.add);
+        } else {
+          _pick(gesture.at, add: gesture.add);
+        }
+        return true;
+      case ViewportPhase.dragStart:
+        // While a mesh is being edited, a drag that missed the handles is a
+        // marquee rather than the camera turning. The camera is still there
+        // on the right button and on the trackpad, and having to hold
+        // something down to select is the wrong way round for the one thing
+        // somebody is doing constantly.
+        if (!editing || widget.onSelectElements == null) return false;
+        setState(() {
+          _boxFrom = gesture.at;
+          _boxTo = gesture.at;
+        });
+        return true;
+      case ViewportPhase.dragUpdate:
+        setState(() => _boxTo = gesture.at);
+        return true;
+      case ViewportPhase.dragEnd || ViewportPhase.dragCancel:
+        if (gesture.phase == ViewportPhase.dragEnd) _takeBox(gesture.add);
+        setState(() {
+          _boxFrom = null;
+          _boxTo = null;
+        });
+        return true;
+    }
+  }
+
+  /// A drag that nothing else wanted turns the view.
+  bool _orbitInput(ViewportGesture gesture) {
+    switch (gesture.phase) {
+      case ViewportPhase.dragStart:
+        _dragAnchor = gesture.at;
+        return true;
+      case ViewportPhase.dragUpdate:
+        final anchor = _dragAnchor;
+        if (anchor == null) return true;
+        widget.onCameraChanged(widget.camera.orbit(gesture.at - anchor));
+        _dragAnchor = gesture.at;
+        return true;
+      case ViewportPhase.dragEnd || ViewportPhase.dragCancel:
+        _dragAnchor = null;
+        return true;
+      case ViewportPhase.hover || ViewportPhase.leave || ViewportPhase.tap:
+        return false;
+    }
   }
 }

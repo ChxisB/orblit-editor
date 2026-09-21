@@ -32,7 +32,7 @@ double _powerFor(
   return power;
 }
 
-extension _Light on _Fields {
+extension _Light on InspectorTarget {
   Widget _light() {
     final type = object.lightType;
     final isSun = type == LightType.sun;

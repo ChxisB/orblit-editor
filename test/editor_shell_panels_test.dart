@@ -7,9 +7,10 @@ import 'package:orblit_editor/src/editor/console_panel.dart';
 import 'package:orblit_editor/src/editor/dock.dart';
 import 'package:orblit_editor/src/editor/game_view.dart';
 import 'package:orblit_editor/src/editor/inspector.dart';
+import 'package:orblit_editor/src/editor/modelling_panel.dart';
 import 'package:orblit_editor/src/editor/outliner.dart';
+import 'package:orblit_editor/src/editor/uv_panel.dart';
 import 'package:orblit_editor/src/editor/viewport.dart';
-import 'package:orblit_editor/src/widgets/controls.dart';
 import 'package:path/path.dart' as p;
 
 import 'support/editor_shell.dart';
@@ -20,24 +21,6 @@ void main() {
   useShell();
 
   group('arranging the panels', () {
-    Future<void> viewMenu(WidgetTester tester, String item) async {
-      // The toolbar button, not the word "Viewport" wherever else it appears
-      // — and it gains a dot when the layout is locked.
-      await tester.tap(
-        find.byWidgetPredicate(
-          (widget) => widget is OrblitButton && widget.label.startsWith('View'),
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(
-        find.descendant(
-          of: find.byType(MenuItemButton),
-          matching: find.text(item),
-        ),
-      );
-      await tester.pumpAndSettle();
-    }
-
     testWidgets('the editor opens with the panels it always had', (
       tester,
     ) async {
@@ -133,5 +116,61 @@ void main() {
       expect(find.byType(SceneViewport), findsOneWidget);
       expect(find.byType(Inspector), findsOneWidget);
     });
+
+    testWidgets('a layout saved before panels were registered still opens', (
+      tester,
+    ) async {
+      Directory(p.join(root.path, '.orblit')).createSync(recursive: true);
+      File(
+        p.join(root.path, '.orblit', 'layout.json'),
+      ).writeAsStringSync(_savedBeforeRegistration);
+
+      await open(tester);
+
+      for (final tab in [
+        'HIERARCHY',
+        'SCENE',
+        'GAME',
+        'INSPECTOR',
+        'MODELLING',
+        'PROJECT',
+        'CONSOLE',
+        'UVS',
+      ]) {
+        expect(
+          find.descendant(
+            of: find.byType(Draggable<PanelDrag>),
+            matching: find.text(tab),
+          ),
+          findsOneWidget,
+          reason: tab,
+        );
+      }
+      // And the tabs that were in front are in front again.
+      expect(find.byType(Outliner), findsOneWidget);
+      expect(find.byType(SceneViewport), findsOneWidget);
+      expect(find.byType(ModellingPanel), findsOneWidget);
+      expect(find.byType(UvPanel), findsOneWidget);
+    });
   });
 }
+
+/// Every kind of panel, as the build before the panel registry wrote them:
+/// the standard arrangement with the console, the UVs and the modelling tools
+/// opened from the View menu. Produced by that build's own writer, and only
+/// compacted here.
+const _savedBeforeRegistration = '''
+{"kind":"orblit.layout","formatVersion":1,"locked":false,"root":{
+  "id":"root","split":"column","weights":[0.74,0.26],"children":[
+    {"id":"middle","split":"row","weights":[0.19,0.58,0.23],"children":[
+      {"id":"left","active":0,"panels":[{"id":"outliner","kind":"outliner"}]},
+      {"id":"centre","active":0,"panels":[
+        {"id":"scene","kind":"viewport"},{"id":"game","kind":"game"}]},
+      {"id":"right","active":1,"panels":[
+        {"id":"inspector","kind":"inspector"},
+        {"id":"modelling","kind":"modelling"}]}]},
+    {"id":"bottom","active":2,"panels":[
+      {"id":"project","kind":"project"},
+      {"id":"console","kind":"console"},
+      {"id":"uvs","kind":"uvs"}]}]}}
+''';

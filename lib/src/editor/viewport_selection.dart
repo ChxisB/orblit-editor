@@ -45,6 +45,68 @@ extension _Selection on _SceneViewportState {
     );
   }
 
+  /// What the gizmos are asked about, or null when there is nothing to put
+  /// one on.
+  GizmoTarget? get _gizmoTarget {
+    final scene = _editing;
+    final id = widget.primary;
+    final size = _surface;
+    if (scene == null || id == null || size == null || size.isEmpty) {
+      return null;
+    }
+    final object = scene[id];
+    if (object == null) return null;
+    return GizmoTarget(
+      object: object,
+      scene: scene,
+      selected: widget.selected,
+      projection: ViewportProjection(camera: widget.camera, size: size),
+    );
+  }
+
+  /// Every gizmo this view can draw: its own, then whatever it was given.
+  ///
+  /// A registry rather than a list so two gizmos under one name are caught
+  /// where they are put together, instead of the second one quietly drawing
+  /// over the first.
+  Registry<GizmoType> get _gizmoTypes {
+    final types = Registry<GizmoType>();
+    for (final type in [..._builtInGizmos, ...widget.gizmos]) {
+      types.register(type);
+    }
+    return types;
+  }
+
+  /// The gizmos every view has.
+  ///
+  /// Registered here rather than by the shell, because what they draw and
+  /// what a drag on them does is state this view keeps: which handle is lit,
+  /// what was grabbed, where it was when the drag began.
+  List<GizmoType> get _builtInGizmos => [
+    GizmoType(
+      name: 'transform',
+      appliesTo: (target) => target.object.kind != ObjectKind.scene,
+      overlay: (_) => _handles(),
+      input: (_, gesture) => _transformInput(gesture),
+    ),
+    // What a selected camera sees. Only one: a preview each for a row of
+    // them would cover the view they are meant to help with.
+    GizmoType(
+      name: 'camera view',
+      appliesTo: (target) {
+        final object = target.object;
+        return widget.previewOf != null &&
+            object.kind == ObjectKind.camera &&
+            target.selected.length == 1 &&
+            identical(target.scene, widget.workspace.loaded?.scene) &&
+            // A camera that is not in the scene has no shot to preview.
+            object.visible &&
+            target.scene.isShown(object.id);
+      },
+      overlay: (target) => _cameraPreview(widget.previewOf!(target.object)),
+    ),
+  ];
+
   /// Whether a drag right now moves parts of a mesh rather than objects.
   bool get _editingElements =>
       widget.editing != null && !_selectedElements.isEmpty;

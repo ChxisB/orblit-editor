@@ -6,18 +6,19 @@ import 'package:flutter/material.dart';
 ///
 /// A kind rather than a widget, because the layout is data: it is saved to a
 /// file, sent through an undo, and compared in a test, and a widget is none of
-/// those things. What builds one is the shell's business.
-enum PanelKind {
-  outliner('Hierarchy', Icons.account_tree_outlined),
-  inspector('Inspector', Icons.tune),
-  viewport('Scene', Icons.videocam_outlined),
-  game('Game', Icons.sports_esports_outlined),
-  project('Project', Icons.folder_outlined),
-  console('Console', Icons.terminal),
-  uvs('UVs', Icons.grid_on_outlined),
-  modelling('Modelling', Icons.handyman_outlined);
+/// those things. What builds one is whoever registered it.
+///
+/// A class rather than an enum, so something the editor core has never heard
+/// of — a terrain brush panel, a timeline — can be a kind too. A kind is its
+/// name: that is what the layout file stores, so two kinds with the same name
+/// are the same kind.
+@immutable
+class PanelKind {
+  const PanelKind(this.name, this.label, this.icon, {this.repeatable = false});
 
-  const PanelKind(this.label, this.icon);
+  /// What the layout file calls it. Never changed once a kind has shipped,
+  /// or every saved layout that has one loses it.
+  final String name;
 
   final String label;
   final IconData icon;
@@ -26,14 +27,66 @@ enum PanelKind {
   ///
   /// Four scene views onto one world is the reason this whole thing exists.
   /// Four inspectors is four copies of the same fields.
-  bool get repeatable => this == PanelKind.viewport;
+  final bool repeatable;
 
-  static PanelKind? named(Object? name) {
-    for (final kind in values) {
+  static const outliner = PanelKind(
+    'outliner',
+    'Hierarchy',
+    Icons.account_tree_outlined,
+  );
+  static const inspector = PanelKind('inspector', 'Inspector', Icons.tune);
+  static const viewport = PanelKind(
+    'viewport',
+    'Scene',
+    Icons.videocam_outlined,
+    repeatable: true,
+  );
+  static const game = PanelKind(
+    'game',
+    'Game',
+    Icons.sports_esports_outlined,
+  );
+  static const project = PanelKind('project', 'Project', Icons.folder_outlined);
+  static const console = PanelKind('console', 'Console', Icons.terminal);
+  static const uvs = PanelKind('uvs', 'UVs', Icons.grid_on_outlined);
+  static const modelling = PanelKind(
+    'modelling',
+    'Modelling',
+    Icons.handyman_outlined,
+  );
+
+  /// The kinds the editor has always had, which a layout can be read against
+  /// before anything else has registered.
+  static const builtIn = [
+    outliner,
+    inspector,
+    viewport,
+    game,
+    project,
+    console,
+    uvs,
+    modelling,
+  ];
+
+  /// The one of [kinds] called [name], or null.
+  static PanelKind? named(
+    Object? name, [
+    Iterable<PanelKind> kinds = builtIn,
+  ]) {
+    for (final kind in kinds) {
       if (kind.name == name) return kind;
     }
     return null;
   }
+
+  @override
+  bool operator ==(Object other) => other is PanelKind && other.name == name;
+
+  @override
+  int get hashCode => name.hashCode;
+
+  @override
+  String toString() => 'PanelKind($name)';
 }
 
 /// One panel in the layout.
@@ -59,10 +112,14 @@ class DockPanel {
         if (title != null) 'title': title,
       };
 
-  static DockPanel? fromJson(Object? value) {
+  /// Reads one, or null when its kind is not one of [kinds].
+  ///
+  /// Left out rather than guessed: a panel from a build that had something
+  /// this one does not is not worth showing as whatever it most resembles.
+  static DockPanel? fromJson(Object? value, Iterable<PanelKind> kinds) {
     if (value is! Map) return null;
     final map = value.cast<String, Object?>();
-    final kind = PanelKind.named(map['kind']);
+    final kind = PanelKind.named(map['kind'], kinds);
     final id = map['id'];
     if (kind == null || id is! String || id.isEmpty) return null;
     return DockPanel(
@@ -100,12 +157,12 @@ sealed class DockNode {
 
   Map<String, Object?> toJson();
 
-  static DockNode? fromJson(Object? value) {
+  static DockNode? fromJson(Object? value, Iterable<PanelKind> kinds) {
     if (value is! Map) return null;
     final map = value.cast<String, Object?>();
     return map['split'] is String
-        ? DockSplit.fromJson(map)
-        : DockGroup.fromJson(map);
+        ? DockSplit.fromJson(map, kinds)
+        : DockGroup.fromJson(map, kinds);
   }
 }
 
@@ -142,7 +199,10 @@ class DockGroup extends DockNode {
         'panels': [for (final panel in panels) panel.toJson()],
       };
 
-  static DockGroup? fromJson(Map<String, Object?> map) {
+  static DockGroup? fromJson(
+    Map<String, Object?> map,
+    Iterable<PanelKind> kinds,
+  ) {
     final id = map['id'];
     if (id is! String || id.isEmpty) return null;
     final raw = map['panels'];
@@ -151,7 +211,7 @@ class DockGroup extends DockNode {
       active: map['active'] is int ? map['active']! as int : 0,
       panels: [
         if (raw is List)
-          for (final entry in raw) ?DockPanel.fromJson(entry),
+          for (final entry in raw) ?DockPanel.fromJson(entry, kinds),
       ],
     );
   }
@@ -206,14 +266,17 @@ class DockSplit extends DockNode {
         'children': [for (final child in children) child.toJson()],
       };
 
-  static DockSplit? fromJson(Map<String, Object?> map) {
+  static DockSplit? fromJson(
+    Map<String, Object?> map,
+    Iterable<PanelKind> kinds,
+  ) {
     final id = map['id'];
     if (id is! String || id.isEmpty) return null;
 
     final raw = map['children'];
     final children = [
       if (raw is List)
-        for (final entry in raw) ?DockNode.fromJson(entry),
+        for (final entry in raw) ?DockNode.fromJson(entry, kinds),
     ];
     if (children.isEmpty) return null;
 
@@ -650,7 +713,13 @@ class DockLayout {
   /// Null rather than an exception: a layout file written by an older build is
   /// not worth refusing to open the editor over, and the standard arrangement
   /// is always there to fall back to.
-  static DockLayout? read(String text) {
+  ///
+  /// [kinds] is every kind of panel something has registered. A panel of any
+  /// other kind is left out, and the rest of the layout opens without it.
+  static DockLayout? read(
+    String text, {
+    Iterable<PanelKind> kinds = PanelKind.builtIn,
+  }) {
     final Object? parsed;
     try {
       parsed = jsonDecode(text);
@@ -661,7 +730,7 @@ class DockLayout {
       return null;
     }
 
-    final root = DockNode.fromJson(parsed['root']);
+    final root = DockNode.fromJson(parsed['root'], kinds);
     if (root == null) return null;
 
     return DockLayout(

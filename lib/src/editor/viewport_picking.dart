@@ -8,19 +8,6 @@ part of 'viewport.dart';
 // or a rectangle's worth of them -- and the drawing that starts from it.
 
 extension _Picking on _SceneViewportState {
-  /// The preview to show, or null when nothing that has a view is selected.
-  Widget? get _preview {
-    final make = widget.previewOf;
-    if (make == null || widget.selected.length != 1) return null;
-
-    final scene = widget.workspace.loaded?.scene;
-    final object = scene?[widget.selected.first];
-    if (object == null || object.kind != ObjectKind.camera) return null;
-    if (!object.visible || !scene!.isShown(object.id)) return null;
-
-    return make(object);
-  }
-
   MeshPicker _pickerFor(
     EditingMesh editing,
     Size surface,

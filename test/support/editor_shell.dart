@@ -10,6 +10,7 @@ import 'package:orblit_editor/src/editor/viewport.dart';
 import 'package:orblit_editor/src/launcher/project.dart';
 import 'package:orblit_editor/src/platform/command_shortcuts.dart';
 import 'package:orblit_editor/src/theme/orblit_theme.dart';
+import 'package:orblit_editor/src/widgets/controls.dart';
 import 'package:path/path.dart' as p;
 
 // How a test drives the editor shell: a project on disk to open, and the
@@ -23,7 +24,11 @@ late Directory root;
 /// through text is what the tests actually exercise.
 String? systemClipboard;
 
-Future<void> open(WidgetTester tester) async {
+/// Opens the editor on [root], with whatever [extend] adds to it.
+Future<void> open(
+  WidgetTester tester, {
+  void Function(EditorRegistry registry)? extend,
+}) async {
   // The editor's real minimum. At the default 800x600 the panels sit below
   // the fold and a test passes while nothing is on screen.
   await tester.binding.setSurfaceSize(const Size(1440, 900));
@@ -39,6 +44,7 @@ Future<void> open(WidgetTester tester) async {
           lastOpened: DateTime(2026),
         ),
         onClose: () {},
+        extend: extend,
       ),
     ),
   );
@@ -65,6 +71,23 @@ Future<void> add(WidgetTester tester, String label) async {
 /// Picks an item out of a toolbar menu.
 Future<void> menu(WidgetTester tester, String button, String item) async {
   await tester.tap(find.textContaining(button).first);
+  await tester.pumpAndSettle();
+  await tester.tap(
+    find.descendant(of: find.byType(MenuItemButton), matching: find.text(item)),
+  );
+  await tester.pumpAndSettle();
+}
+
+/// Picks an item out of the View menu.
+///
+/// The toolbar button, not the word "Viewport" wherever else it appears —
+/// and it gains a dot when the layout is locked.
+Future<void> viewMenu(WidgetTester tester, String item) async {
+  await tester.tap(
+    find.byWidgetPredicate(
+      (widget) => widget is OrblitButton && widget.label.startsWith('View'),
+    ),
+  );
   await tester.pumpAndSettle();
   await tester.tap(
     find.descendant(of: find.byType(MenuItemButton), matching: find.text(item)),

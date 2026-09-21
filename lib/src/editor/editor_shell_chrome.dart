@@ -1,7 +1,8 @@
 part of 'editor_shell.dart';
 
 // The frame around the panels: the bar above them, the transport
-// buttons on it, the bar below, and the handle between two panels.
+// buttons on it, the mode's own bar under it, the bar below, and the
+// handle between two panels.
 
 /// The bar between the viewport and the project browser.
 class _Splitter extends StatefulWidget {
@@ -50,6 +51,7 @@ class _TopBar extends StatelessWidget {
     required this.onReveal,
     required this.layout,
     required this.onLayout,
+    required this.panels,
     required this.onUndo,
     required this.onRedo,
     required this.selectionCount,
@@ -78,6 +80,9 @@ class _TopBar extends StatelessWidget {
   /// How the panels are arranged, and how to change it.
   final DockLayout layout;
   final ValueChanged<DockLayout> onLayout;
+
+  /// The panels there are to open.
+  final List<PanelType> panels;
   final VoidCallback onUndo;
   final VoidCallback onRedo;
   final int selectionCount;
@@ -128,7 +133,7 @@ class _TopBar extends StatelessWidget {
             onDuplicate: onDuplicate,
           ),
           const SizedBox(width: Space.xs),
-          _ViewMenu(layout: layout, onLayout: onLayout),
+          _ViewMenu(layout: layout, onLayout: onLayout, panels: panels),
           const SizedBox(width: Space.md),
           // Labelled with what they would undo, so the tooltip answers the
           // question somebody actually has before they press it.
@@ -169,6 +174,56 @@ class _TopBar extends StatelessWidget {
           ),
           const Spacer(),
           Text('pre-alpha', style: OrblitText.caption),
+        ],
+      ),
+    );
+  }
+}
+
+/// Which mode the editor is in, and the tools that mode puts on the shelf.
+///
+/// Only there when it has something on it. With one mode and no tools it
+/// would be a strip of nothing, taking height from the panels.
+class _ModeBar extends StatelessWidget {
+  const _ModeBar({
+    required this.modes,
+    required this.mode,
+    required this.onMode,
+  });
+
+  final List<EditorMode> modes;
+  final EditorMode mode;
+  final ValueChanged<EditorMode> onMode;
+
+  @override
+  Widget build(BuildContext context) {
+    final tools = mode.tools;
+
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.symmetric(horizontal: Space.md),
+      decoration: const BoxDecoration(
+        color: OrblitColors.surface,
+        border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
+      ),
+      child: Row(
+        children: [
+          if (modes.length > 1) ...[
+            for (final each in modes)
+              Padding(
+                padding: const EdgeInsets.only(right: Space.xs),
+                child: OrblitButton(
+                  label: each.label,
+                  icon: each.icon,
+                  tone: each.name == mode.name
+                      ? ButtonTone.normal
+                      : ButtonTone.quiet,
+                  onPressed: () => onMode(each),
+                ),
+              ),
+            const SizedBox(width: Space.md),
+          ],
+          if (tools != null) Expanded(child: tools(context)),
         ],
       ),
     );

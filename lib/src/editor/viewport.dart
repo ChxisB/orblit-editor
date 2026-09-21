@@ -15,14 +15,17 @@ import '../theme/orblit_theme.dart';
 import 'commands.dart';
 import 'drawing.dart';
 import 'gizmo.dart';
+import 'gizmo_registry.dart';
 import 'grid.dart';
 import 'model_bounds.dart';
+import 'registry.dart';
 import 'snapping.dart';
 import 'history.dart';
 import 'mesh_edit.dart';
 import 'scene.dart';
 import 'selection_outline.dart';
 import 'ui_canvas.dart';
+import 'viewport_input.dart';
 import 'workspace.dart';
 
 part 'viewport_camera.dart';
@@ -80,6 +83,8 @@ class SceneViewport extends StatefulWidget {
     this.primary,
     this.history,
     this.onPick,
+    this.gizmos = const [],
+    this.modeInput,
   });
 
   /// Only the loaded scene is drawn. The others are names and paths until
@@ -244,6 +249,16 @@ class SceneViewport extends StatefulWidget {
   /// viewport draws every frame; the rest of the editor does not have to.
   final VoidCallback? onClock;
 
+  /// Gizmos beyond the ones every view has, after them in the order.
+  final List<GizmoType> gizmos;
+
+  /// What the mode being worked in does with the pointer.
+  ///
+  /// Asked before anything else in the view: a brush that could not take a
+  /// drag before the handles do would move objects when somebody meant to
+  /// sculpt.
+  final ViewportInput? modeInput;
+
   @override
   State<SceneViewport> createState() => _SceneViewportState();
 }
@@ -251,6 +266,9 @@ class SceneViewport extends StatefulWidget {
 class _SceneViewportState extends State<SceneViewport>
     with SingleTickerProviderStateMixin {
   Offset? _dragAnchor;
+
+  /// Who gets the pointer, and in what order. See [_stages].
+  late final ViewportInputOrder _input = ViewportInputOrder(_stages);
 
   /// What a drag on a handle does. Kept here rather than in the shell because
   /// it is a property of how somebody is working in this view, not of the
@@ -487,17 +505,15 @@ class _SceneViewportState extends State<SceneViewport>
                 // nobody can read; this is only up while somebody is in it.
                 if (widget.editing case final editing?) _elements(editing),
                 // Over the outline, because a handle you cannot see is a handle
-                // you cannot grab — and under nothing, because it has to be the
-                // thing the pointer finds first.
-                _handles(),
+                // you cannot grab. Whatever applies to the selection, in the
+                // order it was registered.
+                if (_gizmoTarget case final target?)
+                  for (final type in _gizmoTypes.all)
+                    if (type.overlay != null && type.appliesTo(target))
+                      type.overlay!(target),
                 if (widget.drawing?.tool.isDrawing ?? false) _outline(),
                 if (_box != null) _marquee(),
                 _chips(),
-                // What the selected camera sees, in the corner. Unity puts this
-                // bottom-right; it is bottom-left here because that is the corner
-                // this editor leaves empty, and a preview under the transform
-                // tools would cover the thing somebody is about to press.
-                if (_preview != null) _cameraPreview(),
                 if (_rendererAvailable) _tools(),
                 _help(),
               ],
@@ -595,10 +611,13 @@ class _SceneViewportState extends State<SceneViewport>
     ),
   );
 
-  Widget _cameraPreview() => Positioned(
+  // Unity puts this bottom-right; it is bottom-left here because that is the
+  // corner this editor leaves empty, and a preview under the transform tools
+  // would cover the thing somebody is about to press.
+  Widget _cameraPreview(Widget preview) => Positioned(
     left: Space.md,
     bottom: 52,
-    child: _CameraPreview(child: _preview!),
+    child: _CameraPreview(child: preview),
   );
 
   Widget _tools() => Positioned(

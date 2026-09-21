@@ -4,7 +4,7 @@ part of 'inspector.dart';
 // cloud, wind and air. Every one of them writes through a setter that
 // records a single undoable step.
 
-extension _Weather on _Fields {
+extension _Weather on InspectorTarget {
   Widget _weather() {
     return OrblitSection(
       title: 'Weather',

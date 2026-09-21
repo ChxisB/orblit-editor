@@ -1,17 +1,116 @@
 part of 'editor_shell.dart';
 
 // The dock: where the panels are, which camera each viewport looks
-// through, and what goes inside a panel of each kind.
-
-/// Which panels show where things are.
-///
-/// The inspector is not one of them, even though it shows the numbers: the
-/// three rows that do listen for themselves, so the rest of it — a dozen
-/// text fields with their own focus, actions and overlays — is left alone.
-bool _showsMovement(PanelKind kind) =>
-    kind == PanelKind.viewport || kind == PanelKind.game;
+// through, and what the editor registers for itself.
 
 extension _Panels on _EditorShellState {
+  /// The editor's own panels, sections and mode, registered the way anything
+  /// else would register one, and then whatever [EditorShell.extend] adds.
+  EditorRegistry _register() {
+    final registry = EditorRegistry();
+    _registerPanels(registry.panels);
+    _registerSections(registry.sections);
+    registry.modes.register(
+      const EditorMode(
+        name: 'scene',
+        label: 'Scene',
+        icon: Icons.open_with,
+        layout: DockLayout.standard,
+      ),
+    );
+    widget.extend?.call(registry);
+    return registry;
+  }
+
+  /// The panels the editor has always had, in the order the View menu lists
+  /// them.
+  void _registerPanels(PanelRegistry panels) => panels
+    ..register(
+      PanelType(kind: PanelKind.outliner, build: (_, _) => _outliner()),
+    )
+    // Not one that shows movement, even though it shows the numbers: the
+    // three rows that do listen for themselves, so the rest of it — a dozen
+    // text fields with their own focus, actions and overlays — is left alone.
+    ..register(
+      PanelType(
+        kind: PanelKind.inspector,
+        build: (_, _) => _inspector(_selectedObject),
+      ),
+    )
+    ..register(
+      PanelType(
+        kind: PanelKind.viewport,
+        opensAs: 'scene',
+        showsMovement: true,
+        build: (_, panel) => _viewport(panel),
+      ),
+    )
+    ..register(
+      PanelType(
+        kind: PanelKind.game,
+        showsMovement: true,
+        build: (_, _) => GameView(
+          workspace: _workspace,
+          projectRoot: widget.project.directory,
+          geometryOf: _geometry.pathFor,
+          interface: _sceneInterface,
+        ),
+      ),
+    )
+    ..register(PanelType(kind: PanelKind.project, build: (_, _) => _project()))
+    ..register(
+      PanelType(
+        kind: PanelKind.console,
+        build: (_, _) => ConsolePanel(log: _log),
+      ),
+    )
+    ..register(
+      PanelType(
+        kind: PanelKind.modelling,
+        build: (_, _) => SingleChildScrollView(
+          padding: const EdgeInsets.all(Space.sm),
+          child: _modellingTools(),
+        ),
+      ),
+    )
+    ..register(
+      PanelType(
+        kind: PanelKind.uvs,
+        build: (_, _) => SingleChildScrollView(
+          padding: const EdgeInsets.all(Space.sm),
+          child: _uvEditor(),
+        ),
+      ),
+    );
+
+  /// The inspector's sections: the ones it has always had, and the shape and
+  /// geometry controls. Those are the shell's, because the shell owns what is
+  /// being edited; the inspector does not know what an extrude is.
+  void _registerSections(Registry<InspectorSection> sections) {
+    InspectorSection.builtIn.forEach(sections.register);
+    sections.register(
+      InspectorSection(
+        name: 'shape',
+        appliesTo: (target) => target.object.kind == ObjectKind.shape,
+        build: (target) => _meshPanel(target.object),
+      ),
+      // Where they have always been: after what every object has, ahead of
+      // anything it puts on screen.
+      before: 'interface',
+    );
+  }
+
+  /// The object the inspector is showing, if it is one rather than a scene.
+  SceneObject? get _selectedObject =>
+      _primary == null ? null : _inspected?.scene?[_primary!];
+
+  /// Opens the panel registered for [kind], or shows it if it is open.
+  void _open(PanelKind kind) {
+    final type = _registry.panels.typeOf(kind);
+    if (type == null) return;
+    setState(() => _layout = _layout.add(type.panel));
+  }
+
   OrbitCamera _cameraFor(String id) => _cameras[id] ??= OrbitCamera();
 
   /// The camera of the view being worked in.
@@ -19,16 +118,36 @@ extension _Panels on _EditorShellState {
 
   set _camera(OrbitCamera camera) => _cameras[_using] = camera;
 
+  /// Switches to [mode], with the panels as they were last left in it.
+  void _enterMode(EditorMode mode) {
+    if (mode.name == _mode.name) return;
+    setState(() {
+      _mode = mode;
+      _layout = _readLayout() ?? mode.layout();
+    });
+  }
+
   /// Where the layout is kept: with the project, since it is about this
   /// project's panels rather than about the editor.
-  File get _layoutFile =>
-      File(p.join(widget.project.directory, '.orblit', 'layout.json'));
+  ///
+  /// One for each mode. The scene's keeps the name it had before there were
+  /// modes, so a layout saved then still opens.
+  File get _layoutFile => File(
+    p.join(
+      widget.project.directory,
+      '.orblit',
+      _mode.name == 'scene' ? 'layout.json' : 'layout.${_mode.name}.json',
+    ),
+  );
 
   DockLayout? _readLayout() {
     try {
       final file = _layoutFile;
       if (!file.existsSync()) return null;
-      return DockLayout.read(file.readAsStringSync());
+      return DockLayout.read(
+        file.readAsStringSync(),
+        kinds: _registry.panels.kinds,
+      );
     } on FileSystemException {
       return null;
     }
@@ -53,47 +172,25 @@ extension _Panels on _EditorShellState {
   /// the two apart is what lets the arrangement be a file and a drag rather
   /// than a widget tree somebody has to edit.
   Widget _buildPanel(BuildContext context, DockPanel panel) {
+    final type = _registry.panels.typeOf(panel.kind);
+
     // A move can only change where things are, so a panel that does not show
     // that is handed back exactly as it was. Flutter compares the widget by
     // identity and skips the subtree — which is the whole saving, because a
     // subtree that is not rebuilt is not laid out or painted either.
-    if (!_deeply && !_showsMovement(panel.kind)) {
+    if (!_deeply && !(type?.showsMovement ?? false)) {
       final was = _panels[panel.id];
       if (was != null) return was;
     }
 
-    final built = _panelFor(panel);
+    final built = type == null
+        ? UnregisteredPanel(panel: panel)
+        : type.build(context, panel);
     _panels[panel.id] = built;
     return built;
   }
 
-  Widget _panelFor(DockPanel panel) {
-    final selected = _primary == null ? null : _inspected?.scene?[_primary!];
-
-    return switch (panel.kind) {
-      PanelKind.outliner => _outliner(selected),
-      PanelKind.inspector => _inspector(selected),
-      PanelKind.viewport => _viewport(panel, selected),
-      PanelKind.game => GameView(
-        workspace: _workspace,
-        projectRoot: widget.project.directory,
-        geometryOf: _geometry.pathFor,
-        interface: _sceneInterface,
-      ),
-      PanelKind.project => _project(),
-      PanelKind.console => ConsolePanel(log: _log),
-      PanelKind.modelling => SingleChildScrollView(
-        padding: const EdgeInsets.all(Space.sm),
-        child: _modellingTools(),
-      ),
-      PanelKind.uvs => SingleChildScrollView(
-        padding: const EdgeInsets.all(Space.sm),
-        child: _uvEditor(),
-      ),
-    };
-  }
-
-  Widget _outliner(SceneObject? selected) => Outliner(
+  Widget _outliner() => Outliner(
     workspace: _workspace,
     selected: _selected,
     primary: _primary,
@@ -126,29 +223,7 @@ extension _Panels on _EditorShellState {
             onExportTypes: () => _exportBindings(_dataAsset!),
           ),
     onOpenData: _showData,
-    // The shape and geometry controls. The inspector shows what it is
-    // given and does not know what an extrude is.
-    meshPanel: selected?.kind != ObjectKind.shape
-        ? null
-        : MeshPanel(
-            shape: selected!.shape,
-            geometry: selected.geometry,
-            onShape: (shape) => _reshape(selected, shape),
-            outline: selected.outline,
-            onOutline: (next, {required live}) =>
-                _setOutline(selected, next, live: live),
-            boundary: selected.boundary,
-            onBoundary: (next, {required live}) =>
-                _setBoundary(selected, next, live: live),
-            naturalSize: selected.localBounds(
-              reported: _models.of(selected),
-            ),
-            onOpenTools: () => setState(
-              () => _layout = _layout.add(
-                const DockPanel(id: 'modelling', kind: PanelKind.modelling),
-              ),
-            ),
-          ),
+    sections: _registry.sections.all,
     onOpenInterface: (path) =>
         _openInterface(p.join(widget.project.directory, path)),
     onDetachData: _detachData,
@@ -157,7 +232,22 @@ extension _Panels on _EditorShellState {
     onUnpackPrefab: _unpackPrefab,
   );
 
-  Widget _viewport(DockPanel panel, SceneObject? selected) => SceneViewport(
+  /// The shape and geometry controls, for an object that has geometry.
+  Widget _meshPanel(SceneObject selected) => MeshPanel(
+    shape: selected.shape,
+    geometry: selected.geometry,
+    onShape: (shape) => _reshape(selected, shape),
+    outline: selected.outline,
+    onOutline: (next, {required live}) =>
+        _setOutline(selected, next, live: live),
+    boundary: selected.boundary,
+    onBoundary: (next, {required live}) =>
+        _setBoundary(selected, next, live: live),
+    naturalSize: selected.localBounds(reported: _models.of(selected)),
+    onOpenTools: () => _open(PanelKind.modelling),
+  );
+
+  Widget _viewport(DockPanel panel) => SceneViewport(
     workspace: _workspace,
     camera: _cameraFor(panel.id),
     onCameraChanged: (camera) =>
@@ -219,6 +309,8 @@ extension _Panels on _EditorShellState {
       plain: true,
     ),
     onSceneNotes: _reportSceneNotes,
+    modeInput: _mode.input,
+    gizmos: _registry.gizmos.all,
     // The viewport owns the clock; this is how
     // the tree and the inspector hear about it.
     onClock: () {

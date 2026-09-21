@@ -12,6 +12,7 @@ import '../widgets/controls.dart';
 import 'colour.dart';
 import 'commands.dart';
 import 'history.dart';
+import 'registry.dart';
 import 'scene.dart';
 import 'workspace.dart';
 
@@ -20,6 +21,7 @@ part 'inspector_scene.dart';
 part 'inspector_rows.dart';
 part 'inspector_light.dart';
 part 'inspector_weather.dart';
+part 'inspector_sections.dart';
 
 /// Properties of whatever is selected.
 ///
@@ -29,6 +31,10 @@ part 'inspector_weather.dart';
 ///
 /// Every field runs a command. Nothing here writes to the scene directly, so
 /// there is no edit that undo does not know about.
+///
+/// Which fields come in which order is [sections], and the inspector keeps no
+/// list of its own: a section registered from outside is stacked, scrolled
+/// and rebuilt exactly as the built-in ones are.
 class Inspector extends StatelessWidget {
   const Inspector({
     super.key,
@@ -45,7 +51,7 @@ class Inspector extends StatelessWidget {
     this.onOpenData,
     this.onDetachData,
     this.onOpenInterface,
-    this.meshPanel,
+    this.sections,
   });
 
   /// The scene being looked at, which need not be the loaded one — a scene can
@@ -90,11 +96,14 @@ class Inspector extends StatelessWidget {
   /// Opens the interface a canvas object shows.
   final ValueChanged<String>? onOpenInterface;
 
-  /// The shape and geometry controls, for an object that has geometry.
+  /// The sections an object's fields come in, first to last, each shown
+  /// only for the objects it applies to.
   ///
-  /// Built by the shell, which owns what is being edited — the inspector
-  /// shows what it is given and does not know what an extrude is.
-  final Widget? meshPanel;
+  /// Null is [InspectorSection.builtIn]. The shell passes its registry,
+  /// which adds the shape and geometry controls: those are built by the
+  /// shell, which owns what is being edited, and the inspector does not know
+  /// what an extrude is.
+  final List<InspectorSection>? sections;
 
   @override
   Widget build(BuildContext context) {
@@ -167,7 +176,8 @@ class Inspector extends StatelessWidget {
                                     onOpenData: onOpenData,
                                     onDetachData: onDetachData,
                                     onOpenInterface: onOpenInterface,
-                                    meshPanel: meshPanel,
+                                    sections:
+                                        sections ?? InspectorSection.builtIn,
                                   ),
                                 ),
                               ],
@@ -189,7 +199,7 @@ class _Fields extends StatelessWidget {
     this.onOpenData,
     this.onDetachData,
     this.onOpenInterface,
-    this.meshPanel,
+    required this.sections,
   });
 
   final String sceneId;
@@ -206,11 +216,20 @@ class _Fields extends StatelessWidget {
 
   final ValueChanged<String>? onOpenInterface;
 
-  final Widget? meshPanel;
+  final List<InspectorSection> sections;
 
   @override
   Widget build(BuildContext context) {
     final parent = object.parentId == null ? null : scene[object.parentId!];
+    final target = InspectorTarget(
+      sceneId: sceneId,
+      scene: scene,
+      object: object,
+      history: history,
+      onOpenData: onOpenData,
+      onDetachData: onDetachData,
+      onOpenInterface: onOpenInterface,
+    );
 
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: Space.sm),
@@ -252,21 +271,17 @@ class _Fields extends StatelessWidget {
               ],
             ),
           ),
-        if (object.kind != ObjectKind.scene) _visibility(scene),
-        // Weather is everywhere at once, so it has no position to show.
-        if (object.kind != ObjectKind.scene &&
-            object.kind != ObjectKind.weather)
-          _transform(),
-        if (object.kind == ObjectKind.light) _light(),
-        if (object.kind == ObjectKind.mesh) _mesh(),
-        if (object.kind == ObjectKind.weather) ...[_weather(), _air()],
-        if (object.kind == ObjectKind.shape && meshPanel != null) meshPanel!,
-        if (object.kind == ObjectKind.canvas) _interface(),
-        if (object.data.isNotEmpty) _data(),
+        for (final section in sections)
+          if (section.appliesTo(target)) section.build(target),
       ],
     );
   }
+}
 
+// The built-in sections. Written against what a section is given rather
+// than against the widget showing them, so each is registered the same way
+// a section from outside would be.
+extension _Sections on InspectorTarget {
   /// Which interface this canvas puts on screen.
   ///
   /// A reference and not a copy, which is the same rule as a mesh and a data

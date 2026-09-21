@@ -26,8 +26,10 @@ import 'grid.dart';
 import 'drawing.dart';
 import 'frame_rate.dart';
 import 'dock_view.dart';
+import 'editor_mode.dart';
 import 'game_view.dart';
 import 'geometry_store.dart';
+import 'gizmo_registry.dart';
 import 'script_build.dart';
 import 'ui_editor.dart';
 import 'history.dart';
@@ -38,7 +40,9 @@ import 'model_bounds.dart';
 import 'modelling_panel.dart';
 import 'mesh_tools.dart';
 import 'outliner.dart';
+import 'panel_registry.dart';
 import 'prefab.dart';
+import 'registry.dart';
 import 'scene.dart';
 import 'snapping.dart';
 import 'surface.dart';
@@ -69,15 +73,47 @@ part 'editor_shell_menus.dart';
 /// viewport, an inspector and a status bar. Docking comes later, and it comes
 /// more easily to a layout that already knows what its regions are.
 class EditorShell extends StatefulWidget {
-  const EditorShell({super.key, required this.project, required this.onClose});
+  const EditorShell({
+    super.key,
+    required this.project,
+    required this.onClose,
+    this.extend,
+  });
 
   final Project project;
 
   /// Back to the launcher.
   final VoidCallback onClose;
 
+  /// Adds to what the editor shows: panels, modes, inspector sections and
+  /// gizmos. Called once, after the editor has registered its own.
+  final void Function(EditorRegistry registry)? extend;
+
   @override
   State<EditorShell> createState() => _EditorShellState();
+}
+
+/// What the editor shows that something outside it can add to, one registry
+/// for each sort.
+///
+/// Handed to [EditorShell.extend] once the editor has registered its own, so
+/// what is added lands after the built-in ones, or ahead of a named one with
+/// `before:`. The editor keeps no other list: every panel, mode and section
+/// on screen reached it through here.
+class EditorRegistry {
+  /// Panels, in the order the View menu lists them.
+  final PanelRegistry panels = PanelRegistry();
+
+  /// Ways of working. The editor opens in the first, and the switcher shows
+  /// once there is a second.
+  final Registry<EditorMode> modes = Registry();
+
+  /// The inspector's sections, in the order they stack.
+  final Registry<InspectorSection> sections = Registry();
+
+  /// What a scene view draws and asks after its own handles. The view's own
+  /// are registered in the view, which is where their state is.
+  final Registry<GizmoType> gizmos = Registry();
 }
 
 class _EditorShellState extends State<EditorShell> {
@@ -459,8 +495,15 @@ class _EditorShellState extends State<EditorShell> {
     );
   }
 
+  /// Everything the editor can show: its own, and whatever
+  /// [EditorShell.extend] added.
+  late final EditorRegistry _registry = _register();
+
+  /// The way of working the editor is in.
+  late EditorMode _mode = _registry.modes.all.first;
+
   /// How the panels are arranged. Data, so it survives being closed.
-  late DockLayout _layout = _readLayout() ?? DockLayout.standard();
+  late DockLayout _layout = _readLayout() ?? _mode.layout();
 
   /// A camera per scene view.
   ///
@@ -536,6 +579,7 @@ class _EditorShellState extends State<EditorShell> {
               onNewScene: () => _newScene(),
               layout: _layout,
               onLayout: _relayout,
+              panels: _registry.panels.all,
               onOpenInCode: _openInCode,
               onReveal: () {
                 final problem = CodeEditor.reveal(widget.project.directory);
@@ -550,6 +594,12 @@ class _EditorShellState extends State<EditorShell> {
               onPaste: _paste,
               onDuplicate: _duplicate,
             ),
+            if (_registry.modes.all.length > 1 || _mode.tools != null)
+              _ModeBar(
+                modes: _registry.modes.all,
+                mode: _mode,
+                onMode: _enterMode,
+              ),
             // The panels, arranged as the layout says. What is where is
             // data — saved with the project, put back exactly, and
             // changed by dragging a tab rather than by editing this.

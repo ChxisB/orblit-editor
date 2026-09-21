@@ -49,7 +49,10 @@ extension _Dragging on _SceneViewportState {
   }
 
   /// Picks whatever is under the pointer, or nothing.
-  void _pick(Offset local) {
+  ///
+  /// [add] is set when a modifier was held: Command on macOS, Control
+  /// everywhere else, and Shift on every platform alongside either.
+  void _pick(Offset local, {required bool add}) {
     final scene = widget.workspace.loaded?.scene;
     final size = _surface;
     if (scene == null || size == null || size.isEmpty) return;
@@ -74,12 +77,7 @@ extension _Dragging on _SceneViewportState {
           boundsOf: widget.models?.of,
         );
 
-    // Command adds to the selection on macOS, Control everywhere else; Shift
-    // does the same on every platform, so it is checked alongside either.
-    final held =
-        HardwareKeyboard.instance.isShiftPressed || isCommandModifierPressed;
-
-    widget.onPick?.call(hit, add: held);
+    widget.onPick?.call(hit, add: add);
   }
 
   /// Takes hold of a handle, remembering where everything was.

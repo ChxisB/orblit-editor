@@ -295,22 +295,18 @@ class _EditMenu extends StatelessWidget {
 /// are here, because building a four-view layout by dragging is a minute of
 /// somebody's time every time they want one.
 class _ViewMenu extends StatelessWidget {
-  const _ViewMenu({required this.layout, required this.onLayout});
+  const _ViewMenu({
+    required this.layout,
+    required this.onLayout,
+    required this.panels,
+  });
 
   final DockLayout layout;
   final ValueChanged<DockLayout> onLayout;
 
-  /// The panels that can be opened, in a sensible order.
-  static const _openable = [
-    (PanelKind.outliner, 'outliner'),
-    (PanelKind.inspector, 'inspector'),
-    (PanelKind.viewport, 'scene'),
-    (PanelKind.game, 'game'),
-    (PanelKind.project, 'project'),
-    (PanelKind.console, 'console'),
-    (PanelKind.modelling, 'modelling'),
-    (PanelKind.uvs, 'uvs'),
-  ];
+  /// The panels that can be opened: whatever is registered, in the order it
+  /// was registered.
+  final List<PanelType> panels;
 
   @override
   Widget build(BuildContext context) {
@@ -362,18 +358,17 @@ class _ViewMenu extends StatelessWidget {
         const Divider(height: 9, color: OrblitColors.line),
         // Opening one that is already open shows it rather than adding a
         // second, which is why every one of these can be pressed at any time.
-        for (final (kind, id) in _openable)
+        for (final type in panels)
           MenuItemButton(
-            onPressed: () =>
-                onLayout(layout.add(DockPanel(id: id, kind: kind))),
+            onPressed: () => onLayout(layout.add(type.panel)),
             leadingIcon: Icon(
-              kind.icon,
+              type.kind.icon,
               size: 14,
-              color: layout.holds(id)
+              color: layout.holds(type.panel.id)
                   ? OrblitColors.ember
                   : OrblitColors.inkMid,
             ),
-            child: Text(kind.label, style: OrblitText.label),
+            child: Text(type.kind.label, style: OrblitText.label),
           ),
       ],
       builder: (context, controller, child) => OrblitButton(
