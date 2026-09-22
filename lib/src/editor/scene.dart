@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as p;
 import 'package:orblit_filament/orblit_filament.dart';
 import 'package:orblit_light/orblit_light.dart';
+import 'package:orblit_scene/orblit_scene.dart' as doc;
 import 'package:orblit_weather/orblit_weather.dart';
 
 import 'package:orblit_mesh/orblit_mesh.dart';

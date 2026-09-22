@@ -198,6 +198,13 @@ abstract final class SceneDocument {
       );
     }
 
+    // What the row carries without understanding it. Its own fields win: the
+    // row is what the editor has been changing, and what it carries is only
+    // what was there when it was read.
+    for (final MapEntry(:key, :value) in object.components.entries) {
+      components.putIfAbsent(key, () => value);
+    }
+
     return doc.SceneEntity(
       id: object.id,
       name: object.name,
@@ -243,7 +250,7 @@ abstract final class SceneDocument {
     final prefab = entity[doc.SceneComponents.prefab];
     final data = entity[doc.SceneComponents.data];
 
-    return SceneObject(
+    final object = SceneObject(
       id: entity.id,
       name: entity.name,
       kind: _kindOf(entity),
@@ -310,6 +317,17 @@ abstract final class SceneDocument {
       prefab: prefab is doc.PrefabComponent ? prefab.asset : null,
       data: data is doc.DataComponent ? data.paths : null,
     );
+
+    // Whatever the row has no way to say goes with it. Worked out from what
+    // the row writes back rather than from a list of the kinds it models: a
+    // lamp is a light and a mesh, the row is only a light, and a list of
+    // modelled kinds would drop its mesh just as surely as it once dropped a
+    // body.
+    final said = entityOf(object).components;
+    for (final MapEntry(:key, :value) in entity.components.entries) {
+      if (!said.containsKey(key)) object.components[key] = value;
+    }
+    return object;
   }
 
   /// What an entity is, in the one word the outliner needs.

@@ -23,3 +23,4 @@ part 'commands_hierarchy.dart';
 part 'commands_links.dart';
 part 'commands_scene.dart';
 part 'commands_geometry.dart';
+part 'commands_components.dart';

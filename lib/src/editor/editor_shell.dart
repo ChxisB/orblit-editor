@@ -12,6 +12,8 @@ import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'asset_browser.dart';
 import 'assets.dart';
+import 'body_gizmo.dart';
+import 'body_section.dart';
 import 'clipboard.dart';
 import 'code_editor.dart';
 import 'boundary.dart';

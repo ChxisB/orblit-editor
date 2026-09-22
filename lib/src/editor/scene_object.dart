@@ -42,8 +42,10 @@ class SceneObject {
     this.interfaceAsset,
     this.prefab,
     List<String>? data,
+    Map<String, doc.SceneComponent>? components,
   }) : renderKey = renderKey ?? _nextRenderKey++,
        data = data ?? [],
+       components = components ?? {},
        boundary = boundary ?? Boundary(),
        surfaces = surfaces ?? [],
        weather = weather ?? WeatherState.of(condition),
@@ -356,6 +358,19 @@ class SceneObject {
   /// with a text editor all read the same one.
   final List<String> data;
 
+  /// The components this row has no fields of its own for, as the document
+  /// had them.
+  ///
+  /// A body, a set of splats, a tilemap, and anything written by a newer
+  /// Orblit or by a project's own tool. Kept whole and written back whole, so
+  /// opening a scene and saving it does not delete the parts of it this
+  /// editor has no panel for — the promise [doc.UnknownComponent] makes for
+  /// the format, kept by the editor too.
+  ///
+  /// A component in here is never changed in place: an edit replaces it with
+  /// a new one, which is what lets undo keep the old one without copying it.
+  final Map<String, doc.SceneComponent> components;
+
   IconData get icon => switch (kind) {
     ObjectKind.scene => Icons.public,
     ObjectKind.group => Icons.folder_outlined,
@@ -419,6 +434,7 @@ class SceneObject {
     interfaceAsset: interfaceAsset,
     prefab: prefab,
     data: List<String>.from(data),
+    components: Map.of(components),
   );
 }
 

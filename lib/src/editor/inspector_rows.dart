@@ -89,12 +89,108 @@ class SliderRow extends StatelessWidget {
   }
 }
 
-/// Three numbers that belong together, each draggable.
+/// One number or a few that belong together, each dragged sideways to change.
 ///
-/// Dragging rather than typing, because a transform is nearly always adjusted
-/// by feel against the viewport. The whole drag is one undo step: the command
-/// merges while the pointer is down and seals when it lifts, so undo returns
-/// to where the drag started rather than stepping back through every frame.
+/// Dragging rather than typing, because most of what an inspector holds is
+/// adjusted by feel against the viewport. The whole drag is one undo step when
+/// [onChanged] runs a command that merges: it merges while the pointer is
+/// down and [onSettled] seals it when the pointer lifts, so undo returns to
+/// where the drag started rather than stepping back through every frame.
+class DragRow extends StatelessWidget {
+  const DragRow({
+    super.key,
+    required this.label,
+    required this.listenable,
+    required this.read,
+    required this.onChanged,
+    required this.onSettled,
+    this.step = 0.01,
+    this.decimals = 2,
+    this.minimum,
+  });
+
+  final String label;
+
+  /// What says the numbers may have changed. Usually the history, since
+  /// every change to a scene goes through it.
+  final Listenable listenable;
+
+  /// The numbers as they are now. Asked again at every step of a drag rather
+  /// than remembered, because the drag is what is changing them.
+  final List<double> Function() read;
+
+  /// Called with every number, one of them moved.
+  final ValueChanged<List<double>> onChanged;
+
+  final VoidCallback onSettled;
+
+  /// Units per logical pixel dragged.
+  final double step;
+
+  final int decimals;
+
+  /// A floor for each number: a scale cannot be dragged through zero into a
+  /// matrix that cannot be inverted, nor a ball into one with no size.
+  final double? minimum;
+
+  // X, Y, Z tinted the way every 3D tool tints them, because the convention is
+  // older than any of them and reading is faster than remembering.
+  static const _axisColours = [
+    Color(0xFFD9634F),
+    Color(0xFF7FB069),
+    Color(0xFF5B8DD9),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    // Listening here rather than being rebuilt from above.
+    //
+    // A drag runs a command a frame, and a row like this is the only part of
+    // the inspector it changes — a name is the same name at a different
+    // height. Rebuilding the whole inspector to show three numbers was over
+    // half the cost of a drag frame, most of it text fields with their own
+    // focus, actions and overlays.
+    return ListenableBuilder(
+      listenable: listenable,
+      builder: (context, _) => _row(),
+    );
+  }
+
+  Widget _row() {
+    final values = read();
+
+    return FieldRow(
+      label: label,
+      child: Row(
+        children: [
+          for (var i = 0; i < values.length; i++) ...[
+            if (i > 0) const SizedBox(width: Space.xs),
+            Expanded(
+              child: _NumberField(
+                value: values[i],
+                accent: values.length == 3
+                    ? _axisColours[i]
+                    : OrblitColors.inkDim,
+                decimals: decimals,
+                onDrag: (pixels) {
+                  final next = List.of(read());
+                  final moved = next[i] + pixels * step;
+                  next[i] = minimum == null
+                      ? moved
+                      : (moved < minimum! ? minimum! : moved);
+                  onChanged(next);
+                },
+                onSettled: onSettled,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// One of an object's position, rotation or scale.
 class VectorRow extends StatelessWidget {
   const VectorRow({
     super.key,
@@ -123,69 +219,26 @@ class VectorRow extends StatelessWidget {
   /// a matrix that cannot be inverted.
   final double? minimum;
 
-  // X, Y, Z tinted the way every 3D tool tints them, because the convention is
-  // older than any of them and reading is faster than remembering.
-  static const _axisColours = [
-    Color(0xFFD9634F),
-    Color(0xFF7FB069),
-    Color(0xFF5B8DD9),
-  ];
-
   @override
-  Widget build(BuildContext context) {
-    // Listening here rather than being rebuilt from above.
-    //
-    // A drag runs a command a frame, and these three rows are the only part
-    // of the inspector that a move changes — a name is the same name at a
-    // different height. Rebuilding the whole inspector to show three numbers
-    // was over half the cost of a drag frame, most of it text fields with
-    // their own focus, actions and overlays.
-    return ListenableBuilder(
-      listenable: history,
-      builder: (context, _) => _row(),
-    );
-  }
-
-  Widget _row() {
-    final value = field.of(object);
-
-    return FieldRow(
-      label: label,
-      child: Row(
-        children: [
-          for (var i = 0; i < 3; i++) ...[
-            if (i > 0) const SizedBox(width: Space.xs),
-            Expanded(
-              child: _NumberField(
-                value: value[i],
-                accent: _axisColours[i],
-                decimals: decimals,
-                onDrag: (pixels) {
-                  final next = Vector3.copy(field.of(object));
-                  final moved = next[i] + pixels * step;
-                  next[i] = minimum == null
-                      ? moved
-                      : (moved < minimum! ? minimum! : moved);
-
-                  history.run(
-                    SetTransform(
-                      sceneId: sceneId,
-                      id: object.id,
-                      field: field,
-                      name: object.name,
-                      from: field.of(object),
-                      to: next,
-                    ),
-                  );
-                },
-                onSettled: history.seal,
-              ),
-            ),
-          ],
-        ],
+  Widget build(BuildContext context) => DragRow(
+    label: label,
+    listenable: history,
+    read: () => field.of(object).storage,
+    onChanged: (values) => history.run(
+      SetTransform(
+        sceneId: sceneId,
+        id: object.id,
+        field: field,
+        name: object.name,
+        from: field.of(object),
+        to: Vector3.array(values),
       ),
-    );
-  }
+    ),
+    onSettled: history.seal,
+    step: step,
+    decimals: decimals,
+    minimum: minimum,
+  );
 }
 
 /// One draggable number.

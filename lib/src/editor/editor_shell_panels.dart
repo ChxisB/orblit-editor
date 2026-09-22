@@ -10,6 +10,7 @@ extension _Panels on _EditorShellState {
     final registry = EditorRegistry();
     _registerPanels(registry.panels);
     _registerSections(registry.sections);
+    registry.gizmos.register(bodyGizmo());
     registry.modes.register(
       const EditorMode(
         name: 'scene',
@@ -83,9 +84,10 @@ extension _Panels on _EditorShellState {
       ),
     );
 
-  /// The inspector's sections: the ones it has always had, and the shape and
-  /// geometry controls. Those are the shell's, because the shell owns what is
-  /// being edited; the inspector does not know what an extrude is.
+  /// The inspector's sections: the ones it has always had, the shape and
+  /// geometry controls, and the physics body. Those are the shell's, because
+  /// the shell owns what is being edited; the inspector does not know what an
+  /// extrude is.
   void _registerSections(Registry<InspectorSection> sections) {
     InspectorSection.builtIn.forEach(sections.register);
     sections.register(
@@ -96,6 +98,12 @@ extension _Panels on _EditorShellState {
       ),
       // Where they have always been: after what every object has, ahead of
       // anything it puts on screen.
+      before: 'interface',
+    );
+    sections.register(
+      bodySection(
+        boundsOf: (object) => object.localBounds(reported: _models.of(object)),
+      ),
       before: 'interface',
     );
   }
@@ -250,8 +258,7 @@ extension _Panels on _EditorShellState {
   Widget _viewport(DockPanel panel) => SceneViewport(
     workspace: _workspace,
     camera: _cameraFor(panel.id),
-    onCameraChanged: (camera) =>
-        setState(() => _cameras[panel.id] = camera),
+    onCameraChanged: (camera) => setState(() => _cameras[panel.id] = camera),
     selected: _selected,
     primary: _primary,
     history: _history,
@@ -296,8 +303,7 @@ extension _Panels on _EditorShellState {
     geometryOf: _geometry.pathFor,
     interface: _sceneInterface,
     showInterface: _showInterface,
-    onToggleInterface: () =>
-        setState(() => _showInterface = !_showInterface),
+    onToggleInterface: () => setState(() => _showInterface = !_showInterface),
     outlineSelection: _outlineSelection,
     onToggleOutline: () =>
         setState(() => _outlineSelection = !_outlineSelection),
