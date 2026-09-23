@@ -81,6 +81,12 @@ dependencies:
   orblit_mesh:
     path: ../orblit/packages/orblit_mesh
 
+  # Clips: the file the timeline edits, and the sampling that shows one on
+  # the scene. The runtime plays the same file through the same code, so a
+  # scrub here is what the game does at that moment.
+  orblit_motion:
+    path: ../orblit/packages/orblit_motion
+
   # The worked examples, shown in the launcher beside the projects. The same
   # package the gallery app uses, so an example only has to be written once
   # and the editor never drifts from what the gallery shows.

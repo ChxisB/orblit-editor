@@ -483,6 +483,21 @@ class EditorScene {
     invalidate();
   }
 
+  /// Puts [object] where the object with its id is, in the same place.
+  ///
+  /// For a change worked out on a document and read back as a new row, one
+  /// object at a time — a clip's preview, which changes a handful of fields a
+  /// frame and would rebuild every other row through [replaceAll].
+  void replace(SceneObject object) {
+    final was = _byId[object.id];
+    if (was == null) {
+      throw SceneError('There is no object with id "${object.id}".');
+    }
+    _objects[_objects.indexOf(was)] = object;
+    _byId[object.id] = object;
+    invalidate();
+  }
+
   void restore(List<({SceneObject object, int index})> entries) {
     for (final entry in entries) {
       _byId[entry.object.id] = entry.object;

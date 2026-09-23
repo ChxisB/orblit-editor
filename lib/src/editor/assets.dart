@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:orblit_motion/orblit_motion.dart' show ClipDocument;
 import 'package:path/path.dart' as p;
 
 import 'package:orblit_ui/orblit_ui.dart';
@@ -25,6 +26,7 @@ enum AssetKind {
   prefab('Prefab', Icons.widgets_outlined),
   dataObject('Data object', Icons.dataset_outlined),
   canvas('Canvas', Icons.web_asset),
+  clip('Clip', Icons.animation),
   audio('Audio', Icons.graphic_eq),
   data('Data', Icons.data_object),
   other('File', Icons.insert_drive_file_outlined);
@@ -47,6 +49,7 @@ enum AssetKind {
     '.oprefab': prefab,
     '.odata': dataObject,
     '.oui': canvas,
+    '.oclip': clip,
     '.wav': audio, '.mp3': audio, '.ogg': audio,
     '.json': data, '.yaml': data, '.yml': data,
   };
@@ -344,6 +347,13 @@ class AssetTree {
       } else if (what == NewAsset.dataObject) {
         File(path).writeAsStringSync(
           DataObject.blank(p.basenameWithoutExtension(unique)).toText(),
+        );
+      } else if (what == NewAsset.clip) {
+        File(path).writeAsStringSync(
+          ClipDocument(
+            name: p.basenameWithoutExtension(unique),
+            duration: 1,
+          ).encode(),
         );
       } else {
         File(path).writeAsStringSync(_starterFor(what, unique));
@@ -674,6 +684,16 @@ struct Drift {
     extension: '.oscene',
     suggested: 'untitled',
     starter: '{"version":3,"objects":[]}\n',
+  ),
+
+  clip(
+    label: 'Clip',
+    icon: Icons.animation,
+    extension: '.oclip',
+    suggested: 'clip',
+    // Written by ClipDocument rather than as text here, so a new clip is
+    // whatever the format says an empty one is.
+    starter: null,
   );
 
   const NewAsset({
@@ -745,5 +765,6 @@ enum NewAssetGroup {
     NewAsset.folder,
     NewAsset.canvas,
     NewAsset.scene,
+    NewAsset.clip,
   ];
 }

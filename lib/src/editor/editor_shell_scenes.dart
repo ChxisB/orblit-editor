@@ -12,7 +12,8 @@ extension _Scenes on _EditorShellState {
       entry.isLoaded &&
       (entry.neverWritten || _history.stampFor(entry.id) != entry.savedStamp);
 
-  bool get _anyUnsaved => _workspace.entries.any(_isUnsaved);
+  bool get _anyUnsaved =>
+      _workspace.entries.any(_isUnsaved) || _bench.anyUnsaved;
 
   /// Lists the project's other scenes without loading them.
   void _listSiblingScenes() {
@@ -114,8 +115,10 @@ extension _Scenes on _EditorShellState {
 
     if (leaving != null) {
       // Its steps go with it: undoing into a scene that is not loaded would be
-      // a step that appears to do nothing.
+      // a step that appears to do nothing. So does the clip's pose, which
+      // there is nothing left to put back on.
       _history.forget(leaving.id);
+      _preview.forget();
       _workspace.unload(leaving);
     }
 
@@ -132,6 +135,7 @@ extension _Scenes on _EditorShellState {
       _camera = OrbitCamera();
       _reportedNotes.clear();
     });
+    _onBenchChanged();
     _report(opened.problems);
   }
 
@@ -167,7 +171,11 @@ extension _Scenes on _EditorShellState {
   /// Synchronous on purpose. An awaited write leaves a gap between encoding
   /// the scene and recording that it was saved — an edit landing in that gap
   /// is not in the file, but the history would call itself clean.
+  ///
+  /// Saving without saying which also writes every clip with changes, since
+  /// that is somebody pressing save and meaning everything.
   void _save([SceneEntry? which]) {
+    if (which == null) _saveClips();
     final entry = which ?? _current;
     final scene = entry?.scene;
     if (entry == null || scene == null) return;
@@ -182,7 +190,7 @@ extension _Scenes on _EditorShellState {
       final file = File(path);
       file.parent.createSync(recursive: true);
       file.writeAsStringSync(
-        SceneDocument.encode(scene, prefabs: _prefabs.find),
+        _atRest(() => SceneDocument.encode(scene, prefabs: _prefabs.find)),
       );
     } on FileSystemException catch (error) {
       _say('Could not save ${entry.title}: ${error.message}');
@@ -280,6 +288,7 @@ extension _Scenes on _EditorShellState {
 
     if (leaving != null) {
       _history.forget(leaving.id);
+      _preview.forget();
       _workspace.unload(leaving);
     }
 
@@ -299,6 +308,7 @@ extension _Scenes on _EditorShellState {
       _selectedScene = null;
       _camera = OrbitCamera();
     });
+    _onBenchChanged();
   }
 
   /// Takes a scene off the list, asking first if it has changes.
@@ -313,6 +323,7 @@ extension _Scenes on _EditorShellState {
     }
 
     _history.forget(entry.id);
+    if (identical(entry, _current)) _preview.forget();
     _workspace.remove(entry.id);
     setState(() {
       _selected.clear();

@@ -5,10 +5,18 @@ part of 'inspector.dart';
 
 /// A labelled row, so every field lines up on the same column.
 class FieldRow extends StatelessWidget {
-  const FieldRow({super.key, required this.label, required this.child});
+  const FieldRow({
+    super.key,
+    required this.label,
+    required this.child,
+    this.trailing,
+  });
 
   final String label;
   final Widget child;
+
+  /// Something small after the field, such as the button that keys it.
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +33,10 @@ class FieldRow extends StatelessWidget {
             ),
           ),
           Expanded(child: child),
+          if (trailing case final trailing?) ...[
+            const SizedBox(width: Space.xs),
+            trailing,
+          ],
         ],
       ),
     );
@@ -43,6 +55,7 @@ class SliderRow extends StatelessWidget {
     this.onSettled,
     this.unit,
     this.decimals = 0,
+    this.trailing,
   });
 
   final String label;
@@ -57,10 +70,14 @@ class SliderRow extends StatelessWidget {
   final String? unit;
   final int decimals;
 
+  /// See [FieldRow.trailing].
+  final Widget? trailing;
+
   @override
   Widget build(BuildContext context) {
     return FieldRow(
       label: label,
+      trailing: trailing,
       child: Row(
         children: [
           Expanded(
@@ -107,6 +124,7 @@ class DragRow extends StatelessWidget {
     this.step = 0.01,
     this.decimals = 2,
     this.minimum,
+    this.trailing,
   });
 
   final String label;
@@ -132,6 +150,9 @@ class DragRow extends StatelessWidget {
   /// A floor for each number: a scale cannot be dragged through zero into a
   /// matrix that cannot be inverted, nor a ball into one with no size.
   final double? minimum;
+
+  /// See [FieldRow.trailing].
+  final Widget? trailing;
 
   // X, Y, Z tinted the way every 3D tool tints them, because the convention is
   // older than any of them and reading is faster than remembering.
@@ -161,6 +182,7 @@ class DragRow extends StatelessWidget {
 
     return FieldRow(
       label: label,
+      trailing: trailing,
       child: Row(
         children: [
           for (var i = 0; i < values.length; i++) ...[
@@ -199,6 +221,7 @@ class VectorRow extends StatelessWidget {
     required this.object,
     required this.field,
     required this.history,
+    this.keying,
     this.step = 0.01,
     this.decimals = 2,
     this.minimum,
@@ -210,6 +233,10 @@ class VectorRow extends StatelessWidget {
   final TransformField field;
   final History history;
 
+  /// What keys it into the clip being edited. Null where there is no
+  /// timeline, and then the row has no key button.
+  final Keying? keying;
+
   /// Units per logical pixel dragged.
   final double step;
 
@@ -220,24 +247,91 @@ class VectorRow extends StatelessWidget {
   final double? minimum;
 
   @override
-  Widget build(BuildContext context) => DragRow(
-    label: label,
-    listenable: history,
-    read: () => field.of(object).storage,
-    onChanged: (values) => history.run(
-      SetTransform(
-        sceneId: sceneId,
-        id: object.id,
-        field: field,
-        name: object.name,
-        from: field.of(object),
-        to: Vector3.array(values),
+  Widget build(BuildContext context) {
+    final keying = this.keying;
+    return DragRow(
+      label: label,
+      // The clip moves it too, and a pose is not a step on the undo stack.
+      listenable: keying == null
+          ? history
+          : Listenable.merge([history, keying]),
+      read: () => field.of(object).storage,
+      onChanged: (values) => history.run(
+        SetTransform(
+          sceneId: sceneId,
+          id: object.id,
+          field: field,
+          name: object.name,
+          from: field.of(object),
+          to: Vector3.array(values),
+        ),
       ),
-    ),
-    onSettled: history.seal,
-    step: step,
-    decimals: decimals,
-    minimum: minimum,
+      onSettled: history.seal,
+      step: step,
+      decimals: decimals,
+      minimum: minimum,
+      trailing: keying == null
+          ? null
+          : KeyButton(
+              keying: keying,
+              object: object,
+              property: 'transform.${field.name}',
+            ),
+    );
+  }
+}
+
+/// The diamond after a field that a clip can key.
+///
+/// Filled where there is a key on the playhead's frame, hollow and lit where
+/// the clip moves the field between keys, and hollow and dim where it does
+/// not move it yet. Pressing it keys the field as it is now. Not there at all
+/// where the clip cannot key the field, so a row does not offer what it
+/// cannot do.
+class KeyButton extends StatelessWidget {
+  const KeyButton({
+    super.key,
+    required this.keying,
+    required this.object,
+    required this.property,
+  });
+
+  final Keying keying;
+  final SceneObject object;
+
+  /// The field as a clip names it, like `transform.position`.
+  final String property;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    // Listening for itself: the playhead moving changes the mark and nothing
+    // else about the row it is in.
+    listenable: keying,
+    builder: (context, _) {
+      final mark = keying.markFor(object, property);
+      if (mark == KeyMark.none) return const SizedBox.shrink();
+      return Tooltip(
+        message: 'Key this frame',
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => keying.key(object, property),
+            child: SizedBox(
+              width: 16,
+              height: 24,
+              child: Icon(
+                mark == KeyMark.keyed ? Icons.diamond : Icons.diamond_outlined,
+                size: 12,
+                color: mark == KeyMark.unkeyed
+                    ? OrblitColors.inkDim
+                    : OrblitColors.ember,
+              ),
+            ),
+          ),
+        ),
+      );
+    },
   );
 }
 

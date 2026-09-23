@@ -65,6 +65,18 @@ extension _Panels on _EditorShellState {
         build: (_, _) => ConsolePanel(log: _log),
       ),
     )
+    // Not one that shows movement either: it listens to the bench itself,
+    // which is where the playhead and the keys are.
+    ..register(
+      PanelType(
+        kind: PanelKind.timeline,
+        build: (_, _) => TimelinePanel(
+          bench: _bench,
+          selected: _selectedObject,
+          onProblem: (message) => _say(message, level: LogLevel.error),
+        ),
+      ),
+    )
     ..register(
       PanelType(
         kind: PanelKind.modelling,
@@ -238,6 +250,7 @@ extension _Panels on _EditorShellState {
     onApplyPrefab: _applyPrefab,
     onRevertPrefab: _revertPrefab,
     onUnpackPrefab: _unpackPrefab,
+    keying: _bench,
   );
 
   /// The shape and geometry controls, for an object that has geometry.
@@ -340,6 +353,10 @@ extension _Panels on _EditorShellState {
       }
       if (asset.kind == AssetKind.texture) {
         _applyTexture(asset.path);
+        return;
+      }
+      if (asset.kind == AssetKind.clip) {
+        _openClip(asset.path);
         return;
       }
       const editable = {

@@ -10,6 +10,8 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
+import 'clip_bench.dart' show Keying;
+import 'clip_edits.dart' show KeyMark;
 import 'colour.dart';
 import 'commands.dart';
 import 'history.dart';
@@ -53,6 +55,7 @@ class Inspector extends StatelessWidget {
     this.onDetachData,
     this.onOpenInterface,
     this.sections,
+    this.keying,
   });
 
   /// The scene being looked at, which need not be the loaded one — a scene can
@@ -105,6 +108,10 @@ class Inspector extends StatelessWidget {
   /// shell, which owns what is being edited, and the inspector does not know
   /// what an extrude is.
   final List<InspectorSection>? sections;
+
+  /// What keys a field into the clip being edited. Null where there is no
+  /// timeline, and then no field offers to be keyed.
+  final Keying? keying;
 
   @override
   Widget build(BuildContext context) {
@@ -186,6 +193,7 @@ class Inspector extends StatelessWidget {
                                     onOpenInterface: onOpenInterface,
                                     sections:
                                         sections ?? InspectorSection.builtIn,
+                                    keying: keying,
                                   ),
                                 ),
                               ],
@@ -208,6 +216,7 @@ class _Fields extends StatelessWidget {
     this.onDetachData,
     this.onOpenInterface,
     required this.sections,
+    this.keying,
   });
 
   final String sceneId;
@@ -226,6 +235,8 @@ class _Fields extends StatelessWidget {
 
   final List<InspectorSection> sections;
 
+  final Keying? keying;
+
   @override
   Widget build(BuildContext context) {
     final parent = object.parentId == null ? null : scene[object.parentId!];
@@ -237,6 +248,7 @@ class _Fields extends StatelessWidget {
       onOpenData: onOpenData,
       onDetachData: onDetachData,
       onOpenInterface: onOpenInterface,
+      keying: keying,
     );
 
     return ListView(
@@ -439,6 +451,7 @@ extension _Sections on InspectorTarget {
           object: object,
           field: TransformField.position,
           history: history,
+          keying: keying,
           step: 0.02,
         ),
         VectorRow(
@@ -447,6 +460,7 @@ extension _Sections on InspectorTarget {
           object: object,
           field: TransformField.rotation,
           history: history,
+          keying: keying,
           step: 0.5,
           decimals: 1,
         ),
@@ -456,6 +470,7 @@ extension _Sections on InspectorTarget {
           object: object,
           field: TransformField.scale,
           history: history,
+          keying: keying,
           step: 0.02,
           minimum: 0.001,
         ),

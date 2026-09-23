@@ -54,6 +54,7 @@ class PanelKind {
     'Modelling',
     Icons.handyman_outlined,
   );
+  static const timeline = PanelKind('timeline', 'Timeline', Icons.animation);
 
   /// The kinds the editor has always had, which a layout can be read against
   /// before anything else has registered.
@@ -66,6 +67,7 @@ class PanelKind {
     console,
     uvs,
     modelling,
+    timeline,
   ];
 
   /// The one of [kinds] called [name], or null.
@@ -358,6 +360,7 @@ class DockLayout {
                 DockPanel(id: 'project', kind: PanelKind.project),
                 DockPanel(id: 'console', kind: PanelKind.console),
                 DockPanel(id: 'uvs', kind: PanelKind.uvs),
+                DockPanel(id: 'timeline', kind: PanelKind.timeline),
               ],
             ),
           ],

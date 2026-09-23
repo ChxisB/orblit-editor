@@ -6,7 +6,8 @@ part of 'editor_shell.dart';
 // An instance is a link and what is different about it, and all the working
 // out of that lives in orblit_scene. What is here is the editor's side: which
 // file, which scene, what to say, and every change made as one step that can
-// be undone.
+// be undone. Each is done at rest, off the clip's pose: a prefab made or
+// applied mid-clip would otherwise keep wherever the playhead was.
 
 extension _Prefabs on _EditorShellState {
   /// Saves an object and everything under it as a prefab asset.
@@ -14,7 +15,7 @@ extension _Prefabs on _EditorShellState {
   /// The object it was made from becomes the first instance, the way it does
   /// in every editor that has prefabs. Anything else and the thing on screen
   /// would look like the prefab while quietly not being one.
-  void _makePrefab(ObjectDrag dragged, String directory) {
+  void _makePrefab(ObjectDrag dragged, String directory) => _atRest(() {
     final open = _workspace.sceneHolding(dragged.id);
     final scene = open?.scene;
     if (open == null || scene == null) return;
@@ -59,7 +60,7 @@ extension _Prefabs on _EditorShellState {
       '${object.name} is now an instance of it.',
     );
     _report(made.problems);
-  }
+  });
 
   /// Puts an instance of a prefab into the open scene.
   ///
@@ -121,7 +122,7 @@ extension _Prefabs on _EditorShellState {
   /// the rest from the prefab: a lamp somebody made red stays red when the
   /// lamp post grows a second arm. That includes instances inside other
   /// prefabs, and instances in scenes other than this one.
-  void _applyPrefab(String id) {
+  void _applyPrefab(String id) => _atRest(() {
     final instance = _instanceAt(id);
     if (instance == null) return;
     final (:entry, :scene, :head, :asset) = instance;
@@ -178,11 +179,11 @@ extension _Prefabs on _EditorShellState {
                 'instance${touched == 1 ? '' : 's'}.',
     );
     _report(problems);
-  }
+  });
 
   /// Throws away what an instance changed about its prefab. It keeps where it
   /// stands, and whatever was hung on it from outside stays hung on it.
-  void _revertPrefab(String id) {
+  void _revertPrefab(String id) => _atRest(() {
     final instance = _instanceAt(id);
     if (instance == null) return;
     final (:entry, :scene, :head, :asset) = instance;
@@ -194,11 +195,11 @@ extension _Prefabs on _EditorShellState {
     );
     _changeScene(entry, reverted.document, 'Revert ${scene[head]?.name}');
     _report(reverted.problems);
-  }
+  });
 
   /// Cuts an instance loose from its prefab: its parts become ordinary
   /// objects, with ids of their own, that the prefab no longer changes.
-  void _unpackPrefab(String id) {
+  void _unpackPrefab(String id) => _atRest(() {
     final instance = _instanceAt(id);
     if (instance == null) return;
     final (:entry, :scene, :head, :asset) = instance;
@@ -211,7 +212,7 @@ extension _Prefabs on _EditorShellState {
     );
     _changeScene(entry, unpacked.document, 'Unpack ${scene[head]?.name}');
     _follow(unpacked.renamed);
-  }
+  });
 
   /// The instance [id] is, or is part of, and where.
   ///
@@ -281,5 +282,6 @@ extension _Prefabs on _EditorShellState {
         ..addAll(now);
       if (_primary case final id?) _primary = renamed[id] ?? id;
     });
+    if (renamed[_bench.owner] case final id?) _bench.owner = id;
   }
 }

@@ -14,6 +14,8 @@ import 'asset_browser.dart';
 import 'assets.dart';
 import 'body_gizmo.dart';
 import 'body_section.dart';
+import 'clip_bench.dart';
+import 'clip_preview.dart';
 import 'clipboard.dart';
 import 'code_editor.dart';
 import 'boundary.dart';
@@ -48,10 +50,12 @@ import 'registry.dart';
 import 'scene.dart';
 import 'snapping.dart';
 import 'surface.dart';
+import 'timeline.dart';
 import 'uv_panel.dart';
 import 'scene_document.dart';
 
 import 'package:orblit_mesh/orblit_mesh.dart';
+import 'package:orblit_motion/orblit_motion.dart' show ClipFormatException;
 import 'package:orblit_scene/orblit_scene.dart' as doc;
 import 'package:orblit_ui/orblit_ui.dart';
 
@@ -66,6 +70,7 @@ part 'editor_shell_objects.dart';
 part 'editor_shell_panels.dart';
 part 'editor_shell_documents.dart';
 part 'editor_shell_prefabs.dart';
+part 'editor_shell_clips.dart';
 part 'editor_shell_intents.dart';
 part 'editor_shell_chrome.dart';
 part 'editor_shell_menus.dart';
@@ -249,6 +254,18 @@ class _EditorShellState extends State<EditorShell> {
   /// from one scene to another possible at all.
   final SceneClipboard _clipboard = SceneClipboard();
 
+  /// The clips open on the timeline, and where its playhead is.
+  late final ClipBench _bench = ClipBench(
+    history: _history,
+    scene: () => _current?.scene,
+  );
+
+  /// The timeline's clip, shown on the loaded scene.
+  final ClipPreview _preview = ClipPreview();
+
+  /// Whether the top bar was last built saying a clip has changes.
+  bool _clipsUnsaved = false;
+
   @override
   void initState() {
     super.initState();
@@ -257,6 +274,7 @@ class _EditorShellState extends State<EditorShell> {
     _stopCatching;
     _history.addListener(_onHistoryChanged);
     _workspace.addListener(_onChanged);
+    _bench.addListener(_onBenchChanged);
     _frames
       ..start()
       ..addListener(_onChanged);
@@ -325,6 +343,9 @@ class _EditorShellState extends State<EditorShell> {
 
   @override
   void dispose() {
+    _bench
+      ..removeListener(_onBenchChanged)
+      ..dispose();
     _history
       ..removeListener(_onHistoryChanged)
       ..dispose();
@@ -362,6 +383,27 @@ class _EditorShellState extends State<EditorShell> {
       return;
     }
     setState(() {});
+  }
+
+  /// A change on the timeline — the clip, its playhead, what it is played
+  /// on — shown on the loaded scene.
+  ///
+  /// Posing is not a step on the undo stack, so it is built the way a drag
+  /// is: only what shows movement, unless it changed more than where things
+  /// are. The top bar is built again only when whether a clip has changes
+  /// does, and not every time the playhead moves.
+  void _onBenchChanged() {
+    final scene = _current?.scene;
+    final change = scene == null
+        ? PoseChange.none
+        : _preview.pose(scene, _bench.clip, _bench.owner, _bench.at);
+    final unsaved = _bench.anyUnsaved;
+    if (change == PoseChange.rebuilt || unsaved != _clipsUnsaved) {
+      _clipsUnsaved = unsaved;
+      setState(() {});
+    } else if (change == PoseChange.moved) {
+      _rebuildForMove();
+    }
   }
 
   /// Whether everything has to be built again, or only what shows movement.

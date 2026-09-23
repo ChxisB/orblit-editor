@@ -195,7 +195,8 @@ extension _Objects on _EditorShellState {
     final scene = _working?.scene;
     if (scene == null || _selected.isEmpty) return;
 
-    _clipboard.take(scene, _selected);
+    // At rest, so what is copied mid-clip is the object and not its pose.
+    _atRest(() => _clipboard.take(scene, _selected));
     setState(() {});
     await services.Clipboard.setData(
       services.ClipboardData(text: _clipboard.toText()),
@@ -210,7 +211,7 @@ extension _Objects on _EditorShellState {
 
     // Copied before it is deleted, since the delete is what makes it
     // unreachable.
-    _clipboard.take(scene, _selected);
+    _atRest(() => _clipboard.take(scene, _selected));
     await services.Clipboard.setData(
       services.ClipboardData(text: _clipboard.toText()),
     );
@@ -275,7 +276,7 @@ extension _Objects on _EditorShellState {
 
     // On its own clipboard, so duplicating does not throw away what somebody
     // had copied earlier.
-    final taken = SceneClipboard()..take(scene, _selected);
+    final taken = _atRest(() => SceneClipboard()..take(scene, _selected));
     final content = taken.contents(
       nextId: _nextObjectId,
       parentId: _primary == null ? null : scene[_primary!]?.parentId,

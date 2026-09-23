@@ -15,6 +15,7 @@ class InspectorTarget {
     this.onOpenData,
     this.onDetachData,
     this.onOpenInterface,
+    this.keying,
   });
 
   /// The scene [object] is in, by id, which is how a command names it.
@@ -35,6 +36,11 @@ class InspectorTarget {
 
   /// Opens the interface a canvas puts on screen.
   final ValueChanged<String>? onOpenInterface;
+
+  /// What keys one of [object]'s fields into the clip being edited, when
+  /// there is one. A section that has a field a clip can move puts a
+  /// [KeyButton] after it.
+  final Keying? keying;
 }
 
 /// One block of the inspector, and the objects it is shown for.

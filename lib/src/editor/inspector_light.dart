@@ -157,7 +157,10 @@ extension _Light on InspectorTarget {
 
   Widget _power() {
     final isSun = object.lightType == LightType.sun;
+    final keying = this.keying;
 
+    // The only one of a light's fields with a key button: a clip keys numbers
+    // and vectors, and power is the one here that a clip is asked to move.
     return SliderRow(
       label: 'Power',
       value: object.power,
@@ -175,6 +178,9 @@ extension _Light on InspectorTarget {
         ),
       ),
       onSettled: history.seal,
+      trailing: keying == null
+          ? null
+          : KeyButton(keying: keying, object: object, property: 'light.power'),
     );
   }
 
