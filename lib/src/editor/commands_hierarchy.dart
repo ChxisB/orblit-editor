@@ -177,11 +177,18 @@ class MoveBetweenScenes extends EditorCommand {
 
     // Two scenes can hold the same id — the starter scene names its objects
     // outright — and adding a second one would throw. Renaming on the way
-    // across rather than refusing keeps the drag working.
+    // across rather than refusing keeps the drag working. A part of an
+    // instance is named by the path into it, so it follows the instance
+    // rather than being renamed on its own.
+    final heads = <String, String>{
+      for (final entry in _removed)
+        if (!doc.EntityPath.isPart(entry.object.id) &&
+            to.contains(entry.object.id))
+          entry.object.id: '${entry.object.id}~${to.length}',
+    };
     final clash = <String, String>{
       for (final entry in _removed)
-        if (to.contains(entry.object.id))
-          entry.object.id: '${entry.object.id}~${to.length}',
+        entry.object.id: ?_renamed(entry.object.id, heads),
     };
 
     _moved = [
@@ -205,6 +212,15 @@ class MoveBetweenScenes extends EditorCommand {
 
     to.moveTo(root.id, parentId: parentId, index: index);
     placeInWorld(to, root, world);
+  }
+
+  /// What [id] is called once [heads] have been renamed, or null when it
+  /// keeps its name.
+  static String? _renamed(String id, Map<String, String> heads) {
+    if (heads[id] case final renamed?) return renamed;
+    final head = doc.EntityPath.instanceOf(id);
+    final moved = head == null ? null : heads[head];
+    return moved == null ? null : '$moved${id.substring(head!.length)}';
   }
 
   @override
@@ -346,68 +362,5 @@ class DeleteObjects extends EditorCommand {
     for (final batch in _removed.reversed) {
       scene.restore(batch);
     }
-  }
-}
-
-/// Puts a prefab's contents back over an instance already in the scene.
-///
-/// What a revert does, and what applying changes to a prefab does to every
-/// other instance of it. The whole subtree goes at once rather than field by
-/// field: a prefab can gain and lose children, and a change that only ever
-/// touched properties would leave the extra ones behind.
-///
-/// One command per instance, so undo puts an instance back exactly as it was
-/// rather than approximately.
-class ReplaceSubtree extends EditorCommand {
-  ReplaceSubtree({
-    required this.sceneId,
-    required this.rootId,
-    required this.objects,
-    required this.what,
-    this.label_ = 'Revert',
-  });
-
-  @override
-  final String sceneId;
-
-  /// The object being replaced, which keeps its id so the selection survives.
-  final String rootId;
-
-  /// The replacement, parents before children.
-  final List<SceneObject> objects;
-
-  final String what;
-  final String label_;
-
-  List<({SceneObject object, int index})> _removed = const [];
-
-  @override
-  String get label => '$label_ $what';
-
-  @override
-  void apply(SceneHost host) {
-    final scene = host.sceneFor(sceneId);
-    if (scene == null || !scene.contains(rootId)) return;
-
-    // Where it sat among its siblings, so a revert does not send it to the
-    // bottom of the tree under somebody's cursor.
-    final at = _removed.isEmpty ? null : _removed.first.index;
-    _removed = scene.remove(rootId);
-
-    // Kept contiguous rather than appended, so the subtree stays where it was
-    // in the list and everything after it keeps its order.
-    final index = at ?? _removed.first.index;
-    for (var i = 0; i < objects.length; i++) {
-      final into = index + i;
-      scene.add(objects[i], at: into > scene.objects.length ? null : into);
-    }
-  }
-
-  @override
-  void revert(SceneHost host) {
-    final scene = host.sceneFor(sceneId);
-    if (scene == null || _removed.isEmpty) return;
-    scene.remove(rootId);
-    scene.restore(_removed);
   }
 }

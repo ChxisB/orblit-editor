@@ -51,12 +51,29 @@ abstract final class SceneDocument {
   ///
   /// Two was a light's power changing units. Three moved the air out of the
   /// scene and into an object. Four replaced an object's kind with the set of
-  /// components it has. The list of conversions lives with the format, in
+  /// components it has. Five made a prefab instance a link and a diff rather
+  /// than a copy. The list of conversions lives with the format, in
   /// `orblit_scene`, and so does the refusal to read anything newer.
   static const int formatVersion = doc.SceneDocument.formatVersion;
 
-  static String encode(EditorScene scene, {String? name}) =>
-      documentOf(scene, name: name).encode();
+  /// The scene as the text of a file.
+  ///
+  /// Every instance is folded back to its link and what is different about
+  /// it, against the prefab [prefabs] hands back for it — which has to be the
+  /// one it was opened against, or the difference between two versions of
+  /// the prefab is saved as a change to every instance. An instance whose
+  /// prefab cannot be had is written out whole rather than lost.
+  static String encode(
+    EditorScene scene, {
+    String? name,
+    doc.PrefabSource? prefabs,
+  }) {
+    final document = documentOf(scene, name: name);
+    return (prefabs == null
+            ? document
+            : doc.foldInstances(document, prefabs))
+        .encode();
+  }
 
   /// The editor's scene as a document.
   static doc.SceneDocument documentOf(EditorScene scene, {String? name}) =>
@@ -75,9 +92,17 @@ abstract final class SceneDocument {
         entities: [for (final object in scene.objects) entityOf(object)],
       );
 
-  static SceneLoad decode(String text) {
-    final load = doc.SceneDocument.decode(text);
-    final document = load.document;
+  /// A scene out of a file's text, its instances opened.
+  ///
+  /// [prefabs] hands over each prefab an instance links to. Without it, or
+  /// for one it cannot find, the instance stays folded: a row with the link
+  /// on it and nothing under it, saved back exactly as it was read.
+  static SceneLoad decode(String text, {doc.PrefabSource? prefabs}) {
+    final read = doc.SceneDocument.decode(text);
+    final opened = prefabs == null
+        ? null
+        : doc.expandInstances(read.document, prefabs);
+    final document = opened?.document ?? read.document;
 
     return SceneLoad(
       scene: EditorScene(
@@ -90,7 +115,7 @@ abstract final class SceneDocument {
         hoursPerSecond: document.settings.hoursPerSecond,
       ),
       name: document.name,
-      problems: load.problems,
+      problems: [...read.problems, ...?opened?.problems],
     );
   }
 
@@ -187,10 +212,8 @@ abstract final class SceneDocument {
         asset: object.interfaceAsset,
       );
     }
-    if (object.prefab != null) {
-      components[doc.SceneComponents.prefab] = doc.PrefabComponent(
-        asset: object.prefab,
-      );
+    if (object.prefab case final link?) {
+      components[doc.SceneComponents.prefab] = link;
     }
     if (object.data.isNotEmpty) {
       components[doc.SceneComponents.data] = doc.DataComponent(
@@ -314,7 +337,7 @@ abstract final class SceneDocument {
       surfaces: mesh is doc.MeshComponent && mesh.surfaces != null
           ? [for (final one in mesh.surfaces!) ?Surface.fromJson(one)]
           : null,
-      prefab: prefab is doc.PrefabComponent ? prefab.asset : null,
+      prefab: prefab is doc.PrefabComponent ? prefab : null,
       data: data is doc.DataComponent ? data.paths : null,
     );
 

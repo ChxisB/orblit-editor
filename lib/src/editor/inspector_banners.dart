@@ -3,8 +3,8 @@ part of 'inspector.dart';
 // What the inspector says above the fields: where the object came from,
 // what it is linked to, and why there may be no fields to show.
 
-/// Says this object came from a prefab, and offers the three things anybody
-/// wants to do about it.
+/// Says this object is, or is part of, an instance of a prefab, and offers
+/// the three things anybody wants to do about it.
 ///
 /// At the top, above the fields, because it changes what editing a field
 /// *means*: a change here is a change to one lamp post until it is applied,
@@ -12,6 +12,8 @@ part of 'inspector.dart';
 class _PrefabBand extends StatelessWidget {
   const _PrefabBand({
     required this.source,
+    this.readable = true,
+    this.partOf,
     this.onApply,
     this.onRevert,
     this.onUnpack,
@@ -20,6 +22,14 @@ class _PrefabBand extends StatelessWidget {
   /// The prefab's path, relative to the project.
   final String source;
 
+  /// Whether the prefab could be read. One that could not leaves the instance
+  /// as nothing but a link, and there is nothing to apply, revert or unpack.
+  final bool readable;
+
+  /// The instance this is a part of, when it is a part rather than the
+  /// instance itself. What the buttons act on.
+  final String? partOf;
+
   final VoidCallback? onApply;
   final VoidCallback? onRevert;
   final VoidCallback? onUnpack;
@@ -27,6 +37,11 @@ class _PrefabBand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = p.basename(source);
+    final note = !readable
+        ? '$name could not be read. Until it can, this is only a link.'
+        : partOf == null
+        ? null
+        : 'Part of $partOf. Changes here are changes to that instance.';
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -60,32 +75,35 @@ class _PrefabBand extends StatelessWidget {
               ),
             ],
           ),
+          if (note != null) ...[
+            const SizedBox(height: Space.xs),
+            Text(note, style: OrblitText.caption),
+          ],
           const SizedBox(height: Space.sm),
           Row(
             children: [
               _PrefabAction(
                 label: 'Apply',
                 tooltip:
-                    'Save this back to the prefab, and update its other '
-                    'instances. They keep where they stand and what they are '
-                    'called; everything else comes from the prefab.',
-                onPressed: onApply,
+                    'Save what was changed here into the prefab. Every other '
+                    'instance keeps its own changes and takes the rest.',
+                onPressed: readable ? onApply : null,
               ),
               const SizedBox(width: Space.xs),
               _PrefabAction(
                 label: 'Revert',
                 tooltip:
-                    'Throw away the changes made to this one and take '
-                    'the prefab again.',
-                onPressed: onRevert,
+                    'Throw away what was changed here and take the prefab '
+                    'again. It stays where it stands.',
+                onPressed: readable ? onRevert : null,
               ),
               const SizedBox(width: Space.xs),
               _PrefabAction(
                 label: 'Unpack',
                 tooltip:
-                    'Break the link. This becomes an ordinary object and '
-                    'stops following the prefab.',
-                onPressed: onUnpack,
+                    'Break the link. The parts become ordinary objects and '
+                    'stop following the prefab.',
+                onPressed: readable ? onUnpack : null,
               ),
             ],
           ),

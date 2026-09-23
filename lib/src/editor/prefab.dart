@@ -1,218 +1,106 @@
-import 'dart:convert';
+import 'dart:io';
 
-import 'package:vector_math/vector_math_64.dart';
+import 'package:orblit_scene/orblit_scene.dart' as doc;
+import 'package:path/path.dart' as p;
 
-import 'scene.dart';
-import 'scene_document.dart';
+/// The extension a prefab file carries.
+const String prefabExtension = doc.prefabExtension;
 
-/// An object and everything under it, saved as an asset and reusable.
+/// A project's prefabs, as the scenes open in this editor were opened
+/// against them.
 ///
-/// The point of one is that the thing exists in the project rather than in a
-/// scene: a lamp post made once can be dropped down a street a hundred times,
-/// and when the lamp changes, the street changes. Without prefabs the only way
-/// to have a hundred of something is a hundred copies, and the hundred-and-
-/// first change has to be made a hundred times.
+/// The file is `orblit_scene`'s [doc.PrefabDocument], and so is everything
+/// done with one — opening an instance, folding it, applying it. What is here
+/// is the part only an editor has: a folder on disk, and a memory of what was
+/// in it.
 ///
-/// The file is the same JSON a scene uses for its objects, so a prefab is
-/// readable, diffable and mergeable, and a scene and a prefab cannot drift
-/// into two encodings of the same object.
-class Prefab {
-  const Prefab({
-    required this.name,
-    required this.rootId,
-    required this.objects,
-  });
+/// Remembered rather than read afresh each time, because an instance is saved
+/// as what is different about it from its prefab, and that difference has to
+/// be worked out against the prefab it was opened from. Read the file again
+/// after somebody has changed it in another program and the gap between the
+/// old lamp and the new one would be saved as a change to every lamp in the
+/// scene, pinning the old one in place for good. Kept, the scene saves what
+/// was changed in it and the new lamp arrives the next time it is opened.
+///
+/// A prefab that is not there, or cannot be read, is not remembered: its
+/// instances stay folded, exactly as they were saved, and the next look may
+/// find the file.
+class PrefabFiles {
+  PrefabFiles(this.root);
 
-  /// What the thing is called. The file name without its extension is what
-  /// wins on disk; this is what an instance is named when it is dropped in.
-  final String name;
+  /// The project directory, which prefab paths are relative to.
+  final String root;
 
-  /// The id of the object everything else hangs off, inside this file.
-  final String rootId;
+  final Map<String, doc.PrefabDocument> _known = {};
 
-  /// The root and its descendants. Ids are local to the prefab: they are
-  /// remapped on the way into a scene, so the same prefab can be instanced
-  /// twice without the two arguing over an id.
-  final List<SceneObject> objects;
-
-  static const String marker = 'orblit.prefab';
-  static const int formatVersion = 1;
-
-  static const String extension = '.oprefab';
-
-  /// Takes an object out of a scene, with everything under it.
+  /// The prefab at [asset], or null when there is not a readable one.
   ///
-  /// The root's own transform is dropped: a prefab is a thing, not a thing at
-  /// a place, and one saved from an object standing at x=40 should not arrive
-  /// forty metres away every time it is used. Its rotation and scale are kept,
-  /// because those are usually part of what the thing *is*.
-  static Prefab fromScene(EditorScene scene, String id) {
-    final root = scene[id];
-    if (root == null) {
-      throw SceneError('That object is not in this scene.');
-    }
+  /// A [doc.PrefabSource], so this is what is handed to everything in
+  /// `orblit_scene` that opens or folds an instance.
+  doc.PrefabDocument? find(String asset) => read(asset).prefab;
 
-    final copy = root.copy()
-      ..parentId = null
-      ..prefab = null;
-    copy.position.setZero();
+  /// The prefab at [asset], or why there is not one.
+  ({doc.PrefabDocument? prefab, String? problem}) read(String asset) {
+    final known = _known[asset];
+    if (known != null) return (prefab: known, problem: null);
 
-    return Prefab(
-      name: root.name,
-      rootId: root.id,
-      objects: [
-        copy,
-        for (final child in scene.descendantsOf(id)) child.copy()..prefab = null,
-      ],
-    );
-  }
-
-  /// The file's contents.
-  String toText() => '${const JsonEncoder.withIndent('  ').convert({
-        'kind': marker,
-        'formatVersion': formatVersion,
-        'sceneFormatVersion': SceneDocument.formatVersion,
-        'name': name,
-        'root': rootId,
-        'objects': [for (final o in objects) SceneDocument.objectToJson(o)],
-      })}\n';
-
-  /// Reads a prefab, or says why it could not.
-  ///
-  /// Null rather than an exception: a `.oprefab` in a project may have been
-  /// written by a newer build, edited by hand, or half-copied, and a browser
-  /// that throws on one bad file shows nothing at all.
-  static Prefab? read(String text) {
-    final Object? parsed;
-    try {
-      parsed = jsonDecode(text);
-    } on FormatException {
-      return null;
-    }
-    if (parsed is! Map<String, Object?> || parsed['kind'] != marker) {
-      return null;
-    }
-
-    final raw = parsed['objects'];
-    if (raw is! List) return null;
-
-    final version = parsed['sceneFormatVersion'];
-    final objects = <SceneObject>[];
-    for (final entry in raw) {
-      if (entry is! Map<String, Object?>) continue;
-      final object = SceneDocument.objectFromJson(
-        entry,
-        version: version is int ? version : SceneDocument.formatVersion,
+    final file = File(p.join(root, asset));
+    if (!file.existsSync()) {
+      return (
+        prefab: null,
+        problem: '${p.basename(asset)} is not in the project any more.',
       );
-      if (object != null) objects.add(object);
     }
-    if (objects.isEmpty) return null;
-
-    final root = parsed['root'];
-    final rootId = root is String && objects.any((o) => o.id == root)
-        ? root
-        // A file whose root is missing still has a root: the one object with
-        // no parent. Better than refusing to open something recoverable.
-        : objects.firstWhere((o) => o.parentId == null, orElse: () => objects.first).id;
-
-    return Prefab(
-      name: parsed['name'] is String ? parsed['name']! as String : 'Prefab',
-      rootId: rootId,
-      objects: objects,
-    );
-  }
-
-  /// Fresh objects ready to go into a scene, linked back to this prefab.
-  ///
-  /// New ids every time and parent links remapped alongside, so two instances
-  /// of the same prefab are two things rather than one thing counted twice.
-  ({List<SceneObject> objects, String rootId}) instantiate({
-    required String Function() nextId,
-    required String source,
-    String? parentId,
-    Vector3? at,
-    String? name,
-  }) {
-    final remap = <String, String>{for (final o in objects) o.id: nextId()};
-
-    final made = [
-      for (final original in objects)
-        original.copyAs(
-          id: remap[original.id]!,
-          parentId: original.parentId == null
-              ? parentId
-              : remap[original.parentId],
-        )..prefab = source,
-    ];
-
-    final rootKey = remap[rootId]!;
-    final root = made.firstWhere((o) => o.id == rootKey);
-    if (at != null) root.position.setFrom(at);
-    if (name != null) root.name = name;
-
-    return (objects: made, rootId: rootKey);
-  }
-
-  /// This prefab's objects laid over an instance already in a scene.
-  ///
-  /// What a revert produces, and what applying to one prefab pushes out to
-  /// every other instance of it. The instance keeps two things it is entitled
-  /// to keep — where it stands and what it is called — because those are what
-  /// make it *this* lamp post rather than the lamp post. Everything else comes
-  /// from the asset.
-  ///
-  /// Children are matched to the prefab's by walking both trees in the same
-  /// order, so ids survive a revert wherever the shape has not changed and the
-  /// selection is not lost under somebody's cursor.
-  ({List<SceneObject> objects, String rootId}) resyncing(
-    EditorScene scene,
-    String instanceId, {
-    required String Function() nextId,
-    required String source,
-  }) {
-    final instance = scene[instanceId];
-    if (instance == null) {
-      throw SceneError('That instance is not in this scene.');
-    }
-
-    // Prefab id -> the id in the scene to reuse, where there is one.
-    final keep = <String, String>{rootId: instanceId};
-    _match(scene, instanceId, rootId, keep);
-
-    final remap = <String, String>{
-      for (final o in objects) o.id: keep[o.id] ?? nextId(),
-    };
-
-    final made = [
-      for (final original in objects)
-        original.copyAs(
-          id: remap[original.id]!,
-          parentId: original.parentId == null
-              ? instance.parentId
-              : remap[original.parentId],
-        )..prefab = source,
-    ];
-
-    final root = made.firstWhere((o) => o.id == instanceId);
-    root.position.setFrom(instance.position);
-    root.name = instance.name;
-
-    return (objects: made, rootId: instanceId);
-  }
-
-  /// Pairs a prefab's children with a scene subtree's, by order.
-  void _match(
-    EditorScene scene,
-    String sceneParent,
-    String prefabParent,
-    Map<String, String> keep,
-  ) {
-    final mine = [for (final o in objects) if (o.parentId == prefabParent) o];
-    final theirs = scene.childrenOf(sceneParent);
-
-    for (var i = 0; i < mine.length && i < theirs.length; i++) {
-      keep[mine[i].id] = theirs[i].id;
-      _match(scene, theirs[i].id, mine[i].id, keep);
+    try {
+      final prefab = doc.PrefabDocument.decode(file.readAsStringSync()).prefab;
+      _known[asset] = prefab;
+      return (prefab: prefab, problem: null);
+    } on doc.SceneFormatException catch (error) {
+      return (
+        prefab: null,
+        problem: '${p.basename(asset)} is not a readable prefab: '
+            '${error.message}',
+      );
+    } on FileSystemException catch (error) {
+      return (
+        prefab: null,
+        problem: 'Could not read ${p.basename(asset)}: '
+            '${error.osError?.message ?? error.message}',
+      );
     }
   }
+
+  /// Writes [prefab] to [asset] and remembers it as what that file now is.
+  ///
+  /// Returns why it could not, or null.
+  String? write(String asset, doc.PrefabDocument prefab) {
+    final path = p.join(root, asset);
+    try {
+      File(path)
+        ..parent.createSync(recursive: true)
+        ..writeAsStringSync(prefab.encode());
+    } on FileSystemException catch (error) {
+      return 'Could not write ${p.basename(path)}: '
+          '${error.osError?.message ?? error.message}';
+    }
+    _known[asset] = prefab;
+    return null;
+  }
+
+  /// Forgets every prefab but [assets], so each is read again the next time
+  /// it is wanted.
+  ///
+  /// Only safe for a prefab no open scene has an instance of: those were
+  /// opened against what is remembered, and have to be saved against it.
+  void keepOnly(Set<String> assets) =>
+      _known.removeWhere((asset, _) => !assets.contains(asset));
+
+  /// A source that hands back [prefab] for [asset] and this project's own
+  /// for everything else.
+  ///
+  /// What a change to one prefab is worked out with: the instances of it
+  /// that are open now were opened against the prefab as it was, and are
+  /// folded against that before being opened against the new one.
+  doc.PrefabSource withOne(String asset, doc.PrefabDocument? prefab) =>
+      (wanted) => wanted == asset ? prefab : find(wanted);
 }

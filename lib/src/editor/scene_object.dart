@@ -337,13 +337,15 @@ class SceneObject {
   /// on two scenes, and changing it changes both.
   String? interfaceAsset;
 
-  /// The prefab this came from, as a path relative to the project.
+  /// The prefab this is an instance of, and what is different about it.
   ///
-  /// Null for an ordinary object. Set on every object in an instance, root
-  /// and children alike, because a change three levels down still has to know
-  /// which asset it belongs to. Unpacking clears it, and from then on this is
-  /// an ordinary object that happens to look like a prefab.
-  String? prefab;
+  /// Null for an ordinary object. Set on an instance's root only: the parts
+  /// under it say which instance they belong to by their ids, which are paths
+  /// into it (`lamp3/bulb`), so a change three levels down knows where it
+  /// belongs without every part carrying the link. Unpacking takes it away,
+  /// and from then on this is an ordinary object that happens to look like a
+  /// prefab.
+  doc.PrefabComponent? prefab;
 
   /// Whether this object came from a prefab and still remembers it.
   bool get isPrefabInstance => prefab != null;

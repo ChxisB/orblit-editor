@@ -74,6 +74,14 @@ void main() {
       expect(band('Cube.oprefab'), findsOneWidget);
       expect(band('Apply'), findsOneWidget);
       expect(band('Unpack'), findsOneWidget);
+      // And the outliner marks it, naming the prefab.
+      expect(
+        find.descendant(
+          of: find.byType(Outliner),
+          matching: find.byTooltip('Instance of Cube.oprefab'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('making one is undoable, link and all', (tester) async {
@@ -154,6 +162,51 @@ void main() {
       expect(source.readAsStringSync(), contains('orblit.prefab'));
       expect(find.textContaining('updated 2 other instances'), findsOneWidget);
       await tester.pumpAndSettle();
+    });
+
+    testWidgets('a part stays in its instance', (tester) async {
+      await open(tester);
+      await dragToBrowser(tester, 'Props');
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(row('Crate')),
+      );
+      await tester.pump(const Duration(milliseconds: 200));
+      await gesture.moveTo(
+        tester.getCenter(
+          find.descendant(
+            of: find.byType(Outliner),
+            matching: find.text('Shared'),
+          ),
+        ),
+      );
+      await tester.pump();
+      await gesture.up();
+      await tester.pump();
+
+      // Moved out, it would be a change the instance could not be saved as.
+      expect(
+        find.textContaining('Unpack that to move its parts out of it'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('7 objects'), findsOneWidget);
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('the scene is saved with the link, not the parts', (
+      tester,
+    ) async {
+      await open(tester);
+      await dragToBrowser(tester, 'Props');
+      await save(tester);
+
+      final written = File(
+        p.join(root.path, 'scenes', 'main.oscene'),
+      ).readAsStringSync();
+      expect(written, contains('Props.oprefab'));
+      // What the group holds is in the prefab, and nowhere in the scene.
+      expect(written, isNot(contains('Crate')));
+      expect(prefabs().single.readAsStringSync(), contains('Crate'));
     });
   });
 

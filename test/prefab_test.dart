@@ -1,35 +1,85 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:orblit_editor/src/editor/clipboard.dart';
 import 'package:orblit_editor/src/editor/commands.dart';
 import 'package:orblit_editor/src/editor/history.dart';
 import 'package:orblit_editor/src/editor/prefab.dart';
 import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/scene_document.dart';
+import 'package:orblit_scene/orblit_scene.dart' as doc;
+import 'package:path/path.dart' as p;
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
-/// A lamp post: a group with a post and a lamp under it.
+const String lampAsset = 'prefabs/Lamp post$prefabExtension';
+const String streetAsset = 'prefabs/Street$prefabExtension';
+
+/// A lamp post: a group with a post and a bulb under it.
 EditorScene lampScene() => EditorScene([
-      SceneObject(
-        id: 'lamp',
-        name: 'Lamp post',
-        kind: ObjectKind.group,
-        position: Vector3(40, 0, 12),
-      ),
-      SceneObject(
-        id: 'post',
-        name: 'Post',
-        kind: ObjectKind.mesh,
-        parentId: 'lamp',
-        scale: Vector3(0.2, 4, 0.2),
-      ),
-      SceneObject(
-        id: 'bulb',
-        name: 'Bulb',
-        kind: ObjectKind.light,
-        parentId: 'lamp',
-        position: Vector3(0, 4, 0),
-        colour: const Color(0xFFFFCC88),
-      ),
-    ]);
+  SceneObject(
+    id: 'lamp',
+    name: 'Lamp post',
+    kind: ObjectKind.group,
+    position: Vector3(40, 0, 12),
+  ),
+  SceneObject(
+    id: 'post',
+    name: 'Post',
+    kind: ObjectKind.mesh,
+    parentId: 'lamp',
+    scale: Vector3(0.2, 4, 0.2),
+  ),
+  SceneObject(
+    id: 'bulb',
+    name: 'Bulb',
+    kind: ObjectKind.light,
+    parentId: 'lamp',
+    position: Vector3(0, 4, 0),
+    colour: const Color(0xFFFFCC88),
+  ),
+]);
+
+/// A project folder with the lamp post saved in it as a prefab.
+PrefabFiles project() {
+  final root = Directory.systemTemp.createTempSync('orblit_prefabs');
+  addTearDown(() => root.deleteSync(recursive: true));
+  final files = PrefabFiles(root.path);
+  final made = doc.makePrefab(
+    SceneDocument.documentOf(lampScene()),
+    'lamp',
+    asset: lampAsset,
+    source: files.find,
+  );
+  expect(files.write(lampAsset, made.prefab), isNull);
+  return files;
+}
+
+/// A scene file holding a folded instance of [asset] for each of [ids].
+String sceneWith(List<String> ids, {String asset = lampAsset}) =>
+    doc.SceneDocument(
+      name: 'Street',
+      entities: [
+        for (final id in ids)
+          doc.SceneEntity(
+            id: id,
+            name: id,
+            components: {
+              doc.SceneComponents.prefab: doc.PrefabComponent(asset: asset),
+            },
+          ),
+      ],
+    ).encode();
+
+/// The objects a scene file holds, by id.
+Map<String, Map<String, Object?>> savedObjects(String text) {
+  final json = jsonDecode(text) as Map<String, Object?>;
+  return {
+    for (final entry in (json['entities']! as List).cast<Map<String, Object?>>())
+      entry['id']! as String: entry,
+  };
+}
 
 /// Ids that do not collide with the ones already in a scene.
 String Function() counter() {
@@ -37,251 +87,271 @@ String Function() counter() {
   return () => 'new${next++}';
 }
 
-/// A host for running commands against one scene.
+/// A host for running commands against named scenes.
 class _Host implements SceneHost {
-  _Host(this.scene);
+  _Host(this.scenes);
 
-  final EditorScene scene;
+  final Map<String, EditorScene> scenes;
 
   @override
-  EditorScene? sceneFor(String id) => scene;
+  EditorScene? sceneFor(String id) => scenes[id];
 }
 
 void main() {
-  group('saving one', () {
-    test('takes the object and everything under it', () {
-      final prefab = Prefab.fromScene(lampScene(), 'lamp');
+  group('the project\'s prefabs', () {
+    test('are read once, and kept as the scenes were opened against them', () {
+      final files = project();
+      final first = files.find(lampAsset)!;
 
-      expect(prefab.name, 'Lamp post');
-      expect(prefab.rootId, 'lamp');
-      expect([for (final o in prefab.objects) o.name],
-          containsAll(['Lamp post', 'Post', 'Bulb']));
+      // Changed in another program while a scene is open.
+      File(p.join(files.root, lampAsset)).writeAsStringSync(
+        doc.PrefabDocument(
+          name: 'Changed',
+          root: first.root,
+          document: first.document,
+        ).encode(),
+      );
+      expect(files.find(lampAsset)!.name, 'Lamp post');
+
+      // Once nothing open uses it, the next look reads the file again.
+      files.keepOnly({});
+      expect(files.find(lampAsset)!.name, 'Changed');
     });
 
-    test('drops the root\'s position, because a prefab is not a place', () {
-      final prefab = Prefab.fromScene(lampScene(), 'lamp');
-      final root = prefab.objects.firstWhere((o) => o.id == 'lamp');
+    test('one that is not there says so, and is looked for again', () {
+      final files = project();
+      const later = 'prefabs/Later.oprefab';
 
-      expect(root.position, Vector3.zero());
-      // What is under it keeps its own, which is the shape of the thing.
-      final bulb = prefab.objects.firstWhere((o) => o.name == 'Bulb');
-      expect(bulb.position.y, 4);
+      expect(files.read(later).problem, contains('not in the project'));
+      File(
+        p.join(files.root, later),
+      ).writeAsStringSync(files.find(lampAsset)!.encode());
+      expect(files.find(later), isNotNull);
     });
 
-    test('does not carry a link to some other prefab', () {
-      final scene = lampScene();
-      scene['lamp']!.prefab = 'prefabs/old.oprefab';
+    test('one that is not a prefab says why', () {
+      final files = project();
+      File(p.join(files.root, 'prefabs/Junk.oprefab')).writeAsStringSync('{');
 
-      final prefab = Prefab.fromScene(scene, 'lamp');
-      expect(prefab.objects.every((o) => o.prefab == null), isTrue);
+      final read = files.read('prefabs/Junk.oprefab');
+      expect(read.prefab, isNull);
+      expect(read.problem, contains('not a readable prefab'));
     });
 
-    test('says so rather than throwing on an object that is not there', () {
-      expect(() => Prefab.fromScene(lampScene(), 'nope'),
-          throwsA(isA<SceneError>()));
-    });
-  });
-
-  group('the file', () {
-    test('survives a round trip', () {
-      final prefab = Prefab.fromScene(lampScene(), 'lamp');
-      final back = Prefab.read(prefab.toText())!;
-
-      expect(back.name, prefab.name);
-      expect(back.rootId, prefab.rootId);
-      expect(back.objects.length, prefab.objects.length);
-      expect(back.objects.firstWhere((o) => o.name == 'Bulb').colour,
-          const Color(0xFFFFCC88));
-    });
-
-    test('is not read from something that is not one', () {
-      expect(Prefab.read('not json at all'), isNull);
-      expect(Prefab.read('{"kind":"orblit.objects"}'), isNull);
-      expect(Prefab.read('{"kind":"orblit.prefab","objects":[]}'), isNull);
-    });
-
-    test('a missing root falls back to the one with no parent', () {
-      final text = Prefab.fromScene(lampScene(), 'lamp')
-          .toText()
-          .replaceAll('"root": "lamp"', '"root": "gone"');
-
-      expect(Prefab.read(text)!.rootId, 'lamp');
-    });
-  });
-
-  group('instancing', () {
-    test('gives every instance ids of its own', () {
-      final prefab = Prefab.fromScene(lampScene(), 'lamp');
-      final next = counter();
-
-      final one = prefab.instantiate(nextId: next, source: 'p.oprefab');
-      final two = prefab.instantiate(nextId: next, source: 'p.oprefab');
-
-      final ids = {for (final o in one.objects) o.id};
-      expect(ids.intersection({for (final o in two.objects) o.id}), isEmpty);
-      expect(ids.length, 3);
-    });
-
-    test('links every object in it, not only the root', () {
-      final made = Prefab.fromScene(lampScene(), 'lamp')
-          .instantiate(nextId: counter(), source: 'prefabs/lamp.oprefab');
-
-      expect(made.objects.every((o) => o.prefab == 'prefabs/lamp.oprefab'),
-          isTrue);
-    });
-
-    test('keeps the shape, with children pointing at the new root', () {
-      final made = Prefab.fromScene(lampScene(), 'lamp')
-          .instantiate(nextId: counter(), source: 'p.oprefab');
-
-      final children =
-          made.objects.where((o) => o.parentId == made.rootId).toList();
-      expect(children.length, 2);
-    });
-
-    test('lands where it was dropped, under the parent it was given', () {
-      final made = Prefab.fromScene(lampScene(), 'lamp').instantiate(
-        nextId: counter(),
-        source: 'p.oprefab',
-        parentId: 'street',
-        at: Vector3(1, 2, 3),
-        name: 'Lamp post 2',
+    test('withOne answers for one prefab and the files for the rest', () {
+      final files = project();
+      final other = doc.PrefabDocument(
+        name: 'Other',
+        root: 'lamp',
+        document: files.find(lampAsset)!.document,
       );
 
-      final root = made.objects.firstWhere((o) => o.id == made.rootId);
-      expect(root.parentId, 'street');
-      expect(root.position, Vector3(1, 2, 3));
-      expect(root.name, 'Lamp post 2');
+      final source = files.withOne('prefabs/Other.oprefab', other);
+      expect(source('prefabs/Other.oprefab'), same(other));
+      expect(source(lampAsset), same(files.find(lampAsset)));
     });
   });
 
-  group('reverting an instance', () {
-    /// A scene holding one instance of a prefab, already edited.
-    (EditorScene, Prefab, String) placed() {
-      final prefab = Prefab.fromScene(lampScene(), 'lamp');
-      final scene = EditorScene([
-        SceneObject(id: 'street', name: 'Street', kind: ObjectKind.group),
+  group('a scene with instances in it', () {
+    test('is saved as the link and what is different, not the parts', () {
+      final files = project();
+      final scene = SceneDocument.decode(
+        sceneWith(['lamp1']),
+        prefabs: files.find,
+      ).scene;
+      expect(scene['lamp1/bulb'], isNotNull);
+
+      scene['lamp1/bulb']!.colour = const Color(0xFF3366FF);
+      final text = SceneDocument.encode(scene, prefabs: files.find);
+      final saved = savedObjects(text);
+
+      expect(saved.keys, ['lamp1']);
+      final link =
+          (saved['lamp1']!['components']! as Map<String, Object?>)['prefab']!
+              as Map<String, Object?>;
+      expect(link['asset'], lampAsset);
+      expect(link['overrides'], isNotNull);
+      expect(text, isNot(contains('lamp1/')));
+
+      final back = SceneDocument.decode(text, prefabs: files.find).scene;
+      expect(back['lamp1/bulb']!.colour, const Color(0xFF3366FF));
+      expect(back['lamp1/post'], isNotNull);
+    });
+
+    test('keeps an edit to one instance in that one, and takes a change to '
+        'the prefab in both', () {
+      final files = project();
+      final scene = SceneDocument.decode(
+        sceneWith(['lamp1', 'lamp2']),
+        prefabs: files.find,
+      ).scene;
+      scene['lamp1/bulb']!.colour = const Color(0xFF3366FF);
+      final text = SceneDocument.encode(scene, prefabs: files.find);
+
+      // The prefab's post grows, in a later session.
+      final was = files.find(lampAsset)!;
+      final post = was.document['post']!;
+      File(p.join(files.root, lampAsset)).writeAsStringSync(
+        doc.PrefabDocument(
+          name: was.name,
+          root: was.root,
+          document: was.document.withEntity(
+            'post',
+            post.withComponent(
+              doc.SceneComponents.transform,
+              doc.TransformComponent(scale: Vector3(0.2, 9, 0.2)),
+            ),
+          ),
+        ).encode(),
+      );
+
+      final later = PrefabFiles(files.root);
+      final back = SceneDocument.decode(text, prefabs: later.find).scene;
+      expect(back['lamp1/bulb']!.colour, const Color(0xFF3366FF));
+      expect(back['lamp2/bulb']!.colour, const Color(0xFFFFCC88));
+      expect(back['lamp1/post']!.scale.y, 9);
+      expect(back['lamp2/post']!.scale.y, 9);
+    });
+
+    test('opens a prefab inside a prefab, and saves an edit made inside it', () {
+      final files = project();
+      files.write(
+        streetAsset,
+        doc.PrefabDocument(
+          name: 'Street',
+          root: 'street',
+          document: doc.SceneDocument(
+            name: 'Street',
+            entities: [
+              const doc.SceneEntity(id: 'street', name: 'Street'),
+              const doc.SceneEntity(
+                id: 'lamp3',
+                name: 'Corner lamp',
+                parent: 'street',
+                components: {
+                  doc.SceneComponents.prefab: doc.PrefabComponent(
+                    asset: lampAsset,
+                  ),
+                },
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final scene = SceneDocument.decode(
+        sceneWith(['main'], asset: streetAsset),
+        prefabs: files.find,
+      ).scene;
+      expect(scene['main/lamp3/bulb']!.parentId, 'main/lamp3');
+
+      scene['main/lamp3/bulb']!.colour = const Color(0xFF00FF00);
+      final text = SceneDocument.encode(scene, prefabs: files.find);
+      expect(savedObjects(text).keys, ['main']);
+
+      final back = SceneDocument.decode(text, prefabs: files.find).scene;
+      expect(back['main/lamp3/bulb']!.colour, const Color(0xFF00FF00));
+    });
+
+    test('whose prefab has gone stays a link, and is saved as one', () {
+      final files = project();
+      final text = sceneWith(['lamp1'], asset: 'prefabs/Gone.oprefab');
+
+      final load = SceneDocument.decode(text, prefabs: files.find);
+      expect(load.problems.single, contains('could not be read'));
+      expect(load.scene.objects.map((o) => o.id), ['lamp1']);
+      expect(
+        savedObjects(SceneDocument.encode(load.scene, prefabs: files.find))
+            .keys,
+        ['lamp1'],
+      );
+    });
+  });
+
+  group('copying an instance', () {
+    EditorScene opened(PrefabFiles files) =>
+        SceneDocument.decode(sceneWith(['lamp1']), prefabs: files.find).scene;
+
+    test('pastes another instance, its parts under its new id', () {
+      final scene = opened(project());
+      scene['lamp1/bulb']!.colour = const Color(0xFF3366FF);
+
+      final clipboard = SceneClipboard()..take(scene, ['lamp1']);
+      final pasted = clipboard.contents(nextId: counter());
+      final byId = {for (final o in pasted.objects) o.id: o};
+
+      expect(byId.keys, unorderedEquals(['new0', 'new0/post', 'new0/bulb']));
+      expect(byId['new0']!.prefab?.asset, lampAsset);
+      expect(byId['new0/bulb']!.parentId, 'new0');
+      expect(byId['new0/bulb']!.colour, const Color(0xFF3366FF));
+      expect(pasted.roots, ['new0']);
+    });
+
+    test('a part copied on its own pastes as an ordinary object', () {
+      final scene = opened(project());
+
+      final clipboard = SceneClipboard()..take(scene, ['lamp1/bulb']);
+      final pasted = clipboard.contents(nextId: counter());
+
+      expect(pasted.objects.single.id, 'new0');
+      expect(pasted.objects.single.prefab, isNull);
+    });
+
+    test('text from an older editor is read at the version it was written',
+        () {
+      final text = jsonEncode({
+        'kind': 'orblit.objects',
+        'formatVersion': 4,
+        'roots': ['a'],
+        'objects': [
+          {
+            'id': 'a',
+            'name': 'Old lamp',
+            'components': {
+              'prefab': {'asset': lampAsset},
+            },
+          },
+        ],
+      });
+
+      final clipboard = SceneClipboard();
+      expect(clipboard.takeText(text), isTrue);
+      final pasted = clipboard.contents(nextId: counter()).objects.single;
+      expect(pasted.prefab?.state, doc.PrefabState.stamped);
+    });
+  });
+
+  group('moving an instance to another scene', () {
+    test('an instance whose id is taken there brings its parts along', () {
+      final files = project();
+      final from = SceneDocument.decode(
+        sceneWith(['lamp']),
+        prefabs: files.find,
+      ).scene;
+      final to = EditorScene([
+        SceneObject(id: 'lamp', name: 'Their lamp', kind: ObjectKind.group),
       ]);
-      final made = prefab.instantiate(
-        nextId: counter(),
-        source: 'p.oprefab',
-        parentId: 'street',
-        at: Vector3(5, 0, 5),
-        name: 'Lamp A',
-      );
-      for (final object in made.objects) {
-        scene.add(object);
-      }
-      return (scene, prefab, made.rootId);
-    }
-
-    test('takes the prefab back but keeps where it stands and its name', () {
-      final (scene, prefab, id) = placed();
-      scene[id]!.name = 'Lamp A';
-      scene.childrenOf(id).first.scale.setValues(9, 9, 9);
-
-      final made =
-          prefab.resyncing(scene, id, nextId: counter(), source: 'p.oprefab');
-      final root = made.objects.firstWhere((o) => o.id == id);
-
-      expect(root.position, Vector3(5, 0, 5));
-      expect(root.name, 'Lamp A');
-      expect(root.parentId, 'street');
-      final post = made.objects.firstWhere((o) => o.name == 'Post');
-      expect(post.scale, Vector3(0.2, 4, 0.2));
-    });
-
-    test('reuses the ids that are already there, so nothing is deselected', () {
-      final (scene, prefab, id) = placed();
-      final was = {for (final o in scene.descendantsOf(id)) o.id};
-
-      final made =
-          prefab.resyncing(scene, id, nextId: counter(), source: 'p.oprefab');
-
-      expect(made.rootId, id);
-      expect({for (final o in made.objects) o.id}.containsAll(was), isTrue);
-    });
-
-    test('a child the prefab has gained comes with a new id', () {
-      final (scene, _, id) = placed();
-
-      // The prefab grows a third child after the instance was made.
-      final bigger = lampScene()
-        ..add(SceneObject(
-          id: 'sign',
-          name: 'Sign',
-          kind: ObjectKind.mesh,
-          parentId: 'lamp',
-        ));
-      final grown = Prefab.fromScene(bigger, 'lamp');
-
-      final made =
-          grown.resyncing(scene, id, nextId: counter(), source: 'p.oprefab');
-      expect(made.objects.length, 4);
-      expect(made.objects.any((o) => o.name == 'Sign'), isTrue);
-    });
-  });
-
-  group('the commands', () {
-    test('replacing a subtree is undoable to exactly what was there', () {
-      final scene = lampScene();
-      final host = _Host(scene);
-      final history = History(host);
-
-      final prefab = Prefab.fromScene(scene, 'lamp');
-      scene['post']!.scale.setValues(9, 9, 9);
-
-      final made =
-          prefab.resyncing(scene, 'lamp', nextId: counter(), source: 'p');
-      history.run(ReplaceSubtree(
-        sceneId: 's',
-        rootId: 'lamp',
-        objects: made.objects,
-        what: 'Lamp post',
-      ));
-      expect(scene.childrenOf('lamp').first.scale, Vector3(0.2, 4, 0.2));
-
-      history.undo();
-      expect(scene['post']!.scale, Vector3(9, 9, 9));
-      expect(scene.objects.length, 3);
-    });
-
-    test('replacing keeps the object where it sat among its siblings', () {
-      final scene = lampScene()
-        ..add(SceneObject(id: 'kerb', name: 'Kerb', kind: ObjectKind.mesh));
-      final host = _Host(scene);
-      final prefab = Prefab.fromScene(scene, 'lamp');
-
-      final made =
-          prefab.resyncing(scene, 'lamp', nextId: counter(), source: 'p');
-      ReplaceSubtree(
-        sceneId: 's',
-        rootId: 'lamp',
-        objects: made.objects,
-        what: 'Lamp post',
-      ).apply(host);
-
-      expect(scene.objects.first.id, 'lamp');
-      expect(scene.objects.last.id, 'kerb');
-    });
-
-    test('linking and unpacking are both undoable', () {
-      final scene = lampScene();
-      final host = _Host(scene);
-      final history = History(host);
-      final ids = ['lamp', 'post', 'bulb'];
+      final history = History(_Host({'a': from, 'b': to}));
 
       history.run(
-          LinkPrefab(sceneId: 's', ids: ids, source: 'p', what: 'Lamp post'));
-      expect(scene.objects.every((o) => o.prefab == 'p'), isTrue);
+        MoveBetweenScenes(
+          fromSceneId: 'a',
+          sceneId: 'b',
+          id: 'lamp',
+          name: 'Lamp post',
+          parentId: null,
+          index: 1,
+        ),
+      );
 
-      history.run(UnpackPrefab(sceneId: 's', ids: ids, what: 'Lamp post'));
-      expect(scene.objects.every((o) => o.prefab == null), isTrue);
+      expect(to['lamp~1']!.prefab?.asset, lampAsset);
+      expect(to['lamp~1/bulb']!.parentId, 'lamp~1');
+      expect(to['lamp~1/post']!.parentId, 'lamp~1');
+      expect(from.length, 0);
 
       history.undo();
-      expect(scene.objects.every((o) => o.prefab == 'p'), isTrue);
-      history.undo();
-      expect(scene.objects.every((o) => o.prefab == null), isTrue);
+      expect(from['lamp/bulb']!.parentId, 'lamp');
+      expect(to.length, 1);
     });
   });
 }

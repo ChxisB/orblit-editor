@@ -52,6 +52,7 @@ import 'uv_panel.dart';
 import 'scene_document.dart';
 
 import 'package:orblit_mesh/orblit_mesh.dart';
+import 'package:orblit_scene/orblit_scene.dart' as doc;
 import 'package:orblit_ui/orblit_ui.dart';
 
 import 'viewport.dart';
@@ -124,6 +125,9 @@ class _EditorShellState extends State<EditorShell> {
   late final History _history = History(_workspace);
 
   late final AssetTree _assets = AssetTree(widget.project.directory);
+
+  /// The project's prefabs, as the scenes open here were opened against them.
+  late final PrefabFiles _prefabs = PrefabFiles(widget.project.directory);
 
   /// Where each asset stands with the cook, for the marks in the browser.
   ///
@@ -296,7 +300,10 @@ class _EditorShellState extends State<EditorShell> {
     if (!file.existsSync()) return;
 
     try {
-      final loaded = SceneDocument.decode(file.readAsStringSync());
+      final loaded = SceneDocument.decode(
+        file.readAsStringSync(),
+        prefabs: _prefabs.find,
+      );
       _workspace.sharedEntry
         ..scene = loaded.scene
         ..neverWritten = false;

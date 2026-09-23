@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:orblit_filament/orblit_filament.dart';
 import 'package:orblit_light/orblit_light.dart';
+import 'package:orblit_scene/orblit_scene.dart' show EntityPath, PrefabState;
 import 'package:orblit_weather/orblit_weather.dart';
 import 'package:path/path.dart' as p;
 import 'package:vector_math/vector_math_64.dart' hide Colors;
@@ -153,9 +154,16 @@ class Inspector extends StatelessWidget {
                                     count: selectionCount,
                                     name: selected.name,
                                   ),
-                                if (selected.prefab != null)
+                                if (_instanceHolding(entry.scene!, selected)
+                                    case final instance?)
                                   _PrefabBand(
-                                    source: selected.prefab!,
+                                    source: instance.prefab!.asset ?? '',
+                                    readable:
+                                        instance.prefab!.state ==
+                                        PrefabState.open,
+                                    partOf: identical(instance, selected)
+                                        ? null
+                                        : instance.name,
                                     onApply: onApplyPrefab == null
                                         ? null
                                         : () => onApplyPrefab!(selected.id),
@@ -593,4 +601,12 @@ extension _Sections on InspectorTarget {
       ],
     ),
   );
+}
+
+/// The instance [object] is, or the outermost one it is a part of — which is
+/// the one a scene links to, and so the one the prefab band acts on.
+SceneObject? _instanceHolding(EditorScene scene, SceneObject object) {
+  final head = EntityPath.instanceOf(object.id);
+  final instance = head == null ? object : scene[head];
+  return instance?.prefab?.asset == null ? null : instance;
 }

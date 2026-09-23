@@ -135,6 +135,21 @@ extension _Objects on _EditorShellState {
     final object = scene?[id];
     if (open == null || scene == null || object == null) return;
 
+    // A part is the prefab's, and can be rearranged only inside the instance
+    // it belongs to. Anywhere else it would stop being a part, and that is
+    // what unpacking is for.
+    final instance = doc.EntityPath.instanceOf(id);
+    if (instance != null &&
+        (drop.sceneId != open.id ||
+            drop.parentId == null ||
+            !doc.EntityPath.within(instance, drop.parentId!))) {
+      _say(
+        '${object.name} is part of ${scene[instance]?.name ?? instance}. '
+        'Unpack that to move its parts out of it.',
+      );
+      return;
+    }
+
     // Onto a different scene's row — the shared set, most often. A different
     // operation rather than a refusal: one scene loses the subtree and
     // another gains it.

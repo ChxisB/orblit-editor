@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:orblit_scene/orblit_scene.dart' show EntityPath;
 import 'package:vector_math/vector_math_64.dart';
 
 import 'scene.dart';
@@ -71,11 +72,31 @@ class SceneClipboard {
   /// New ids every time, so pasting twice gives two things rather than one
   /// thing that cannot decide which scene it is in. Parent links are remapped
   /// alongside, or a pasted child would point at the object it was copied from.
+  ///
+  /// A part of a prefab instance is named by its path into the instance, so
+  /// it keeps that path under the instance's new id: a copied lamp post
+  /// pastes as another instance of the lamp post, with its changes. A part
+  /// copied without its instance has nothing to be a part of, and pastes as
+  /// an ordinary object.
   ClipboardContents contents({
     required String Function() nextId,
     String? parentId,
   }) {
-    final remap = <String, String>{for (final o in _objects) o.id: nextId()};
+    final copied = {for (final o in _objects) o.id};
+    final remap = <String, String>{};
+    String mapped(String id) {
+      if (remap[id] case final known?) return known;
+      for (final outer in EntityPath.enclosing(id)) {
+        if (copied.contains(outer)) {
+          return remap[id] = '${mapped(outer)}${id.substring(outer.length)}';
+        }
+      }
+      return remap[id] = nextId();
+    }
+
+    for (final object in _objects) {
+      mapped(object.id);
+    }
 
     return (
       objects: [
@@ -142,12 +163,17 @@ class SceneClipboard {
 
     final raw = parsed['objects'];
     final roots = parsed['roots'];
+    // Written by an older editor, it is read the way a scene from one is.
+    final version = parsed['formatVersion'];
     if (raw is! List || roots is! List) return false;
 
     final objects = <SceneObject>[];
     for (final entry in raw) {
       if (entry is! Map<String, Object?>) continue;
-      final object = SceneDocument.objectFromJson(entry);
+      final object = SceneDocument.objectFromJson(
+        entry,
+        version: version is int ? version : SceneDocument.formatVersion,
+      );
       if (object != null) objects.add(object);
     }
     if (objects.isEmpty) return false;

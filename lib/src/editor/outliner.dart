@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
 
 import '../platform/command_shortcuts.dart';
 import '../theme/orblit_theme.dart';
@@ -487,6 +488,20 @@ class _RowState extends State<_Row> {
                             Icons.edit_outlined,
                             size: 11,
                             color: OrblitColors.ember,
+                          ),
+                        ),
+                      // An instance says which prefab it is one of. What is
+                      // under it is that prefab's, and goes where it goes.
+                      if (widget.row.object?.prefab?.asset case final asset?)
+                        Padding(
+                          padding: const EdgeInsets.only(left: Space.xs),
+                          child: Tooltip(
+                            message: 'Instance of ${p.basename(asset)}',
+                            child: Icon(
+                              Icons.widgets_outlined,
+                              size: 11,
+                              color: OrblitColors.inkDim,
+                            ),
                           ),
                         ),
                     ],

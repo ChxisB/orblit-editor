@@ -48,7 +48,10 @@ extension _Scenes on _EditorShellState {
     }
 
     try {
-      final load = SceneDocument.decode(file.readAsStringSync());
+      final load = SceneDocument.decode(
+        file.readAsStringSync(),
+        prefabs: _prefabs.find,
+      );
       return (
         scene: load.scene,
         path: path,
@@ -99,6 +102,10 @@ extension _Scenes on _EditorShellState {
       return;
     }
 
+    // A prefab nothing in memory is using is read again, so one changed in
+    // another program since shows up in the scene about to be opened. One
+    // still in use is not: what is open was opened against it.
+    _prefabs.keepOnly(_prefabsInUse());
     final opened = _read(path);
     if (opened.path == null) {
       _report(opened.problems);
@@ -174,7 +181,9 @@ extension _Scenes on _EditorShellState {
     try {
       final file = File(path);
       file.parent.createSync(recursive: true);
-      file.writeAsStringSync(SceneDocument.encode(scene));
+      file.writeAsStringSync(
+        SceneDocument.encode(scene, prefabs: _prefabs.find),
+      );
     } on FileSystemException catch (error) {
       _say('Could not save ${entry.title}: ${error.message}');
       return;
@@ -210,7 +219,9 @@ extension _Scenes on _EditorShellState {
     try {
       final file = File(path);
       file.parent.createSync(recursive: true);
-      file.writeAsStringSync(SceneDocument.encode(scene));
+      file.writeAsStringSync(
+        SceneDocument.encode(scene, prefabs: _prefabs.find),
+      );
     } on FileSystemException catch (error) {
       _say(
         'Could not save the shared objects: ${error.message}',
