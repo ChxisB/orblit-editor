@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orblit_editor/src/editor/body_gizmo.dart';
@@ -17,11 +19,16 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 // having fields for it, edited as one thing, and drawn as the simulation
 // will see it.
 
-SceneObject crate({doc.BodyComponent? body, Vector3? scale}) => SceneObject(
+SceneObject crate({
+  doc.BodyComponent? body,
+  Vector3? scale,
+  Vector3? rotation,
+}) => SceneObject(
   id: 'crate',
   name: 'Crate',
   kind: ObjectKind.mesh,
   scale: scale,
+  rotation: rotation,
   components: {doc.SceneComponents.body: ?body},
 );
 
@@ -259,6 +266,35 @@ void main() {
 
       expectSame(scaled, big);
       expect(small.width, lessThan(big.width));
+    });
+
+    testWidgets('a box turns the way its object turns', (tester) async {
+      // Partway round and tipped: a quarter turn draws a centred box the same
+      // whichever way it went, so it would not catch a turn the wrong way.
+      final scene = EditorScene([
+        crate(
+          body: doc.BodyComponent(size: Vector3(3, 1, 1)),
+          rotation: Vector3(20, 40, 0),
+        ),
+      ]);
+      final world = scene.worldOf('crate');
+      final projection = ViewportProjection(camera: OrbitCamera(), size: size);
+      final corners = [
+        for (final x in [-1.5, 1.5])
+          for (final y in [-0.5, 0.5])
+            for (final z in [-0.5, 0.5])
+              projection.project(world.transformed3(Vector3(x, y, z)))!,
+      ];
+
+      final box = await drawn(tester, scene);
+
+      // Where the object's own matrix puts the corners, as a model is drawn.
+      final xs = corners.map((corner) => corner.dx);
+      final ys = corners.map((corner) => corner.dy);
+      expect(box.left, closeTo(xs.reduce(math.min), 1e-3));
+      expect(box.right, closeTo(xs.reduce(math.max), 1e-3));
+      expect(box.top, closeTo(ys.reduce(math.min), 1e-3));
+      expect(box.bottom, closeTo(ys.reduce(math.max), 1e-3));
     });
 
     testWidgets('a ball takes the largest of its scales', (tester) async {

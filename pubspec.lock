@@ -354,7 +354,7 @@ packages:
       path: "../orblit/packages/orblit_filament"
       relative: true
     source: path
-    version: "0.32.0"
+    version: "0.32.1"
   orblit_light:
     dependency: "direct main"
     description:
@@ -396,7 +396,7 @@ packages:
       path: "../orblit/packages/orblit_rig"
       relative: true
     source: path
-    version: "0.2.0"
+    version: "0.2.1"
   orblit_scene:
     dependency: "direct main"
     description:

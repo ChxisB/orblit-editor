@@ -93,10 +93,13 @@ class _Outline {
     scale.absolute();
     final centre = world.transformed3(body.centre);
 
-    // The object's own axes in the world, without its scale.
-    final x = turn.rotated(Vector3(1, 0, 0));
-    final y = turn.rotated(Vector3(0, 1, 0));
-    final z = turn.rotated(Vector3(0, 0, 1));
+    // The object's own axes in the world, without its scale: the columns of
+    // its rotation. Not `Quaternion.rotated`, which turns by the inverse and
+    // would draw the body turned the other way from its model.
+    final turning = turn.asRotationMatrix();
+    final x = turning.getColumn(0);
+    final y = turning.getColumn(1);
+    final z = turning.getColumn(2);
 
     switch (body.shape) {
       case doc.BodyShape.box:

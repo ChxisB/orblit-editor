@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orblit_editor/src/editor/clip_edits.dart';
 import 'package:orblit_motion/orblit_motion.dart';
+import 'package:orblit_scene/orblit_scene.dart' show TransformComponent;
 import 'package:vector_math/vector_math_64.dart';
 
 const ChannelAddress height = (
@@ -105,13 +106,16 @@ void main() {
       final turn = keyValueOf(
         ChannelKind.rotation,
         'transform.rotation',
-        [0, 90, 0],
+        [20, 40, 10],
       )! as Quaternion;
-      final turned = turn.rotated(Vector3(1, 0, 0));
-      // A quarter turn about up takes x to z one way or the other, whichever
-      // way round `rotated` applies it — so only the size is compared.
-      expect(turned.x.abs(), lessThan(1e-9));
-      expect(turned.z.abs(), closeTo(1, 1e-9));
+      // Turns a model the way the field does, compared as the matrix a model
+      // is drawn with. Not through `Quaternion.rotated`, which turns by the
+      // inverse.
+      final field = TransformComponent.rotationOf(Vector3(20, 40, 10));
+      final key = turn.asRotationMatrix();
+      for (var i = 0; i < 9; i++) {
+        expect(key.storage[i], closeTo(field.storage[i], 1e-9));
+      }
       expect(keyValueOf(ChannelKind.number, 'light.power', 2), 2.0);
     });
   });
