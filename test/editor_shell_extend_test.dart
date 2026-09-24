@@ -135,11 +135,12 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('with only the one, there is nothing to switch', (
+    testWidgets("the editor's own are the scene and the terrain", (
       tester,
     ) async {
       await open(tester);
-      expect(modeButton(Icons.open_with), findsNothing);
+      expect(modeButton(Icons.open_with), findsOneWidget);
+      expect(modeButton(Icons.landscape_outlined), findsOneWidget);
     });
 
     testWidgets('a second brings its own panels, its tools and the first say '

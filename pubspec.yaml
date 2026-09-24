@@ -87,6 +87,19 @@ dependencies:
   orblit_motion:
     path: ../orblit/packages/orblit_motion
 
+  # Ground: the files a terrain is kept in, the brushes that shape it and
+  # the undo record a stroke leaves. The runtime reads the same files and
+  # stands on the same heights, so what is sculpted here is what is walked
+  # on there.
+  orblit_terrain:
+    path: ../orblit/packages/orblit_terrain
+
+  # Only for turning a terrain into what the renderer draws, which the
+  # runtime does through the same function. Two conversions would be two
+  # answers to how a set's pictures reach the GPU.
+  orblit_stage:
+    path: ../orblit/packages/orblit_stage
+
   # The worked examples, shown in the launcher beside the projects. The same
   # package the gallery app uses, so an example only has to be written once
   # and the editor never drifts from what the gallery shows.

@@ -14,6 +14,7 @@ import '../platform/renderer_support.dart';
 import '../theme/orblit_theme.dart';
 import 'commands.dart';
 import 'drawing.dart';
+import 'editor_mode.dart';
 import 'gizmo.dart';
 import 'gizmo_registry.dart';
 import 'grid.dart';
@@ -85,6 +86,8 @@ class SceneViewport extends StatefulWidget {
     this.onPick,
     this.gizmos = const [],
     this.modeInput,
+    this.modeOverlay,
+    this.terrainOf,
   });
 
   /// Only the loaded scene is drawn. The others are names and paths until
@@ -258,6 +261,13 @@ class SceneViewport extends StatefulWidget {
   /// drag before the handles do would move objects when somebody meant to
   /// sculpt.
   final ViewportInput? modeInput;
+
+  /// What the mode being worked in draws over the view, above the handles.
+  final ViewportOverlay? modeOverlay;
+
+  /// The ground the shown objects put in the scene, as the renderer takes
+  /// it. Null draws none.
+  final List<OrblitTerrain> Function(Iterable<SceneObject> objects)? terrainOf;
 
   @override
   State<SceneViewport> createState() => _SceneViewportState();
@@ -511,6 +521,21 @@ class _SceneViewportState extends State<SceneViewport>
                   for (final type in _gizmoTypes.all)
                     if (type.overlay != null && type.appliesTo(target))
                       type.overlay!(target),
+                // Over the handles as well, because while a mode is drawing
+                // something it is what the pointer is doing. Never in the way
+                // of it: the mode's input is how the mode is worked.
+                if (widget.modeOverlay case final overlay?)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: overlay(
+                        context,
+                        ViewportProjection(
+                          camera: widget.camera,
+                          size: constraints.biggest,
+                        ),
+                      ),
+                    ),
+                  ),
                 if (widget.drawing?.tool.isDrawing ?? false) _outline(),
                 if (_box != null) _marquee(),
                 _chips(),

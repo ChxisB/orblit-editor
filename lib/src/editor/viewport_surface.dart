@@ -51,6 +51,7 @@ extension _Surface on _SceneViewportState {
                           // whichever one is open.
                           shared: widget.workspace.shared,
                           geometryOf: widget.geometryOf,
+                          terrainOf: widget.terrainOf,
                           // Centred on what this view is looking at, so four views
                           // each get a grid under their own camera rather than one
                           // grid the others have run off the edge of.

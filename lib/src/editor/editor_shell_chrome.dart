@@ -44,6 +44,7 @@ class _TopBar extends StatelessWidget {
     required this.onClose,
     required this.onAdd,
     required this.onAddShape,
+    required this.onAddTerrain,
     required this.onSave,
     required this.onSaveAs,
     required this.onNewScene,
@@ -70,6 +71,7 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onClose;
   final ValueChanged<ObjectKind> onAdd;
   final ValueChanged<ShapeKind> onAddShape;
+  final VoidCallback onAddTerrain;
   final VoidCallback onSave;
   final VoidCallback onSaveAs;
 
@@ -122,7 +124,11 @@ class _TopBar extends StatelessWidget {
             onReveal: onReveal,
           ),
           const SizedBox(width: Space.xs),
-          _AddMenu(onAdd: onAdd, onAddShape: onAddShape),
+          _AddMenu(
+            onAdd: onAdd,
+            onAddShape: onAddShape,
+            onAddTerrain: onAddTerrain,
+          ),
           const SizedBox(width: Space.xs),
           _EditMenu(
             selectionCount: selectionCount,

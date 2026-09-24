@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -50,6 +51,10 @@ import 'registry.dart';
 import 'scene.dart';
 import 'snapping.dart';
 import 'surface.dart';
+import 'terrain_bench.dart';
+import 'terrain_brush_panel.dart';
+import 'terrain_mode.dart';
+import 'terrain_section.dart';
 import 'timeline.dart';
 import 'uv_panel.dart';
 import 'scene_document.dart';
@@ -57,6 +62,8 @@ import 'scene_document.dart';
 import 'package:orblit_mesh/orblit_mesh.dart';
 import 'package:orblit_motion/orblit_motion.dart' show ClipFormatException;
 import 'package:orblit_scene/orblit_scene.dart' as doc;
+import 'package:orblit_terrain/orblit_terrain.dart'
+    show RegionKey, Terrain, TerrainSet, terrainExtension;
 import 'package:orblit_ui/orblit_ui.dart';
 
 import 'viewport.dart';
@@ -74,6 +81,7 @@ part 'editor_shell_clips.dart';
 part 'editor_shell_intents.dart';
 part 'editor_shell_chrome.dart';
 part 'editor_shell_menus.dart';
+part 'editor_shell_terrain.dart';
 
 /// The editor, once a project is open.
 ///
@@ -266,6 +274,23 @@ class _EditorShellState extends State<EditorShell> {
   /// Whether the top bar was last built saying a clip has changes.
   bool _clipsUnsaved = false;
 
+  /// The terrains open for shaping, and the brush that shapes them.
+  late final TerrainBench _terrains = TerrainBench(
+    history: _history,
+    projectRoot: widget.project.directory,
+    // Said after, not now: a terrain is opened the first time a view draws
+    // it, which is in the middle of a build.
+    onProblem: (message) => scheduleMicrotask(() {
+      if (mounted) _say(message, level: LogLevel.error);
+    }),
+  );
+
+  /// What the top bar and the views were last built knowing about the
+  /// terrains: whether one has changes, and which pictures had arrived.
+  bool _terrainsUnsaved = false;
+
+  int _terrainPictures = 0;
+
   @override
   void initState() {
     super.initState();
@@ -275,6 +300,7 @@ class _EditorShellState extends State<EditorShell> {
     _history.addListener(_onHistoryChanged);
     _workspace.addListener(_onChanged);
     _bench.addListener(_onBenchChanged);
+    _terrains.addListener(_onTerrainsChanged);
     _frames
       ..start()
       ..addListener(_onChanged);
@@ -345,6 +371,9 @@ class _EditorShellState extends State<EditorShell> {
   void dispose() {
     _bench
       ..removeListener(_onBenchChanged)
+      ..dispose();
+    _terrains
+      ..removeListener(_onTerrainsChanged)
       ..dispose();
     _history
       ..removeListener(_onHistoryChanged)
@@ -625,6 +654,7 @@ class _EditorShellState extends State<EditorShell> {
               onClose: widget.onClose,
               onAdd: _add,
               onAddShape: _addShape,
+              onAddTerrain: _newTerrain,
               onSave: _save,
               onSaveAs: _saveAs,
               onNewScene: () => _newScene(),

@@ -455,15 +455,20 @@ class ColourRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.onChanged,
+    this.swatches = standardSwatches,
   });
 
   final String label;
   final Color value;
   final ValueChanged<Color> onChanged;
 
+  /// The colours offered. A ground tint wants earth, not a light's white and
+  /// primaries.
+  final List<Color> swatches;
+
   // A short palette rather than a full picker: enough to see a colour change
   // reach the renderer, and a picker is a component in its own right.
-  static const _swatches = [
+  static const standardSwatches = [
     Color(0xFFFFF3E0),
     Color(0xFFD9634F),
     Color(0xFF7FB069),
@@ -478,7 +483,7 @@ class ColourRow extends StatelessWidget {
       label: label,
       child: Row(
         children: [
-          for (final swatch in _swatches) ...[
+          for (final swatch in swatches) ...[
             _Swatch(
               colour: swatch,
               selected: swatch.toARGB32() == value.toARGB32(),

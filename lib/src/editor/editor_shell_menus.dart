@@ -5,13 +5,21 @@ part of 'editor_shell.dart';
 
 /// The Add menu.
 class _AddMenu extends StatelessWidget {
-  const _AddMenu({required this.onAdd, required this.onAddShape});
+  const _AddMenu({
+    required this.onAdd,
+    required this.onAddShape,
+    required this.onAddTerrain,
+  });
 
   final ValueChanged<ObjectKind> onAdd;
 
   /// Shapes are their own submenu: there are seven of them and they are the
   /// thing somebody reaches for most while blocking a level out.
   final ValueChanged<ShapeKind> onAddShape;
+
+  /// Ground: an object and a file of its own, which is more than picking an
+  /// object kind.
+  final VoidCallback onAddTerrain;
 
   static const _items = [
     // Not 'Cube': it is an object that draws a cube until it is given a mesh
@@ -69,6 +77,15 @@ class _AddMenu extends StatelessWidget {
             leadingIcon: Icon(icon, size: 14, color: OrblitColors.inkMid),
             child: Text(label, style: OrblitText.label),
           ),
+        MenuItemButton(
+          onPressed: onAddTerrain,
+          leadingIcon: const Icon(
+            Icons.landscape_outlined,
+            size: 14,
+            color: OrblitColors.inkMid,
+          ),
+          child: Text('Terrain', style: OrblitText.label),
+        ),
       ],
       builder: (context, controller, child) => OrblitButton(
         label: 'Add',

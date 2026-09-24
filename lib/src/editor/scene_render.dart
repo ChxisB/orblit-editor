@@ -59,12 +59,18 @@ extension SceneRendering on EditorScene {
   /// both have something to say, which is the rule that makes a shared set
   /// useful rather than something to work around — put a manager there once
   /// and every scene has it, and any scene can still overrule it.
+  ///
+  /// [terrainOf] turns the objects that are shown into the ground they put
+  /// in the scene. Asked rather than worked out here, because a terrain is a
+  /// file of its own that whoever calls this has open, and reading it again
+  /// every frame would be reading megabytes to draw what has not changed.
   OrblitScene toRenderScene(
     OrblitCamera camera, {
     String? projectRoot,
     EditorScene? shared,
     String? Function(SceneObject)? geometryOf,
     GridPlan? grid,
+    List<OrblitTerrain> Function(Iterable<SceneObject> objects)? terrainOf,
   }) {
     final sky = skyState;
     final driven = dayCycle;
@@ -182,6 +188,11 @@ extension SceneRendering on EditorScene {
       fog: _fogFrom(air, weather ?? shared?.weather),
       precipitation: _precipitationFrom(air, weather ?? shared?.weather),
       camera: driven ? _metered(camera, lights, ambientLux) : camera,
+      terrain: terrainOf?.call([
+        for (final scene in [this, ?shared])
+          for (final object in scene._objects)
+            if (scene.isShown(object.id)) object,
+      ]),
     );
   }
 

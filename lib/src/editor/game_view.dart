@@ -28,6 +28,7 @@ class GameView extends StatelessWidget {
     this.interface,
     this.through,
     this.plain = false,
+    this.terrainOf,
   });
 
   final Workspace workspace;
@@ -51,6 +52,9 @@ class GameView extends StatelessWidget {
   /// has no camera does not fit in it — and would be saying so about a camera
   /// that is selected and therefore obviously there.
   final bool plain;
+
+  /// The ground the shown objects put in the scene. Null draws none.
+  final List<OrblitTerrain> Function(Iterable<SceneObject> objects)? terrainOf;
 
   static bool get _rendererAvailable => rendererAvailable;
 
@@ -123,6 +127,7 @@ class GameView extends StatelessWidget {
                     projectRoot: projectRoot,
                     shared: workspace.shared,
                     geometryOf: geometryOf,
+                    terrainOf: terrainOf,
                   ),
                 ),
         ),

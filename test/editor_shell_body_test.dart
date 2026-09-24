@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:orblit_editor/src/editor/inspector.dart';
 import 'package:orblit_editor/src/editor/scene_document.dart';
 import 'package:orblit_editor/src/editor/viewport.dart';
 import 'package:orblit_scene/orblit_scene.dart' as doc;
@@ -12,33 +11,6 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 import 'support/editor_shell.dart';
 
 // A physics body, put on from the inspector and seen in the scene view.
-
-/// Scrolls the inspector until [target] has been built and is on screen.
-Future<void> reach(WidgetTester tester, Finder target) =>
-    tester.scrollUntilVisible(
-      target,
-      200,
-      scrollable: find
-          .descendant(
-            of: find.byType(Inspector),
-            matching: find.byType(Scrollable),
-          )
-          .first,
-    );
-
-Future<void> tapInInspector(WidgetTester tester, String label) async {
-  final button = find.descendant(
-    of: find.byType(Inspector),
-    matching: find.text(label),
-  );
-  await reach(tester, button);
-  // Built and on screen is not enough: scrolled only just into view, it sits
-  // on the edge of the pane, and the tap lands on the splitter below it.
-  await tester.ensureVisible(button);
-  await tester.pumpAndSettle();
-  await tester.tap(button);
-  await tester.pumpAndSettle();
-}
 
 /// The wireframe the body gizmo draws, found by what paints it.
 final wireframe = find.descendant(

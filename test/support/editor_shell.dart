@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orblit_editor/src/editor/editor_shell.dart';
+import 'package:orblit_editor/src/editor/inspector.dart';
 import 'package:orblit_editor/src/editor/outliner.dart';
 import 'package:orblit_editor/src/editor/scene.dart';
 import 'package:orblit_editor/src/editor/viewport.dart';
@@ -147,6 +148,33 @@ Future<void> undo(WidgetTester tester) async {
   await tester.sendKeyDownEvent(commandKey);
   await tester.sendKeyEvent(LogicalKeyboardKey.keyZ);
   await tester.sendKeyUpEvent(commandKey);
+  await tester.pumpAndSettle();
+}
+
+/// Scrolls the inspector until [target] has been built and is on screen.
+Future<void> reach(WidgetTester tester, Finder target) =>
+    tester.scrollUntilVisible(
+      target,
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(Inspector),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+
+Future<void> tapInInspector(WidgetTester tester, String label) async {
+  final button = find.descendant(
+    of: find.byType(Inspector),
+    matching: find.text(label),
+  );
+  await reach(tester, button);
+  // Built and on screen is not enough: scrolled only just into view, it sits
+  // on the edge of the pane, and the tap lands on the splitter below it.
+  await tester.ensureVisible(button);
+  await tester.pumpAndSettle();
+  await tester.tap(button);
   await tester.pumpAndSettle();
 }
 

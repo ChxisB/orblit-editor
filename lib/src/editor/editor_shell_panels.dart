@@ -19,6 +19,9 @@ extension _Panels on _EditorShellState {
         layout: DockLayout.standard,
       ),
     );
+    registry.modes.register(
+      terrainMode(bench: _terrains, history: _history, target: _terrainTarget),
+    );
     widget.extend?.call(registry);
     return registry;
   }
@@ -55,6 +58,7 @@ extension _Panels on _EditorShellState {
           projectRoot: widget.project.directory,
           geometryOf: _geometry.pathFor,
           interface: _sceneInterface,
+          terrainOf: _terrains.renderFor,
         ),
       ),
     )
@@ -94,10 +98,19 @@ extension _Panels on _EditorShellState {
           child: _uvEditor(),
         ),
       ),
+    )
+    ..register(
+      PanelType(
+        kind: terrainBrushPanel,
+        build: (_, _) => SingleChildScrollView(
+          padding: const EdgeInsets.all(Space.sm),
+          child: TerrainBrushPanel(bench: _terrains, target: _terrainTarget()),
+        ),
+      ),
     );
 
   /// The inspector's sections: the ones it has always had, the shape and
-  /// geometry controls, and the physics body. Those are the shell's, because
+  /// geometry controls, the physics body and the terrain. Those are the shell's, because
   /// the shell owns what is being edited; the inspector does not know what an
   /// extrude is.
   void _registerSections(Registry<InspectorSection> sections) {
@@ -118,6 +131,7 @@ extension _Panels on _EditorShellState {
       ),
       before: 'interface',
     );
+    sections.register(terrainSection(bench: _terrains), before: 'interface');
   }
 
   /// The object the inspector is showing, if it is one rather than a scene.
@@ -326,9 +340,12 @@ extension _Panels on _EditorShellState {
       geometryOf: _geometry.pathFor,
       through: camera,
       plain: true,
+      terrainOf: _terrains.renderFor,
     ),
     onSceneNotes: _reportSceneNotes,
     modeInput: _mode.input,
+    modeOverlay: _mode.overlay,
+    terrainOf: _terrains.renderFor,
     gizmos: _registry.gizmos.all,
     // The viewport owns the clock; this is how
     // the tree and the inspector hear about it.

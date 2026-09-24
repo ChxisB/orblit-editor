@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'dock.dart';
+import 'gizmo.dart';
 import 'registry.dart';
 import 'viewport_input.dart';
 
@@ -19,6 +20,7 @@ class EditorMode implements Registered {
     required this.layout,
     this.tools,
     this.input,
+    this.overlay,
   });
 
   /// Also what its layout is saved under, so a word that is safe in a file
@@ -41,4 +43,14 @@ class EditorMode implements Registered {
   /// First refusal on every gesture in a scene view, ahead of the handles and
   /// the selection. Null passes everything through.
   final ViewportInput? input;
+
+  /// Drawn over every scene view while it is the mode, above the handles:
+  /// whatever the mode's own input wants seen, such as a brush's reach.
+  final ViewportOverlay? overlay;
 }
+
+/// Something drawn over a scene view, given how that view projects.
+typedef ViewportOverlay = Widget Function(
+  BuildContext context,
+  ViewportProjection projection,
+);
