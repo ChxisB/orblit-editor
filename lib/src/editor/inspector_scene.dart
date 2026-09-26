@@ -111,8 +111,8 @@ class _SceneFields extends StatelessWidget {
             onPressed: () => onLoad(entry),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.all(Space.md),
+        const Padding(
+          padding: EdgeInsets.all(Space.md),
           child: Text(
             'Loading a scene replaces the one open. Only one scene is in the '
             'viewport at a time.',
@@ -134,8 +134,8 @@ class _SceneFields extends StatelessWidget {
           onRenameDone: () {},
           editable: false,
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.md),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.md),
           child: Text(
             'What every scene in this project has in it. Objects here are '
             'drawn and lit alongside whichever scene is open, and saved '
@@ -161,8 +161,8 @@ class _SceneFields extends StatelessWidget {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.all(Space.md),
+        const Padding(
+          padding: EdgeInsets.all(Space.md),
           child: Text(
             'A scene of its own overrules it: a sun or a Weather object in '
             'the open scene is used instead of the one here, so a level can '
@@ -276,7 +276,7 @@ class _SceneFields extends StatelessWidget {
           // a slider that cannot move is worse than a value that says
           // where it came from.
           if (scene.dayCycle) ...[
-            TextRow(label: 'Sky', value: 'From the time of day'),
+            const TextRow(label: 'Sky', value: 'From the time of day'),
             TextRow(label: 'Ambient', value: _lux(scene.skyState.ambient)),
           ] else ...[
             ColourRow(

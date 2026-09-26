@@ -368,7 +368,7 @@ class _UiEditorState extends State<UiEditor> {
           'Save ${p.basename(widget.path)}?',
           style: OrblitText.title,
         ),
-        content: Text(
+        content: const Text(
           'It has changes that are not on disk.',
           style: OrblitText.body,
         ),
@@ -398,14 +398,16 @@ class _UiEditorState extends State<UiEditor> {
   Widget build(BuildContext context) {
     return Shortcuts(
       shortcuts: {
-        commandShortcut(LogicalKeyboardKey.keyS): _SaveIntent(),
-        commandShortcut(LogicalKeyboardKey.keyZ): _UndoIntent(),
-        commandShortcut(LogicalKeyboardKey.keyZ, shift: true): _RedoIntent(),
+        commandShortcut(LogicalKeyboardKey.keyS): const _SaveIntent(),
+        commandShortcut(LogicalKeyboardKey.keyZ): const _UndoIntent(),
+        commandShortcut(LogicalKeyboardKey.keyZ, shift: true):
+            const _RedoIntent(),
         if (!commandIsMeta)
           const SingleActivator(LogicalKeyboardKey.keyY, control: true):
-              _RedoIntent(),
-        const SingleActivator(LogicalKeyboardKey.delete): _DeleteIntent(),
-        const SingleActivator(LogicalKeyboardKey.backspace): _DeleteIntent(),
+              const _RedoIntent(),
+        const SingleActivator(LogicalKeyboardKey.delete): const _DeleteIntent(),
+        const SingleActivator(LogicalKeyboardKey.backspace):
+            const _DeleteIntent(),
       },
       child: Actions(
         actions: {

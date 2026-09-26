@@ -104,8 +104,8 @@ extension _Terrains on _EditorShellState {
   static Terrain _startingGround() {
     final terrain = Terrain(
       sets: [
-        TerrainSet(name: 'Rock', tileSize: 8, triplanar: true),
-        TerrainSet(name: 'Grass'),
+        const TerrainSet(name: 'Rock', tileSize: 8, triplanar: true),
+        const TerrainSet(name: 'Grass'),
       ],
     );
     for (final z in const [-1, 0]) {

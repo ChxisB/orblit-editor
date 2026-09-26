@@ -104,9 +104,9 @@ class _BodySection extends StatelessWidget {
         // Ground never moves, whatever the file says, so there is nothing to
         // choose and the row says so instead of offering a choice it ignores.
         ground
-            ? ChoiceRow(
+            ? const ChoiceRow(
                 label: 'Motion',
-                options: const ['Fixed'],
+                options: ['Fixed'],
                 selected: 'Fixed',
               )
             : ChoiceRow(

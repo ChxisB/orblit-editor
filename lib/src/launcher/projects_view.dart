@@ -36,7 +36,7 @@ class ProjectsView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Projects', style: OrblitText.display),
+                  const Text('Projects', style: OrblitText.display),
                   const SizedBox(height: Space.xs),
                   Text(
                     projects.isEmpty
@@ -303,9 +303,9 @@ class _Empty extends StatelessWidget {
                   size: 28, color: OrblitColors.inkDim),
             ),
             const SizedBox(height: Space.lg),
-            Text('No projects yet', style: OrblitText.title),
+            const Text('No projects yet', style: OrblitText.title),
             const SizedBox(height: Space.sm),
-            Text(
+            const Text(
               'Make one, or open a folder that already has an '
               '$projectFileName in it.',
               textAlign: TextAlign.center,

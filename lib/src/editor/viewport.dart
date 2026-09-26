@@ -668,10 +668,10 @@ class _SceneViewportState extends State<SceneViewport>
     ),
   );
 
-  Widget _help() => Positioned(
+  Widget _help() => const Positioned(
     right: Space.md,
     bottom: Space.md,
-    child: const _ViewportChip(
+    child: _ViewportChip(
       'Drag to orbit · two fingers to orbit, shift to pan, pinch '
       'to zoom · ` to fly, then WASD',
     ),

@@ -90,8 +90,8 @@ extension _Light on InspectorTarget {
             },
     ),
     if (scene.dayCycle)
-      Padding(
-        padding: const EdgeInsets.fromLTRB(
+      const Padding(
+        padding: EdgeInsets.fromLTRB(
           Space.md,
           Space.xs,
           Space.md,

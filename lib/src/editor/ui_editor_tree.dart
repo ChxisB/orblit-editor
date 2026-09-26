@@ -40,7 +40,7 @@ class _Tree extends StatelessWidget {
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
             ),
-            child: Text('ELEMENTS', style: OrblitText.section),
+            child: const Text('ELEMENTS', style: OrblitText.section),
           ),
           Expanded(
             child: ListView.builder(

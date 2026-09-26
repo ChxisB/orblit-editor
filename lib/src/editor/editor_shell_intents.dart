@@ -75,17 +75,17 @@ extension _Keys on _EditorShellState {
     // The two keys a modelling tool has. Escape comes back out of the
     // geometry and G goes round the three ways of selecting it, which is
     // what somebody presses without thinking about it.
-    const SingleActivator(LogicalKeyboardKey.escape): _LeaveEditIntent(),
-    const SingleActivator(LogicalKeyboardKey.enter): _FinishDrawIntent(),
+    const SingleActivator(LogicalKeyboardKey.escape): const _LeaveEditIntent(),
+    const SingleActivator(LogicalKeyboardKey.enter): const _FinishDrawIntent(),
     const SingleActivator(LogicalKeyboardKey.numpadEnter):
-        _FinishDrawIntent(),
-    const SingleActivator(LogicalKeyboardKey.keyG): _CycleModeIntent(),
+        const _FinishDrawIntent(),
+    const SingleActivator(LogicalKeyboardKey.keyG): const _CycleModeIntent(),
     // The brackets, which is where every tool with a brush size puts
     // them.
-    const SingleActivator(LogicalKeyboardKey.bracketRight): _GridIntent(
+    const SingleActivator(LogicalKeyboardKey.bracketRight): const _GridIntent(
       true,
     ),
-    const SingleActivator(LogicalKeyboardKey.bracketLeft): _GridIntent(
+    const SingleActivator(LogicalKeyboardKey.bracketLeft): const _GridIntent(
       false,
     ),
     // Whole squares at a time, which is the one way of placing something

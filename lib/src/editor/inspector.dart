@@ -129,7 +129,7 @@ class Inspector extends StatelessWidget {
             child:
                 dataPanel ??
                 (entry == null
-                    ? Center(
+                    ? const Center(
                         child: Text(
                           'No scene loaded.',
                           style: OrblitText.caption,
@@ -412,13 +412,8 @@ extension _Sections on InspectorTarget {
             },
           ),
           if (hiddenAbove)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                Space.md,
-                Space.xs,
-                Space.md,
-                0,
-              ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(Space.md, Space.xs, Space.md, 0),
               child: Text(
                 'Hidden anyway, because something it is inside is hidden.',
                 style: OrblitText.caption,
@@ -594,8 +589,8 @@ extension _Sections on InspectorTarget {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(Space.md, Space.xs, Space.md, 0),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(Space.md, Space.xs, Space.md, 0),
           child: Text(
             'A ground plane that casts shadows casts them onto itself, '
             'which is most of what makes a scene look dirty.',

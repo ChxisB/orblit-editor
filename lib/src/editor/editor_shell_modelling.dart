@@ -23,14 +23,15 @@ final Map<ShortcutActivator, Intent> _nudges = {
   },
   // Up and down are the exception: there is no arrow for them, so shift
   // turns the near-and-far pair into a high-and-low one.
-  SingleActivator(LogicalKeyboardKey.arrowUp, shift: true): _NudgeIntent(_y, 1),
-  SingleActivator(LogicalKeyboardKey.arrowDown, shift: true): _NudgeIntent(
+  const SingleActivator(LogicalKeyboardKey.arrowUp, shift: true): _NudgeIntent(
     _y,
-    -1,
+    1,
   ),
-  SingleActivator(LogicalKeyboardKey.arrowUp, shift: true, alt: true):
+  const SingleActivator(LogicalKeyboardKey.arrowDown, shift: true):
+      _NudgeIntent(_y, -1),
+  const SingleActivator(LogicalKeyboardKey.arrowUp, shift: true, alt: true):
       _NudgeIntent(_y, 10),
-  SingleActivator(LogicalKeyboardKey.arrowDown, shift: true, alt: true):
+  const SingleActivator(LogicalKeyboardKey.arrowDown, shift: true, alt: true):
       _NudgeIntent(_y, -10),
 };
 

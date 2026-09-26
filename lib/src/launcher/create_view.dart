@@ -99,9 +99,9 @@ class _CreateViewState extends State<CreateView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('New project', style: OrblitText.display),
+            const Text('New project', style: OrblitText.display),
             const SizedBox(height: Space.xs),
-            Text('A folder, a scene, and somewhere to put assets.',
+            const Text('A folder, a scene, and somewhere to put assets.',
                 style: OrblitText.caption),
             const SizedBox(height: Space.xl),
 

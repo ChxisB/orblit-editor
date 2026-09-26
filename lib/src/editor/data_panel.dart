@@ -86,7 +86,7 @@ class _DataPanelState extends State<DataPanel> {
       context: context,
       builder: (context) => SimpleDialog(
         backgroundColor: OrblitColors.surface,
-        title: Text('What kind of value?', style: OrblitText.title),
+        title: const Text('What kind of value?', style: OrblitText.title),
         children: [
           for (final type in DataType.values)
             SimpleDialogOption(

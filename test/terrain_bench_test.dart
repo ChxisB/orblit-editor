@@ -35,8 +35,8 @@ rig() {
   final terrain = Terrain(
     regionSize: 32,
     sets: [
-      TerrainSet(name: 'Rock'),
-      TerrainSet(name: 'Grass'),
+      const TerrainSet(name: 'Rock'),
+      const TerrainSet(name: 'Grass'),
     ],
   );
   for (final z in const [-1, 0]) {
@@ -235,7 +235,7 @@ void main() {
         (settings) => (
           sets: [
             ...settings.sets,
-            TerrainSet(name: 'Sand'),
+            const TerrainSet(name: 'Sand'),
           ],
           autoCover: settings.autoCover,
           blendSharpness: settings.blendSharpness,

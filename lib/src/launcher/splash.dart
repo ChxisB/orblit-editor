@@ -146,7 +146,7 @@ class _Mark extends StatelessWidget {
                       fit: BoxFit.contain,
                       filterQuality: FilterQuality.medium,
                       // If the asset is missing the editor should still open.
-                      errorBuilder: (context, error, stack) => Text(
+                      errorBuilder: (context, error, stack) => const Text(
                         'ORBLIT',
                         style: OrblitText.display,
                       ),

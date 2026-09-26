@@ -171,10 +171,10 @@ ThemeData orblitTheme() {
       thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6.5),
       overlayShape: RoundSliderOverlayShape(overlayRadius: 14),
     ),
-    scrollbarTheme: ScrollbarThemeData(
+    scrollbarTheme: const ScrollbarThemeData(
       thumbColor: WidgetStatePropertyAll(OrblitColors.line),
-      thickness: const WidgetStatePropertyAll(7),
-      radius: const Radius.circular(4),
+      thickness: WidgetStatePropertyAll(7),
+      radius: Radius.circular(4),
     ),
     tooltipTheme: TooltipThemeData(
       decoration: BoxDecoration(

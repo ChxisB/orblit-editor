@@ -177,7 +177,7 @@ class _Rail extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text('Orblit',
+                    const Text('Orblit',
                         style: OrblitText.title, overflow: TextOverflow.ellipsis),
                     Text(
                       'Engine 0.1.0 · pre-alpha',

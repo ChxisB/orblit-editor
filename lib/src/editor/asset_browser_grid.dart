@@ -35,12 +35,12 @@ class _Grid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final grid = entries.isEmpty
-        ? Center(
+        ? const Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text('This folder is empty.', style: OrblitText.caption),
-                const SizedBox(height: Space.xs),
+                SizedBox(height: Space.xs),
                 Text(
                   'Right-click to add something.',
                   style: OrblitText.caption,

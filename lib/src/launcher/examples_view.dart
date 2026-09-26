@@ -551,11 +551,11 @@ class _Panel extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.all(Space.md),
         children: [
-          Text('SETTINGS', style: OrblitText.section),
+          const Text('SETTINGS', style: OrblitText.section),
           const SizedBox(height: Space.sm),
           example.settings(context, onChanged),
           const SizedBox(height: Space.xl),
-          Text('HOW', style: OrblitText.section),
+          const Text('HOW', style: OrblitText.section),
           const SizedBox(height: Space.sm),
           // The lines that matter, not the whole file. What an example is for
           // is the handful of statements that do the thing.
@@ -587,17 +587,17 @@ class _RendererUnavailable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
+    return const ColoredBox(
       color: OrblitColors.ground,
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(Space.xl),
+          padding: EdgeInsets.all(Space.xl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.desktop_access_disabled_outlined,
+              Icon(Icons.desktop_access_disabled_outlined,
                   size: 26, color: OrblitColors.inkDim),
-              const SizedBox(height: Space.md),
+              SizedBox(height: Space.md),
               Text(
                 '$rendererUnavailableMessage\n'
                 'The settings and the code are still here.',

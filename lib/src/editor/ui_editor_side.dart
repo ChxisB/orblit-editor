@@ -108,7 +108,7 @@ class _Side extends StatelessWidget {
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
             ),
-            child: Text('INTERFACE', style: OrblitText.section),
+            child: const Text('INTERFACE', style: OrblitText.section),
           ),
           Expanded(
             child: ListView(
@@ -281,7 +281,7 @@ class _Side extends StatelessWidget {
             ],
           ),
           const SizedBox(height: Space.sm),
-          Text('ON SCREEN', style: OrblitText.section),
+          const Text('ON SCREEN', style: OrblitText.section),
           const SizedBox(height: Space.xs),
           // Chips that wrap rather than four segments sharing one
           // row: "Match height" does not fit in a quarter of a
@@ -313,7 +313,7 @@ class _Side extends StatelessWidget {
             ),
           ),
           const SizedBox(height: Space.sm),
-          Text('PREVIEW ON', style: OrblitText.section),
+          const Text('PREVIEW ON', style: OrblitText.section),
           const SizedBox(height: Space.xs),
           // A view rather than a property of the file. A
           // responsive interface is a different layout at every
@@ -393,7 +393,7 @@ class _Side extends StatelessWidget {
           // margin and the edge a television eats are one
           // measurement rather than two that disagree.
           const SizedBox(height: Space.sm),
-          Text('FLUID RANGE', style: OrblitText.section),
+          const Text('FLUID RANGE', style: OrblitText.section),
           const SizedBox(height: Space.xs),
           SliderRow(
             label: 'Smallest',

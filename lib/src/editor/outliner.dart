@@ -475,8 +475,8 @@ class _RowState extends State<_Row> {
                       // the inspector is showing, so a multiple selection
                       // does not look like it lost track of itself.
                       if (widget.primary && widget.selected)
-                        Padding(
-                          padding: const EdgeInsets.only(left: Space.xs),
+                        const Padding(
+                          padding: EdgeInsets.only(left: Space.xs),
                           child: Icon(
                             Icons.edit_outlined,
                             size: 11,
@@ -490,7 +490,7 @@ class _RowState extends State<_Row> {
                           padding: const EdgeInsets.only(left: Space.xs),
                           child: Tooltip(
                             message: 'Instance of ${p.basename(asset)}',
-                            child: Icon(
+                            child: const Icon(
                               Icons.widgets_outlined,
                               size: 11,
                               color: OrblitColors.inkDim,

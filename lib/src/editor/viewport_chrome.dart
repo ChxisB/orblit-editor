@@ -48,21 +48,21 @@ class _Placeholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return const Stack(
       children: [
-        const Positioned.fill(child: CustomPaint(painter: _GridPainter())),
+        Positioned.fill(child: CustomPaint(painter: _GridPainter())),
         Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.view_in_ar_outlined,
                 size: 34,
                 color: OrblitColors.inkDim,
               ),
-              const SizedBox(height: Space.md),
+              SizedBox(height: Space.md),
               Text('Viewport', style: OrblitText.label),
-              const SizedBox(height: Space.xs),
+              SizedBox(height: Space.xs),
               Text(rendererUnavailableMessage, style: OrblitText.caption),
             ],
           ),
@@ -147,7 +147,7 @@ class _CameraPreview extends StatelessWidget {
             height: 20,
             padding: const EdgeInsets.symmetric(horizontal: Space.sm),
             alignment: Alignment.centerLeft,
-            child: Text('CAMERA', style: OrblitText.section),
+            child: const Text('CAMERA', style: OrblitText.section),
           ),
           Expanded(
             child: ClipRRect(

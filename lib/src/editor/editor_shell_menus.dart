@@ -35,7 +35,7 @@ class _AddMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return MenuAnchor(
       style: MenuStyle(
-        backgroundColor: WidgetStatePropertyAll(OrblitColors.raised),
+        backgroundColor: const WidgetStatePropertyAll(OrblitColors.raised),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
@@ -47,7 +47,7 @@ class _AddMenu extends StatelessWidget {
       menuChildren: [
         SubmenuButton(
           menuStyle: MenuStyle(
-            backgroundColor: WidgetStatePropertyAll(OrblitColors.raised),
+            backgroundColor: const WidgetStatePropertyAll(OrblitColors.raised),
             surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
             shape: WidgetStatePropertyAll(
               RoundedRectangleBorder(
@@ -68,7 +68,7 @@ class _AddMenu extends StatelessWidget {
                 child: Text(shape.label, style: OrblitText.label),
               ),
           ],
-          child: Text('Shape', style: OrblitText.label),
+          child: const Text('Shape', style: OrblitText.label),
         ),
         const Divider(height: 9, color: OrblitColors.line),
         for (final (kind, label, icon) in _items)
@@ -84,7 +84,7 @@ class _AddMenu extends StatelessWidget {
             size: 14,
             color: OrblitColors.inkMid,
           ),
-          child: Text('Terrain', style: OrblitText.label),
+          child: const Text('Terrain', style: OrblitText.label),
         ),
       ],
       builder: (context, controller, child) => OrblitButton(
@@ -124,7 +124,7 @@ class _SceneMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return MenuAnchor(
       style: MenuStyle(
-        backgroundColor: WidgetStatePropertyAll(OrblitColors.raised),
+        backgroundColor: const WidgetStatePropertyAll(OrblitColors.raised),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
@@ -141,7 +141,7 @@ class _SceneMenu extends StatelessWidget {
             size: 14,
             color: OrblitColors.inkMid,
           ),
-          child: Text('New scene', style: OrblitText.label),
+          child: const Text('New scene', style: OrblitText.label),
         ),
         MenuItemButton(
           onPressed: onSave,
@@ -150,7 +150,7 @@ class _SceneMenu extends StatelessWidget {
             size: 14,
             color: OrblitColors.inkMid,
           ),
-          child: Text('Save', style: OrblitText.label),
+          child: const Text('Save', style: OrblitText.label),
         ),
         MenuItemButton(
           onPressed: onSaveAs,
@@ -159,7 +159,7 @@ class _SceneMenu extends StatelessWidget {
             size: 14,
             color: OrblitColors.inkMid,
           ),
-          child: Text('Save as…', style: OrblitText.label),
+          child: const Text('Save as…', style: OrblitText.label),
         ),
         const Divider(height: 9, color: OrblitColors.line),
         MenuItemButton(
@@ -226,7 +226,7 @@ class _EditMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return MenuAnchor(
       style: MenuStyle(
-        backgroundColor: WidgetStatePropertyAll(OrblitColors.raised),
+        backgroundColor: const WidgetStatePropertyAll(OrblitColors.raised),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
@@ -326,7 +326,7 @@ class _ViewMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     return MenuAnchor(
       style: MenuStyle(
-        backgroundColor: WidgetStatePropertyAll(OrblitColors.raised),
+        backgroundColor: const WidgetStatePropertyAll(OrblitColors.raised),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
@@ -357,7 +357,7 @@ class _ViewMenu extends StatelessWidget {
             size: 14,
             color: OrblitColors.inkMid,
           ),
-          child: Text('One view', style: OrblitText.label),
+          child: const Text('One view', style: OrblitText.label),
         ),
         MenuItemButton(
           onPressed: () =>
@@ -367,7 +367,7 @@ class _ViewMenu extends StatelessWidget {
             size: 14,
             color: OrblitColors.inkMid,
           ),
-          child: Text('Four views', style: OrblitText.label),
+          child: const Text('Four views', style: OrblitText.label),
         ),
         const Divider(height: 9, color: OrblitColors.line),
         // Opening one that is already open shows it rather than adding a

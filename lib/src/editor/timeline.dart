@@ -292,7 +292,7 @@ class _TimelinePanelState extends State<TimelinePanel>
                       ..at = clip.duration,
                   ),
                   const SizedBox(width: Space.md),
-                  Text('Length', style: OrblitText.caption),
+                  const Text('Length', style: OrblitText.caption),
                   const SizedBox(width: Space.xs),
                   SizedBox(
                     width: 64,
@@ -307,7 +307,7 @@ class _TimelinePanelState extends State<TimelinePanel>
                     ),
                   ),
                   const SizedBox(width: Space.xs),
-                  Text('s', style: OrblitText.caption),
+                  const Text('s', style: OrblitText.caption),
                   const SizedBox(width: Space.sm),
                   _rateMenu(clip),
                   const SizedBox(width: Space.xs),
@@ -481,7 +481,7 @@ class _TimelinePanelState extends State<TimelinePanel>
         ),
         MenuItemButton(
           onPressed: owner == null ? null : () => _bench.owner = null,
-          child: Text('Play on nothing', style: OrblitText.label),
+          child: const Text('Play on nothing', style: OrblitText.label),
         ),
       ],
     );

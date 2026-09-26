@@ -168,7 +168,7 @@ class _TopBar extends StatelessWidget {
     final run = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('pre-alpha', style: OrblitText.caption),
+        const Text('pre-alpha', style: OrblitText.caption),
         const SizedBox(width: Space.md),
         // Set apart on a pad of its own, since it is the one control on the
         // bar that leaves the editor rather than changing something in it.
