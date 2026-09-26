@@ -29,6 +29,7 @@ class GameView extends StatelessWidget {
     this.through,
     this.plain = false,
     this.terrainOf,
+    this.scatterOf,
   });
 
   final Workspace workspace;
@@ -55,6 +56,10 @@ class GameView extends StatelessWidget {
 
   /// The ground the shown objects put in the scene. Null draws none.
   final List<OrblitTerrain> Function(Iterable<SceneObject> objects)? terrainOf;
+
+  /// What is scattered over that ground. Null draws none.
+  final List<OrblitPopulation> Function(Iterable<SceneObject> objects)?
+  scatterOf;
 
   static bool get _rendererAvailable => rendererAvailable;
 
@@ -128,6 +133,7 @@ class GameView extends StatelessWidget {
                     shared: workspace.shared,
                     geometryOf: geometryOf,
                     terrainOf: terrainOf,
+                    scatterOf: scatterOf,
                   ),
                 ),
         ),

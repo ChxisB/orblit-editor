@@ -88,6 +88,7 @@ class SceneViewport extends StatefulWidget {
     this.modeInput,
     this.modeOverlay,
     this.terrainOf,
+    this.scatterOf,
   });
 
   /// Only the loaded scene is drawn. The others are names and paths until
@@ -268,6 +269,11 @@ class SceneViewport extends StatefulWidget {
   /// The ground the shown objects put in the scene, as the renderer takes
   /// it. Null draws none.
   final List<OrblitTerrain> Function(Iterable<SceneObject> objects)? terrainOf;
+
+  /// What is scattered over that ground, as the renderer takes it. Null
+  /// draws none.
+  final List<OrblitPopulation> Function(Iterable<SceneObject> objects)?
+  scatterOf;
 
   @override
   State<SceneViewport> createState() => _SceneViewportState();

@@ -440,5 +440,46 @@ void main() {
         reason: 'without a bench there is nothing to draw',
       );
     });
+
+    test('what is scattered over it is drawn as blocks, once per file', () {
+      final (:bench, :history, :open, said: _) = rig();
+      open.terrain.scatter.addAll(const [
+        ScatterLayer(name: 'grass', density: 1),
+        ScatterLayer(name: 'trees', seed: 2, density: 0.1, mesh: 'tree.glb'),
+      ]);
+
+      final drawn = bench.scatterFor([ground('a'), ground('b')]);
+      // A population a region for the grass; the trees are models, which
+      // the editor does not draw yet.
+      expect(drawn, hasLength(4));
+      expect(drawn.map((p) => p.key).toSet(), hasLength(4));
+      expect(drawn.every((p) => p.transforms.isNotEmpty), isTrue);
+
+      final again = bench.scatterFor([ground('a')]);
+      for (var i = 0; i < drawn.length; i++) {
+        expect(again[i], same(drawn[i]), reason: 'nothing moved');
+      }
+
+      stroke(bench, history, open);
+      final after = bench.scatterFor([ground('a')]);
+      expect(
+        [for (final p in after) p.revision],
+        isNot([for (final p in drawn) p.revision]),
+        reason: 'the grass is placed again where the brush raised it',
+      );
+
+      final camera = OrbitCamera().toRenderCamera();
+      final scene = EditorScene([ground('here')]);
+      expect(
+        scene.toRenderScene(camera, scatterOf: bench.scatterFor).populations,
+        hasLength(4),
+      );
+      expect(scene.toRenderScene(camera).populations, isEmpty);
+    });
+
+    test('ground with nothing scattered draws nothing over it', () {
+      final (:bench, history: _, open: _, said: _) = rig();
+      expect(bench.scatterFor([ground('a')]), isEmpty);
+    });
   });
 }

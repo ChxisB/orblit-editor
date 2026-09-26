@@ -61,6 +61,7 @@ extension _Panels on _EditorShellState {
           geometryOf: _geometry.pathFor,
           interface: _sceneInterface,
           terrainOf: _terrains.renderFor,
+          scatterOf: _terrains.scatterFor,
         ),
       ),
     )
@@ -345,11 +346,13 @@ extension _Panels on _EditorShellState {
       through: camera,
       plain: true,
       terrainOf: _terrains.renderFor,
+      scatterOf: _terrains.scatterFor,
     ),
     onSceneNotes: _reportSceneNotes,
     modeInput: _mode.input,
     modeOverlay: _mode.overlay,
     terrainOf: _terrains.renderFor,
+    scatterOf: _terrains.scatterFor,
     gizmos: _registry.gizmos.all,
     // The viewport owns the clock; this is how
     // the tree and the inspector hear about it.

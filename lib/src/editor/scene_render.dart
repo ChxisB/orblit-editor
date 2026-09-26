@@ -64,6 +64,7 @@ extension SceneRendering on EditorScene {
   /// in the scene. Asked rather than worked out here, because a terrain is a
   /// file of its own that whoever calls this has open, and reading it again
   /// every frame would be reading megabytes to draw what has not changed.
+  /// [scatterOf] is the same for what is scattered over that ground.
   OrblitScene toRenderScene(
     OrblitCamera camera, {
     String? projectRoot,
@@ -71,6 +72,7 @@ extension SceneRendering on EditorScene {
     String? Function(SceneObject)? geometryOf,
     GridPlan? grid,
     List<OrblitTerrain> Function(Iterable<SceneObject> objects)? terrainOf,
+    List<OrblitPopulation> Function(Iterable<SceneObject> objects)? scatterOf,
   }) {
     final sky = skyState;
     final driven = dayCycle;
@@ -188,13 +190,17 @@ extension SceneRendering on EditorScene {
       fog: _fogFrom(air, weather ?? shared?.weather),
       precipitation: _precipitationFrom(air, weather ?? shared?.weather),
       camera: driven ? _metered(camera, lights, ambientLux) : camera,
-      terrain: terrainOf?.call([
-        for (final scene in [this, ?shared])
-          for (final object in scene._objects)
-            if (scene.isShown(object.id)) object,
-      ]),
+      terrain: terrainOf?.call(_shownWith(shared)),
+      populations: scatterOf?.call(_shownWith(shared)),
     );
   }
+
+  /// What is shown of this scene and [shared], the one after the other.
+  List<SceneObject> _shownWith(EditorScene? shared) => [
+    for (final scene in [this, ?shared])
+      for (final object in scene._objects)
+        if (scene.isShown(object.id)) object,
+  ];
 
   /// The camera, set for the light this scene actually has in it.
   OrblitCamera _metered(

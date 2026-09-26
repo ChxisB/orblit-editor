@@ -3,9 +3,10 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
-import 'package:orblit_filament/orblit_filament.dart' show OrblitTerrain;
+import 'package:orblit_filament/orblit_filament.dart'
+    show OrblitPopulation, OrblitTerrain;
 import 'package:orblit_scene/orblit_scene.dart' as doc;
-import 'package:orblit_stage/orblit_stage.dart' show terrainFrom;
+import 'package:orblit_stage/orblit_stage.dart' show scatterFrom, terrainFrom;
 import 'package:orblit_terrain/orblit_terrain.dart';
 import 'package:path/path.dart' as p;
 import 'package:vector_math/vector_math_64.dart';
@@ -399,6 +400,42 @@ class TerrainBench extends ChangeNotifier {
       }
     }
     return terrains;
+  }
+
+  /// Where each terrain's scatter stands, kept between frames so that a
+  /// stroke places again only the regions it touched, and what each last
+  /// drew, against the placer's revision when it did.
+  final Map<String, ScatterPlacer> _placers = {};
+  final Map<String, (int, List<OrblitPopulation>)> _scattered = {};
+
+  /// What the terrains [objects] put in the scene have scattered over them,
+  /// as the renderer takes it: a population a region and layer.
+  ///
+  /// Blocks only. A layer that names a model is left out here, since drawing
+  /// it means resolving its mesh and material the way the scene's own objects
+  /// are, and nothing does that for a terrain yet.
+  List<OrblitPopulation> scatterFor(Iterable<SceneObject> objects) {
+    final seen = <String>{};
+    final drawn = <OrblitPopulation>[];
+    for (final object in objects) {
+      final file = terrainComponentOf(object)?.file;
+      if (file == null || !seen.add(file)) continue;
+      final open = terrainFor(file);
+      if (open == null) continue;
+      final placer = _placers.putIfAbsent(file, ScatterPlacer.new);
+      placer.update(open.terrain);
+      var held = _scattered[file];
+      if (held == null || held.$1 != placer.revision) {
+        final blocks = scatterFrom(
+          placer,
+          key: open.key,
+          models: false,
+        ).populations;
+        held = _scattered[file] = (placer.revision, blocks);
+      }
+      drawn.addAll(held.$2);
+    }
+    return drawn;
   }
 
   /// The picture at [path] as RGBA bytes, or null while it is being read or
