@@ -402,25 +402,37 @@ void main() {
   });
 
   group('the console', () {
-    testWidgets('there are two panels at the bottom', (tester) async {
+    testWidgets('it starts folded under the view', (tester) async {
       await open(tester);
 
-      expect(find.text('PROJECT'), findsOneWidget);
-      expect(find.text('CONSOLE'), findsOneWidget);
-      // The project one is showing to begin with.
-      expect(find.byType(AssetBrowser), findsOneWidget);
+      // Its tab is there to be clicked, and nothing under the tab is built.
+      expect(dockTab('console'), findsOneWidget);
       expect(find.byType(ConsolePanel), findsNothing);
+      // The project browser has a column of its own, so it is not behind it.
+      expect(find.byType(AssetBrowser), findsOneWidget);
+    });
+
+    testWidgets('its tab folds it away again', (tester) async {
+      await open(tester);
+      await tester.tap(dockTab('console'));
+      await tester.pumpAndSettle();
+      expect(find.byType(ConsolePanel), findsOneWidget);
+
+      await tester.tap(dockTab('console'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ConsolePanel), findsNothing);
+      expect(dockTab('console'), findsOneWidget);
     });
 
     testWidgets('opening it shows what the editor has said', (tester) async {
       await open(tester);
       await save(tester);
 
-      await tester.tap(find.text('CONSOLE'));
+      await tester.tap(dockTab('console'));
       await tester.pumpAndSettle();
 
       expect(find.byType(ConsolePanel), findsOneWidget);
-      expect(find.byType(AssetBrowser), findsNothing);
       expect(find.textContaining('Saved'), findsWidgets);
     });
 
@@ -434,7 +446,7 @@ void main() {
       await tester.pump(const Duration(seconds: 6));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('CONSOLE'));
+      await tester.tap(dockTab('console'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Saved'), findsWidgets);
     });
@@ -461,7 +473,7 @@ void main() {
 
       // Kept, and counted where somebody who is not looking at the console
       // will still see it.
-      await tester.tap(find.text('CONSOLE'));
+      await tester.tap(dockTab('console'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Select an object first'), findsWidgets);
     });
@@ -469,7 +481,7 @@ void main() {
     testWidgets('it can be cleared', (tester) async {
       await open(tester);
       await save(tester);
-      await tester.tap(find.text('CONSOLE'));
+      await tester.tap(dockTab('console'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Saved'), findsWidgets);
 
@@ -482,7 +494,7 @@ void main() {
     testWidgets('the filters hide a level', (tester) async {
       await open(tester);
       await save(tester);
-      await tester.tap(find.text('CONSOLE'));
+      await tester.tap(dockTab('console'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Saved'), findsWidgets);
 

@@ -52,6 +52,12 @@ Future<void> open(
   await tester.pumpAndSettle();
 }
 
+/// The tab of the panel with [panelId], wherever it has been docked.
+///
+/// By key rather than by what it says, because the label is also the name of
+/// a menu item, and the outliner's and inspector's rows can say it too.
+Finder dockTab(String panelId) => find.byKey(ValueKey('dock-tab/$panelId'));
+
 /// Adds through the Add menu.
 ///
 /// Scoped to the menu item, because find.text also matches the outliner row

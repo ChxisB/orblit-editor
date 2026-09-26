@@ -12,6 +12,10 @@ enum ButtonTone {
 
   /// Available without asking to be noticed.
   quiet,
+
+  /// A menu on a bar: its name and nothing else until the pointer is on it,
+  /// so a row of them reads as a menu bar rather than a row of buttons.
+  flat,
 }
 
 /// A button, sized and coloured for a tool rather than for a phone.
@@ -53,7 +57,8 @@ class _OrblitButtonState extends State<OrblitButton> {
       ButtonTone.primary =>
         _pressed ? OrblitColors.emberDeep : OrblitColors.ember,
       ButtonTone.normal => _hovering ? OrblitColors.hover : OrblitColors.raised,
-      ButtonTone.quiet => _hovering ? OrblitColors.raised : Colors.transparent,
+      ButtonTone.quiet ||
+      ButtonTone.flat => _hovering ? OrblitColors.raised : Colors.transparent,
     };
   }
 
@@ -64,7 +69,8 @@ class _OrblitButtonState extends State<OrblitButton> {
       // that white text on it is the lower-contrast choice, not the higher.
       ButtonTone.primary => const Color(0xFF1A1206),
       ButtonTone.normal => OrblitColors.ink,
-      ButtonTone.quiet => _hovering ? OrblitColors.ink : OrblitColors.inkMid,
+      ButtonTone.quiet ||
+      ButtonTone.flat => _hovering ? OrblitColors.ink : OrblitColors.inkMid,
     };
   }
 
@@ -115,17 +121,19 @@ class _OrblitButtonState extends State<OrblitButton> {
         onTap: widget.onPressed,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 90),
-          height: 30,
-          padding: const EdgeInsets.symmetric(horizontal: Space.md),
+          height: widget.tone == ButtonTone.flat ? 28 : 30,
+          padding: EdgeInsets.symmetric(
+            horizontal: widget.tone == ButtonTone.flat ? Space.sm : Space.md,
+          ),
           decoration: BoxDecoration(
             color: _background,
             borderRadius: BorderRadius.circular(Radii.control),
             border: Border.all(
-              color: widget.tone == ButtonTone.primary
-                  ? Colors.transparent
-                  : (_hovering && _enabled
-                        ? OrblitColors.line
-                        : OrblitColors.lineSoft),
+              color: switch (widget.tone) {
+                ButtonTone.primary || ButtonTone.flat => Colors.transparent,
+                _ when _hovering && _enabled => OrblitColors.line,
+                _ => OrblitColors.lineSoft,
+              },
             ),
           ),
           child: content,

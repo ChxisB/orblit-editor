@@ -57,13 +57,13 @@ void main() {
   group('docking', () {
     test('onto a side makes a split', () {
       final was = DockLayout.standard();
-      // The outliner, because it is the one panel that has a group to itself
-      // — which is what makes the group it leaves collapse.
-      final now = was.dock('outliner', 'right', DockSide.bottom);
+      // The console, because the group it leaves still has panels in it, so
+      // nothing collapses to cancel out the split being made.
+      final now = was.dock('console', 'right', DockSide.bottom);
 
       expect(splitsIn(now.root), greaterThan(splitsIn(was.root)));
-      expect(now.holds('outliner'), isTrue);
-      expect(panelsIn(now.root, 'left'), isEmpty);
+      expect(now.holds('console'), isTrue);
+      expect(panelsIn(now.root, 'bottom'), ['uvs', 'timeline']);
     });
 
     test('onto the centre makes it another tab', () {
@@ -84,11 +84,12 @@ void main() {
       final now = was.dock('outliner', 'right', DockSide.centre);
 
       expect(panelsIn(now.root, 'left'), isEmpty);
-      // The middle split had three children and now has two, rather than
-      // keeping an empty column.
-      final middle = now.root as DockSplit;
-      final inner = middle.children.first as DockSplit;
-      expect(inner.children, hasLength(2));
+      // The left column held the outliner over the project and now holds
+      // the project alone, so it is that group rather than a column of one.
+      final root = now.root as DockSplit;
+      expect(root.children, hasLength(3));
+      expect(root.children.first, isA<DockGroup>());
+      expect((root.children.first as DockGroup).id, 'files');
     });
 
     test('a split left with one child is replaced by that child', () {
@@ -97,10 +98,13 @@ void main() {
         layout = layout.dock(panel, 'left', DockSide.centre);
       }
 
-      // Everything ended up in one group, so the row that held three columns
-      // is gone rather than being a row of one.
+      // The view and the inspector's column are empty, so the row is down to
+      // two columns, and the middle one — the bottom panel with no view over
+      // it — is that group rather than a column of one.
       final root = layout.root as DockSplit;
-      expect(root.children.first, isA<DockGroup>());
+      expect(root.children, hasLength(2));
+      expect(root.children.last, isA<DockGroup>());
+      expect((root.children.last as DockGroup).id, 'bottom');
     });
 
     test('dropping a panel on its own group does nothing', () {
@@ -140,15 +144,96 @@ void main() {
     });
   });
 
+  group('folding', () {
+    test('the panels under the view start folded', () {
+      final bottom = (DockLayout.standard().root as DockSplit).children[1]
+          as DockSplit;
+
+      expect(bottom.folded, [false, true]);
+    });
+
+    test('a group under another folds and opens again', () {
+      final open = DockLayout.standard().collapse('bottom', collapsed: false);
+      expect(open.canCollapse('bottom'), isTrue);
+
+      final folded = open.collapse('bottom');
+      final middle = (folded.root as DockSplit).children[1] as DockSplit;
+      expect(middle.folded, [false, true]);
+      // Folding is not closing: every panel is still there.
+      expect(folded.panels, hasLength(open.panels.length));
+    });
+
+    test('the group at the top of a column does not fold', () {
+      final layout = DockLayout.standard();
+
+      expect(layout.canCollapse('centre'), isFalse);
+      expect(layout.canCollapse('left'), isFalse);
+      expect(identical(layout.collapse('centre').root, layout.root), isTrue);
+    });
+
+    test('a group beside others rather than under one does not fold', () {
+      expect(DockLayout.standard().canCollapse('right'), isFalse);
+    });
+
+    test('showing a panel in a folded group opens it', () {
+      final now = DockLayout.standard().show('timeline');
+      final middle = (now.root as DockSplit).children[1] as DockSplit;
+
+      expect(middle.folded, [false, false]);
+      expect((middle.children[1] as DockGroup).current?.id, 'timeline');
+    });
+
+    test('a column where everything asks to fold shows everything', () {
+      const split = DockSplit(
+        id: 's',
+        axis: Axis.vertical,
+        weights: [0.5, 0.5],
+        children: [
+          DockGroup(id: 'a', panels: [], collapsed: true),
+          DockGroup(id: 'b', panels: [], collapsed: true),
+        ],
+      );
+
+      expect(split.folded, [false, false]);
+    });
+
+    test('it folds while the layout is locked, as choosing a tab does', () {
+      final locked = DockLayout.standard()
+          .collapse('bottom', collapsed: false)
+          .copyWith(locked: true);
+
+      expect(
+        ((locked.collapse('bottom').root as DockSplit).children[1] as DockSplit)
+            .folded,
+        [false, true],
+      );
+    });
+
+    test('it is kept in the file', () {
+      final now = DockLayout.read(DockLayout.standard().toText())!;
+      final middle = (now.root as DockSplit).children[1] as DockSplit;
+
+      expect(middle.folded, [false, true]);
+      final open = DockLayout.read(
+        DockLayout.standard().collapse('bottom', collapsed: false).toText(),
+      )!;
+      expect(((open.root as DockSplit).children[1] as DockSplit).folded, [
+        false,
+        false,
+      ]);
+    });
+  });
+
   group('closing', () {
     test('takes the panel out and collapses what it leaves', () {
       // The outliner, which is the panel with a group to itself: closing it
-      // is what leaves an empty column for the split to collapse.
+      // leaves the left column with one group, for the split to collapse.
       final now = DockLayout.standard().close('outliner');
 
       expect(now.holds('outliner'), isFalse);
-      final middle = (now.root as DockSplit).children.first as DockSplit;
-      expect(middle.children, hasLength(2));
+      final root = now.root as DockSplit;
+      expect(root.children, hasLength(3));
+      expect(root.children.first, isA<DockGroup>());
     });
 
     test('a tab beside others leaves the others alone', () {

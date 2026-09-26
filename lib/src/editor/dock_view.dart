@@ -26,11 +26,13 @@ class DockView extends StatelessWidget {
   final ValueChanged<DockLayout> onChanged;
 
   @override
-  Widget build(BuildContext context) => _node(context, layout.root);
+  Widget build(BuildContext context) => _node(context, layout.root, false);
 
-  Widget _node(BuildContext context, DockNode node) => switch (node) {
+  Widget _node(BuildContext context, DockNode node, bool folded) =>
+      switch (node) {
         DockGroup() => _DockGroupView(
             group: node,
+            folded: folded,
             layout: layout,
             panel: panel,
             onChanged: onChanged,
@@ -55,14 +57,26 @@ class _DockSplitView extends StatelessWidget {
 
   final DockSplit split;
   final DockLayout layout;
-  final Widget Function(BuildContext, DockNode) child;
+  final Widget Function(BuildContext, DockNode, bool folded) child;
   final ValueChanged<DockLayout> onChanged;
 
   static const double _handle = 5;
 
   @override
   Widget build(BuildContext context) {
-    final shares = split.shares;
+    final folded = split.folded;
+    // A folded group is as tall as its tabs, and the rest share what is left
+    // in the proportions they had, so opening it again gives back the height
+    // it had rather than whatever it was squeezed to.
+    final open = [
+      for (var i = 0; i < split.children.length; i++)
+        folded[i] ? 0.0 : split.shares[i],
+    ];
+    final total = open.fold<double>(0, (sum, share) => sum + share);
+    final shares = [
+      for (final share in open) total <= 0 ? 0.0 : share / total,
+    ];
+    final foldedCount = folded.where((fold) => fold).length;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -72,21 +86,27 @@ class _DockSplitView extends StatelessWidget {
         // The handles take space out of the total before it is shared, or the
         // panels would add up to more than the room and overflow by exactly
         // the number of dividers.
-        final room = (along - _handle * (split.children.length - 1))
-            .clamp(0.0, double.infinity);
+        final room =
+            (along -
+                    _handle * (split.children.length - 1) -
+                    _Tabs.height * foldedCount)
+                .clamp(0.0, double.infinity);
 
         final pieces = <Widget>[];
         for (var i = 0; i < split.children.length; i++) {
+          final size = folded[i] ? _Tabs.height : room * shares[i];
           pieces.add(SizedBox(
-            width: split.axis == Axis.horizontal ? room * shares[i] : null,
-            height: split.axis == Axis.vertical ? room * shares[i] : null,
-            child: child(context, split.children[i]),
+            width: split.axis == Axis.horizontal ? size : null,
+            height: split.axis == Axis.vertical ? size : null,
+            child: child(context, split.children[i], folded[i]),
           ));
 
           if (i + 1 < split.children.length) {
             pieces.add(_Handle(
               axis: split.axis,
-              locked: layout.locked,
+              // Nothing to drag against a folded group: it is the height of
+              // its tabs until it is opened.
+              locked: layout.locked || folded[i] || folded[i + 1],
               onDrag: (delta) {
                 if (room <= 0) return;
                 // The two either side share what they had between them, so
@@ -181,12 +201,18 @@ class _HandleState extends State<_Handle> {
 class _DockGroupView extends StatefulWidget {
   const _DockGroupView({
     required this.group,
+    required this.folded,
     required this.layout,
     required this.panel,
     required this.onChanged,
   });
 
   final DockGroup group;
+
+  /// Whether it is drawn as its tabs alone. The group asks to be folded; the
+  /// column it is in decides whether it is.
+  final bool folded;
+
   final DockLayout layout;
   final PanelBuilder panel;
   final ValueChanged<DockLayout> onChanged;
@@ -231,21 +257,26 @@ class _DockGroupViewState extends State<_DockGroupView> {
         children: [
           _Tabs(
             group: group,
+            folded: widget.folded,
             layout: widget.layout,
             onChanged: widget.onChanged,
           ),
-          Expanded(
-            child: showing == null
-                ? const SizedBox.shrink()
-                // A boundary a panel, so a panel that did not change is not
-                // painted again because a different one did. Every edit
-                // rebuilds the editor from the top — a drag does it sixty
-                // times a second — and without these that is a repaint of the
-                // whole window each time.
-                : RepaintBoundary(
-                    child: ClipRect(child: widget.panel(context, showing)),
-                  ),
-          ),
+          // Folded, the panel is not built at all rather than built at no
+          // height: a panel squeezed to nothing overflows, and one nobody can
+          // see has no reason to be doing its work.
+          if (!widget.folded)
+            Expanded(
+              child: showing == null
+                  ? const SizedBox.shrink()
+                  // A boundary a panel, so a panel that did not change is not
+                  // painted again because a different one did. Every edit
+                  // rebuilds the editor from the top — a drag does it sixty
+                  // times a second — and without these that is a repaint of
+                  // the whole window each time.
+                  : RepaintBoundary(
+                      child: ClipRect(child: widget.panel(context, showing)),
+                    ),
+            ),
         ],
       ),
     );
@@ -328,36 +359,111 @@ class _DropHint extends StatelessWidget {
 }
 
 /// The tabs above a group.
+///
+/// The strip is darker than the panels and the tab that is showing is the
+/// panel's own colour, so it reads as the top of the panel under it rather
+/// than as a button that happens to be lit.
 class _Tabs extends StatelessWidget {
   const _Tabs({
     required this.group,
+    required this.folded,
     required this.layout,
     required this.onChanged,
   });
 
   final DockGroup group;
+  final bool folded;
   final DockLayout layout;
   final ValueChanged<DockLayout> onChanged;
 
+  /// Also the height of a folded group, which is nothing but these.
+  static const double height = 28;
+
   @override
   Widget build(BuildContext context) {
+    final folds = folded || layout.canCollapse(group.id);
+    void fold(bool collapsed) =>
+        onChanged(layout.collapse(group.id, collapsed: collapsed));
+
     return Container(
-      height: 28,
-      decoration: const BoxDecoration(
-        color: OrblitColors.surface,
-        border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
-      ),
+      height: height,
+      color: OrblitColors.ground,
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (var i = 0; i < group.panels.length; i++)
-            _PanelTab(
-              panel: group.panels[i],
-              selected: i == group.showing,
-              locked: layout.locked,
-              onTap: () => onChanged(layout.show(group.panels[i].id)),
-              onClose: () => onChanged(layout.close(group.panels[i].id)),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < group.panels.length; i++)
+                    _PanelTab(
+                      // Found by the panel rather than by its name, which is
+                      // also the name of a menu, a button and a heading.
+                      key: ValueKey('dock-tab/${group.panels[i].id}'),
+                      panel: group.panels[i],
+                      // Folded, nothing is showing, so no tab says it is.
+                      selected: i == group.showing && !folded,
+                      locked: layout.locked,
+                      onTap: () {
+                        // The tab that is showing folds its group away and
+                        // opens it again, so the console is put away where
+                        // it is read rather than from a corner of the panel.
+                        if (folds && i == group.showing) {
+                          fold(!folded);
+                        } else {
+                          onChanged(layout.show(group.panels[i].id));
+                        }
+                      },
+                      onClose: () => onChanged(layout.close(group.panels[i].id)),
+                    ),
+                ],
+              ),
             ),
+          ),
+          if (folds)
+            _FoldButton(folded: folded, onTap: () => fold(!folded)),
         ],
+      ),
+    );
+  }
+}
+
+/// The chevron at the end of a group's tabs that folds it.
+class _FoldButton extends StatefulWidget {
+  const _FoldButton({required this.folded, required this.onTap});
+
+  final bool folded;
+  final VoidCallback onTap;
+
+  @override
+  State<_FoldButton> createState() => _FoldButtonState();
+}
+
+class _FoldButtonState extends State<_FoldButton> {
+  bool _hovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: widget.folded ? 'Open' : 'Fold away',
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovering = true),
+        onExit: (_) => setState(() => _hovering = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          child: SizedBox(
+            width: _Tabs.height,
+            child: Icon(
+              widget.folded ? Icons.expand_less : Icons.expand_more,
+              size: 16,
+              color: _hovering ? OrblitColors.ink : OrblitColors.inkDim,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -365,6 +471,7 @@ class _Tabs extends StatelessWidget {
 
 class _PanelTab extends StatefulWidget {
   const _PanelTab({
+    super.key,
     required this.panel,
     required this.selected,
     required this.locked,
@@ -401,34 +508,44 @@ class _PanelTabState extends State<_PanelTab> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: Space.md),
           decoration: BoxDecoration(
-            color: widget.selected ? OrblitColors.ground : Colors.transparent,
+            color: widget.selected
+                ? OrblitColors.surface
+                : (_hovering ? OrblitColors.surface.withValues(alpha: 0.5)
+                    : Colors.transparent),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(Radii.control),
+            ),
             border: Border(
               top: BorderSide(
                 color: widget.selected ? OrblitColors.ember : Colors.transparent,
                 width: 2,
               ),
-              right: const BorderSide(color: OrblitColors.lineSoft),
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(panel.kind.icon, size: 13, color: colour),
+              Icon(panel.kind.icon, size: 14, color: colour),
               const SizedBox(width: Space.sm),
               Text(
-                panel.label.toUpperCase(),
-                style: OrblitText.section.copyWith(color: colour),
+                panel.label,
+                style: OrblitText.label.copyWith(color: colour),
               ),
               // Only under the cursor, so a row of tabs is a row of names
-              // rather than a row of names and crosses.
-              if (_hovering && !widget.locked) ...[
-                const SizedBox(width: Space.sm),
-                GestureDetector(
-                  onTap: widget.onClose,
-                  child: const Icon(Icons.close, size: 12,
-                      color: OrblitColors.inkDim),
-                ),
-              ],
+              // rather than a row of names and crosses. The room is kept
+              // either way, or the tabs to the right would shuffle along as
+              // the pointer crossed them.
+              const SizedBox(width: Space.sm),
+              SizedBox(
+                width: 12,
+                child: _hovering && !widget.locked
+                    ? GestureDetector(
+                        onTap: widget.onClose,
+                        child: const Icon(Icons.close, size: 12,
+                            color: OrblitColors.inkDim),
+                      )
+                    : null,
+              ),
             ],
           ),
         ),

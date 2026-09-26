@@ -1,8 +1,8 @@
 part of 'editor_shell.dart';
 
-// The frame around the panels: the bar above them, the transport
-// buttons on it, the mode's own bar under it, the bar below, and the
-// handle between two panels.
+// The frame around the panels: the bar above them with the menus, the
+// modes and the transport on it, the mode's tool shelf under it, the bar
+// below, and the handle between two panels.
 
 /// The bar between the viewport and the project browser.
 class _Splitter extends StatefulWidget {
@@ -34,8 +34,14 @@ class _SplitterState extends State<_Splitter> {
   }
 }
 
+/// Menus on the left, the modes in the middle, and running the game on the
+/// right, all on one bar so the panels start as high up the window as they
+/// can.
 class _TopBar extends StatelessWidget {
   const _TopBar({
+    required this.modes,
+    required this.mode,
+    required this.onMode,
     required this.project,
     required this.playing,
     required this.history,
@@ -62,6 +68,10 @@ class _TopBar extends StatelessWidget {
     required this.onPaste,
     required this.onDuplicate,
   });
+
+  final List<EditorMode> modes;
+  final EditorMode mode;
+  final ValueChanged<EditorMode> onMode;
 
   final Project project;
   final bool playing;
@@ -99,112 +109,262 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final menus = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        OrblitButton(
+          label: project.name,
+          icon: Icons.chevron_left,
+          tone: ButtonTone.flat,
+          onPressed: onClose,
+        ),
+        const _BarDivider(),
+        _SceneMenu(
+          dirty: dirty,
+          onSave: onSave,
+          onSaveAs: onSaveAs,
+          onNewScene: onNewScene,
+          onOpenInCode: onOpenInCode,
+          onReveal: onReveal,
+        ),
+        _AddMenu(
+          onAdd: onAdd,
+          onAddShape: onAddShape,
+          onAddTerrain: onAddTerrain,
+        ),
+        _EditMenu(
+          selectionCount: selectionCount,
+          clipboard: clipboard,
+          onCopy: onCopy,
+          onCut: onCut,
+          onPaste: onPaste,
+          onDuplicate: onDuplicate,
+        ),
+        _ViewMenu(layout: layout, onLayout: onLayout, panels: panels),
+        const _BarDivider(),
+        // Labelled with what they would undo, so the tooltip answers the
+        // question somebody actually has before they press it.
+        _TransportButton(
+          icon: Icons.undo,
+          tooltip: history.undoLabel == null
+              ? 'Nothing to undo'
+              : 'Undo ${history.undoLabel}',
+          active: false,
+          enabled: history.canUndo,
+          onTap: onUndo,
+        ),
+        _TransportButton(
+          icon: Icons.redo,
+          tooltip: history.redoLabel == null
+              ? 'Nothing to redo'
+              : 'Redo ${history.redoLabel}',
+          active: false,
+          enabled: history.canRedo,
+          onTap: onRedo,
+        ),
+      ],
+    );
+
+    final run = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('pre-alpha', style: OrblitText.caption),
+        const SizedBox(width: Space.md),
+        // Set apart on a pad of its own, since it is the one control on the
+        // bar that leaves the editor rather than changing something in it.
+        Container(
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            color: OrblitColors.surface,
+            borderRadius: BorderRadius.circular(Radii.control + 2),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _TransportButton(
+                icon: playing ? Icons.pause : Icons.play_arrow,
+                tooltip: playing ? 'Pause' : 'Play',
+                active: playing,
+                onTap: onPlay,
+              ),
+              _TransportButton(
+                icon: Icons.stop,
+                tooltip: 'Stop',
+                active: false,
+                onTap: () {},
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+
     return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: Space.md),
-      decoration: const BoxDecoration(
-        color: OrblitColors.surface,
-        border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
-      ),
-      child: Row(
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: Space.sm),
+      // The same colour as the gaps between the panels, so the bar is part of
+      // the frame the panels sit in rather than one more panel on top.
+      color: OrblitColors.ground,
+      child: CustomMultiChildLayout(
+        delegate: _BarLayout(),
         children: [
-          OrblitButton(
-            label: project.name,
-            icon: Icons.chevron_left,
-            tone: ButtonTone.quiet,
-            onPressed: onClose,
-          ),
-          const SizedBox(width: Space.md),
-          _SceneMenu(
-            dirty: dirty,
-            onSave: onSave,
-            onSaveAs: onSaveAs,
-            onNewScene: onNewScene,
-            onOpenInCode: onOpenInCode,
-            onReveal: onReveal,
-          ),
-          const SizedBox(width: Space.xs),
-          _AddMenu(
-            onAdd: onAdd,
-            onAddShape: onAddShape,
-            onAddTerrain: onAddTerrain,
-          ),
-          const SizedBox(width: Space.xs),
-          _EditMenu(
-            selectionCount: selectionCount,
-            clipboard: clipboard,
-            onCopy: onCopy,
-            onCut: onCut,
-            onPaste: onPaste,
-            onDuplicate: onDuplicate,
-          ),
-          const SizedBox(width: Space.xs),
-          _ViewMenu(layout: layout, onLayout: onLayout, panels: panels),
-          const SizedBox(width: Space.md),
-          // Labelled with what they would undo, so the tooltip answers the
-          // question somebody actually has before they press it.
-          _TransportButton(
-            icon: Icons.undo,
-            tooltip: history.undoLabel == null
-                ? 'Nothing to undo'
-                : 'Undo ${history.undoLabel}',
-            active: false,
-            enabled: history.canUndo,
-            onTap: onUndo,
-          ),
-          const SizedBox(width: Space.xs),
-          _TransportButton(
-            icon: Icons.redo,
-            tooltip: history.redoLabel == null
-                ? 'Nothing to redo'
-                : 'Redo ${history.redoLabel}',
-            active: false,
-            enabled: history.canRedo,
-            onTap: onRedo,
-          ),
-          const Spacer(),
-          // Transport in the centre, where it is in every editor that has one,
-          // because muscle memory is worth more than novelty here.
-          _TransportButton(
-            icon: playing ? Icons.pause : Icons.play_arrow,
-            tooltip: playing ? 'Pause' : 'Play',
-            active: playing,
-            onTap: onPlay,
-          ),
-          const SizedBox(width: Space.xs),
-          _TransportButton(
-            icon: Icons.stop,
-            tooltip: 'Stop',
-            active: false,
-            onTap: () {},
-          ),
-          const Spacer(),
-          Text('pre-alpha', style: OrblitText.caption),
+          LayoutId(id: _BarSlot.start, child: menus),
+          // With one mode there is nothing to switch between, and a single
+          // tab would only be a label saying what the editor is.
+          if (modes.length > 1)
+            LayoutId(
+              id: _BarSlot.middle,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final each in modes)
+                    _ModeTab(
+                      key: ValueKey('mode/${each.name}'),
+                      mode: each,
+                      selected: each.name == mode.name,
+                      onTap: () => onMode(each),
+                    ),
+                ],
+              ),
+            ),
+          LayoutId(id: _BarSlot.end, child: run),
         ],
       ),
     );
   }
 }
 
-/// Which mode the editor is in, and the tools that mode puts on the shelf.
+enum _BarSlot { start, middle, end }
+
+/// Lays out the top bar with its middle in the middle of the window.
 ///
-/// Only there when it has something on it. With one mode and no tools it
-/// would be a strip of nothing, taking height from the panels.
-class _ModeBar extends StatelessWidget {
-  const _ModeBar({
-    required this.modes,
+/// Not in the middle of the room left between the two ends: the ends are
+/// different widths, and modes that shift along whenever a menu gains an
+/// unsaved dot are modes somebody has to look for. Pushed aside only when an
+/// end would otherwise run into them.
+class _BarLayout extends MultiChildLayoutDelegate {
+  @override
+  void performLayout(Size size) {
+    final loose = BoxConstraints.loose(size);
+    final start = layoutChild(_BarSlot.start, loose);
+    final end = layoutChild(
+      _BarSlot.end,
+      loose.copyWith(maxWidth: (size.width - start.width).clamp(0, size.width)),
+    );
+    positionChild(_BarSlot.start, Offset(0, (size.height - start.height) / 2));
+    positionChild(
+      _BarSlot.end,
+      Offset(size.width - end.width, (size.height - end.height) / 2),
+    );
+
+    if (!hasChild(_BarSlot.middle)) return;
+    const gap = Space.lg;
+    final room = size.width - start.width - end.width - gap * 2;
+    final middle = layoutChild(
+      _BarSlot.middle,
+      loose.copyWith(maxWidth: room.clamp(0, size.width)),
+    );
+    final lowest = start.width + gap;
+    final highest = size.width - end.width - gap - middle.width;
+    final centred = (size.width - middle.width) / 2;
+    positionChild(
+      _BarSlot.middle,
+      Offset(
+        highest < lowest ? lowest : centred.clamp(lowest, highest),
+        (size.height - middle.height) / 2,
+      ),
+    );
+  }
+
+  @override
+  bool shouldRelayout(_BarLayout oldDelegate) => false;
+}
+
+/// A short upright line between groups of controls on the bar.
+class _BarDivider extends StatelessWidget {
+  const _BarDivider();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 1,
+    height: 18,
+    margin: const EdgeInsets.symmetric(horizontal: Space.sm),
+    color: OrblitColors.line,
+  );
+}
+
+/// One mode on the top bar. The one the editor is in is lit, not boxed: the
+/// row is a choice of what the middle of the window is for, not a row of
+/// buttons.
+class _ModeTab extends StatefulWidget {
+  const _ModeTab({
+    super.key,
     required this.mode,
-    required this.onMode,
+    required this.selected,
+    required this.onTap,
   });
 
-  final List<EditorMode> modes;
   final EditorMode mode;
-  final ValueChanged<EditorMode> onMode;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  State<_ModeTab> createState() => _ModeTabState();
+}
+
+class _ModeTabState extends State<_ModeTab> {
+  bool _hovering = false;
 
   @override
   Widget build(BuildContext context) {
-    final tools = mode.tools;
+    final colour = widget.selected
+        ? OrblitColors.ember
+        : (_hovering ? OrblitColors.ink : OrblitColors.inkMid);
 
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: Space.sm + 2,
+            vertical: Space.xs,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(widget.mode.icon, size: 16, color: colour),
+              const SizedBox(width: Space.xs + 2),
+              Text(
+                widget.mode.label,
+                style: OrblitText.label.copyWith(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: colour,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The tools the mode puts on the shelf, under the top bar.
+///
+/// Only there when the mode has some. With none it would be a strip of
+/// nothing, taking height from the panels.
+class _ModeBar extends StatelessWidget {
+  const _ModeBar({required this.tools});
+
+  final WidgetBuilder tools;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       height: 36,
       padding: const EdgeInsets.symmetric(horizontal: Space.md),
@@ -212,26 +372,7 @@ class _ModeBar extends StatelessWidget {
         color: OrblitColors.surface,
         border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
       ),
-      child: Row(
-        children: [
-          if (modes.length > 1) ...[
-            for (final each in modes)
-              Padding(
-                padding: const EdgeInsets.only(right: Space.xs),
-                child: OrblitButton(
-                  label: each.label,
-                  icon: each.icon,
-                  tone: each.name == mode.name
-                      ? ButtonTone.normal
-                      : ButtonTone.quiet,
-                  onPressed: () => onMode(each),
-                ),
-              ),
-            const SizedBox(width: Space.md),
-          ],
-          if (tools != null) Expanded(child: tools(context)),
-        ],
-      ),
+      child: Row(children: [Expanded(child: tools(context))]),
     );
   }
 }
@@ -326,10 +467,8 @@ class _StatusBar extends StatelessWidget {
     return Container(
       height: 24,
       padding: const EdgeInsets.symmetric(horizontal: Space.md),
-      decoration: const BoxDecoration(
-        color: OrblitColors.surface,
-        border: Border(top: BorderSide(color: OrblitColors.lineSoft)),
-      ),
+      // The frame's colour, like the bar at the top.
+      color: OrblitColors.ground,
       child: Row(
         children: [
           Flexible(

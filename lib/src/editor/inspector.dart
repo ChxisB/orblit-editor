@@ -118,24 +118,13 @@ class Inspector extends StatelessWidget {
     final entry = this.entry;
     final selected = object;
 
+    // No title of its own: the tab above it already says what it is.
     return Container(
       width: 296,
-      decoration: const BoxDecoration(
-        color: OrblitColors.surface,
-        border: Border(left: BorderSide(color: OrblitColors.lineSoft)),
-      ),
+      color: OrblitColors.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            height: 32,
-            padding: const EdgeInsets.symmetric(horizontal: Space.md),
-            alignment: Alignment.centerLeft,
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
-            ),
-            child: Text('INSPECTOR', style: OrblitText.section),
-          ),
           Expanded(
             child:
                 dataPanel ??

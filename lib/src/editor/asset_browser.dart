@@ -246,85 +246,103 @@ class _AssetBrowserState extends State<AssetBrowser> {
       // rather than a menu controller per file in the project.
       AssetMenu(
         onCreate: _promptCreate,
-        child: Container(
-          decoration: const BoxDecoration(
-            color: OrblitColors.surface,
-            border: Border(top: BorderSide(color: OrblitColors.lineSoft)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _Header(
-                crumb: widget.tree.relative(_directory),
-                count: entries.length,
+        child: ColoredBox(
+          color: OrblitColors.surface,
+          // Side by side where there is room for a grid worth having between
+          // the folders and the preview, and the folders over the files where
+          // there is not: the panel is as likely to be a tall strip down the
+          // side of the window as a wide one under the view.
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final narrow = constraints.maxWidth < 560;
+              final tree = _FolderTree(
+                key: ValueKey(_revision),
+                stacked: narrow,
+                tree: widget.tree,
+                folders: folders,
+                current: _directory,
+                onOpen: (path) {
+                  setState(() {
+                    _directory = path;
+                    _selected = null;
+                    _showing = null;
+                  });
+                  widget.onSelectAsset?.call(null);
+                },
+                onDropObject: widget.onMakePrefab,
+              );
+              final grid = _Grid(
+                key: ValueKey('$_directory/$_revision'),
+                entries: entries,
                 cookStatus: widget.cookStatus,
-                previewing: _previewing,
-                onPreview: () => setState(() => _previewing = !_previewing),
-                canGoUp: !p.equals(_directory, widget.tree.root),
-                onUp: () => setState(() {
-                  _directory = p.dirname(_directory);
-                  _selected = null;
-                  _showing = null;
-                }),
-                onRefresh: () => setState(() => _revision++),
-              ),
-              Expanded(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _FolderTree(
-                      key: ValueKey(_revision),
-                      tree: widget.tree,
-                      folders: folders,
-                      current: _directory,
-                      onOpen: (path) {
-                        setState(() {
-                          _directory = path;
-                          _selected = null;
-                          _showing = null;
-                        });
-                        widget.onSelectAsset?.call(null);
-                      },
-                      onDropObject: widget.onMakePrefab,
-                    ),
-                    Expanded(
-                      child: _Grid(
-                        key: ValueKey('$_directory/$_revision'),
-                        entries: entries,
-                        cookStatus: widget.cookStatus,
-                        selected: _selected,
-                        onSelect: (asset) {
-                          setState(() {
-                            _selected = asset.path;
-                            _showing = asset;
-                          });
-                          widget.onSelectAsset?.call(asset);
-                        },
-                        onDelete: _confirmDelete,
-                        onRename: _promptRename,
-                        onBuild: widget.onBuild,
-                        onDropObject: widget.onMakePrefab == null
-                            ? null
-                            : (object) =>
-                                  widget.onMakePrefab!(object, _directory),
-                        onOpen: (asset) {
-                          if (!asset.isFolder) {
-                            widget.onOpenAsset?.call(asset);
-                            return;
-                          }
-                          setState(() {
-                            _directory = asset.path;
-                            _selected = null;
-                            _showing = null;
-                          });
-                        },
-                      ),
-                    ),
-                    if (_previewing) AssetPreview(asset: _showing),
-                  ],
-                ),
-              ),
-            ],
+                selected: _selected,
+                onSelect: (asset) {
+                  setState(() {
+                    _selected = asset.path;
+                    _showing = asset;
+                  });
+                  widget.onSelectAsset?.call(asset);
+                },
+                onDelete: _confirmDelete,
+                onRename: _promptRename,
+                onBuild: widget.onBuild,
+                onDropObject: widget.onMakePrefab == null
+                    ? null
+                    : (object) => widget.onMakePrefab!(object, _directory),
+                onOpen: (asset) {
+                  if (!asset.isFolder) {
+                    widget.onOpenAsset?.call(asset);
+                    return;
+                  }
+                  setState(() {
+                    _directory = asset.path;
+                    _selected = null;
+                    _showing = null;
+                  });
+                },
+              );
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _Header(
+                    crumb: widget.tree.relative(_directory),
+                    count: entries.length,
+                    cookStatus: widget.cookStatus,
+                    // No room for a preview beside the files in a narrow
+                    // panel, so no switch for one either.
+                    previewing: narrow ? null : _previewing,
+                    onPreview: () =>
+                        setState(() => _previewing = !_previewing),
+                    canGoUp: !p.equals(_directory, widget.tree.root),
+                    onUp: () => setState(() {
+                      _directory = p.dirname(_directory);
+                      _selected = null;
+                      _showing = null;
+                    }),
+                    onRefresh: () => setState(() => _revision++),
+                  ),
+                  Expanded(
+                    child: narrow
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(flex: 2, child: tree),
+                              Expanded(flex: 3, child: grid),
+                            ],
+                          )
+                        : Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              tree,
+                              Expanded(child: grid),
+                              if (_previewing) AssetPreview(asset: _showing),
+                            ],
+                          ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),

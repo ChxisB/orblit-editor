@@ -38,8 +38,8 @@ void main() {
 
       expect(find.byType(SceneViewport), findsNWidgets(4));
       // Each one is a camera of its own, so moving one does not move the rest.
-      expect(find.text('SCENE 2'), findsOneWidget);
-      expect(find.text('SCENE 4'), findsOneWidget);
+      expect(dockTab('scene2'), findsOneWidget);
+      expect(dockTab('scene4'), findsOneWidget);
     });
 
     testWidgets('and back to one', (tester) async {
@@ -52,10 +52,10 @@ void main() {
 
     testWidgets('the game view is a tab beside the scene', (tester) async {
       await open(tester);
-      expect(find.text('GAME'), findsOneWidget);
+      expect(dockTab('game'), findsOneWidget);
       expect(find.byType(GameView), findsNothing);
 
-      await tester.tap(find.text('GAME'));
+      await tester.tap(dockTab('game'));
       await tester.pumpAndSettle();
 
       expect(find.byType(GameView), findsOneWidget);
@@ -128,19 +128,20 @@ void main() {
       await open(tester);
 
       for (final tab in [
-        'HIERARCHY',
-        'SCENE',
-        'GAME',
-        'INSPECTOR',
-        'MODELLING',
-        'PROJECT',
-        'CONSOLE',
-        'UVS',
+        'outliner',
+        'scene',
+        'game',
+        'inspector',
+        'modelling',
+        'project',
+        'console',
+        'uvs',
       ]) {
+        // Once, and as a tab that can be dragged somewhere else.
         expect(
           find.descendant(
-            of: find.byType(Draggable<PanelDrag>),
-            matching: find.text(tab),
+            of: dockTab(tab),
+            matching: find.byType(Draggable<PanelDrag>),
           ),
           findsOneWidget,
           reason: tab,

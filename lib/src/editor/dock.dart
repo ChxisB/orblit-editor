@@ -174,6 +174,7 @@ class DockGroup extends DockNode {
     required super.id,
     required this.panels,
     this.active = 0,
+    this.collapsed = false,
   });
 
   final List<DockPanel> panels;
@@ -183,21 +184,35 @@ class DockGroup extends DockNode {
   /// allowed to be briefly out of step.
   final int active;
 
+  /// Whether it is folded down to its tabs.
+  ///
+  /// Folded rather than closed, so the console and the timeline are one
+  /// click away without taking height from the view while nobody is reading
+  /// them. Only a group stacked in a column folds: in a row it would be a
+  /// strip of tabs as tall as the window and as narrow as nothing.
+  final bool collapsed;
+
   int get showing =>
       panels.isEmpty ? 0 : active.clamp(0, panels.length - 1);
 
   DockPanel? get current => panels.isEmpty ? null : panels[showing];
 
-  DockGroup copyWith({List<DockPanel>? panels, int? active}) => DockGroup(
+  DockGroup copyWith({
+    List<DockPanel>? panels,
+    int? active,
+    bool? collapsed,
+  }) => DockGroup(
         id: id,
         panels: panels ?? this.panels,
         active: active ?? this.active,
+        collapsed: collapsed ?? this.collapsed,
       );
 
   @override
   Map<String, Object?> toJson() => {
         'id': id,
         'active': active,
+        if (collapsed) 'collapsed': true,
         'panels': [for (final panel in panels) panel.toJson()],
       };
 
@@ -211,6 +226,7 @@ class DockGroup extends DockNode {
     return DockGroup(
       id: id,
       active: map['active'] is int ? map['active']! as int : 0,
+      collapsed: map['collapsed'] == true,
       panels: [
         if (raw is List)
           for (final entry in raw) ?DockPanel.fromJson(entry, kinds),
@@ -250,6 +266,21 @@ class DockSplit extends DockNode {
       return [for (var i = 0; i < children.length; i++) 1 / children.length];
     }
     return [for (final w in weights) (w <= 0 ? 0 : w) / total];
+  }
+
+  /// Which children are drawn folded down to their tabs, one per child.
+  ///
+  /// A folded group only makes sense stacked in a column, and a column with
+  /// every child folded would have nothing to give the room to, so then none
+  /// of them are.
+  List<bool> get folded {
+    final wants = [
+      for (final child in children)
+        axis == Axis.vertical && child is DockGroup && child.collapsed,
+    ];
+    return wants.every((fold) => fold)
+        ? [for (final _ in children) false]
+        : wants;
   }
 
   DockSplit copyWith({List<DockNode>? children, List<double>? weights}) =>
@@ -319,129 +350,115 @@ class DockLayout {
   static const int formatVersion = 1;
 
   /// The arrangement the editor opens with.
-  factory DockLayout.standard() => const DockLayout(
-        root: DockSplit(
-          id: 'root',
-          axis: Axis.vertical,
-          weights: [0.74, 0.26],
-          children: [
-            DockSplit(
-              id: 'middle',
-              axis: Axis.horizontal,
-              weights: [0.19, 0.58, 0.23],
-              children: [
-                DockGroup(
-                  id: 'left',
-                  panels: [
-                    DockPanel(id: 'outliner', kind: PanelKind.outliner),
-                  ],
-                ),
-                DockGroup(
-                  id: 'centre',
-                  panels: [
-                    DockPanel(id: 'scene', kind: PanelKind.viewport),
-                    DockPanel(id: 'game', kind: PanelKind.game),
-                  ],
-                ),
-                DockGroup(
-                  id: 'right',
-                  panels: [
-                    DockPanel(id: 'inspector', kind: PanelKind.inspector),
-                    // Beside the inspector rather than behind a menu. It is a
-                    // tool, and a tool nobody can find is a tool nobody uses.
-                    DockPanel(id: 'modelling', kind: PanelKind.modelling),
-                  ],
-                ),
-              ],
-            ),
-            DockGroup(
-              id: 'bottom',
-              panels: [
-                DockPanel(id: 'project', kind: PanelKind.project),
-                DockPanel(id: 'console', kind: PanelKind.console),
-                DockPanel(id: 'uvs', kind: PanelKind.uvs),
-                DockPanel(id: 'timeline', kind: PanelKind.timeline),
-              ],
-            ),
+  ///
+  /// Three columns, each the height of the window apart from the middle one:
+  /// what is in the scene and what is in the project on the left, the view in
+  /// the middle with the console and the other tall-and-wide tools folded
+  /// under it, and the inspector down the whole right side, because a
+  /// component with twenty fields is the one thing that is always short of
+  /// height.
+  factory DockLayout.standard() => DockLayout.columns(
+        const DockGroup(
+          id: 'centre',
+          panels: [
+            DockPanel(id: 'scene', kind: PanelKind.viewport),
+            DockPanel(id: 'game', kind: PanelKind.game),
           ],
         ),
+        bottom: const [
+          DockPanel(id: 'console', kind: PanelKind.console),
+          DockPanel(id: 'uvs', kind: PanelKind.uvs),
+          DockPanel(id: 'timeline', kind: PanelKind.timeline),
+        ],
+        right: const [
+          DockPanel(id: 'inspector', kind: PanelKind.inspector),
+          // Beside the inspector rather than behind a menu. It is a tool, and
+          // a tool nobody can find is a tool nobody uses.
+          DockPanel(id: 'modelling', kind: PanelKind.modelling),
+        ],
       );
 
   /// Four scene views onto the same world, the way a modelling tool arranges
   /// them. The reason the layout is data at all.
-  factory DockLayout.fourViews() => DockLayout(
+  factory DockLayout.fourViews() => DockLayout.columns(
+        DockSplit(
+          id: 'views',
+          axis: Axis.vertical,
+          weights: const [0.5, 0.5],
+          children: [
+            for (final (row, pair) in const [
+              ('viewsTop', ['scene', 'scene2']),
+              ('viewsBottom', ['scene3', 'scene4']),
+            ])
+              DockSplit(
+                id: row,
+                axis: Axis.horizontal,
+                weights: const [0.5, 0.5],
+                children: [
+                  for (final one in pair)
+                    DockGroup(
+                      id: 'group_$one',
+                      panels: [
+                        DockPanel(
+                          id: one,
+                          kind: PanelKind.viewport,
+                          title: one == 'scene'
+                              ? 'Scene'
+                              : 'Scene ${one.substring(5)}',
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+          ],
+        ),
+        bottom: const [DockPanel(id: 'console', kind: PanelKind.console)],
+        right: const [DockPanel(id: 'inspector', kind: PanelKind.inspector)],
+      );
+
+  /// The three columns every built-in arrangement shares, around whatever
+  /// goes in the middle. A mode's own arrangement starts from here too, so
+  /// switching mode moves panels rather than the whole editor.
+  ///
+  /// The panels under the view start folded: the view is what somebody opens
+  /// the editor to look at, and the console is a click away when there is
+  /// something in it worth reading.
+  factory DockLayout.columns(
+    DockNode centre, {
+    required List<DockPanel> bottom,
+    required List<DockPanel> right,
+  }) =>
+      DockLayout(
         root: DockSplit(
           id: 'root',
-          axis: Axis.vertical,
-          weights: const [0.74, 0.26],
+          axis: Axis.horizontal,
+          weights: const [0.2, 0.58, 0.22],
           children: [
-            DockSplit(
-              id: 'middle',
-              axis: Axis.horizontal,
-              weights: const [0.16, 0.62, 0.22],
+            const DockSplit(
+              id: 'leftColumn',
+              axis: Axis.vertical,
+              weights: [0.55, 0.45],
               children: [
-                const DockGroup(
+                DockGroup(
                   id: 'left',
                   panels: [DockPanel(id: 'outliner', kind: PanelKind.outliner)],
                 ),
-                DockSplit(
-                  id: 'views',
-                  axis: Axis.vertical,
-                  weights: const [0.5, 0.5],
-                  children: [
-                    DockSplit(
-                      id: 'viewsTop',
-                      axis: Axis.horizontal,
-                      weights: const [0.5, 0.5],
-                      children: [
-                        for (final one in const ['scene', 'scene2'])
-                          DockGroup(
-                            id: 'group_$one',
-                            panels: [
-                              DockPanel(
-                                id: one,
-                                kind: PanelKind.viewport,
-                                title: one == 'scene' ? 'Scene' : 'Scene 2',
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                    DockSplit(
-                      id: 'viewsBottom',
-                      axis: Axis.horizontal,
-                      weights: const [0.5, 0.5],
-                      children: [
-                        for (final one in const ['scene3', 'scene4'])
-                          DockGroup(
-                            id: 'group_$one',
-                            panels: [
-                              DockPanel(
-                                id: one,
-                                kind: PanelKind.viewport,
-                                title: one == 'scene3' ? 'Scene 3' : 'Scene 4',
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-                const DockGroup(
-                  id: 'right',
-                  panels: [
-                    DockPanel(id: 'inspector', kind: PanelKind.inspector),
-                  ],
+                DockGroup(
+                  id: 'files',
+                  panels: [DockPanel(id: 'project', kind: PanelKind.project)],
                 ),
               ],
             ),
-            const DockGroup(
-              id: 'bottom',
-              panels: [
-                DockPanel(id: 'project', kind: PanelKind.project),
-                DockPanel(id: 'console', kind: PanelKind.console),
+            DockSplit(
+              id: 'middle',
+              axis: Axis.vertical,
+              weights: const [0.72, 0.28],
+              children: [
+                centre,
+                DockGroup(id: 'bottom', panels: bottom, collapsed: true),
               ],
             ),
+            DockGroup(id: 'right', panels: right),
           ],
         ),
       );
@@ -472,7 +489,8 @@ class DockLayout {
   static DockNode _show(DockNode node, String panelId) {
     if (node is DockGroup) {
       final at = node.panels.indexWhere((panel) => panel.id == panelId);
-      return at < 0 ? node : node.copyWith(active: at);
+      // Unfolded too: asking to see a panel is asking to see it, not its tab.
+      return at < 0 ? node : node.copyWith(active: at, collapsed: false);
     }
     if (node is DockSplit) {
       return node.copyWith(
@@ -498,6 +516,7 @@ class DockLayout {
       return node.copyWith(
         panels: [...node.panels, panel],
         active: node.panels.length,
+        collapsed: false,
       );
     }
     if (node is DockSplit) {
@@ -605,6 +624,7 @@ class DockLayout {
         return node.copyWith(
           panels: [...node.panels, panel],
           active: node.panels.length,
+          collapsed: false,
         );
       }
 
@@ -630,6 +650,57 @@ class DockLayout {
       );
     }
     return node;
+  }
+
+  /// Folds a group down to its tabs, or opens it out again.
+  ///
+  /// Allowed while the layout is locked, the way choosing a tab is: it
+  /// changes what is showing, not where anything is.
+  DockLayout collapse(String groupId, {bool collapsed = true}) {
+    if (collapsed && !canCollapse(groupId)) return this;
+    return copyWith(root: _collapse(root, groupId, collapsed));
+  }
+
+  static DockNode _collapse(DockNode node, String groupId, bool collapsed) {
+    if (node is DockGroup && node.id == groupId) {
+      return node.copyWith(collapsed: collapsed);
+    }
+    if (node is DockSplit) {
+      return node.copyWith(
+        children: [
+          for (final child in node.children)
+            _collapse(child, groupId, collapsed),
+        ],
+      );
+    }
+    return node;
+  }
+
+  /// Whether a group can fold: it is stacked in a column under something
+  /// else, and something in that column would still be open to take the room.
+  ///
+  /// Under something, because a group folds down: the console under the view
+  /// folds and the view grows into its room, but the view itself folding up
+  /// to a strip at the top of the window would leave the editor with nothing
+  /// to look at.
+  bool canCollapse(String groupId) {
+    bool within(DockNode node) {
+      if (node is! DockSplit) return false;
+      final at = node.children.indexWhere(
+        (child) => child is DockGroup && child.id == groupId,
+      );
+      if (at >= 0) {
+        if (node.axis != Axis.vertical || at == 0) return false;
+        final folded = node.folded;
+        for (var i = 0; i < node.children.length; i++) {
+          if (i != at && !folded[i]) return true;
+        }
+        return false;
+      }
+      return node.children.any(within);
+    }
+
+    return within(root);
   }
 
   /// Changes how two neighbours in a split share their space.

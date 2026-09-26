@@ -44,9 +44,10 @@ void main() {
       );
     }
 
-    /// in capitals, so the finder is too.
+    /// It is a tab beside the inspector, and a tab that is not showing is not
+    /// built.
     Future<void> openTools(WidgetTester tester) async {
-      await tester.tap(find.text('MODELLING').first);
+      await tester.tap(dockTab('modelling'));
       await tester.pumpAndSettle();
     }
 

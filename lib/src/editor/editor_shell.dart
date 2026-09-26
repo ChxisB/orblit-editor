@@ -648,6 +648,9 @@ class _EditorShellState extends State<EditorShell> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _TopBar(
+              modes: _registry.modes.all,
+              mode: _mode,
+              onMode: _enterMode,
               project: widget.project,
               playing: _playing,
               history: _history,
@@ -677,12 +680,7 @@ class _EditorShellState extends State<EditorShell> {
               onPaste: _paste,
               onDuplicate: _duplicate,
             ),
-            if (_registry.modes.all.length > 1 || _mode.tools != null)
-              _ModeBar(
-                modes: _registry.modes.all,
-                mode: _mode,
-                onMode: _enterMode,
-              ),
+            if (_mode.tools case final tools?) _ModeBar(tools: tools),
             // The panels, arranged as the layout says. What is where is
             // data — saved with the project, put back exactly, and
             // changed by dragging a tab rather than by editing this.

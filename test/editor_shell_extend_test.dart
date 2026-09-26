@@ -13,7 +13,6 @@ import 'package:orblit_editor/src/editor/panel_registry.dart';
 import 'package:orblit_editor/src/editor/scene.dart';
 import 'package:orblit_editor/src/editor/viewport.dart';
 import 'package:orblit_editor/src/editor/viewport_input.dart';
-import 'package:orblit_editor/src/widgets/controls.dart';
 import 'package:path/path.dart' as p;
 
 import 'support/editor_shell.dart';
@@ -126,12 +125,10 @@ void main() {
   });
 
   group('modes', () {
-    Finder modeButton(IconData icon) => find.byWidgetPredicate(
-      (widget) => widget is OrblitButton && widget.icon == icon,
-    );
+    Finder modeTab(String name) => find.byKey(ValueKey('mode/$name'));
 
-    Future<void> enter(WidgetTester tester, IconData icon) async {
-      await tester.tap(modeButton(icon));
+    Future<void> enter(WidgetTester tester, String name) async {
+      await tester.tap(modeTab(name));
       await tester.pumpAndSettle();
     }
 
@@ -139,8 +136,8 @@ void main() {
       tester,
     ) async {
       await open(tester);
-      expect(modeButton(Icons.open_with), findsOneWidget);
-      expect(modeButton(Icons.landscape_outlined), findsOneWidget);
+      expect(modeTab('scene'), findsOneWidget);
+      expect(modeTab('terrain'), findsOneWidget);
     });
 
     testWidgets('a second brings its own panels, its tools and the first say '
@@ -169,11 +166,11 @@ void main() {
       );
 
       // It opens in the scene, as it always has.
-      expect(modeButton(Icons.open_with), findsOneWidget);
+      expect(modeTab('scene'), findsOneWidget);
       expect(find.text('ground tools'), findsNothing);
       expect(find.byType(Outliner), findsOneWidget);
 
-      await enter(tester, Icons.terrain);
+      await enter(tester, 'ground');
       expect(find.text('ground tools'), findsOneWidget);
       expect(find.byType(Outliner), findsNothing);
 
@@ -190,7 +187,7 @@ void main() {
         contains('"console"'),
       );
 
-      await enter(tester, Icons.open_with);
+      await enter(tester, 'scene');
       expect(find.text('ground tools'), findsNothing);
       expect(find.byType(Outliner), findsOneWidget);
       expect(find.byType(ConsolePanel), findsNothing);
@@ -201,7 +198,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(phases, isEmpty);
 
-      await enter(tester, Icons.terrain);
+      await enter(tester, 'ground');
       expect(find.byType(ConsolePanel), findsOneWidget);
     });
   });

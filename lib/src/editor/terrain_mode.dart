@@ -48,48 +48,22 @@ EditorMode terrainMode({
 }
 
 /// The scene's arrangement with the brush in front on the right, since the
-/// brush's settings are what is reached for most while shaping, and without
-/// the panels that have nothing to say about the ground.
-DockLayout terrainLayout() => const DockLayout(
-  root: DockSplit(
-    id: 'root',
-    axis: Axis.vertical,
-    weights: [0.74, 0.26],
-    children: [
-      DockSplit(
-        id: 'middle',
-        axis: Axis.horizontal,
-        weights: [0.19, 0.58, 0.23],
-        children: [
-          DockGroup(
-            id: 'left',
-            panels: [DockPanel(id: 'outliner', kind: PanelKind.outliner)],
-          ),
-          DockGroup(
-            id: 'centre',
-            panels: [
-              DockPanel(id: 'scene', kind: PanelKind.viewport),
-              DockPanel(id: 'game', kind: PanelKind.game),
-            ],
-          ),
-          DockGroup(
-            id: 'right',
-            panels: [
-              DockPanel(id: 'brush', kind: terrainBrushPanel),
-              DockPanel(id: 'inspector', kind: PanelKind.inspector),
-            ],
-          ),
-        ],
-      ),
-      DockGroup(
-        id: 'bottom',
-        panels: [
-          DockPanel(id: 'project', kind: PanelKind.project),
-          DockPanel(id: 'console', kind: PanelKind.console),
-        ],
-      ),
+/// brush's settings are what is reached for most while shaping, and only the
+/// console under the view: the other tools there have nothing to say about
+/// the ground.
+DockLayout terrainLayout() => DockLayout.columns(
+  const DockGroup(
+    id: 'centre',
+    panels: [
+      DockPanel(id: 'scene', kind: PanelKind.viewport),
+      DockPanel(id: 'game', kind: PanelKind.game),
     ],
   ),
+  bottom: const [DockPanel(id: 'console', kind: PanelKind.console)],
+  right: const [
+    DockPanel(id: 'brush', kind: terrainBrushPanel),
+    DockPanel(id: 'inspector', kind: PanelKind.inspector),
+  ],
 );
 
 /// Each tool's icon on the shelf.

@@ -65,7 +65,7 @@ void main() {
   /// Starts a tool from the modelling panel, which is where they live now —
   /// the viewport draws what a tool is doing and does not offer the tool.
   Future<void> startTool(WidgetTester tester, ViewportTool tool) async {
-    await tester.tap(find.text('MODELLING').first);
+    await tester.tap(find.byKey(const ValueKey('dock-tab/modelling')));
     await tester.pumpAndSettle();
     tester
         .widget<ModellingPanel>(find.byType(ModellingPanel))

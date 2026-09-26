@@ -8,7 +8,6 @@ import 'package:orblit_editor/src/editor/terrain_brush_panel.dart';
 import 'package:orblit_editor/src/editor/terrain_mode.dart';
 import 'package:orblit_editor/src/editor/viewport.dart';
 import 'package:orblit_editor/src/editor/workspace.dart';
-import 'package:orblit_editor/src/widgets/controls.dart';
 import 'package:path/path.dart' as p;
 
 import 'support/editor_shell.dart';
@@ -18,12 +17,10 @@ import 'support/editor_shell.dart';
 
 const file = 'terrain/terrain/terrain.oterrain';
 
-Finder modeButton(IconData icon) => find.byWidgetPredicate(
-  (widget) => widget is OrblitButton && widget.icon == icon,
-);
+Finder modeTab(String name) => find.byKey(ValueKey('mode/$name'));
 
 Future<void> enterTerrainMode(WidgetTester tester) async {
-  await tester.tap(modeButton(Icons.landscape_outlined));
+  await tester.tap(modeTab('terrain'));
   await tester.pumpAndSettle();
 }
 

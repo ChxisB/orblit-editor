@@ -10,8 +10,13 @@ class _FolderTree extends StatelessWidget {
     required this.folders,
     required this.current,
     required this.onOpen,
+    this.stacked = false,
     this.onDropObject,
   });
+
+  /// Above the files rather than beside them, in a panel too narrow for both
+  /// side by side. It then runs the panel's width, with a line under it.
+  final bool stacked;
 
   final AssetTree tree;
   final List<({String path, int depth})> folders;
@@ -23,10 +28,13 @@ class _FolderTree extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const edge = BorderSide(color: OrblitColors.lineSoft);
     return Container(
-      width: 176,
-      decoration: const BoxDecoration(
-        border: Border(right: BorderSide(color: OrblitColors.lineSoft)),
+      width: stacked ? null : 176,
+      decoration: BoxDecoration(
+        border: stacked
+            ? const Border(bottom: edge)
+            : const Border(right: edge),
       ),
       child: ListView(
         padding: const EdgeInsets.symmetric(vertical: Space.xs),

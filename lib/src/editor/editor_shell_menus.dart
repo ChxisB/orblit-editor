@@ -89,8 +89,7 @@ class _AddMenu extends StatelessWidget {
       ],
       builder: (context, controller, child) => OrblitButton(
         label: 'Add',
-        icon: Icons.add,
-        tone: ButtonTone.quiet,
+        tone: ButtonTone.flat,
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),
       ),
@@ -193,8 +192,7 @@ class _SceneMenu extends StatelessWidget {
       builder: (context, controller, child) => OrblitButton(
         // The dot is the unsaved marker, in the place somebody looks for it.
         label: dirty ? 'Scene •' : 'Scene',
-        icon: Icons.description_outlined,
-        tone: ButtonTone.quiet,
+        tone: ButtonTone.flat,
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),
       ),
@@ -265,8 +263,7 @@ class _EditMenu extends StatelessWidget {
       ],
       builder: (context, controller, child) => OrblitButton(
         label: 'Edit',
-        icon: Icons.content_copy,
-        tone: ButtonTone.quiet,
+        tone: ButtonTone.flat,
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),
       ),
@@ -390,8 +387,7 @@ class _ViewMenu extends StatelessWidget {
       ],
       builder: (context, controller, child) => OrblitButton(
         label: layout.locked ? 'View •' : 'View',
-        icon: Icons.dashboard_outlined,
-        tone: ButtonTone.quiet,
+        tone: ButtonTone.flat,
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),
       ),

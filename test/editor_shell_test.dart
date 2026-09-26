@@ -124,7 +124,7 @@ void main() {
   testWidgets('the project browser lists what is on disk', (tester) async {
     await open(tester);
 
-    expect(find.text('PROJECT'), findsOneWidget);
+    expect(dockTab('project'), findsOneWidget);
     expect(find.text('scenes'), findsWidgets);
   });
 

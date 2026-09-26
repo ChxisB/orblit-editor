@@ -68,11 +68,14 @@ class _CookSummary extends StatelessWidget {
           children: [
             const Icon(Icons.error_outline, size: 13, color: OrblitColors.bad),
             const SizedBox(width: 4),
-            Text(
-              'Cook unknown',
-              style: OrblitText.caption.copyWith(
-                fontSize: 11,
-                color: OrblitColors.bad,
+            Flexible(
+              child: Text(
+                'Cook unknown',
+                overflow: TextOverflow.ellipsis,
+                style: OrblitText.caption.copyWith(
+                  fontSize: 11,
+                  color: OrblitColors.bad,
+                ),
               ),
             ),
           ],
@@ -83,6 +86,7 @@ class _CookSummary extends StatelessWidget {
     if (status.asking) {
       return Text(
         'Checking assets…',
+        overflow: TextOverflow.ellipsis,
         style: OrblitText.caption.copyWith(fontSize: 11),
       );
     }
@@ -102,6 +106,7 @@ class _CookSummary extends StatelessWidget {
           '${counts[CookState.cooked] ?? 0} already cooked.',
       child: Text(
         parts.join(' · '),
+        overflow: TextOverflow.ellipsis,
         style: OrblitText.caption.copyWith(
           fontSize: 11,
           color: failed > 0 ? OrblitColors.bad : OrblitColors.warn,

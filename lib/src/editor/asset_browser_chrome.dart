@@ -18,7 +18,8 @@ class _Header extends StatelessWidget {
   final int count;
   final CookStatusIndex? cookStatus;
   final bool canGoUp;
-  final bool previewing;
+  /// Whether the preview is showing, or null where there is no room for one.
+  final bool? previewing;
   final VoidCallback onPreview;
   final VoidCallback onUp;
   final VoidCallback onRefresh;
@@ -50,8 +51,10 @@ class _Header extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          // Gives way before anything else on the bar does, in a panel
+          // down the side of the window rather than under the view.
           if (cookStatus != null) ...[
-            _CookSummary(status: cookStatus!),
+            Flexible(child: _CookSummary(status: cookStatus!)),
             const SizedBox(width: Space.sm),
           ],
           Text(
@@ -75,15 +78,17 @@ class _Header extends StatelessWidget {
               },
             ),
           ),
-          const SizedBox(width: Space.xs),
-          _IconAction(
-            icon: previewing
-                ? Icons.visibility_outlined
-                : Icons.visibility_off_outlined,
-            tooltip: previewing ? 'Hide the preview' : 'Show the preview',
-            enabled: true,
-            onTap: onPreview,
-          ),
+          if (previewing case final previewing?) ...[
+            const SizedBox(width: Space.xs),
+            _IconAction(
+              icon: previewing
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              tooltip: previewing ? 'Hide the preview' : 'Show the preview',
+              enabled: true,
+              onTap: onPreview,
+            ),
+          ],
           const SizedBox(width: Space.xs),
           _IconAction(
             icon: Icons.refresh,

@@ -150,7 +150,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.text('UVS'), findsWidgets);
+    expect(find.byKey(const ValueKey('dock-tab/uvs')), findsOneWidget);
   });
 
   testWidgets('the inspector still follows a change of selection',

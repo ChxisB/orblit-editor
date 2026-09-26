@@ -42,7 +42,7 @@ void main() {
   }
 
   Future<void> openTools(WidgetTester tester) async {
-    await tester.tap(find.text('MODELLING').first);
+    await tester.tap(find.byKey(const ValueKey('dock-tab/modelling')));
     await tester.pumpAndSettle();
   }
 
@@ -62,7 +62,7 @@ void main() {
     await open(tester);
     // A tool nobody can find is a tool nobody uses, so it is a tab beside
     // the inspector rather than an item in a menu.
-    expect(find.text('MODELLING'), findsOneWidget);
+    expect(find.byKey(const ValueKey('dock-tab/modelling')), findsOneWidget);
   });
 
   testWidgets('it says what it is waiting for with nothing selected',
@@ -147,6 +147,6 @@ void main() {
     // where somebody has closed it.
     panel.onOpenTools();
     await tester.pumpAndSettle();
-    expect(find.text('MODELLING'), findsOneWidget);
+    expect(find.byKey(const ValueKey('dock-tab/modelling')), findsOneWidget);
   });
 }

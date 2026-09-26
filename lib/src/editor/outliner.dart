@@ -165,31 +165,24 @@ class _OutlinerState extends State<Outliner> {
   Widget build(BuildContext context) {
     final rows = _rows;
 
+    // No title of its own: the tab above it already says what it is.
     return Container(
       width: 248,
-      decoration: const BoxDecoration(
-        color: OrblitColors.surface,
-        border: Border(right: BorderSide(color: OrblitColors.lineSoft)),
-      ),
+      color: OrblitColors.surface,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            height: 32,
-            padding: const EdgeInsets.only(left: Space.md, right: Space.sm),
+            height: 24,
+            padding: const EdgeInsets.symmetric(horizontal: Space.md),
+            alignment: Alignment.centerLeft,
             decoration: const BoxDecoration(
               border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
             ),
-            child: Row(
-              children: [
-                Text('HIERARCHY', style: OrblitText.section),
-                const Spacer(),
-                Text(
-                  '${widget.workspace.entries.length} '
-                  'scene${widget.workspace.entries.length == 1 ? '' : 's'}',
-                  style: OrblitText.mono.copyWith(fontSize: 10.5),
-                ),
-              ],
+            child: Text(
+              '${widget.workspace.entries.length} '
+              'scene${widget.workspace.entries.length == 1 ? '' : 's'} open',
+              style: OrblitText.mono.copyWith(fontSize: 10.5),
             ),
           ),
           Expanded(

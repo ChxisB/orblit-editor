@@ -92,8 +92,7 @@ void main() {
   /// Brings the modelling panel to the front. It is a tab beside the
   /// inspector, and a tab that is not showing is not built.
   Future<void> openTools(WidgetTester tester) async {
-    // Tabs are drawn in capitals, so the finder is too.
-    await tester.tap(find.text('MODELLING').first);
+    await tester.tap(find.byKey(const ValueKey('dock-tab/modelling')));
     await tester.pumpAndSettle();
   }
 
