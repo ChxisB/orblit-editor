@@ -10,7 +10,9 @@ extension _Panels on _EditorShellState {
     final registry = EditorRegistry();
     _registerPanels(registry.panels);
     _registerSections(registry.sections);
-    registry.gizmos.register(bodyGizmo());
+    registry.gizmos
+      ..register(bodyGizmo())
+      ..register(jointGizmo());
     registry.modes.register(
       const EditorMode(
         name: 'scene',
@@ -131,7 +133,9 @@ extension _Panels on _EditorShellState {
       ),
       before: 'interface',
     );
-    sections.register(terrainSection(bench: _terrains), before: 'interface');
+    sections
+      ..register(jointSection(), before: 'interface')
+      ..register(terrainSection(bench: _terrains), before: 'interface');
   }
 
   /// The object the inspector is showing, if it is one rather than a scene.

@@ -39,6 +39,8 @@ import 'script_build.dart';
 import 'ui_editor.dart';
 import 'history.dart';
 import 'inspector.dart';
+import 'joint_gizmo.dart';
+import 'joint_section.dart';
 import 'mesh_edit.dart';
 import 'mesh_panel.dart';
 import 'model_bounds.dart';

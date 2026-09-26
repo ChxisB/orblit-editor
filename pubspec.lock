@@ -375,7 +375,7 @@ packages:
       path: "../orblit/packages/orblit_motion"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.2.0"
   orblit_native:
     dependency: "direct main"
     description:
@@ -403,7 +403,7 @@ packages:
       path: "../orblit/packages/orblit_scene"
       relative: true
     source: path
-    version: "0.8.0"
+    version: "0.9.0"
   orblit_sequence:
     dependency: transitive
     description:

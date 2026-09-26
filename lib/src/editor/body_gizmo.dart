@@ -6,8 +6,8 @@ import 'package:vector_math/vector_math_64.dart';
 
 import '../theme/orblit_theme.dart';
 import 'body_section.dart';
-import 'gizmo.dart';
 import 'gizmo_registry.dart';
+import 'world_lines.dart';
 
 /// Draws the shape the physics sees for every selected object with a body.
 ///
@@ -49,39 +49,16 @@ class _BodyPainter extends CustomPainter {
       if (body != null) outline.body(body, target.scene.worldOf(id));
     }
 
-    canvas
-      // A dark pass under the bright one, as the selection outline has, so the
-      // wireframe reads against a pale floor as well as a dark sky.
-      ..drawPath(
-        outline.path,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3
-          ..color = const Color(0x66000000),
-      )
-      ..drawPath(
-        outline.path,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.25
-          ..color = OrblitColors.good,
-      );
+    outline.paint(canvas, OrblitColors.good);
   }
 
   @override
   bool shouldRepaint(covariant _BodyPainter old) => true;
 }
 
-/// Lines in the world, gathered as a path in the view's pixels.
-class _Outline {
-  _Outline(this.projection);
-
-  final ViewportProjection projection;
-  final path = Path();
-
-  /// Segments to a full circle: round at any size a body is drawn at, and few
-  /// enough that a hundred selected balls cost nothing.
-  static const int _segments = 32;
+/// A body's shape as lines in the world.
+class _Outline extends WorldLines {
+  _Outline(super.projection);
 
   /// [body] laid out the way the simulation places it: turned with its
   /// object, at the object's point for [doc.BodyComponent.centre], and sized
@@ -135,7 +112,7 @@ class _Outline {
     // Two corners share an edge when they differ along exactly one axis.
     for (var i = 0; i < 8; i++) {
       for (final axis in const [1, 2, 4]) {
-        if (i & axis == 0) _line(corner(i), corner(i | axis));
+        if (i & axis == 0) line(corner(i), corner(i | axis));
       }
     }
   }
@@ -143,9 +120,9 @@ class _Outline {
   /// A ring about each of the object's axes, so a ball's turn shows as well
   /// as its size.
   void _ball(Vector3 centre, Vector3 x, Vector3 y, Vector3 z, double radius) {
-    _arc(centre, x, y, radius, 0, 2 * math.pi);
-    _arc(centre, y, z, radius, 0, 2 * math.pi);
-    _arc(centre, z, x, radius, 0, 2 * math.pi);
+    arc(centre, x, y, radius, 0, 2 * math.pi);
+    arc(centre, y, z, radius, 0, 2 * math.pi);
+    arc(centre, z, x, radius, 0, 2 * math.pi);
   }
 
   /// A ring at each end of the straight part, four lines joining them, and a
@@ -160,14 +137,14 @@ class _Outline {
   ) {
     final top = centre + y * straight;
     final bottom = centre - y * straight;
-    _arc(top, x, z, radius, 0, 2 * math.pi);
-    _arc(bottom, x, z, radius, 0, 2 * math.pi);
+    arc(top, x, z, radius, 0, 2 * math.pi);
+    arc(bottom, x, z, radius, 0, 2 * math.pi);
     for (final side in [x, -x, z, -z]) {
-      _line(top + side * radius, bottom + side * radius);
+      line(top + side * radius, bottom + side * radius);
     }
     for (final across in [x, z]) {
-      _arc(top, across, y, radius, 0, math.pi);
-      _arc(bottom, across, y, radius, math.pi, 2 * math.pi);
+      arc(top, across, y, radius, 0, math.pi);
+      arc(bottom, across, y, radius, math.pi, 2 * math.pi);
     }
   }
 
@@ -181,46 +158,9 @@ class _Outline {
     const lines = 2;
     for (var i = -lines; i <= lines; i++) {
       final along = i / lines * reach;
-      _line(centre + x * along - z * reach, centre + x * along + z * reach);
-      _line(centre + z * along - x * reach, centre + z * along + x * reach);
+      line(centre + x * along - z * reach, centre + x * along + z * reach);
+      line(centre + z * along - x * reach, centre + z * along + x * reach);
     }
-    _line(centre, centre + y * (reach / 2));
-  }
-
-  /// Part of a circle about [centre] in the plane of [u] and [v], from angle
-  /// [from] to [to] measured from [u] towards [v].
-  void _arc(
-    Vector3 centre,
-    Vector3 u,
-    Vector3 v,
-    double radius,
-    double from,
-    double to,
-  ) {
-    final steps = math.max(
-      2,
-      (_segments * (to - from).abs() / (2 * math.pi)).ceil(),
-    );
-    Vector3 at(int i) {
-      final angle = from + (to - from) * i / steps;
-      return centre +
-          u * (radius * math.cos(angle)) +
-          v * (radius * math.sin(angle));
-    }
-
-    for (var i = 0; i < steps; i++) {
-      _line(at(i), at(i + 1));
-    }
-  }
-
-  void _line(Vector3 a, Vector3 b) {
-    final from = projection.project(a);
-    final to = projection.project(b);
-    // With one end behind the eye the line would be flipped across the view,
-    // through somewhere the body is not.
-    if (from == null || to == null) return;
-    path
-      ..moveTo(from.dx, from.dy)
-      ..lineTo(to.dx, to.dy);
+    line(centre, centre + y * (reach / 2));
   }
 }
