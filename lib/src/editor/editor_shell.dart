@@ -36,9 +36,10 @@ import 'game_view.dart';
 import 'geometry_store.dart';
 import 'gizmo_registry.dart';
 import 'script_build.dart';
-import 'ui_editor.dart';
 import 'history.dart';
 import 'inspector.dart';
+import 'interface_bench.dart';
+import 'interface_mode.dart';
 import 'joint_gizmo.dart';
 import 'joint_section.dart';
 import 'mesh_edit.dart';
@@ -219,11 +220,11 @@ class _EditorShellState extends State<EditorShell> {
 
   late final ScriptBuilder _builder = ScriptBuilder(widget.project.directory);
 
-  /// Interfaces read off disk, by path.
+  /// Interfaces read off disk, by path, for canvases whose interface is not
+  /// open in the Interface workspace.
   ///
   /// Cached because the scene is rebuilt every frame and a canvas object asks
-  /// for its document each time. Cleared when the project folder changes, so
-  /// editing an interface shows up in the scene without reopening it.
+  /// for its document each time.
   final Map<String, UiDocument?> _interfaces = {};
 
   /// Whether the interface is drawn over the viewport.
@@ -292,6 +293,9 @@ class _EditorShellState extends State<EditorShell> {
   bool _terrainsUnsaved = false;
 
   int _terrainPictures = 0;
+
+  /// The interfaces open for laying out, and how the one shown is looked at.
+  late final InterfaceBench _interfaceBench = InterfaceBench(history: _history);
 
   @override
   void initState() {
@@ -377,6 +381,7 @@ class _EditorShellState extends State<EditorShell> {
     _terrains
       ..removeListener(_onTerrainsChanged)
       ..dispose();
+    _interfaceBench.dispose();
     _history
       ..removeListener(_onHistoryChanged)
       ..dispose();

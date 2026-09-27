@@ -382,7 +382,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('TypeScript'), findsOneWidget);
-      expect(find.text('Interface'), findsOneWidget);
+      // On the menu, because the workspace tab says Interface too.
+      expect(find.widgetWithText(MenuItemButton, 'Interface'), findsOneWidget);
       expect(find.text('C++'), findsOneWidget);
       expect(find.text('C++ header'), findsOneWidget);
       // And what each one would actually write.

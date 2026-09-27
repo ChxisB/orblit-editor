@@ -1,4 +1,4 @@
-part of 'ui_editor.dart';
+part of 'interface_mode.dart';
 
 // The small pieces the panels are built from.
 
@@ -54,24 +54,6 @@ class _Showing extends StatelessWidget {
       ),
     );
   }
-}
-
-/// A class list with any direction it named taken out.
-///
-/// The type says `row` now, and a leftover `stack` or `md:row` in the classes
-/// is applied over the top of it — the element would keep its old layout and
-/// the change would look like it did nothing.
-String _flowing(String classes) {
-  const directions = {'col', 'column', 'stack', 'row'};
-  final kept = [
-    for (final name in classes.split(RegExp(r'\s+')))
-      if (name.isNotEmpty)
-        if (!directions.contains(name) &&
-            !directions.contains(name.split(':').last))
-          name,
-  ];
-  if (!kept.any((name) => name.startsWith('gap-'))) kept.add('gap-4');
-  return kept.join(' ');
 }
 
 /// How many columns the grid is drawing, when it is not the authored number.

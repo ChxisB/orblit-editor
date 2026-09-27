@@ -261,15 +261,6 @@ void main() {
       );
     }
 
-    Future<void> dropOnViewport(WidgetTester tester, Finder tile) async {
-      final gesture = await tester.startGesture(tester.getCenter(tile));
-      await tester.pump(const Duration(milliseconds: 200));
-      await gesture.moveTo(tester.getCenter(find.byType(SceneViewport)));
-      await tester.pump();
-      await gesture.up();
-      await tester.pumpAndSettle();
-    }
-
     testWidgets('dropping one makes a canvas object that shows it', (
       tester,
     ) async {

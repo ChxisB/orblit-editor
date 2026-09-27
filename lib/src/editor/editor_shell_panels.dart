@@ -14,7 +14,8 @@ extension _Panels on _EditorShellState {
       ..register(bodyGizmo())
       ..register(jointGizmo());
     // In the order work usually goes: lay out a level, shape what is in it,
-    // shape the ground under it, then make it move.
+    // shape the ground under it, make it move, then lay out what is shown
+    // over it.
     registry.modes
       ..register(
         const EditorMode(
@@ -50,6 +51,13 @@ extension _Panels on _EditorShellState {
           label: 'Animation',
           icon: Icons.animation,
           layout: DockLayout.animation,
+        ),
+      )
+      ..register(
+        interfaceMode(
+          bench: _interfaceBench,
+          onNew: _newInterface,
+          onEnter: _showSceneInterface,
         ),
       );
     widget.extend?.call(registry);
@@ -137,6 +145,27 @@ extension _Panels on _EditorShellState {
           padding: const EdgeInsets.all(Space.sm),
           child: TerrainBrushPanel(bench: _terrains, target: _terrainTarget()),
         ),
+      ),
+    )
+    // The Interface workspace's three. They listen to the bench themselves,
+    // since an edit there changes nothing the rest of the editor shows.
+    ..register(
+      PanelType(
+        kind: interfaceCanvasPanel,
+        build: (_, _) =>
+            InterfaceCanvas(bench: _interfaceBench, onNew: _newInterface),
+      ),
+    )
+    ..register(
+      PanelType(
+        kind: interfaceElementsPanel,
+        build: (_, _) => InterfaceElements(bench: _interfaceBench),
+      ),
+    )
+    ..register(
+      PanelType(
+        kind: interfaceDesignPanel,
+        build: (_, _) => InterfaceDesign(bench: _interfaceBench),
       ),
     );
 

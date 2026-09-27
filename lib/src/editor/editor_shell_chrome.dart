@@ -219,18 +219,7 @@ class _TopBar extends StatelessWidget {
           if (modes.length > 1)
             LayoutId(
               id: _BarSlot.middle,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final each in modes)
-                    _ModeTab(
-                      key: ValueKey('mode/${each.name}'),
-                      mode: each,
-                      selected: each.name == mode.name,
-                      onTap: () => onMode(each),
-                    ),
-                ],
-              ),
+              child: _ModeTabs(modes: modes, mode: mode, onMode: onMode),
             ),
           LayoutId(id: _BarSlot.end, child: run),
         ],
@@ -298,6 +287,67 @@ class _BarDivider extends StatelessWidget {
   );
 }
 
+/// How much of each workspace tab the bar has room for.
+enum _TabFit { iconAndWord, word, icon }
+
+/// The workspace tabs, with as much of each as the bar has room for.
+///
+/// The icon goes first and the word last, because the word is what tells
+/// somebody new what a tab is for. Only a window too narrow for the words
+/// gets icons alone, and those say their word when pointed at.
+class _ModeTabs extends StatelessWidget {
+  const _ModeTabs({
+    required this.modes,
+    required this.mode,
+    required this.onMode,
+  });
+
+  final List<EditorMode> modes;
+  final EditorMode mode;
+  final ValueChanged<EditorMode> onMode;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final fit = _fitIn(context, constraints.maxWidth);
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final each in modes)
+            _ModeTab(
+              key: ValueKey('mode/${each.name}'),
+              mode: each,
+              fit: fit,
+              selected: each.name == mode.name,
+              onTap: () => onMode(each),
+            ),
+        ],
+      );
+    },
+  );
+
+  _TabFit _fitIn(BuildContext context, double room) {
+    // Merged as Text merges it, or an inherited letter spacing makes the
+    // words wider on screen than they measured.
+    final style = DefaultTextStyle.of(context).style.merge(_ModeTab.wording);
+    var words = 0.0;
+    for (final each in modes) {
+      final painter = TextPainter(
+        text: TextSpan(text: each.label, style: style),
+        textDirection: TextDirection.ltr,
+        textScaler: MediaQuery.textScalerOf(context),
+      )..layout();
+      words += painter.width;
+      painter.dispose();
+    }
+    final padding = modes.length * _ModeTab.padding * 2;
+    final icons = modes.length * (_ModeTab.iconSize + _ModeTab.iconGap);
+    if (padding + icons + words <= room) return _TabFit.iconAndWord;
+    if (padding + words <= room) return _TabFit.word;
+    return _TabFit.icon;
+  }
+}
+
 /// One mode on the top bar. The one the editor is in is lit, not boxed: the
 /// row is a choice of what the middle of the window is for, not a row of
 /// buttons.
@@ -305,11 +355,22 @@ class _ModeTab extends StatefulWidget {
   const _ModeTab({
     super.key,
     required this.mode,
+    required this.fit,
     required this.selected,
     required this.onTap,
   });
 
+  // What [_ModeTabs] measures a row of tabs by before it builds one.
+  static const padding = Space.sm + 2;
+  static const iconSize = 16.0;
+  static const iconGap = Space.xs + 2;
+  static final wording = OrblitText.label.copyWith(
+    fontSize: 13,
+    fontWeight: FontWeight.w600,
+  );
+
   final EditorMode mode;
+  final _TabFit fit;
   final bool selected;
   final VoidCallback onTap;
 
@@ -326,8 +387,9 @@ class _ModeTabState extends State<_ModeTab> {
         ? OrblitColors.ember
         : (_hovering ? OrblitColors.ink : OrblitColors.inkMid);
 
+    final fit = widget.fit;
     // Colour alone does not tell a screen reader which workspace is open.
-    return Semantics(
+    final tab = Semantics(
       container: true,
       button: true,
       selected: widget.selected,
@@ -340,28 +402,33 @@ class _ModeTabState extends State<_ModeTab> {
           onTap: widget.onTap,
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: Space.sm + 2,
+              horizontal: _ModeTab.padding,
               vertical: Space.xs,
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(widget.mode.icon, size: 16, color: colour),
-                const SizedBox(width: Space.xs + 2),
-                Text(
-                  widget.mode.label,
-                  style: OrblitText.label.copyWith(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                if (fit != _TabFit.word)
+                  Icon(
+                    widget.mode.icon,
+                    size: _ModeTab.iconSize,
                     color: colour,
                   ),
-                ),
+                if (fit == _TabFit.iconAndWord)
+                  const SizedBox(width: _ModeTab.iconGap),
+                if (fit != _TabFit.icon)
+                  Text(
+                    widget.mode.label,
+                    style: _ModeTab.wording.copyWith(color: colour),
+                  ),
               ],
             ),
           ),
         ),
       ),
     );
+    if (fit != _TabFit.icon) return tab;
+    return Tooltip(message: widget.mode.label, child: tab);
   }
 }
 

@@ -3,11 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orblit_editor/src/editor/inspector.dart' show FieldRow;
+import 'package:orblit_editor/src/editor/interface_bench.dart';
+import 'package:orblit_editor/src/editor/interface_mode.dart';
 import 'package:orblit_editor/src/editor/ui_canvas.dart';
-import 'package:orblit_editor/src/editor/ui_editor.dart';
 import 'package:orblit_editor/src/theme/orblit_theme.dart';
 import 'package:orblit_ui/orblit_ui.dart';
-import 'package:path/path.dart' as p;
+
+import 'support/interface_workspace.dart';
 
 void main() {
   late Directory root;
@@ -165,27 +167,21 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    Future<UiEditor> open(WidgetTester tester, {UiDocument? document}) async {
-      final path = p.join(root.path, 'menu.oui');
-      final held = document ?? menu;
-      File(path).writeAsStringSync(held.toText());
-
-      await tester.binding.setSurfaceSize(const Size(1600, 950));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-
-      final editor = UiEditor(path: path, document: held);
-      await tester.pumpWidget(MaterialApp(theme: orblitTheme(), home: editor));
-      await tester.pumpAndSettle();
-      return editor;
-    }
+    Future<InterfaceBench> open(WidgetTester tester, {UiDocument? document}) =>
+        openInterface(tester, folder: root, document: document ?? menu);
 
     testWidgets('the elements are listed as a tree', (tester) async {
       await open(tester);
 
-      expect(find.text('ELEMENTS'), findsOneWidget);
       // Named by their words where they have any, since "Play" says more
       // about which button it is than "button" does.
-      expect(find.text('Play'), findsWidgets);
+      expect(
+        find.descendant(
+          of: find.byType(InterfaceElements),
+          matching: find.text('Play'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('adding puts an element inside the selection', (tester) async {
@@ -199,28 +195,23 @@ void main() {
     });
 
     testWidgets('a change can be undone', (tester) async {
-      await open(tester);
+      final bench = await open(tester);
       await tester.tap(find.widgetWithText(Container, 'Box').first);
       await tester.pumpAndSettle();
       expect(find.text('box'), findsWidgets);
 
-      await tester.tap(find.widgetWithText(Container, 'Undo').first);
+      bench.history.undo();
       await tester.pumpAndSettle();
 
       expect(find.text('box'), findsNothing);
     });
 
     testWidgets('saving writes a file that opens again', (tester) async {
-      await open(tester);
+      final bench = await open(tester);
       await tester.tap(find.widgetWithText(Container, 'Box').first);
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(Container, 'Save').first);
-      await tester.pumpAndSettle();
 
-      final written =
-          UiDocument.read(File(p.join(root.path, 'menu.oui')).readAsStringSync());
-      expect(written, isNotNull);
-      expect(written!.root.children.last.type, 'box');
+      expect(savedInterface(bench, root).root.children.last.type, 'box');
     });
 
     testWidgets('previewing takes the chrome away', (tester) async {
@@ -307,17 +298,12 @@ void main() {
     });
 
     testWidgets('where it was dragged to is what gets saved', (tester) async {
-      await open(tester);
+      final bench = await open(tester);
 
       final before = menu.root.children.first.placed!;
       await dragBy(tester, onCanvas('Orblit'), const Offset(120, 60));
-      await tester.tap(find.widgetWithText(Container, 'Save').first);
-      await tester.pumpAndSettle();
 
-      final written = UiDocument.read(
-        File(p.join(root.path, 'menu.oui')).readAsStringSync(),
-      )!;
-      final after = written.root.children.first.placed!;
+      final after = savedInterface(bench, root).root.children.first.placed!;
 
       // Further than the drag in canvas units, because the canvas is scaled
       // down to fit: a hundred and twenty pixels of pointer is more than a
@@ -327,21 +313,16 @@ void main() {
     });
 
     testWidgets('a whole drag is one undo step', (tester) async {
-      await open(tester);
+      final bench = await open(tester);
 
       await dragBy(tester, onCanvas('Orblit'), const Offset(80, 0));
-      await tester.tap(find.widgetWithText(Container, 'Undo').first);
+      bench.history.undo();
       await tester.pumpAndSettle();
-
-      await tester.tap(find.widgetWithText(Container, 'Save').first);
-      await tester.pumpAndSettle();
-      final written = UiDocument.read(
-        File(p.join(root.path, 'menu.oui')).readAsStringSync(),
-      )!;
 
       // One press put it back, not eighty.
+      expect(bench.anyUnsaved, isFalse);
       expect(
-        written.root.children.first.placed!.left,
+        savedInterface(bench, root).root.children.first.placed!.left,
         menu.root.children.first.placed!.left,
       );
     });
@@ -355,27 +336,24 @@ void main() {
           children: [UiNode(type: 'text', text: 'Row one')],
         ),
       );
-      await open(tester, document: flowed);
+      final bench = await open(tester, document: flowed);
 
       await dragBy(tester, onCanvas('Row one'), const Offset(100, 100));
 
       // Nothing to save: a position its parent throws away on the next layout
       // is not a move, it is a lie.
-      expect(find.widgetWithText(Container, 'Save •'), findsNothing);
+      expect(bench.anyUnsaved, isFalse);
       expect(onCanvas('Row one'), findsOneWidget);
     });
 
     testWidgets('the canvas size can be changed', (tester) async {
-      await open(tester);
+      final bench = await open(tester);
 
       await tester.tap(find.text('390 × 844'));
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(Container, 'Save').first);
-      await tester.pumpAndSettle();
 
-      final written =
-          UiDocument.read(File(p.join(root.path, 'menu.oui')).readAsStringSync());
-      expect(written!.canvas.width, 390);
+      final written = savedInterface(bench, root);
+      expect(written.canvas.width, 390);
       expect(written.canvas.height, 844);
     });
 

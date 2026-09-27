@@ -458,11 +458,15 @@ class DockLayout {
   /// The panels under the view start [folded] unless a mode says otherwise:
   /// the view is what somebody opens the editor to look at, and the console
   /// is a click away when there is something in it worth reading. [below] is
-  /// how much of the middle column they take once open.
+  /// how much of the middle column they take once open. [left] is the tree
+  /// over Project, which is the scene's unless a mode edits something else.
   factory DockLayout.columns(
     DockNode centre, {
     required List<DockPanel> bottom,
     required List<DockPanel> right,
+    List<DockPanel> left = const [
+      DockPanel(id: 'outliner', kind: PanelKind.outliner),
+    ],
     bool folded = true,
     double below = 0.28,
     int revision = 0,
@@ -474,16 +478,13 @@ class DockLayout {
           axis: Axis.horizontal,
           weights: const [0.2, 0.58, 0.22],
           children: [
-            const DockSplit(
+            DockSplit(
               id: 'leftColumn',
               axis: Axis.vertical,
-              weights: [0.55, 0.45],
+              weights: const [0.55, 0.45],
               children: [
-                DockGroup(
-                  id: 'left',
-                  panels: [DockPanel(id: 'outliner', kind: PanelKind.outliner)],
-                ),
-                DockGroup(
+                DockGroup(id: 'left', panels: left),
+                const DockGroup(
                   id: 'files',
                   panels: [DockPanel(id: 'project', kind: PanelKind.project)],
                 ),

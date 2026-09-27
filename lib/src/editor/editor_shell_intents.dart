@@ -165,6 +165,12 @@ extension _Keys on _EditorShellState {
           setState(_drawing.undo);
           return null;
         }
+        // The scene's selection is not on screen there, and deleting
+        // objects nobody can see is worse than doing nothing.
+        if (_mode.name == 'interface') {
+          _interfaceBench.removeSelected();
+          return null;
+        }
         _deleteSelection();
         return null;
       },

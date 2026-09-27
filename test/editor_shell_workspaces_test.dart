@@ -1,9 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:orblit_editor/src/editor/interface_mode.dart';
 import 'package:orblit_editor/src/editor/modelling_panel.dart';
 import 'package:orblit_editor/src/editor/viewport.dart';
+import 'package:orblit_ui/orblit_ui.dart';
 import 'package:path/path.dart' as p;
 
 import 'support/editor_shell.dart';
@@ -41,11 +44,49 @@ void main() {
       await open(tester);
 
       final lefts = [
-        for (final name in ['scene', 'modelling', 'terrain', 'animation'])
+        for (final name in [
+          'scene',
+          'modelling',
+          'terrain',
+          'animation',
+          'interface',
+        ])
           tester.getTopLeft(modeTab(name)).dx,
       ];
       expect(lefts, [...lefts]..sort());
       expect(inMode(tester, 'scene'), isTrue);
+    });
+
+    testWidgets('the tabs give up their icons before their words', (
+      tester,
+    ) async {
+      await open(tester);
+      Finder icon() => find.descendant(
+        of: modeTab('interface'),
+        matching: find.byType(Icon),
+      );
+      Finder word() => find.descendant(
+        of: modeTab('interface'),
+        matching: find.text('Interface'),
+      );
+
+      // The test font is wider than any real one, so these widths are
+      // where it runs out of room rather than where a real window does.
+      await tester.binding.setSurfaceSize(const Size(1600, 900));
+      await tester.pumpAndSettle();
+      expect(icon(), findsOneWidget);
+      expect(word(), findsOneWidget);
+
+      await tester.binding.setSurfaceSize(const Size(1440, 900));
+      await tester.pumpAndSettle();
+      expect(icon(), findsNothing);
+      expect(word(), findsOneWidget);
+
+      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      await tester.pumpAndSettle();
+      expect(icon(), findsOneWidget);
+      expect(word(), findsNothing);
+      expect(find.byTooltip('Interface'), findsOneWidget);
     });
 
     testWidgets('each one shows the panels for its job', (tester) async {
@@ -135,6 +176,149 @@ void main() {
 
       await enterMode(tester, 'animation');
       expect(find.byType(SceneViewport), findsNWidgets(4));
+    });
+  });
+
+  group('the Interface workspace', () {
+    /// Writes hud.oui into the project and returns where.
+    String writeHud() {
+      final path = p.join(root.path, 'hud.oui');
+      File(path).writeAsStringSync(
+        const UiDocument(
+          root: UiNode(
+            type: 'stack',
+            classes: 'w-full h-full',
+            children: [
+              UiNode(
+                type: 'text',
+                css: 'left: 40px; top: 40px',
+                text: 'Health 100',
+              ),
+            ],
+          ),
+        ).toText(),
+      );
+      return path;
+    }
+
+    Finder hudTile() => find.descendant(
+      of: find.byType(GridView),
+      matching: find.text('hud.oui'),
+    );
+
+    Finder onCanvas(String text) => find.descendant(
+      of: find.byType(InterfaceCanvas),
+      matching: find.text(text),
+    );
+
+    Finder inElements(String text) => find.descendant(
+      of: find.byType(InterfaceElements),
+      matching: find.text(text),
+    );
+
+    /// Opens hud.oui from Project, which takes a double tap.
+    Future<void> openHud(WidgetTester tester) async {
+      await tester.tap(hudTile());
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(hudTile());
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> addBox(WidgetTester tester) async {
+      // The word itself. The first Container around it is the whole
+      // palette, and its middle is a different button.
+      await tester.tap(
+        find.descendant(
+          of: find.byType(InterfaceDesign),
+          matching: find.text('Box'),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('opening an interface from Project goes there', (
+      tester,
+    ) async {
+      writeHud();
+      await open(tester);
+      await openHud(tester);
+
+      expect(inMode(tester, 'interface'), isTrue);
+      expect(onCanvas('Health 100'), findsOneWidget);
+      expect(inElements('Health 100'), findsOneWidget);
+    });
+
+    testWidgets('the editor keys undo and save what is laid out', (
+      tester,
+    ) async {
+      final path = writeHud();
+      await open(tester);
+      await openHud(tester);
+
+      await addBox(tester);
+      expect(inElements('box'), findsOneWidget);
+      expect(find.text('hud.oui •'), findsOneWidget);
+
+      await undo(tester);
+      expect(inElements('box'), findsNothing);
+      expect(find.text('hud.oui •'), findsNothing);
+
+      await addBox(tester);
+      await save(tester);
+      expect(find.text('hud.oui •'), findsNothing);
+      final saved = UiDocument.read(File(path).readAsStringSync());
+      expect(saved!.root.children.last.type, 'box');
+    });
+
+    testWidgets('it opens on the interface the scene shows', (tester) async {
+      writeHud();
+      await open(tester);
+      await dropOnViewport(tester, hudTile());
+
+      await enterMode(tester, 'interface');
+
+      expect(onCanvas('Health 100'), findsOneWidget);
+    });
+
+    testWidgets('delete takes out the element, not the object', (
+      tester,
+    ) async {
+      writeHud();
+      await open(tester);
+      await dropOnViewport(tester, hudTile());
+      await enterMode(tester, 'interface');
+
+      await tester.tap(inElements('Health 100'));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.delete);
+      await tester.pumpAndSettle();
+
+      expect(onCanvas('Health 100'), findsNothing);
+      await enterMode(tester, 'scene');
+      expect(row('hud'), findsOneWidget);
+    });
+
+    testWidgets('with nothing open it offers to make one', (tester) async {
+      await open(tester);
+      await enterMode(tester, 'interface');
+      expect(find.text('No interface open'), findsOneWidget);
+
+      await tester.tap(
+        find.descendant(
+          of: find.byType(InterfaceCanvas),
+          matching: find.text('New interface'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        File(p.join(root.path, 'interfaces', 'screen.oui')).existsSync(),
+        isTrue,
+      );
+      expect(find.text('No interface open'), findsNothing);
+      // The scene showed nothing, so it shows the new one.
+      await enterMode(tester, 'scene');
+      expect(row('screen'), findsOneWidget);
     });
   });
 }

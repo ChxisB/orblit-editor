@@ -244,10 +244,17 @@ Future<void> dropTexture(WidgetTester tester) async {
   await open(tester);
   await openFolder(tester, 'assets');
 
-  final tile = find.descendant(
-    of: find.byType(GridView),
-    matching: find.text('rock.png'),
+  await dropOnViewport(
+    tester,
+    find.descendant(
+      of: find.byType(GridView),
+      matching: find.text('rock.png'),
+    ),
   );
+}
+
+/// Drags [tile] out of Project and drops it on the viewport.
+Future<void> dropOnViewport(WidgetTester tester, Finder tile) async {
   final gesture = await tester.startGesture(tester.getCenter(tile));
   await tester.pump(const Duration(milliseconds: 200));
   await gesture.moveTo(tester.getCenter(find.byType(SceneViewport)));

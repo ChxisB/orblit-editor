@@ -2,12 +2,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:orblit_editor/src/editor/interface_bench.dart';
 import 'package:orblit_editor/src/editor/ui_canvas.dart';
-import 'package:orblit_editor/src/editor/ui_editor.dart';
 import 'package:orblit_editor/src/theme/orblit_theme.dart';
 import 'package:orblit_editor/src/widgets/controls.dart';
 import 'package:orblit_ui/orblit_ui.dart';
-import 'package:path/path.dart' as p;
+
+import 'support/interface_workspace.dart';
 
 void main() {
   late Directory root;
@@ -202,21 +203,12 @@ void main() {
   });
 
   group('the editor', () {
-    Future<String> open(WidgetTester tester, {UiDocument? document}) async {
-      final path = p.join(root.path, 'menu.oui');
-      final held = document ?? menu;
-      File(path).writeAsStringSync(held.toText());
-
-      await tester.binding.setSurfaceSize(const Size(1600, 1100));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
-
-      await tester.pumpWidget(MaterialApp(
-        theme: orblitTheme(),
-        home: UiEditor(path: path, document: held),
-      ));
-      await tester.pumpAndSettle();
-      return path;
-    }
+    Future<InterfaceBench> open(WidgetTester tester) => openInterface(
+          tester,
+          folder: root,
+          document: menu,
+          window: const Size(1600, 1100),
+        );
 
     Future<void> press(WidgetTester tester, String label) async {
       final target = find.widgetWithText(Container, label).first;
@@ -224,12 +216,6 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(target);
       await tester.pumpAndSettle();
-    }
-
-    UiDocument saved(WidgetTester tester, String path) {
-      final read = UiDocument.read(File(path).readAsStringSync());
-      expect(read, isNotNull);
-      return read!;
     }
 
     bool gridIsUp(WidgetTester tester) =>
@@ -272,37 +258,35 @@ void main() {
     });
 
     testWidgets('splitting makes a row of equal columns', (tester) async {
-      final path = await open(tester);
+      final bench = await open(tester);
 
       // The root is selected to begin with, so this splits the canvas.
       await press(tester, '3');
-      await press(tester, 'Save');
 
-      final root = saved(tester, path).root;
-      expect(root.type, 'row');
-      expect(root.children, hasLength(3));
-      expect(root.children.every((child) => child.type == 'column'), isTrue);
+      final top = savedInterface(bench, root).root;
+      expect(top.type, 'row');
+      expect(top.children, hasLength(3));
+      expect(top.children.every((child) => child.type == 'column'), isTrue);
       expect(
-        root.children.every((child) => child.classes.contains('md:flex-1')),
+        top.children.every((child) => child.classes.contains('md:flex-1')),
         isTrue,
       );
       // Stacked until there is room: equal widths only where they are widths.
-      expect(root.classes, contains('md:row'));
+      expect(top.classes, contains('md:row'));
     });
 
     testWidgets('what was in it goes into the first column, without its place',
         (tester) async {
-      final path = await open(tester);
+      final bench = await open(tester);
       await press(tester, '2');
-      await press(tester, 'Save');
 
-      final root = saved(tester, path).root;
-      expect(root.children.first.children, hasLength(2));
-      expect(root.children.last.children, isEmpty);
+      final top = savedInterface(bench, root).root;
+      expect(top.children.first.children, hasLength(2));
+      expect(top.children.last.children, isEmpty);
 
       // Stripped of `left` and `top` on the way in. A Positioned that is no
       // longer in a stack does not lay out badly, it throws.
-      for (final child in root.children.first.children) {
+      for (final child in top.children.first.children) {
         expect(child.placed, isNull);
       }
     });
@@ -334,15 +318,14 @@ void main() {
 
     testWidgets('splitting something placed on a stack gives it a width',
         (tester) async {
-      final path = await open(tester);
+      final bench = await open(tester);
 
       await press(tester, 'Row');
       await press(tester, '2');
-      await press(tester, 'Save');
 
       // Reaching the far edge is the honest reading of "split this into
       // columns", and without it the columns have nothing to divide.
-      final row = saved(tester, path).root.children.last;
+      final row = savedInterface(bench, root).root.children.last;
       expect(row.css, contains('right: 0'));
     });
 
@@ -393,11 +376,12 @@ void main() {
     });
 
     testWidgets('the split can be undone', (tester) async {
-      await open(tester);
+      final bench = await open(tester);
       await press(tester, '2');
       expect(find.text('row'), findsWidgets);
 
-      await press(tester, 'Undo');
+      bench.history.undo();
+      await tester.pumpAndSettle();
       expect(find.text('stack'), findsWidgets);
     });
   });

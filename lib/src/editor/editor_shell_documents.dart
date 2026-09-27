@@ -152,24 +152,33 @@ extension _Documents on _EditorShellState {
     _select(object.id);
   }
 
-  /// The interface the open scene puts on screen, if any.
+  /// Where the interface the open scene puts on screen is, relative to the
+  /// project, if it puts one there.
   ///
   /// The first visible canvas object, since a screen shows one interface at a
   /// time. Two canvases both visible is a scene saying two things, and picking
   /// the first is at least the one nearest the top of the tree.
-  UiDocument? get _sceneInterface {
+  String? get _sceneInterfaceAsset {
     final scene = _current?.scene;
     if (scene == null) return null;
 
     for (final object in scene.objects) {
       if (object.kind != ObjectKind.canvas) continue;
       if (!object.visible || !scene.isShown(object.id)) continue;
-
-      final path = object.interfaceAsset;
-      if (path == null) continue;
-      return _interfaces.putIfAbsent(path, () => _readInterface(path));
+      if (object.interfaceAsset case final path?) return path;
     }
     return null;
+  }
+
+  /// The interface the open scene puts on screen, if any.
+  ///
+  /// The copy being laid out when there is one, so a change shows over the
+  /// scene before it is saved.
+  UiDocument? get _sceneInterface {
+    final path = _sceneInterfaceAsset;
+    if (path == null) return null;
+    return _interfaceBench[p.join(widget.project.directory, path)]?.document ??
+        _interfaces.putIfAbsent(path, () => _readInterface(path));
   }
 
   UiDocument? _readInterface(String relative) {
@@ -182,33 +191,70 @@ extension _Documents on _EditorShellState {
     }
   }
 
-  /// Opens a canvas for laying out.
+  /// Opens the canvas at [path] in the Interface workspace.
   ///
-  /// A screen of its own rather than a panel. A canvas is a design surface at
-  /// a fixed size, and one squeezed into the space beside a 3D viewport is a
-  /// view too small to lay anything out in next to a viewport nobody is
-  /// looking at.
-  Future<void> _openInterface(String path) async {
-    final File file = File(path);
-    if (!file.existsSync()) {
-      _say('${p.basename(path)} is not in the project any more.');
+  /// A workspace rather than a panel beside the scene. A canvas is a design
+  /// surface at a fixed size, and one squeezed in next to a 3D view is too
+  /// small to lay anything out in.
+  void _openInterface(String path) {
+    final problem = _interfaceBench.openFile(path);
+    if (problem != null) {
+      _say(problem);
       return;
     }
+    _enterModeNamed('interface');
+  }
 
-    final document = UiDocument.read(file.readAsStringSync());
-    if (document == null) {
-      _say('${p.basename(path)} is not a readable interface.');
+  /// Gives the Interface workspace something to show when it opens on
+  /// nothing: the interface the open scene puts on screen.
+  ///
+  /// Quiet when that file cannot be read, since nobody asked for it. The
+  /// workspace then offers a new one instead.
+  void _showSceneInterface() {
+    if (_interfaceBench.shown != null) return;
+    final path = _sceneInterfaceAsset;
+    if (path == null) return;
+    _interfaceBench.openFile(p.join(widget.project.directory, path));
+  }
+
+  /// Makes an interface in the project's interfaces folder and opens it.
+  ///
+  /// A scene that shows nothing yet gets it on a new canvas object, because
+  /// an interface the game never shows is a step somebody has to know about.
+  void _newInterface() {
+    final folder = Directory(p.join(widget.project.directory, 'interfaces'));
+    try {
+      folder.createSync(recursive: true);
+    } on FileSystemException catch (error) {
+      _say('Could not make the interfaces folder: ${error.message}');
       return;
     }
-
-    await Navigator.of(context).push<void>(
-      MaterialPageRoute(
-        builder: (context) =>
-            UiEditor(path: path, document: document, onProblem: _say),
-      ),
+    final made = _assets.create(
+      folder.path,
+      NewAsset.canvas,
+      NewAsset.canvas.suggested,
     );
-    // Read again: the scene is showing what was on disk before it was edited.
-    if (mounted) setState(() => _interfaces.clear());
+    final path = made.path;
+    if (path == null) {
+      _say('Could not make an interface: ${made.problem}');
+      return;
+    }
+    if (_sceneInterfaceAsset == null && _working?.scene != null) {
+      _putInterfaceOnScene(path);
+    }
+    _openInterface(path);
+  }
+
+  /// Writes every interface with changes, and says which could not be
+  /// written.
+  void _saveInterfaces() {
+    if (!_interfaceBench.anyUnsaved) return;
+    for (final problem in _interfaceBench.saveAll()) {
+      _say(problem, level: LogLevel.error);
+    }
+    // For the top bar's mark. Nothing else rebuilds it when no scene is
+    // saved along with the interfaces.
+    setState(() {});
   }
 
   // ---- scripts ----

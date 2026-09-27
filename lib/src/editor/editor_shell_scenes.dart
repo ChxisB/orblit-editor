@@ -15,7 +15,8 @@ extension _Scenes on _EditorShellState {
   bool get _anyUnsaved =>
       _workspace.entries.any(_isUnsaved) ||
       _bench.anyUnsaved ||
-      _terrains.anyUnsaved;
+      _terrains.anyUnsaved ||
+      _interfaceBench.anyUnsaved;
 
   /// Lists the project's other scenes without loading them.
   void _listSiblingScenes() {
@@ -174,12 +175,14 @@ extension _Scenes on _EditorShellState {
   /// the scene and recording that it was saved — an edit landing in that gap
   /// is not in the file, but the history would call itself clean.
   ///
-  /// Saving without saying which also writes every clip and terrain with
-  /// changes, since that is somebody pressing save and meaning everything.
+  /// Saving without saying which also writes every clip, terrain and
+  /// interface with changes, since that is somebody pressing save and
+  /// meaning everything.
   void _save([SceneEntry? which]) {
     if (which == null) {
       _saveClips();
       _saveTerrains();
+      _saveInterfaces();
     }
     final entry = which ?? _current;
     final scene = entry?.scene;
