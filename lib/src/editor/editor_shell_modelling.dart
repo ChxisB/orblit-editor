@@ -147,6 +147,10 @@ extension _Modelling on _EditorShellState {
   /// waiting for when there is nothing to work on.
   Widget _modellingTools() {
     final chosen = _shapeSelected;
+    final primary = _primary;
+    final other = chosen != null || primary == null
+        ? null
+        : _workspace.sceneHolding(primary)?.scene?[primary];
     return ModellingPanel(
       shape: chosen?.object.shape,
       geometry: chosen?.object.geometry,
@@ -176,6 +180,7 @@ extension _Modelling on _EditorShellState {
       drawing: _drawing,
       snapping: _snapping,
       onSnapping: (_) => setState(() {}),
+      notShape: other?.kind == ObjectKind.shape ? null : other?.name,
     );
   }
 

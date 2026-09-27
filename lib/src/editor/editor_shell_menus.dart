@@ -313,10 +313,14 @@ class _ViewMenu extends StatelessWidget {
     required this.layout,
     required this.onLayout,
     required this.panels,
+    required this.modeLayout,
   });
 
   final DockLayout layout;
   final ValueChanged<DockLayout> onLayout;
+
+  /// The mode's own arrangement, which Reset panels puts back.
+  final DockLayout Function() modeLayout;
 
   /// The panels that can be opened: whatever is registered, in the order it
   /// was registered.
@@ -349,19 +353,27 @@ class _ViewMenu extends StatelessWidget {
           ),
         ),
         const Divider(height: 9, color: OrblitColors.line),
+        // The mode's own panels, never another mode's. Also the way back from
+        // four views to one.
         MenuItemButton(
           onPressed: () =>
-              onLayout(DockLayout.standard().copyWith(locked: layout.locked)),
+              onLayout(modeLayout().copyWith(locked: layout.locked)),
           leadingIcon: const Icon(
             Icons.view_quilt_outlined,
             size: 14,
             color: OrblitColors.inkMid,
           ),
-          child: const Text('One view', style: OrblitText.label),
+          child: const Text('Reset panels', style: OrblitText.label),
         ),
         MenuItemButton(
-          onPressed: () =>
-              onLayout(DockLayout.fourViews().copyWith(locked: layout.locked)),
+          // The revision goes with it, as the lock does: this is still the
+          // same mode's layout, rearranged.
+          onPressed: () => onLayout(
+            DockLayout.fourViews().copyWith(
+              locked: layout.locked,
+              revision: layout.revision,
+            ),
+          ),
           leadingIcon: const Icon(
             Icons.grid_view_outlined,
             size: 14,

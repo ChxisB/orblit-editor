@@ -89,10 +89,9 @@ void main() {
   }
 
 
-  /// Brings the modelling panel to the front. It is a tab beside the
-  /// inspector, and a tab that is not showing is not built.
+  /// Goes to the Modelling workspace, where the modelling panel is in front.
   Future<void> openTools(WidgetTester tester) async {
-    await tester.tap(find.byKey(const ValueKey('dock-tab/modelling')));
+    await tester.tap(find.byKey(const ValueKey('mode/modelling')));
     await tester.pumpAndSettle();
   }
 

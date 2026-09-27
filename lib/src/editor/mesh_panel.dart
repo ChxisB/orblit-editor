@@ -43,7 +43,7 @@ class MeshPanel extends StatelessWidget {
   /// is moving.
   final void Function(PolyShape next, {required bool live}) onOutline;
 
-  /// Opens the modelling panel, for when it is not on screen.
+  /// Goes to the Modelling mode, where the modelling panel is.
   final VoidCallback onOpenTools;
 
   /// Where this object begins and ends, as far as anything but the eye is
@@ -165,13 +165,13 @@ class MeshPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Extruding, cutting, materials and export are in the modelling '
-            'panel.',
+            'Extruding, cutting, materials and export are in the Modelling '
+            'tab at the top.',
             style: OrblitText.caption.copyWith(fontSize: 11),
           ),
           const SizedBox(height: Space.xs),
           OrblitButton(
-            label: 'Modelling tools',
+            label: 'Go to Modelling',
             icon: Icons.handyman_outlined,
             expand: true,
             tone: ButtonTone.quiet,

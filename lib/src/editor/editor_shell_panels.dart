@@ -13,17 +13,45 @@ extension _Panels on _EditorShellState {
     registry.gizmos
       ..register(bodyGizmo())
       ..register(jointGizmo());
-    registry.modes.register(
-      const EditorMode(
-        name: 'scene',
-        label: 'Scene',
-        icon: Icons.open_with,
-        layout: DockLayout.standard,
-      ),
-    );
-    registry.modes.register(
-      terrainMode(bench: _terrains, history: _history, target: _terrainTarget),
-    );
+    // In the order work usually goes: lay out a level, shape what is in it,
+    // shape the ground under it, then make it move.
+    registry.modes
+      ..register(
+        const EditorMode(
+          name: 'scene',
+          label: 'Scene',
+          icon: Icons.open_with,
+          layout: DockLayout.standard,
+        ),
+      )
+      ..register(
+        EditorMode(
+          name: 'modelling',
+          label: 'Modelling',
+          icon: Icons.view_in_ar_outlined,
+          layout: DockLayout.modelling,
+          // Straight into the parts of the selected shape, because that is
+          // what somebody came here to change. With no shape selected it
+          // stays on whole objects until one is picked.
+          onEnter: () => _setContext(EditContext.element),
+          onLeave: () => _setContext(EditContext.object),
+        ),
+      )
+      ..register(
+        terrainMode(
+          bench: _terrains,
+          history: _history,
+          target: _terrainTarget,
+        ),
+      )
+      ..register(
+        const EditorMode(
+          name: 'animation',
+          label: 'Animation',
+          icon: Icons.animation,
+          layout: DockLayout.animation,
+        ),
+      );
     widget.extend?.call(registry);
     return registry;
   }
@@ -160,10 +188,25 @@ extension _Panels on _EditorShellState {
   /// Switches to [mode], with the panels as they were last left in it.
   void _enterMode(EditorMode mode) {
     if (mode.name == _mode.name) return;
+    _mode.onLeave?.call();
     setState(() {
       _mode = mode;
-      _layout = _readLayout() ?? mode.layout();
+      _layout = _layoutOf(mode);
     });
+    mode.onEnter?.call();
+  }
+
+  /// Switches to the mode called [name], when something registered one.
+  void _enterModeNamed(String name) {
+    if (_registry.modes[name] case final mode?) _enterMode(mode);
+  }
+
+  /// The panels as they were last left in [mode], or its own arrangement
+  /// when they never were, or were left before that arrangement changed.
+  DockLayout _layoutOf(EditorMode mode) {
+    final own = mode.layout();
+    final saved = _readLayout(mode);
+    return saved != null && saved.revision >= own.revision ? saved : own;
   }
 
   /// Where the layout is kept: with the project, since it is about this
@@ -171,17 +214,17 @@ extension _Panels on _EditorShellState {
   ///
   /// One for each mode. The scene's keeps the name it had before there were
   /// modes, so a layout saved then still opens.
-  File get _layoutFile => File(
+  File _layoutFile(EditorMode mode) => File(
     p.join(
       widget.project.directory,
       '.orblit',
-      _mode.name == 'scene' ? 'layout.json' : 'layout.${_mode.name}.json',
+      mode.name == 'scene' ? 'layout.json' : 'layout.${mode.name}.json',
     ),
   );
 
-  DockLayout? _readLayout() {
+  DockLayout? _readLayout(EditorMode mode) {
     try {
-      final file = _layoutFile;
+      final file = _layoutFile(mode);
       if (!file.existsSync()) return null;
       return DockLayout.read(
         file.readAsStringSync(),
@@ -195,12 +238,12 @@ extension _Panels on _EditorShellState {
   void _relayout(DockLayout layout) {
     setState(() => _layout = layout);
     try {
-      final file = _layoutFile;
+      final file = _layoutFile(_mode);
       file.parent.createSync(recursive: true);
       file.writeAsStringSync(layout.toText());
     } on FileSystemException {
       // Not worth a message. A layout that cannot be saved comes back as the
-      // standard one, which is a small loss and not one worth interrupting
+      // mode's own one, which is a small loss and not one worth interrupting
       // somebody over.
     }
   }
@@ -284,7 +327,7 @@ extension _Panels on _EditorShellState {
     onBoundary: (next, {required live}) =>
         _setBoundary(selected, next, live: live),
     naturalSize: selected.localBounds(reported: _models.of(selected)),
-    onOpenTools: () => _open(PanelKind.modelling),
+    onOpenTools: () => _enterModeNamed('modelling'),
   );
 
   Widget _viewport(DockPanel panel) => SceneViewport(

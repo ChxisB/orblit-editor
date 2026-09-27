@@ -45,7 +45,7 @@ void main() {
     testWidgets('and back to one', (tester) async {
       await open(tester);
       await viewMenu(tester, 'Four views');
-      await viewMenu(tester, 'One view');
+      await viewMenu(tester, 'Reset panels');
 
       expect(find.byType(SceneViewport), findsOneWidget);
     });
@@ -121,9 +121,14 @@ void main() {
       tester,
     ) async {
       Directory(p.join(root.path, '.orblit')).createSync(recursive: true);
-      File(
-        p.join(root.path, '.orblit', 'layout.json'),
-      ).writeAsStringSync(_savedBeforeRegistration);
+      // Stamped with the Scene workspace's revision. Unstamped, the workspace
+      // sets it aside for its own arrangement, which the next test covers.
+      File(p.join(root.path, '.orblit', 'layout.json')).writeAsStringSync(
+        _savedBeforeRegistration.replaceFirst(
+          '"locked":false',
+          '"locked":false,"revision":1',
+        ),
+      );
 
       await open(tester);
 
@@ -152,6 +157,25 @@ void main() {
       expect(find.byType(SceneViewport), findsOneWidget);
       expect(find.byType(ModellingPanel), findsOneWidget);
       expect(find.byType(UvPanel), findsOneWidget);
+    });
+
+    testWidgets('a layout saved before workspaces gives way to the new one', (
+      tester,
+    ) async {
+      Directory(p.join(root.path, '.orblit')).createSync(recursive: true);
+      File(
+        p.join(root.path, '.orblit', 'layout.json'),
+      ).writeAsStringSync(_savedBeforeRegistration);
+
+      await open(tester);
+
+      // The tools have a workspace of their own now, and the old file would
+      // bring them back into this one.
+      for (final tab in ['modelling', 'uvs']) {
+        expect(dockTab(tab), findsNothing, reason: tab);
+      }
+      expect(dockTab('inspector'), findsOneWidget);
+      expect(dockTab('console'), findsOneWidget);
     });
   });
 }

@@ -4,7 +4,8 @@ part of 'editor_shell.dart';
 // taken off it again whenever the scene is read as a document.
 
 extension _Clips on _EditorShellState {
-  /// Opens the clip at [path] on the timeline, and the timeline with it.
+  /// Opens the clip at [path] on the timeline, in the Animation mode where
+  /// the timeline is.
   void _openClip(String path) {
     final List<String> problems;
     try {
@@ -22,6 +23,7 @@ extension _Clips on _EditorShellState {
       );
       return;
     }
+    _enterModeNamed('animation');
     _open(PanelKind.timeline);
     if (problems.isEmpty) return;
     _say(

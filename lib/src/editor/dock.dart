@@ -336,7 +336,11 @@ class DockSplit extends DockNode {
 /// arrangement half-way through being rebuilt is not something anything else
 /// should be able to see.
 class DockLayout {
-  const DockLayout({required this.root, this.locked = false});
+  const DockLayout({
+    required this.root,
+    this.locked = false,
+    this.revision = 0,
+  });
 
   final DockNode root;
 
@@ -347,16 +351,26 @@ class DockLayout {
   /// is, by a drag that was meant to be something else.
   final bool locked;
 
+  /// Which version of its mode's own arrangement this one grew from.
+  ///
+  /// A mode that changes the panels it opens with raises its number. A layout
+  /// saved under a lower one is set aside for the new arrangement. Otherwise
+  /// somebody who never moved a panel would never see the new ones.
+  final int revision;
+
   static const int formatVersion = 1;
 
-  /// The arrangement the editor opens with.
+  /// The arrangement the editor opens with, which is the Scene mode's.
   ///
   /// Three columns, each the height of the window apart from the middle one:
   /// what is in the scene and what is in the project on the left, the view in
-  /// the middle with the console and the other tall-and-wide tools folded
-  /// under it, and the inspector down the whole right side, because a
-  /// component with twenty fields is the one thing that is always short of
-  /// height.
+  /// the middle with the console folded under it, and the inspector down the
+  /// whole right side, because a component with twenty fields is the one
+  /// thing that is always short of height.
+  ///
+  /// Revision 1 took the modelling, UV and timeline panels out. Each has a
+  /// mode of its own now, and a panel for a job nobody is doing is one more
+  /// thing for a newcomer to wonder about.
   factory DockLayout.standard() => DockLayout.columns(
         const DockGroup(
           id: 'centre',
@@ -365,17 +379,38 @@ class DockLayout {
             DockPanel(id: 'game', kind: PanelKind.game),
           ],
         ),
-        bottom: const [
-          DockPanel(id: 'console', kind: PanelKind.console),
-          DockPanel(id: 'uvs', kind: PanelKind.uvs),
-          DockPanel(id: 'timeline', kind: PanelKind.timeline),
-        ],
+        bottom: const [DockPanel(id: 'console', kind: PanelKind.console)],
+        right: const [DockPanel(id: 'inspector', kind: PanelKind.inspector)],
+        revision: 1,
+      );
+
+  /// Shaping one object. The modelling tools come first on the right, and
+  /// the UVs wait folded under the view. No game view: nothing is played
+  /// while a shape is being made.
+  factory DockLayout.modelling() => DockLayout.columns(
+        const DockGroup(
+          id: 'centre',
+          panels: [DockPanel(id: 'scene', kind: PanelKind.viewport)],
+        ),
+        bottom: const [DockPanel(id: 'uvs', kind: PanelKind.uvs)],
         right: const [
-          DockPanel(id: 'inspector', kind: PanelKind.inspector),
-          // Beside the inspector rather than behind a menu. It is a tool, and
-          // a tool nobody can find is a tool nobody uses.
           DockPanel(id: 'modelling', kind: PanelKind.modelling),
+          DockPanel(id: 'inspector', kind: PanelKind.inspector),
         ],
+      );
+
+  /// Making things move. The timeline is open under the view and taller than
+  /// the console would be, because keys are the work here. The inspector has
+  /// the key buttons.
+  factory DockLayout.animation() => DockLayout.columns(
+        const DockGroup(
+          id: 'centre',
+          panels: [DockPanel(id: 'scene', kind: PanelKind.viewport)],
+        ),
+        bottom: const [DockPanel(id: 'timeline', kind: PanelKind.timeline)],
+        right: const [DockPanel(id: 'inspector', kind: PanelKind.inspector)],
+        folded: false,
+        below: 0.4,
       );
 
   /// Four scene views onto the same world, the way a modelling tool arranges
@@ -420,15 +455,20 @@ class DockLayout {
   /// goes in the middle. A mode's own arrangement starts from here too, so
   /// switching mode moves panels rather than the whole editor.
   ///
-  /// The panels under the view start folded: the view is what somebody opens
-  /// the editor to look at, and the console is a click away when there is
-  /// something in it worth reading.
+  /// The panels under the view start [folded] unless a mode says otherwise:
+  /// the view is what somebody opens the editor to look at, and the console
+  /// is a click away when there is something in it worth reading. [below] is
+  /// how much of the middle column they take once open.
   factory DockLayout.columns(
     DockNode centre, {
     required List<DockPanel> bottom,
     required List<DockPanel> right,
+    bool folded = true,
+    double below = 0.28,
+    int revision = 0,
   }) =>
       DockLayout(
+        revision: revision,
         root: DockSplit(
           id: 'root',
           axis: Axis.horizontal,
@@ -452,10 +492,10 @@ class DockLayout {
             DockSplit(
               id: 'middle',
               axis: Axis.vertical,
-              weights: const [0.72, 0.28],
+              weights: [1 - below, below],
               children: [
                 centre,
-                DockGroup(id: 'bottom', panels: bottom, collapsed: true),
+                DockGroup(id: 'bottom', panels: bottom, collapsed: folded),
               ],
             ),
             DockGroup(id: 'right', panels: right),
@@ -480,8 +520,12 @@ class DockLayout {
 
   bool holds(String panelId) => panels.any((panel) => panel.id == panelId);
 
-  DockLayout copyWith({DockNode? root, bool? locked}) =>
-      DockLayout(root: root ?? this.root, locked: locked ?? this.locked);
+  DockLayout copyWith({DockNode? root, bool? locked, int? revision}) =>
+      DockLayout(
+        root: root ?? this.root,
+        locked: locked ?? this.locked,
+        revision: revision ?? this.revision,
+      );
 
   /// Shows a panel, opening its group's tab.
   DockLayout show(String panelId) => copyWith(root: _show(root, panelId));
@@ -779,6 +823,7 @@ class DockLayout {
         'kind': 'orblit.layout',
         'formatVersion': formatVersion,
         'locked': locked,
+        'revision': revision,
         'root': root.toJson(),
       })}\n';
 
@@ -810,6 +855,9 @@ class DockLayout {
     return DockLayout(
       root: root,
       locked: parsed['locked'] == true,
+      // Missing from every layout saved before there were revisions, which
+      // is what 0 means.
+      revision: parsed['revision'] is int ? parsed['revision']! as int : 0,
     );
   }
 }

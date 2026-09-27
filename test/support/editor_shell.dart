@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' show Tristate;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -57,6 +58,20 @@ Future<void> open(
 /// By key rather than by what it says, because the label is also the name of
 /// a menu item, and the outliner's and inspector's rows can say it too.
 Finder dockTab(String panelId) => find.byKey(ValueKey('dock-tab/$panelId'));
+
+/// The tab of the workspace called [name], in the middle of the top bar.
+Finder modeTab(String name) => find.byKey(ValueKey('mode/$name'));
+
+/// Goes to the workspace called [name] by its tab.
+Future<void> enterMode(WidgetTester tester, String name) async {
+  await tester.tap(modeTab(name));
+  await tester.pumpAndSettle();
+}
+
+/// Whether the workspace called [name] is the one open.
+bool inMode(WidgetTester tester, String name) =>
+    tester.getSemantics(modeTab(name)).flagsCollection.isSelected ==
+    Tristate.isTrue;
 
 /// Adds through the Add menu.
 ///

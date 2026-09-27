@@ -140,7 +140,12 @@ class _TopBar extends StatelessWidget {
           onPaste: onPaste,
           onDuplicate: onDuplicate,
         ),
-        _ViewMenu(layout: layout, onLayout: onLayout, panels: panels),
+        _ViewMenu(
+          layout: layout,
+          onLayout: onLayout,
+          panels: panels,
+          modeLayout: mode.layout,
+        ),
         const _BarDivider(),
         // Labelled with what they would undo, so the tooltip answers the
         // question somebody actually has before they press it.
@@ -321,32 +326,38 @@ class _ModeTabState extends State<_ModeTab> {
         ? OrblitColors.ember
         : (_hovering ? OrblitColors.ink : OrblitColors.inkMid);
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: widget.onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: Space.sm + 2,
-            vertical: Space.xs,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(widget.mode.icon, size: 16, color: colour),
-              const SizedBox(width: Space.xs + 2),
-              Text(
-                widget.mode.label,
-                style: OrblitText.label.copyWith(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: colour,
+    // Colour alone does not tell a screen reader which workspace is open.
+    return Semantics(
+      container: true,
+      button: true,
+      selected: widget.selected,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovering = true),
+        onExit: (_) => setState(() => _hovering = false),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: widget.onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: Space.sm + 2,
+              vertical: Space.xs,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(widget.mode.icon, size: 16, color: colour),
+                const SizedBox(width: Space.xs + 2),
+                Text(
+                  widget.mode.label,
+                  style: OrblitText.label.copyWith(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: colour,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

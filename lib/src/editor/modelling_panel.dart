@@ -49,6 +49,7 @@ class ModellingPanel extends StatelessWidget {
     required this.drawing,
     required this.snapping,
     required this.onSnapping,
+    this.notShape,
   });
 
   /// What the selected shape was made from, if it is still that.
@@ -98,6 +99,11 @@ class ModellingPanel extends StatelessWidget {
   final Snapping snapping;
   final ValueChanged<Snapping> onSnapping;
 
+  /// The name of what is selected when it is not a shape, or null.
+  ///
+  /// So a selected model is not answered as if nothing were selected.
+  final String? notShape;
+
   /// Whether there is a shape to work on at all.
   bool get hasShape => shape != null || geometry != null;
 
@@ -112,7 +118,10 @@ class ModellingPanel extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(Space.sm),
             child: Text(
-              'Select a shape to work on it, or draw one.',
+              notShape == null
+                  ? 'Select a shape to work on it, or draw one.'
+                  : '$notShape is not a shape, so it has no parts to change '
+                        'here. Draw a shape, or add one from the Add menu.',
               style: OrblitText.caption.copyWith(fontSize: 11),
             ),
           )
@@ -201,6 +210,8 @@ class ModellingPanel extends StatelessWidget {
             children: [
               for (final one in [ViewportTool.polyShape, ViewportTool.cut]) ...[
                 Expanded(
+                  // The longer label gets the room, or it is cut off.
+                  flex: one == ViewportTool.cut ? 1 : 2,
                   child: OrblitButton(
                     label: one.label,
                     icon: one.icon,

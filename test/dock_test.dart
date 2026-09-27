@@ -21,6 +21,31 @@ void main() {
     ];
   }
 
+  /// Every built-in panel in one arrangement, the way the Scene mode's
+  /// looked before each job had a mode of its own. Busy on purpose, so the
+  /// dock's rules are tested against groups with several panels in them.
+  DockLayout crowded() => DockLayout.columns(
+        const DockGroup(
+          id: 'centre',
+          panels: [
+            DockPanel(id: 'scene', kind: PanelKind.viewport),
+            DockPanel(id: 'game', kind: PanelKind.game),
+          ],
+        ),
+        bottom: const [
+          DockPanel(id: 'console', kind: PanelKind.console),
+          DockPanel(id: 'uvs', kind: PanelKind.uvs),
+          DockPanel(id: 'timeline', kind: PanelKind.timeline),
+        ],
+        right: const [
+          DockPanel(id: 'inspector', kind: PanelKind.inspector),
+          DockPanel(id: 'modelling', kind: PanelKind.modelling),
+        ],
+      );
+
+  DockSplit middleOf(DockLayout layout) =>
+      (layout.root as DockSplit).children[1] as DockSplit;
+
   int splitsIn(DockNode node) {
     if (node is DockSplit) {
       return 1 + node.children.fold(0, (sum, c) => sum + splitsIn(c));
@@ -41,6 +66,42 @@ void main() {
       expect(panelsIn(DockLayout.standard().root, 'centre'), ['scene', 'game']);
     });
 
+    test('the scene keeps to the view, the inspector and the console', () {
+      final layout = DockLayout.standard();
+
+      expect(panelsIn(layout.root, 'right'), ['inspector']);
+      expect(panelsIn(layout.root, 'bottom'), ['console']);
+      expect(layout.revision, 1);
+    });
+
+    test('modelling puts its tools first and folds the UVs away', () {
+      final layout = DockLayout.modelling();
+
+      expect(panelsIn(layout.root, 'right'), ['modelling', 'inspector']);
+      expect(panelsIn(layout.root, 'bottom'), ['uvs']);
+      expect(middleOf(layout).folded, [false, true]);
+      expect(layout.holds('game'), isFalse);
+    });
+
+    test('animation opens the timeline under the view, and tall', () {
+      final layout = DockLayout.animation();
+
+      expect(panelsIn(layout.root, 'bottom'), ['timeline']);
+      expect(middleOf(layout).folded, [false, false]);
+      expect(middleOf(layout).shares.last, closeTo(0.4, 1e-9));
+    });
+
+    test('every mode looks at the same scene view', () {
+      // One id, so one camera: switching mode never moves the view.
+      for (final layout in [
+        DockLayout.standard(),
+        DockLayout.modelling(),
+        DockLayout.animation(),
+      ]) {
+        expect(layout.holds('scene'), isTrue);
+      }
+    });
+
     test('four views is four scene panels', () {
       final layout = DockLayout.fourViews();
       final viewports = layout.panels
@@ -56,7 +117,7 @@ void main() {
 
   group('docking', () {
     test('onto a side makes a split', () {
-      final was = DockLayout.standard();
+      final was = crowded();
       // The console, because the group it leaves still has panels in it, so
       // nothing collapses to cancel out the split being made.
       final now = was.dock('console', 'right', DockSide.bottom);
@@ -67,7 +128,7 @@ void main() {
     });
 
     test('onto the centre makes it another tab', () {
-      final now = DockLayout.standard().dock(
+      final now = crowded().dock(
         'inspector',
         'left',
         DockSide.centre,
@@ -75,11 +136,11 @@ void main() {
 
       expect(panelsIn(now.root, 'left'), ['outliner', 'inspector']);
       // And the one just dropped is the one showing.
-      expect(splitsIn(now.root), splitsIn(DockLayout.standard().root));
+      expect(splitsIn(now.root), splitsIn(crowded().root));
     });
 
     test('a group left empty collapses, and so does the split around it', () {
-      final was = DockLayout.standard();
+      final was = crowded();
       // The outliner is the only panel in its group.
       final now = was.dock('outliner', 'right', DockSide.centre);
 
@@ -93,7 +154,7 @@ void main() {
     });
 
     test('a split left with one child is replaced by that child', () {
-      var layout = DockLayout.standard();
+      var layout = crowded();
       for (final panel in ['inspector', 'modelling', 'scene', 'game']) {
         layout = layout.dock(panel, 'left', DockSide.centre);
       }
@@ -108,7 +169,7 @@ void main() {
     });
 
     test('dropping a panel on its own group does nothing', () {
-      final was = DockLayout.standard();
+      final was = crowded();
       final now = was.dock('scene', 'centre', DockSide.centre);
 
       expect(panelsIn(now.root, 'centre'), ['scene', 'game']);
@@ -116,7 +177,7 @@ void main() {
     });
 
     test('dropping the only panel of a group onto itself keeps it', () {
-      final was = DockLayout.standard();
+      final was = crowded();
       final now = was.dock('outliner', 'left', DockSide.right);
 
       expect(now.holds('outliner'), isTrue);
@@ -124,7 +185,7 @@ void main() {
     });
 
     test('a locked layout refuses to be rearranged', () {
-      final locked = DockLayout.standard().copyWith(locked: true);
+      final locked = crowded().copyWith(locked: true);
       final after = locked.dock('inspector', 'left', DockSide.bottom);
 
       expect(panelsIn(after.root, 'right'), ['inspector', 'modelling']);
@@ -132,7 +193,7 @@ void main() {
     });
 
     test('nothing is lost, whatever is dragged where', () {
-      var layout = DockLayout.standard();
+      var layout = crowded();
       final before = layout.panels.length;
 
       for (final side in DockSide.values) {
@@ -146,14 +207,14 @@ void main() {
 
   group('folding', () {
     test('the panels under the view start folded', () {
-      final bottom = (DockLayout.standard().root as DockSplit).children[1]
+      final bottom = (crowded().root as DockSplit).children[1]
           as DockSplit;
 
       expect(bottom.folded, [false, true]);
     });
 
     test('a group under another folds and opens again', () {
-      final open = DockLayout.standard().collapse('bottom', collapsed: false);
+      final open = crowded().collapse('bottom', collapsed: false);
       expect(open.canCollapse('bottom'), isTrue);
 
       final folded = open.collapse('bottom');
@@ -164,7 +225,7 @@ void main() {
     });
 
     test('the group at the top of a column does not fold', () {
-      final layout = DockLayout.standard();
+      final layout = crowded();
 
       expect(layout.canCollapse('centre'), isFalse);
       expect(layout.canCollapse('left'), isFalse);
@@ -172,11 +233,11 @@ void main() {
     });
 
     test('a group beside others rather than under one does not fold', () {
-      expect(DockLayout.standard().canCollapse('right'), isFalse);
+      expect(crowded().canCollapse('right'), isFalse);
     });
 
     test('showing a panel in a folded group opens it', () {
-      final now = DockLayout.standard().show('timeline');
+      final now = crowded().show('timeline');
       final middle = (now.root as DockSplit).children[1] as DockSplit;
 
       expect(middle.folded, [false, false]);
@@ -198,7 +259,7 @@ void main() {
     });
 
     test('it folds while the layout is locked, as choosing a tab does', () {
-      final locked = DockLayout.standard()
+      final locked = crowded()
           .collapse('bottom', collapsed: false)
           .copyWith(locked: true);
 
@@ -210,12 +271,12 @@ void main() {
     });
 
     test('it is kept in the file', () {
-      final now = DockLayout.read(DockLayout.standard().toText())!;
+      final now = DockLayout.read(crowded().toText())!;
       final middle = (now.root as DockSplit).children[1] as DockSplit;
 
       expect(middle.folded, [false, true]);
       final open = DockLayout.read(
-        DockLayout.standard().collapse('bottom', collapsed: false).toText(),
+        crowded().collapse('bottom', collapsed: false).toText(),
       )!;
       expect(((open.root as DockSplit).children[1] as DockSplit).folded, [
         false,
@@ -228,7 +289,7 @@ void main() {
     test('takes the panel out and collapses what it leaves', () {
       // The outliner, which is the panel with a group to itself: closing it
       // leaves the left column with one group, for the split to collapse.
-      final now = DockLayout.standard().close('outliner');
+      final now = crowded().close('outliner');
 
       expect(now.holds('outliner'), isFalse);
       final root = now.root as DockSplit;
@@ -237,13 +298,13 @@ void main() {
     });
 
     test('a tab beside others leaves the others alone', () {
-      final now = DockLayout.standard().close('game');
+      final now = crowded().close('game');
 
       expect(panelsIn(now.root, 'centre'), ['scene']);
     });
 
     test('closing everything leaves something to open into', () {
-      var layout = DockLayout.standard();
+      var layout = crowded();
       for (final panel in [...layout.panels]) {
         layout = layout.close(panel.id);
       }
@@ -253,7 +314,7 @@ void main() {
 
   group('opening', () {
     test('a panel already there is shown rather than added twice', () {
-      final was = DockLayout.standard();
+      final was = crowded();
       final now = was.add(
         const DockPanel(id: 'console', kind: PanelKind.console),
       );
@@ -262,7 +323,7 @@ void main() {
     });
 
     test('one that is not there is added', () {
-      final now = DockLayout.standard()
+      final now = crowded()
           .close('console')
           .add(const DockPanel(id: 'console', kind: PanelKind.console));
       expect(now.holds('console'), isTrue);
@@ -354,6 +415,19 @@ void main() {
       final now = DockLayout.read(DockLayout.fourViews().toText())!;
       final titles = [for (final panel in now.panels) panel.label];
       expect(titles, containsAll(['Scene', 'Scene 2', 'Scene 4']));
+    });
+
+    test('keeps the revision it grew from', () {
+      final now = DockLayout.read(DockLayout.standard().toText())!;
+
+      expect(now.revision, 1);
+    });
+
+    test('one saved before there were revisions reads as the first', () {
+      final text = crowded().toText().replaceFirst('"revision": 0,', '');
+
+      expect(text, isNot(contains('revision')));
+      expect(DockLayout.read(text)!.revision, 0);
     });
 
     test('is not read from something that is not one', () {

@@ -43,6 +43,8 @@ void main() {
 
     testWidgets('opening one shows it on the timeline', (tester) async {
       await openClip(tester);
+      // In the Animation workspace, where the timeline has room.
+      expect(inMode(tester, 'animation'), isTrue);
       expect(find.byType(TimelineRuler), findsOneWidget);
       expect(find.text('0.00 s   frame 0'), findsOneWidget);
     });

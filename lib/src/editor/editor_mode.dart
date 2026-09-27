@@ -21,6 +21,8 @@ class EditorMode implements Registered {
     this.tools,
     this.input,
     this.overlay,
+    this.onEnter,
+    this.onLeave,
   });
 
   /// Also what its layout is saved under, so a word that is safe in a file
@@ -47,6 +49,13 @@ class EditorMode implements Registered {
   /// Drawn over every scene view while it is the mode, above the handles:
   /// whatever the mode's own input wants seen, such as a brush's reach.
   final ViewportOverlay? overlay;
+
+  /// Sets up the job as the editor switches to it, the way modelling goes
+  /// into the selected shape's parts. Null leaves everything as it was.
+  final VoidCallback? onEnter;
+
+  /// Puts back what [onEnter] set up, as the editor switches away.
+  final VoidCallback? onLeave;
 }
 
 /// Something drawn over a scene view, given how that view projects.

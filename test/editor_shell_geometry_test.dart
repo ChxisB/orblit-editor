@@ -44,12 +44,10 @@ void main() {
       );
     }
 
-    /// It is a tab beside the inspector, and a tab that is not showing is not
-    /// built.
-    Future<void> openTools(WidgetTester tester) async {
-      await tester.tap(dockTab('modelling'));
-      await tester.pumpAndSettle();
-    }
+    /// The panel is in front in the Modelling workspace, and a panel that is
+    /// not showing is not built.
+    Future<void> openTools(WidgetTester tester) =>
+        enterMode(tester, 'modelling');
 
     /// Its callbacks, driven directly rather than by hunting for a button
     /// below the fold of a lazy list.
@@ -139,8 +137,8 @@ void main() {
       await scrollInspector(tester);
 
       // Somebody who used to find extrude here will look here for it.
-      expect(find.textContaining('modelling panel'), findsOneWidget);
-      expect(find.text('Modelling tools'), findsOneWidget);
+      expect(find.textContaining('Modelling tab'), findsOneWidget);
+      expect(find.text('Go to Modelling'), findsOneWidget);
       // And the shape's own numbers are still where they belong.
       expect(find.text('CUBE'), findsOneWidget);
     });
@@ -148,10 +146,16 @@ void main() {
     testWidgets('G goes into the geometry and round the modes', (tester) async {
       await open(tester);
       await addShape(tester, 'Cube');
-      await openTools(tester);
 
+      // In the Scene workspace, where G is the way in. The Modelling
+      // workspace goes in by itself.
       await tester.sendKeyEvent(LogicalKeyboardKey.keyG);
       await tester.pumpAndSettle();
+      expect(
+        tester.widget<SceneViewport>(find.byType(SceneViewport)).editing,
+        isNotNull,
+      );
+      await openTools(tester);
       expect(find.text('Faces'), findsWidgets);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.keyG);

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orblit_editor/src/editor/drawing.dart';
 import 'package:orblit_editor/src/editor/editor_shell.dart';
@@ -42,7 +41,7 @@ void main() {
   }
 
   Future<void> openTools(WidgetTester tester) async {
-    await tester.tap(find.byKey(const ValueKey('dock-tab/modelling')));
+    await tester.tap(find.byKey(const ValueKey('mode/modelling')));
     await tester.pumpAndSettle();
   }
 
@@ -58,11 +57,16 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('it is there without anybody opening it', (tester) async {
+  testWidgets('it has a workspace of its own, one tab away', (tester) async {
     await open(tester);
-    // A tool nobody can find is a tool nobody uses, so it is a tab beside
-    // the inspector rather than an item in a menu.
-    expect(find.byKey(const ValueKey('dock-tab/modelling')), findsOneWidget);
+    // The Scene workspace keeps to placing things, so the tools are not
+    // crowding it.
+    expect(find.byKey(const ValueKey('dock-tab/modelling')), findsNothing);
+
+    // A tool nobody can find is a tool nobody uses, so it is a tab at the
+    // top rather than an item in a menu.
+    await openTools(tester);
+    expect(find.byType(ModellingPanel), findsOneWidget);
   });
 
   testWidgets('it says what it is waiting for with nothing selected',
@@ -106,8 +110,7 @@ void main() {
     expect(find.text('WHOLE SHAPE'), findsOneWidget);
     expect(find.text('SELECTION'), findsNothing);
 
-    await tester.sendKeyEvent(LogicalKeyboardKey.keyG);
-    await tester.pumpAndSettle();
+    // No G first: the workspace went into the cube's parts on the way in.
     final viewport = find.byType(SceneViewport);
     tester.widget<SceneViewport>(viewport).onSelectElements!(
       const [0],
@@ -143,10 +146,10 @@ void main() {
     final panel = tester.widget<MeshPanel>(find.byType(MeshPanel));
     expect(panel.shape, isNotNull);
 
-    // And pressing the pointer opens the panel it points at, for a layout
-    // where somebody has closed it.
+    // And pressing the pointer goes to the workspace it points at.
+    expect(find.byType(ModellingPanel), findsNothing);
     panel.onOpenTools();
     await tester.pumpAndSettle();
-    expect(find.byKey(const ValueKey('dock-tab/modelling')), findsOneWidget);
+    expect(find.byType(ModellingPanel), findsOneWidget);
   });
 }

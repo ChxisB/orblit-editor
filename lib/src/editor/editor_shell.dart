@@ -585,7 +585,7 @@ class _EditorShellState extends State<EditorShell> {
   late EditorMode _mode = _registry.modes.all.first;
 
   /// How the panels are arranged. Data, so it survives being closed.
-  late DockLayout _layout = _readLayout() ?? _mode.layout();
+  late DockLayout _layout = _layoutOf(_mode);
 
   /// A camera per scene view.
   ///
