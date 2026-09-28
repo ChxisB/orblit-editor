@@ -34,11 +34,20 @@ rig({bool open = true}) {
   return (scene: scene, entry: entry, history: history, bench: bench);
 }
 
-Future<void> showPanel(WidgetTester tester, ClipBench bench) async {
+Future<void> showPanel(
+  WidgetTester tester,
+  ClipBench bench, {
+  VoidCallback? onNew,
+}) async {
   await tester.pumpWidget(
     MaterialApp(
       home: Scaffold(
-        body: TimelinePanel(bench: bench, selected: null, onProblem: (_) {}),
+        body: TimelinePanel(
+          bench: bench,
+          selected: null,
+          onProblem: (_) {},
+          onNew: onNew ?? () {},
+        ),
       ),
     ),
   );
@@ -54,9 +63,14 @@ const ChannelAddress lampPower = (
 void main() {
   group('timeline panel', () {
     testWidgets('says what to do when no clip is open', (tester) async {
-      await showPanel(tester, rig(open: false).bench);
-      expect(find.textContaining('No clip open'), findsOneWidget);
+      var made = 0;
+      await showPanel(tester, rig(open: false).bench, onNew: () => made++);
+      expect(find.text('No clip open'), findsOneWidget);
       expect(find.byType(TimelineRuler), findsNothing);
+
+      // The button itself, rather than a file type to go and look for.
+      await tester.tap(find.text('Make a clip'));
+      expect(made, 1);
     });
 
     testWidgets('a tap on the ruler moves the playhead onto a frame', (

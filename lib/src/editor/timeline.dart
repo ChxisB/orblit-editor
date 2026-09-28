@@ -14,6 +14,8 @@ import 'scene.dart';
 import 'timeline_curves.dart';
 import 'timeline_sheet.dart';
 
+part 'timeline_controls.dart';
+
 /// Which of the two ways of looking at a clip the panel shows.
 enum TimelineView { keys, curves }
 
@@ -38,6 +40,7 @@ class TimelinePanel extends StatefulWidget {
     required this.bench,
     this.selected,
     this.onProblem,
+    required this.onNew,
   });
 
   final ClipBench bench;
@@ -47,6 +50,9 @@ class TimelinePanel extends StatefulWidget {
 
   /// Told what went wrong saving a clip.
   final ValueChanged<String>? onProblem;
+
+  /// Makes a clip in the project and opens it here.
+  final VoidCallback onNew;
 
   @override
   State<TimelinePanel> createState() => _TimelinePanelState();
@@ -229,10 +235,7 @@ class _TimelinePanelState extends State<TimelinePanel>
         child: Container(
           color: OrblitColors.surface,
           child: clip == null
-              ? const _Message(
-                  'No clip open. Make one in the project with New › Clip, '
-                  'or open a .oclip.',
-                )
+              ? _NoClip(onNew: widget.onNew)
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -382,6 +385,15 @@ class _TimelinePanelState extends State<TimelinePanel>
               style: OrblitText.label,
             ),
           ),
+        MenuItemButton(
+          onPressed: widget.onNew,
+          leadingIcon: const Icon(
+            Icons.add,
+            size: 14,
+            color: OrblitColors.inkMid,
+          ),
+          child: const Text('Make a clip', style: OrblitText.label),
+        ),
         const Divider(height: 1),
         MenuItemButton(
           onPressed: unsaved
@@ -773,184 +785,5 @@ class _ChannelRowState extends State<_ChannelRow> {
         ),
       ),
     );
-  }
-}
-
-class _Message extends StatelessWidget {
-  const _Message(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(Space.lg),
-        child: Text(
-          text,
-          style: OrblitText.caption,
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-}
-
-class _Action extends StatelessWidget {
-  const _Action({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-    this.on = false,
-  });
-
-  final IconData icon;
-  final String tooltip;
-
-  /// Null greys it out.
-  final VoidCallback? onTap;
-
-  final bool on;
-
-  @override
-  Widget build(BuildContext context) {
-    final colour = onTap == null
-        ? OrblitColors.line
-        : on
-        ? OrblitColors.ember
-        : OrblitColors.inkMid;
-    return Tooltip(
-      message: tooltip,
-      child: MouseRegion(
-        cursor: onTap == null ? MouseCursor.defer : SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(Space.xs),
-            child: Icon(icon, size: 16, color: colour),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({required this.label, required this.on, required this.onTap});
-
-  final String label;
-  final bool on;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: Space.sm,
-            vertical: 3,
-          ),
-          decoration: BoxDecoration(
-            color: on ? OrblitColors.raised : Colors.transparent,
-            borderRadius: BorderRadius.circular(Radii.control),
-            border: Border.all(
-              color: on ? OrblitColors.line : Colors.transparent,
-            ),
-          ),
-          child: Text(
-            label,
-            style: OrblitText.caption.copyWith(
-              fontSize: 11,
-              color: on ? OrblitColors.ink : OrblitColors.inkDim,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-const _menuStyle = MenuStyle(
-  backgroundColor: WidgetStatePropertyAll(OrblitColors.raised),
-  surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
-  shape: WidgetStatePropertyAll(
-    RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(Radius.circular(Radii.panel)),
-      side: BorderSide(color: OrblitColors.line),
-    ),
-  ),
-);
-
-/// A label that opens a menu, the way every choice on the toolbar is made.
-class _Menu extends StatelessWidget {
-  const _Menu({
-    required this.label,
-    required this.items,
-    this.icon,
-    this.tooltip,
-    this.enabled = true,
-    this.warn = false,
-  });
-
-  final String label;
-  final List<Widget> items;
-  final IconData? icon;
-  final String? tooltip;
-  final bool enabled;
-  final bool warn;
-
-  @override
-  Widget build(BuildContext context) {
-    final colour = !enabled
-        ? OrblitColors.line
-        : warn
-        ? OrblitColors.warn
-        : OrblitColors.inkMid;
-    final menu = MenuAnchor(
-      style: _menuStyle,
-      menuChildren: items,
-      builder: (context, controller, _) => MouseRegion(
-        cursor: enabled ? SystemMouseCursors.click : MouseCursor.defer,
-        child: GestureDetector(
-          onTap: !enabled
-              ? null
-              : () => controller.isOpen
-                    ? controller.close()
-                    : controller.open(),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Space.sm,
-              vertical: 3,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(Radii.control),
-              border: Border.all(color: OrblitColors.lineSoft),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (icon != null) ...[
-                  Icon(icon, size: 13, color: colour),
-                  const SizedBox(width: 5),
-                ],
-                Text(
-                  label,
-                  style: OrblitText.caption.copyWith(
-                    fontSize: 11,
-                    color: enabled ? OrblitColors.ink : OrblitColors.inkDim,
-                  ),
-                ),
-                const SizedBox(width: 2),
-                Icon(Icons.arrow_drop_down, size: 14, color: colour),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-    return tooltip == null ? menu : Tooltip(message: tooltip, child: menu);
   }
 }

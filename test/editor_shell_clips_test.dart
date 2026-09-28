@@ -49,6 +49,37 @@ void main() {
       expect(find.text('0.00 s   frame 0'), findsOneWidget);
     });
 
+    testWidgets('an empty timeline makes one and shows it', (tester) async {
+      await open(tester);
+      await enterMode(tester, 'animation');
+
+      await tester.tap(find.text('Make a clip'));
+      await tester.pumpAndSettle();
+
+      expect(
+        File(p.join(root.path, 'clips', 'clip.oclip')).existsSync(),
+        isTrue,
+      );
+      expect(find.byType(TimelineRuler), findsOneWidget);
+    });
+
+    testWidgets('the clip menu makes another', (tester) async {
+      await openClip(tester);
+
+      await tester.tap(find.text('wave'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Make a clip'));
+      await tester.pumpAndSettle();
+
+      expect(
+        File(p.join(root.path, 'clips', 'clip.oclip')).existsSync(),
+        isTrue,
+      );
+      // Shown in place of the one before.
+      expect(find.text('clip'), findsOneWidget);
+      expect(find.text('wave'), findsNothing);
+    });
+
     testWidgets('a key from the inspector is saved with the scene', (
       tester,
     ) async {
