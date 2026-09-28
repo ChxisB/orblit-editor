@@ -85,7 +85,7 @@ String flowing(String classes) {
 }
 
 /// An interface open in the Interface workspace.
-class OpenInterface {
+final class OpenInterface {
   OpenInterface({required this.path, required this.document});
 
   final String path;
@@ -108,7 +108,7 @@ class OpenInterface {
 /// and the design panel all read it, a panel can be closed and opened again
 /// without losing the selection, and each edit is a step on the one undo
 /// stack the rest of the editor uses.
-class InterfaceBench extends ChangeNotifier {
+final class InterfaceBench extends ChangeNotifier {
   InterfaceBench({required this.history});
 
   final History history;
@@ -552,7 +552,7 @@ class InterfaceBench extends ChangeNotifier {
 /// whole and neither ever changes, so undoing is putting one back. An edit
 /// shares every subtree it did not touch, so a step costs the spine of one
 /// edit rather than a copy of the interface.
-class InterfaceEdit extends EditorCommand {
+final class InterfaceEdit extends EditorCommand {
   InterfaceEdit({
     required this.bench,
     required this.path,

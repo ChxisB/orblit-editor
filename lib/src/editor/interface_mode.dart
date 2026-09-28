@@ -72,7 +72,7 @@ DockLayout interfaceLayout() => DockLayout.columns(
 /// With nothing open it offers a new interface, since an empty grey panel
 /// in the middle of the window tells a newcomer nothing about what goes
 /// there.
-class InterfaceCanvas extends StatelessWidget {
+final class InterfaceCanvas extends StatelessWidget {
   const InterfaceCanvas({super.key, required this.bench, required this.onNew});
 
   final InterfaceBench bench;
@@ -104,7 +104,7 @@ class InterfaceCanvas extends StatelessWidget {
 }
 
 /// The elements on the shown canvas, as a tree.
-class InterfaceElements extends StatelessWidget {
+final class InterfaceElements extends StatelessWidget {
   const InterfaceElements({super.key, required this.bench});
 
   final InterfaceBench bench;
@@ -123,7 +123,7 @@ class InterfaceElements extends StatelessWidget {
 }
 
 /// What to add, the selected element's properties and the canvas's.
-class InterfaceDesign extends StatelessWidget {
+final class InterfaceDesign extends StatelessWidget {
   const InterfaceDesign({super.key, required this.bench});
 
   final InterfaceBench bench;
@@ -148,7 +148,7 @@ class InterfaceDesign extends StatelessWidget {
 ///
 /// Listens to the undo stack as well as the bench, because whether the
 /// interface has changes is the stack's answer.
-class InterfaceShelf extends StatelessWidget {
+final class InterfaceShelf extends StatelessWidget {
   const InterfaceShelf({super.key, required this.bench, required this.onNew});
 
   final InterfaceBench bench;
@@ -227,7 +227,7 @@ class InterfaceShelf extends StatelessWidget {
 
 /// The canvas panel with nothing open: what an interface is, and the one
 /// button that makes one.
-class _NothingOpen extends StatelessWidget {
+final class _NothingOpen extends StatelessWidget {
   const _NothingOpen({required this.onNew});
 
   final VoidCallback onNew;
@@ -269,7 +269,7 @@ class _NothingOpen extends StatelessWidget {
   }
 }
 
-class _Message extends StatelessWidget {
+final class _Message extends StatelessWidget {
   const _Message(this.text);
 
   final String text;

@@ -295,7 +295,7 @@ enum _TabFit { iconAndWord, word, icon }
 /// The icon goes first and the word last, because the word is what tells
 /// somebody new what a tab is for. Only a window too narrow for the words
 /// gets icons alone, and those say their word when pointed at.
-class _ModeTabs extends StatelessWidget {
+final class _ModeTabs extends StatelessWidget {
   const _ModeTabs({
     required this.modes,
     required this.mode,
