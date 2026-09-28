@@ -79,21 +79,16 @@ class UvPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            for (final one in UvGesture.values) ...[
-              Expanded(
-                child: OrblitButton(
-                  label: one.label,
-                  icon: one.icon,
-                  expand: true,
-                  tone:
-                      one == gesture ? ButtonTone.primary : ButtonTone.quiet,
-                  onPressed: () => onGesture(one),
-                ),
+        OrblitButtonRow(
+          buttons: [
+            for (final one in UvGesture.values)
+              OrblitButton(
+                label: one.label,
+                icon: one.icon,
+                expand: true,
+                tone: one == gesture ? ButtonTone.primary : ButtonTone.quiet,
+                onPressed: () => onGesture(one),
               ),
-              const SizedBox(width: Space.xs),
-            ],
           ],
         ),
         const SizedBox(height: Space.xs),
@@ -483,30 +478,26 @@ class UvRuleControls extends StatelessWidget {
           ),
         ),
         const SizedBox(height: Space.xs),
-        Row(
-          children: [
+        OrblitButtonRow(
+          buttons: [
             for (final one in [
               (label: 'Flip across', on: uv.flipU),
               (label: 'Flip down', on: uv.flipV),
               (label: 'Swap axes', on: uv.swap),
-            ]) ...[
-              Expanded(
-                child: OrblitButton(
-                  label: one.label,
-                  expand: true,
-                  tone: one.on ? ButtonTone.primary : ButtonTone.quiet,
-                  onPressed: () => onChanged(
-                    switch (one.label) {
-                      'Flip across' => uv.copyWith(flipU: !uv.flipU),
-                      'Flip down' => uv.copyWith(flipV: !uv.flipV),
-                      _ => uv.copyWith(swap: !uv.swap),
-                    },
-                    live: false,
-                  ),
+            ])
+              OrblitButton(
+                label: one.label,
+                expand: true,
+                tone: one.on ? ButtonTone.primary : ButtonTone.quiet,
+                onPressed: () => onChanged(
+                  switch (one.label) {
+                    'Flip across' => uv.copyWith(flipU: !uv.flipU),
+                    'Flip down' => uv.copyWith(flipV: !uv.flipV),
+                    _ => uv.copyWith(swap: !uv.swap),
+                  },
+                  live: false,
                 ),
               ),
-              const SizedBox(width: Space.xs),
-            ],
           ],
         ),
       ],

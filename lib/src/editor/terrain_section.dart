@@ -213,33 +213,26 @@ class _Editing {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       for (final (index, set) in _sets.indexed) _set(index, set),
-      Row(
-        children: [
-          Expanded(
-            child: OrblitButton(
-              label: 'Add set',
-              icon: Icons.add,
-              tone: ButtonTone.quiet,
-              expand: true,
-              onPressed: _sets.length >= Cover.setCount ? null : _addSet,
-            ),
+      OrblitButtonRow(
+        buttons: [
+          OrblitButton(
+            label: 'Add set',
+            icon: Icons.add,
+            tone: ButtonTone.quiet,
+            expand: true,
+            onPressed: _sets.length >= Cover.setCount ? null : _addSet,
           ),
-          const SizedBox(width: Space.xs),
           // Only the last: the ground names a set by its place in the list,
           // so taking one from the middle would repaint everything after it.
-          Expanded(
-            child: Tooltip(
-              message:
-                  'Takes the last set away. Ground painted with it shows '
-                  'the one before.',
-              child: OrblitButton(
-                label: 'Remove last',
-                icon: Icons.remove,
-                tone: ButtonTone.quiet,
-                expand: true,
-                onPressed: _sets.length <= 1 ? null : _removeLastSet,
-              ),
-            ),
+          OrblitButton(
+            label: 'Remove last',
+            icon: Icons.remove,
+            tone: ButtonTone.quiet,
+            expand: true,
+            tooltip:
+                'Takes the last set away. Ground painted with it shows '
+                'the one before.',
+            onPressed: _sets.length <= 1 ? null : _removeLastSet,
           ),
         ],
       ),

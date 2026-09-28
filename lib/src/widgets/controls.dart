@@ -31,6 +31,7 @@ class OrblitButton extends StatefulWidget {
     this.icon,
     this.tone = ButtonTone.normal,
     this.expand = false,
+    this.tooltip,
   });
 
   final String label;
@@ -40,6 +41,15 @@ class OrblitButton extends StatefulWidget {
 
   /// Fills its parent's width, for a stacked column of actions.
   final bool expand;
+
+  /// What pointing at it says, for a button whose label cannot say it all.
+  final String? tooltip;
+
+  double get _padding => tone == ButtonTone.flat ? Space.sm : Space.md;
+
+  /// How much of its width is not room for its content: the padding, and
+  /// the border on each side.
+  double get _inset => _padding * 2 + 2;
 
   @override
   State<OrblitButton> createState() => _OrblitButtonState();
@@ -76,41 +86,14 @@ class _OrblitButtonState extends State<OrblitButton> {
 
   @override
   Widget build(BuildContext context) {
-    final content = Row(
-      mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
-      mainAxisAlignment: widget.expand
-          ? MainAxisAlignment.start
-          : MainAxisAlignment.center,
-      children: [
-        if (widget.icon != null) ...[
-          Icon(widget.icon, size: 15, color: _foreground),
-          const SizedBox(width: Space.sm),
-        ],
-        // Flexible when it fills its parent, since a label long enough to
-        // overflow is a translation away rather than a hypothetical.
-        if (widget.expand)
-          Flexible(
-            child: Text(
-              widget.label,
-              overflow: TextOverflow.ellipsis,
-              style: OrblitText.label.copyWith(
-                color: _foreground,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          )
-        else
-          Text(
-            widget.label,
-            style: OrblitText.label.copyWith(
-              color: _foreground,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-      ],
+    final content = _ButtonContent(
+      label: widget.label,
+      icon: widget.icon,
+      colour: _foreground,
+      expand: widget.expand,
     );
 
-    return MouseRegion(
+    final button = MouseRegion(
       cursor: _enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
       onEnter: (_) => setState(() => _hovering = true),
       onExit: (_) => setState(() => _hovering = false),
@@ -122,9 +105,7 @@ class _OrblitButtonState extends State<OrblitButton> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 90),
           height: widget.tone == ButtonTone.flat ? 28 : 30,
-          padding: EdgeInsets.symmetric(
-            horizontal: widget.tone == ButtonTone.flat ? Space.sm : Space.md,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: widget._padding),
           decoration: BoxDecoration(
             color: _background,
             borderRadius: BorderRadius.circular(Radii.control),
@@ -139,6 +120,175 @@ class _OrblitButtonState extends State<OrblitButton> {
           child: content,
         ),
       ),
+    );
+    if (widget.tooltip case final message?) {
+      return Tooltip(message: message, child: button);
+    }
+    return button;
+  }
+}
+
+/// Buttons side by side, or one above another when a narrow panel would
+/// cut a word off one of them.
+///
+/// Stacked rather than shrunk to icons, because the words are what tell
+/// somebody new what each one does. Side by side, they show their icons
+/// only if all of them can, so a row never mixes the two.
+final class OrblitButtonRow extends StatelessWidget {
+  const OrblitButtonRow({super.key, required this.buttons});
+
+  /// Each fills its share, so each is built with `expand`.
+  final List<OrblitButton> buttons;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final gaps = Space.xs * (buttons.length - 1);
+      final share = (constraints.maxWidth - gaps) / buttons.length;
+      final fits = [
+        for (final one in buttons)
+          _ButtonContent.fitOf(
+            context,
+            one.label,
+            one.icon,
+            share - one._inset,
+          ),
+      ];
+      if (fits.contains(_ButtonFit.icon)) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: Space.xs,
+          children: buttons,
+        );
+      }
+      return _SharedFit(
+        fit: fits.contains(_ButtonFit.word)
+            ? _ButtonFit.word
+            : _ButtonFit.iconAndWord,
+        child: Row(
+          spacing: Space.xs,
+          children: [for (final one in buttons) Expanded(child: one)],
+        ),
+      );
+    },
+  );
+}
+
+enum _ButtonFit { iconAndWord, word, icon }
+
+/// What a row of buttons settled on for all of them.
+final class _SharedFit extends InheritedWidget {
+  const _SharedFit({required this.fit, required super.child});
+
+  final _ButtonFit fit;
+
+  static _ButtonFit? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_SharedFit>()?.fit;
+
+  @override
+  bool updateShouldNotify(_SharedFit oldWidget) => fit != oldWidget.fit;
+}
+
+/// A button's icon and word, or as much of them as its room holds.
+///
+/// One that fills its parent gives up its icon first and its word last,
+/// because the word is what tells somebody new what it does. Only a button
+/// too narrow for its word gets the icon alone, and that says the word when
+/// pointed at.
+final class _ButtonContent extends StatelessWidget {
+  const _ButtonContent({
+    required this.label,
+    required this.icon,
+    required this.colour,
+    required this.expand,
+  });
+
+  static const _iconSize = 15.0;
+  static const _iconGap = Space.sm;
+
+  final String label;
+  final IconData? icon;
+  final Color colour;
+  final bool expand;
+
+  static final _measured = OrblitText.label.copyWith(
+    fontWeight: FontWeight.w500,
+  );
+
+  TextStyle get _wording => _measured.copyWith(color: colour);
+
+  /// What of a button fits in [room]. [_ButtonFit.icon] means its word does
+  /// not, even for a button with no icon to fall back on.
+  static _ButtonFit fitOf(
+    BuildContext context,
+    String label,
+    IconData? icon,
+    double room,
+  ) {
+    // Merged as Text merges it, or an inherited letter spacing makes the
+    // word wider on screen than it measured.
+    final painter = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: DefaultTextStyle.of(context).style.merge(_measured),
+      ),
+      textDirection: TextDirection.ltr,
+      textScaler: MediaQuery.textScalerOf(context),
+    )..layout();
+    final word = painter.width;
+    painter.dispose();
+    if (word > room) return _ButtonFit.icon;
+    if (icon != null && _iconSize + _iconGap + word <= room) {
+      return _ButtonFit.iconAndWord;
+    }
+    return _ButtonFit.word;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!expand) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: _iconSize, color: colour),
+            const SizedBox(width: _iconGap),
+          ],
+          Text(label, style: _wording),
+        ],
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final fit = icon == null
+            ? _ButtonFit.word
+            : _SharedFit.of(context) ??
+                  fitOf(context, label, icon, constraints.maxWidth);
+        final row = Row(
+          mainAxisAlignment: fit == _ButtonFit.icon
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.start,
+          children: [
+            if (fit != _ButtonFit.word)
+              Icon(icon, size: _iconSize, color: colour),
+            if (fit == _ButtonFit.iconAndWord) const SizedBox(width: _iconGap),
+            // Flexible, since a label long enough to overflow is a
+            // translation away rather than a hypothetical.
+            if (fit != _ButtonFit.icon)
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: _wording,
+                ),
+              ),
+          ],
+        );
+        return fit == _ButtonFit.icon
+            ? Tooltip(message: label, child: row)
+            : row;
+      },
     );
   }
 }
@@ -233,7 +383,16 @@ class OrblitSection extends StatelessWidget {
               children: [
                 Icon(icon, size: 13, color: OrblitColors.inkDim),
                 const SizedBox(width: Space.sm),
-                Text(title.toUpperCase(), style: OrblitText.section),
+                // A side panel at the smallest window is narrower than the
+                // longest heading.
+                Flexible(
+                  child: Text(
+                    title.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: OrblitText.section,
+                  ),
+                ),
               ],
             ),
           ),

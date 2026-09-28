@@ -181,35 +181,29 @@ class _BodySection extends StatelessWidget {
           ),
         ],
         const SizedBox(height: Space.xs),
-        Row(
-          children: [
-            if (_object.isDrawable) ...[
-              Expanded(
-                child: OrblitButton(
-                  label: 'Fit to mesh',
-                  icon: Icons.fit_screen_outlined,
-                  tone: ButtonTone.quiet,
-                  expand: true,
-                  onPressed: () => _put(
-                    _fitted(body),
-                    label: 'Fit ${_object.name} body to its mesh',
-                    alone: true,
-                  ),
-                ),
-              ),
-              const SizedBox(width: Space.xs),
-            ],
-            Expanded(
-              child: OrblitButton(
-                label: 'Remove body',
-                icon: Icons.remove,
+        OrblitButtonRow(
+          buttons: [
+            if (_object.isDrawable)
+              OrblitButton(
+                label: 'Fit to mesh',
+                icon: Icons.fit_screen_outlined,
                 tone: ButtonTone.quiet,
                 expand: true,
                 onPressed: () => _put(
-                  null,
-                  label: 'Remove body from ${_object.name}',
+                  _fitted(body),
+                  label: 'Fit ${_object.name} body to its mesh',
                   alone: true,
                 ),
+              ),
+            OrblitButton(
+              label: 'Remove body',
+              icon: Icons.remove,
+              tone: ButtonTone.quiet,
+              expand: true,
+              onPressed: () => _put(
+                null,
+                label: 'Remove body from ${_object.name}',
+                alone: true,
               ),
             ),
           ],

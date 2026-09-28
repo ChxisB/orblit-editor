@@ -206,27 +206,21 @@ class ModellingPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              for (final one in [ViewportTool.polyShape, ViewportTool.cut]) ...[
-                Expanded(
-                  // The longer label gets the room, or it is cut off.
-                  flex: one == ViewportTool.cut ? 1 : 2,
-                  child: OrblitButton(
-                    label: one.label,
-                    icon: one.icon,
-                    expand: true,
-                    tone: tool == one ? ButtonTone.primary : ButtonTone.quiet,
-                    // Cutting needs something to cut. Offered dimmed rather
-                    // than hidden, so it is clear the tool exists and what it
-                    // is waiting for.
-                    onPressed: one == ViewportTool.cut && !hasShape
-                        ? null
-                        : () => onTool(one),
-                  ),
+          OrblitButtonRow(
+            buttons: [
+              for (final one in [ViewportTool.polyShape, ViewportTool.cut])
+                OrblitButton(
+                  label: one.label,
+                  icon: one.icon,
+                  expand: true,
+                  tone: tool == one ? ButtonTone.primary : ButtonTone.quiet,
+                  // Cutting needs something to cut. Offered dimmed rather
+                  // than hidden, so it is clear the tool exists and what it
+                  // is waiting for.
+                  onPressed: one == ViewportTool.cut && !hasShape
+                      ? null
+                      : () => onTool(one),
                 ),
-                const SizedBox(width: Space.xs),
-              ],
             ],
           ),
           if (tool.isDrawing) ...[
@@ -263,20 +257,16 @@ class ModellingPanel extends StatelessWidget {
           ),
           if (editing) ...[
             const SizedBox(height: Space.xs),
-            Row(
-              children: [
-                for (final one in ElementMode.values) ...[
-                  Expanded(
-                    child: OrblitButton(
-                      label: one.label,
-                      icon: one.icon,
-                      expand: true,
-                      tone: one == mode ? ButtonTone.primary : ButtonTone.quiet,
-                      onPressed: () => onMode(one),
-                    ),
+            OrblitButtonRow(
+              buttons: [
+                for (final one in ElementMode.values)
+                  OrblitButton(
+                    label: one.label,
+                    icon: one.icon,
+                    expand: true,
+                    tone: one == mode ? ButtonTone.primary : ButtonTone.quiet,
+                    onPressed: () => onMode(one),
                   ),
-                  const SizedBox(width: Space.xs),
-                ],
               ],
             ),
             const SizedBox(height: Space.xs),

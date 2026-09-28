@@ -481,20 +481,24 @@ class ColourRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return FieldRow(
       label: label,
-      child: Row(
+      // Wraps rather than runs on, because a narrow window leaves the
+      // inspector less room than six swatches take.
+      child: Wrap(
+        spacing: 3,
+        runSpacing: 3,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          for (final swatch in swatches) ...[
+          for (final swatch in swatches)
             _Swatch(
               colour: swatch,
               selected: swatch.toARGB32() == value.toARGB32(),
               onTap: () => onChanged(swatch),
             ),
-            const SizedBox(width: 3),
-          ],
-          const SizedBox(width: Space.xs),
-          Expanded(
+          Padding(
+            padding: const EdgeInsets.only(left: Space.xs),
             child: Text(
               '#${value.toARGB32().toRadixString(16).substring(2).toUpperCase()}',
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: OrblitText.mono.copyWith(fontSize: 10.5),
             ),

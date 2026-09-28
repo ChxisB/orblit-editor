@@ -82,11 +82,31 @@ void main() {
       expect(icon(), findsNothing);
       expect(word(), findsOneWidget);
 
-      await tester.binding.setSurfaceSize(const Size(1200, 800));
+      await tester.binding.setSurfaceSize(const Size(960, 620));
       await tester.pumpAndSettle();
       expect(icon(), findsOneWidget);
       expect(word(), findsNothing);
       expect(find.byTooltip('Interface'), findsOneWidget);
+    });
+
+    testWidgets('each one fits the smallest window', (tester) async {
+      await open(tester);
+      // The minimum the macOS runner allows. Anything that runs over its
+      // edge fails the test.
+      await tester.binding.setSurfaceSize(const Size(960, 620));
+      await tester.pumpAndSettle();
+      // Selected, because a terrain's sections have the longest headings
+      // and the colour swatches.
+      await add(tester, 'Terrain');
+      for (final name in [
+        'modelling',
+        'terrain',
+        'animation',
+        'interface',
+        'scene',
+      ]) {
+        await enterMode(tester, name);
+      }
     });
 
     testWidgets('each one shows the panels for its job', (tester) async {
