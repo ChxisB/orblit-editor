@@ -31,8 +31,9 @@ Future<void> open(
   WidgetTester tester, {
   void Function(EditorRegistry registry)? extend,
 }) async {
-  // The editor's real minimum. At the default 800x600 the panels sit below
-  // the fold and a test passes while nothing is on screen.
+  // A laptop's screen. At the default 800x600 the panels sit below the fold
+  // and a test passes while nothing is on screen. The window's real minimum
+  // is 960x620, which the workspace tests check on their own.
   await tester.binding.setSurfaceSize(const Size(1440, 900));
   addTearDown(() => tester.binding.setSurfaceSize(null));
 

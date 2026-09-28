@@ -37,17 +37,20 @@ const PanelKind interfaceDesignPanel = PanelKind(
 /// Laying out the screens a game shows over its scene.
 ///
 /// [onEnter] opens something to lay out when nothing is open yet, and
-/// [onNew] makes a new interface.
+/// [onNew] makes a new interface. [relative] is where a file is in the
+/// project, for the bar along the bottom.
 EditorMode interfaceMode({
   required InterfaceBench bench,
   required VoidCallback onNew,
   required VoidCallback onEnter,
+  required String Function(String path) relative,
 }) => EditorMode(
   name: 'interface',
   label: 'Interface',
   icon: Icons.web_asset,
   layout: interfaceLayout,
   tools: (_) => InterfaceShelf(bench: bench, onNew: onNew),
+  status: (_) => _Status(bench: bench, relative: relative),
   onEnter: onEnter,
 );
 
@@ -159,17 +162,20 @@ final class InterfaceShelf extends StatelessWidget {
     listenable: Listenable.merge([bench, bench.history]),
     builder: (context, _) {
       final shown = bench.shown;
-      return SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            OrblitButton(
-              label: 'New interface',
-              icon: Icons.add,
-              tone: ButtonTone.quiet,
-              onPressed: onNew,
-            ),
-            if (shown != null) ...[
+      // With nothing open the canvas offers the same button, and says what
+      // an interface is. Two at once read as two different things.
+      if (shown == null) return const SizedBox.shrink();
+      return ModeShelf(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              OrblitButton(
+                label: 'New interface',
+                icon: Icons.add,
+                tone: ButtonTone.quiet,
+                onPressed: onNew,
+              ),
               const SizedBox(width: Space.md),
               Text(
                 shown.name + (bench.isUnsaved(shown) ? ' •' : ''),
@@ -180,7 +186,7 @@ final class InterfaceShelf extends StatelessWidget {
               const SizedBox(width: Space.lg),
               ..._toggles(),
             ],
-          ],
+          ),
         ),
       );
     },
@@ -267,6 +273,34 @@ final class _NothingOpen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The right of the bar along the bottom: where the interface shown is in
+/// the project, marked while it has changes. Nothing with nothing open,
+/// since the canvas already says so.
+final class _Status extends StatelessWidget {
+  const _Status({required this.bench, required this.relative});
+
+  final InterfaceBench bench;
+  final String Function(String path) relative;
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: Listenable.merge([bench, bench.history]),
+    builder: (context, _) {
+      final shown = bench.shown;
+      if (shown == null) return const SizedBox.shrink();
+      final dirty = bench.isUnsaved(shown);
+      final where = relative(shown.path);
+      return Text(
+        dirty ? '$where •' : where,
+        style: OrblitText.mono.copyWith(
+          fontSize: 11,
+          color: dirty ? OrblitColors.ember : OrblitColors.inkDim,
+        ),
+      );
+    },
+  );
 }
 
 final class _Message extends StatelessWidget {

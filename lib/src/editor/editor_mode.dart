@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../theme/orblit_theme.dart';
 import 'dock.dart';
 import 'gizmo.dart';
 import 'registry.dart';
@@ -19,6 +20,7 @@ class EditorMode implements Registered {
     required this.icon,
     required this.layout,
     this.tools,
+    this.status,
     this.input,
     this.overlay,
     this.onEnter,
@@ -38,9 +40,13 @@ class EditorMode implements Registered {
   /// are however they were left, kept for each mode separately.
   final DockLayout Function() layout;
 
-  /// Its tool shelf, shown under the menus while it is the mode. Null for
-  /// none.
+  /// Its tool shelf, shown under the menus while it is the mode, in a
+  /// [ModeShelf] it builds itself. Null for none.
   final WidgetBuilder? tools;
+
+  /// What the bar along the bottom says on its right while it is the mode.
+  /// Null for the scene's file, how many objects it has and the frame rate.
+  final WidgetBuilder? status;
 
   /// First refusal on every gesture in a scene view, ahead of the handles and
   /// the selection. Null passes everything through.
@@ -56,6 +62,29 @@ class EditorMode implements Registered {
 
   /// Puts back what [onEnter] set up, as the editor switches away.
   final VoidCallback? onLeave;
+}
+
+/// The strip under the menus that a mode's tools sit in.
+///
+/// Built by the shelf rather than around it, so a shelf with nothing to hold
+/// builds nothing and leaves no empty strip.
+final class ModeShelf extends StatelessWidget {
+  const ModeShelf({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.symmetric(horizontal: Space.md),
+      decoration: const BoxDecoration(
+        color: OrblitColors.surface,
+        border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
+      ),
+      child: Row(children: [Expanded(child: child)]),
+    );
+  }
 }
 
 /// Something drawn over a scene view, given how that view projects.

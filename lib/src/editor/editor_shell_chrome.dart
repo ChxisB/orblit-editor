@@ -432,29 +432,6 @@ class _ModeTabState extends State<_ModeTab> {
   }
 }
 
-/// The tools the mode puts on the shelf, under the top bar.
-///
-/// Only there when the mode has some. With none it would be a strip of
-/// nothing, taking height from the panels.
-class _ModeBar extends StatelessWidget {
-  const _ModeBar({required this.tools});
-
-  final WidgetBuilder tools;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: Space.md),
-      decoration: const BoxDecoration(
-        color: OrblitColors.surface,
-        border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
-      ),
-      child: Row(children: [Expanded(child: tools(context))]),
-    );
-  }
-}
-
 class _TransportButton extends StatefulWidget {
   const _TransportButton({
     required this.icon,
@@ -517,10 +494,42 @@ class _TransportButtonState extends State<_TransportButton> {
   }
 }
 
-class _StatusBar extends StatelessWidget {
-  const _StatusBar({
+/// The bar along the bottom: the last change on the left, and on the right
+/// whatever the workspace in use says about what it is working on.
+final class _StatusBar extends StatelessWidget {
+  const _StatusBar({required this.message, required this.status});
+
+  final String message;
+  final Widget status;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 24,
+      padding: const EdgeInsets.symmetric(horizontal: Space.md),
+      // The frame's colour, like the bar at the top.
+      color: OrblitColors.ground,
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              message,
+              overflow: TextOverflow.ellipsis,
+              style: OrblitText.caption.copyWith(fontSize: 11),
+            ),
+          ),
+          status,
+        ],
+      ),
+    );
+  }
+}
+
+/// The scene's side of the bar along the bottom: its file, how many objects
+/// it has and how fast it draws.
+final class _SceneStatus extends StatelessWidget {
+  const _SceneStatus({
     required this.objects,
-    required this.message,
     required this.file,
     required this.dirty,
     this.rate,
@@ -529,7 +538,6 @@ class _StatusBar extends StatelessWidget {
   });
 
   final int objects;
-  final String message;
   final String file;
   final bool dirty;
 
@@ -542,58 +550,45 @@ class _StatusBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 24,
-      padding: const EdgeInsets.symmetric(horizontal: Space.md),
-      // The frame's colour, like the bar at the top.
-      color: OrblitColors.ground,
-      child: Row(
-        children: [
-          Flexible(
-            child: Text(
-              message,
-              overflow: TextOverflow.ellipsis,
-              style: OrblitText.caption.copyWith(fontSize: 11),
-            ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          dirty ? '$file •' : file,
+          style: OrblitText.mono.copyWith(
+            fontSize: 11,
+            color: dirty ? OrblitColors.ember : OrblitColors.inkDim,
           ),
-          const Spacer(),
+        ),
+        const SizedBox(width: Space.lg),
+        Text(
+          '$objects objects',
+          style: OrblitText.mono.copyWith(fontSize: 11),
+        ),
+        const SizedBox(width: Space.lg),
+        Text(
+          rate == null ? '— fps' : '${rate!.round()} fps',
+          style: OrblitText.mono.copyWith(
+            fontSize: 11,
+            // Below about fifty a frame is late often enough to feel it.
+            color: rate != null && rate! < 50
+                ? OrblitColors.warn
+                : OrblitColors.inkDim,
+          ),
+        ),
+        if (frameMs != null) ...[
+          const SizedBox(width: Space.sm),
           Text(
-            dirty ? '$file •' : file,
+            // Which half of the frame the time went in, because "slow" and
+            // "slow at what" are different questions.
+            '${frameMs!.toStringAsFixed(1)} ms ${gpuBound ? "gpu" : "cpu"}',
             style: OrblitText.mono.copyWith(
               fontSize: 11,
-              color: dirty ? OrblitColors.ember : OrblitColors.inkDim,
+              color: OrblitColors.inkDim,
             ),
           ),
-          const SizedBox(width: Space.lg),
-          Text(
-            '$objects objects',
-            style: OrblitText.mono.copyWith(fontSize: 11),
-          ),
-          const SizedBox(width: Space.lg),
-          Text(
-            rate == null ? '— fps' : '${rate!.round()} fps',
-            style: OrblitText.mono.copyWith(
-              fontSize: 11,
-              // Below about fifty a frame is late often enough to feel it.
-              color: rate != null && rate! < 50
-                  ? OrblitColors.warn
-                  : OrblitColors.inkDim,
-            ),
-          ),
-          if (frameMs != null) ...[
-            const SizedBox(width: Space.sm),
-            Text(
-              // Which half of the frame the time went in, because "slow" and
-              // "slow at what" are different questions.
-              '${frameMs!.toStringAsFixed(1)} ms ${gpuBound ? "gpu" : "cpu"}',
-              style: OrblitText.mono.copyWith(
-                fontSize: 11,
-                color: OrblitColors.inkDim,
-              ),
-            ),
-          ],
         ],
-      ),
+      ],
     );
   }
 }

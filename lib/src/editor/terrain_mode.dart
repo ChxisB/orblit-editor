@@ -300,43 +300,45 @@ class TerrainToolShelf extends StatelessWidget {
   final TerrainBench bench;
 
   @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: bench,
-    builder: (context, _) => SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (final tool in BrushTool.values) ...[
-            _ToolButton(
-              icon: toolIcon(tool),
-              tooltip: '${toolLabel(tool)}\n${toolHint(tool)}',
-              active: bench.tool == tool,
-              onTap: () => bench.tool = tool,
+  Widget build(BuildContext context) => ModeShelf(
+    child: ListenableBuilder(
+      listenable: bench,
+      builder: (context, _) => SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            for (final tool in BrushTool.values) ...[
+              _ToolButton(
+                icon: toolIcon(tool),
+                tooltip: '${toolLabel(tool)}\n${toolHint(tool)}',
+                active: bench.tool == tool,
+                onTap: () => bench.tool = tool,
+              ),
+              // Shaping, then painting, then holes.
+              if (tool == BrushTool.slope || tool == BrushTool.roughness)
+                const _Divider(),
+            ],
+            const _Divider(),
+            _ShelfSlider(
+              label: 'Size',
+              value: bench.brush.size,
+              min: 1,
+              max: 128,
+              text: '${bench.brush.size.round()} m',
+              onChanged: (value) =>
+                  bench.brush = bench.brush.copyWith(size: value),
             ),
-            // Shaping, then painting, then holes.
-            if (tool == BrushTool.slope || tool == BrushTool.roughness)
-              const _Divider(),
+            _ShelfSlider(
+              label: 'Strength',
+              value: bench.brush.strength,
+              min: 0,
+              max: 1,
+              text: bench.brush.strength.toStringAsFixed(2),
+              onChanged: (value) =>
+                  bench.brush = bench.brush.copyWith(strength: value),
+            ),
           ],
-          const _Divider(),
-          _ShelfSlider(
-            label: 'Size',
-            value: bench.brush.size,
-            min: 1,
-            max: 128,
-            text: '${bench.brush.size.round()} m',
-            onChanged: (value) =>
-                bench.brush = bench.brush.copyWith(size: value),
-          ),
-          _ShelfSlider(
-            label: 'Strength',
-            value: bench.brush.strength,
-            min: 0,
-            max: 1,
-            text: bench.brush.strength.toStringAsFixed(2),
-            onChanged: (value) =>
-                bench.brush = bench.brush.copyWith(strength: value),
-          ),
-        ],
+        ),
       ),
     ),
   );

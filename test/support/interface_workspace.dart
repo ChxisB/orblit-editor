@@ -49,10 +49,7 @@ Future<InterfaceBench> openInterface(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(
-                    height: 36,
-                    child: InterfaceShelf(bench: bench, onNew: () {}),
-                  ),
+                  InterfaceShelf(bench: bench, onNew: () {}),
                   Expanded(
                     child: InterfaceCanvas(bench: bench, onNew: () {}),
                   ),

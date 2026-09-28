@@ -685,7 +685,7 @@ class _EditorShellState extends State<EditorShell> {
               onPaste: _paste,
               onDuplicate: _duplicate,
             ),
-            if (_mode.tools case final tools?) _ModeBar(tools: tools),
+            if (_mode.tools case final tools?) tools(context),
             // The panels, arranged as the layout says. What is where is
             // data — saved with the project, put back exactly, and
             // changed by dragging a tab rather than by editing this.
@@ -697,21 +697,27 @@ class _EditorShellState extends State<EditorShell> {
               ),
             ),
             _StatusBar(
-              objects: open?.scene?.length ?? 0,
               message: _history.undoLabel == null
                   ? 'Ready'
                   : 'Last change: ${_history.undoLabel}',
-              file: open == null
-                  ? 'No scene loaded'
-                  : (open.path == null
-                        ? '${open.title} (unsaved)'
-                        : _assets.relative(open.path!)),
-              dirty: open != null && _isUnsaved(open),
-              rate: _frames.fps,
-              frameMs: _frames.fps == null
-                  ? null
-                  : (_frames.gpuBound ? _frames.rasterMs : _frames.buildMs),
-              gpuBound: _frames.gpuBound,
+              status:
+                  _mode.status?.call(context) ??
+                  _SceneStatus(
+                    objects: open?.scene?.length ?? 0,
+                    file: open == null
+                        ? 'No scene loaded'
+                        : (open.path == null
+                              ? '${open.title} (unsaved)'
+                              : _assets.relative(open.path!)),
+                    dirty: open != null && _isUnsaved(open),
+                    rate: _frames.fps,
+                    frameMs: _frames.fps == null
+                        ? null
+                        : (_frames.gpuBound
+                              ? _frames.rasterMs
+                              : _frames.buildMs),
+                    gpuBound: _frames.gpuBound,
+                  ),
             ),
           ],
         ),

@@ -58,6 +58,7 @@ extension _Panels on _EditorShellState {
           bench: _interfaceBench,
           onNew: _newInterface,
           onEnter: _showSceneInterface,
+          relative: _assets.relative,
         ),
       );
     widget.extend?.call(registry);

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:orblit_editor/src/editor/editor_mode.dart';
 import 'package:orblit_editor/src/editor/interface_mode.dart';
 import 'package:orblit_editor/src/editor/modelling_panel.dart';
 import 'package:orblit_editor/src/editor/viewport.dart';
@@ -231,6 +232,13 @@ void main() {
       matching: find.text(text),
     );
 
+    // The bar along the bottom says the same of a file at the project's
+    // root.
+    Finder onShelf(String text) => find.descendant(
+      of: find.byType(InterfaceShelf),
+      matching: find.text(text),
+    );
+
     Finder inElements(String text) => find.descendant(
       of: find.byType(InterfaceElements),
       matching: find.text(text),
@@ -277,15 +285,15 @@ void main() {
 
       await addBox(tester);
       expect(inElements('box'), findsOneWidget);
-      expect(find.text('hud.oui •'), findsOneWidget);
+      expect(onShelf('hud.oui •'), findsOneWidget);
 
       await undo(tester);
       expect(inElements('box'), findsNothing);
-      expect(find.text('hud.oui •'), findsNothing);
+      expect(onShelf('hud.oui •'), findsNothing);
 
       await addBox(tester);
       await save(tester);
-      expect(find.text('hud.oui •'), findsNothing);
+      expect(onShelf('hud.oui •'), findsNothing);
       final saved = UiDocument.read(File(path).readAsStringSync());
       expect(saved!.root.children.last.type, 'box');
     });
@@ -322,13 +330,12 @@ void main() {
       await open(tester);
       await enterMode(tester, 'interface');
       expect(find.text('No interface open'), findsOneWidget);
+      // Once, on the canvas. A second on the shelf read as a second thing,
+      // and a shelf with nothing on it is an empty strip.
+      expect(find.text('New interface'), findsOneWidget);
+      expect(find.byType(ModeShelf), findsNothing);
 
-      await tester.tap(
-        find.descendant(
-          of: find.byType(InterfaceCanvas),
-          matching: find.text('New interface'),
-        ),
-      );
+      await tester.tap(onCanvas('New interface'));
       await tester.pumpAndSettle();
 
       expect(
@@ -336,9 +343,43 @@ void main() {
         isTrue,
       );
       expect(find.text('No interface open'), findsNothing);
+      // The shelf's, for the next one.
+      expect(
+        find.descendant(
+          of: find.byType(InterfaceShelf),
+          matching: find.text('New interface'),
+        ),
+        findsOneWidget,
+      );
       // The scene showed nothing, so it shows the new one.
       await enterMode(tester, 'scene');
       expect(row('screen'), findsOneWidget);
+    });
+
+    testWidgets('the bar along the bottom names the interface', (
+      tester,
+    ) async {
+      final counts = find.textContaining(RegExp(r'^\d+ objects$'));
+      await open(tester);
+      expect(counts, findsOneWidget);
+
+      await enterMode(tester, 'interface');
+      await tester.tap(onCanvas('New interface'));
+      await tester.pumpAndSettle();
+
+      // Where it is in the project, since the shelf gives only its name.
+      final where = find.text('interfaces/screen.oui');
+      expect(where, findsOneWidget);
+      // Against the bar's right edge, not left wherever the last change's
+      // words happen to end.
+      expect(tester.getTopRight(where).dx, closeTo(1440 - 12, 1));
+      expect(find.byType(ModeShelf), findsOneWidget);
+      // The scene's count and frame rate say nothing about a screen.
+      expect(counts, findsNothing);
+      expect(find.textContaining('fps'), findsNothing);
+
+      await enterMode(tester, 'scene');
+      expect(counts, findsOneWidget);
     });
   });
 }
