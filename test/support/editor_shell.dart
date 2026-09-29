@@ -101,10 +101,7 @@ Future<void> menu(WidgetTester tester, String button, String item) async {
   await tester.pumpAndSettle();
 }
 
-/// Picks an item out of the View menu.
-///
-/// The toolbar button, not the word "Viewport" wherever else it appears —
-/// and it gains a dot when the layout is locked.
+/// Picks an item out of View, including its Panels submenu.
 Future<void> viewMenu(WidgetTester tester, String item) async {
   await tester.tap(
     find.byWidgetPredicate(
@@ -112,9 +109,15 @@ Future<void> viewMenu(WidgetTester tester, String item) async {
     ),
   );
   await tester.pumpAndSettle();
-  await tester.tap(
-    find.descendant(of: find.byType(MenuItemButton), matching: find.text(item)),
+  final target = find.descendant(
+    of: find.byType(MenuItemButton), matching: find.text(item),
   );
+  if (target.evaluate().isEmpty) {
+    await tester.tap(find.widgetWithText(SubmenuButton, 'Panels'));
+    await tester.pumpAndSettle();
+  }
+  await tester.ensureVisible(target);
+  await tester.tap(target);
   await tester.pumpAndSettle();
 }
 

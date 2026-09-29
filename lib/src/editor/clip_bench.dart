@@ -168,6 +168,16 @@ class ClipBench extends ChangeNotifier implements Keying {
     notifyListeners();
   }
 
+  /// Clears the preview without discarding any open clip or its edits.
+  void hide() {
+    _shown = null;
+    _owner = null;
+    _playing = false;
+    _selection = const {};
+    _curve = null;
+    notifyListeners();
+  }
+
   /// Closes the clip at [path], and forgets its steps on the undo stack.
   void close(String path) {
     final closing = this[path];

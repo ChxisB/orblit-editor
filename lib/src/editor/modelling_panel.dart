@@ -147,6 +147,8 @@ class ModellingPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           OrblitButton(
+            tooltip:
+                'Snap movement to grid squares. Brackets change the spacing.',
             label: snapping.on
                 ? 'Snapping to ${_gridLabel(snapping.step)}'
                 : 'Snapping off',
@@ -211,6 +213,8 @@ class ModellingPanel extends StatelessWidget {
               for (final one in [ViewportTool.polyShape, ViewportTool.cut])
                 OrblitButton(
                   label: one.label,
+                  tooltip:
+                      '${one.label} in the view. Enter finishes; Escape cancels.',
                   icon: one.icon,
                   expand: true,
                   tone: tool == one ? ButtonTone.primary : ButtonTone.quiet,
@@ -262,6 +266,7 @@ class ModellingPanel extends StatelessWidget {
                 for (final one in ElementMode.values)
                   OrblitButton(
                     label: one.label,
+                    tooltip: 'Select and edit ${one.label.toLowerCase()}.',
                     icon: one.icon,
                     expand: true,
                     tone: one == mode ? ButtonTone.primary : ButtonTone.quiet,
@@ -271,6 +276,7 @@ class ModellingPanel extends StatelessWidget {
             ),
             const SizedBox(height: Space.xs),
             OrblitButton(
+              tooltip: 'Select parts on the far side of the shape too.',
               label: seeThrough ? 'Seeing through' : 'See through',
               icon: seeThrough
                   ? Icons.visibility_outlined
@@ -372,6 +378,7 @@ class ModellingPanel extends StatelessWidget {
           ],
           OrblitButton(
             label: 'Add material',
+            tooltip: 'Add another material for this shape’s faces.',
             icon: Icons.add,
             expand: true,
             tone: ButtonTone.quiet,
@@ -427,6 +434,7 @@ class ModellingPanel extends StatelessWidget {
           const SizedBox(height: Space.xs),
           OrblitButton(
             label: 'Export shape',
+            tooltip: 'Save this shape as a model file.',
             icon: Icons.save_alt,
             expand: true,
             tone: ButtonTone.quiet,
@@ -500,6 +508,7 @@ class _SurfaceRow extends StatelessWidget {
               if (painting)
                 OrblitButton(
                   label: 'Paint',
+                  tooltip: 'Apply this material to the selected faces.',
                   icon: Icons.format_paint_outlined,
                   tone: ButtonTone.primary,
                   onPressed: onPaint,

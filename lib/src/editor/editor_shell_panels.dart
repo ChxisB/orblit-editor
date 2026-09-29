@@ -93,7 +93,11 @@ extension _Panels on _EditorShellState {
         kind: PanelKind.game,
         showsMovement: true,
         build: (_, _) => GameView(
-          workspace: _workspace,
+          workspace: _playback?.workspace ?? _workspace,
+          onAddCamera: () {
+            _stopPlayback();
+            _add(ObjectKind.camera);
+          },
           projectRoot: widget.project.directory,
           geometryOf: _geometry.pathFor,
           interface: _sceneInterface,
@@ -145,7 +149,11 @@ extension _Panels on _EditorShellState {
         kind: terrainBrushPanel,
         build: (_, _) => SingleChildScrollView(
           padding: const EdgeInsets.all(Space.sm),
-          child: TerrainBrushPanel(bench: _terrains, target: _terrainTarget()),
+          child: TerrainBrushPanel(
+            bench: _terrains,
+            target: _terrainTarget(),
+            onNew: _newTerrain,
+          ),
         ),
       ),
     )
@@ -196,6 +204,16 @@ extension _Panels on _EditorShellState {
     sections
       ..register(jointSection(), before: 'interface')
       ..register(terrainSection(bench: _terrains), before: 'interface');
+    sections.register(
+      motionSection(
+        bench: _bench,
+        onOpen: (path) => _openClip(p.join(widget.project.directory, path)),
+        onAttach: () {
+          final path = _bench.shown?.path;
+          if (path != null) _attachClip(path);
+        },
+      ),
+    );
   }
 
   /// The object the inspector is showing, if it is one rather than a scene.
@@ -225,6 +243,7 @@ extension _Panels on _EditorShellState {
       _layout = _layoutOf(mode);
     });
     mode.onEnter?.call();
+    _followMotion(force: true);
   }
 
   /// Switches to the mode called [name], when something registered one.
@@ -267,6 +286,7 @@ extension _Panels on _EditorShellState {
   }
 
   void _relayout(DockLayout layout) {
+    _focusedModes.remove(_mode.name);
     setState(() => _layout = layout);
     try {
       final file = _layoutFile(_mode);
@@ -312,6 +332,7 @@ extension _Panels on _EditorShellState {
       _selected.clear();
       _primary = null;
       _selectedScene = entry.id;
+      _followMotion();
     }),
     onLoadScene: _loadScene,
     onMove: _move,
@@ -320,6 +341,7 @@ extension _Panels on _EditorShellState {
   );
 
   Widget _inspector(SceneObject? selected) => Inspector(
+    onNewScene: _newScene,
     entry: _inspected,
     object: selected,
     history: _history,
@@ -362,6 +384,7 @@ extension _Panels on _EditorShellState {
   );
 
   Widget _viewport(DockPanel panel) => SceneViewport(
+    showStats: _showStats,
     workspace: _workspace,
     camera: _cameraFor(panel.id),
     onCameraChanged: (camera) => setState(() => _cameras[panel.id] = camera),

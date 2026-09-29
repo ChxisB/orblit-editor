@@ -144,6 +144,8 @@ void main() {
     // a deep one and it gets built like anything else.
     await tester.tap(find.text('View'));
     await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(SubmenuButton, 'Panels'));
+    await tester.pumpAndSettle();
     await tester.tap(find.descendant(
       of: find.byType(MenuItemButton),
       matching: find.text('UVs'),

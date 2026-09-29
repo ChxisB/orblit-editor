@@ -479,7 +479,10 @@ void main() {
       await tester.tap(find.byIcon(Icons.delete_sweep_outlined));
       await tester.pumpAndSettle();
 
-      expect(find.text('Nothing to report.'), findsOneWidget);
+      expect(
+        find.text('No messages yet. Problems and progress appear here.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('the filters hide a level', (tester) async {
@@ -502,7 +505,10 @@ void main() {
         ),
         findsNothing,
       );
-      expect(find.text('Nothing at these levels.'), findsOneWidget);
+      expect(
+        find.text('No matching messages. Turn on a message type above.'),
+        findsOneWidget,
+      );
     });
   });
 }

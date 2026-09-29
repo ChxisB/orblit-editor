@@ -79,9 +79,10 @@ class _ConsolePanelState extends State<ConsolePanel> {
                   ? Center(
                       child: Text(
                         widget.log.entries.isEmpty
-                            ? 'Nothing to report.'
-                            : 'Nothing at these levels.',
+                            ? 'No messages yet. Problems and progress appear here.'
+                            : 'No matching messages. Turn on a message type above.',
                         style: OrblitText.caption,
+                        textAlign: TextAlign.center,
                       ),
                     )
                   : ListView.builder(

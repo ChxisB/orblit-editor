@@ -350,7 +350,9 @@ class _RowState extends State<_Row> {
     final scene = entry.scene;
 
     return object == null
-        ? entry.title
+        ? (entry.id == widget.workspace.sharedEntry.id
+              ? 'In every scene'
+              : entry.title)
         : (scene?.displayNameOf(object) ?? object.name);
   }
 

@@ -75,6 +75,7 @@ class _BodySection extends StatelessWidget {
 
   Widget _absent() => OrblitButton(
     label: 'Add body',
+    tooltip: 'Give this object a shape for physics.',
     icon: Icons.add,
     tone: ButtonTone.quiet,
     expand: true,
@@ -186,6 +187,7 @@ class _BodySection extends StatelessWidget {
             if (_object.isDrawable)
               OrblitButton(
                 label: 'Fit to mesh',
+                tooltip: 'Resize the physics shape to fit this object.',
                 icon: Icons.fit_screen_outlined,
                 tone: ButtonTone.quiet,
                 expand: true,
@@ -197,6 +199,7 @@ class _BodySection extends StatelessWidget {
               ),
             OrblitButton(
               label: 'Remove body',
+              tooltip: 'Stop simulating physics for this object.',
               icon: Icons.remove,
               tone: ButtonTone.quiet,
               expand: true,

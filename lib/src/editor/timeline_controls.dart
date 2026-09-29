@@ -38,6 +38,7 @@ final class _NoClip extends StatelessWidget {
             const SizedBox(height: Space.md),
             OrblitButton(
               label: 'Make a clip',
+              tooltip: 'Create an animation clip for the selected object.',
               icon: Icons.add,
               tone: ButtonTone.primary,
               onPressed: onNew,
@@ -117,27 +118,32 @@ class _Chip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: Space.sm,
-            vertical: 3,
-          ),
-          decoration: BoxDecoration(
-            color: on ? OrblitColors.raised : Colors.transparent,
-            borderRadius: BorderRadius.circular(Radii.control),
-            border: Border.all(
-              color: on ? OrblitColors.line : Colors.transparent,
+    return Tooltip(
+      message: label == 'Keys'
+          ? 'Show the timing of each key.'
+          : 'Show how values change between keys.',
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: Space.sm,
+              vertical: 3,
             ),
-          ),
-          child: Text(
-            label,
-            style: OrblitText.caption.copyWith(
-              fontSize: 11,
-              color: on ? OrblitColors.ink : OrblitColors.inkDim,
+            decoration: BoxDecoration(
+              color: on ? OrblitColors.raised : Colors.transparent,
+              borderRadius: BorderRadius.circular(Radii.control),
+              border: Border.all(
+                color: on ? OrblitColors.line : Colors.transparent,
+              ),
+            ),
+            child: Text(
+              label,
+              style: OrblitText.caption.copyWith(
+                fontSize: 11,
+                color: on ? OrblitColors.ink : OrblitColors.inkDim,
+              ),
             ),
           ),
         ),

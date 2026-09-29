@@ -118,7 +118,9 @@ final class InterfaceElements extends StatelessWidget {
     builder: (context, _) {
       final document = bench.document;
       if (document == null) {
-        return const _Message('The elements of an open interface show here.');
+        return const _Message(
+          'The elements of an open interface show here. Choose New interface on the canvas.',
+        );
       }
       return _Tree(bench: bench, root: document.root);
     },
@@ -138,7 +140,7 @@ final class InterfaceDesign extends StatelessWidget {
       final document = bench.document;
       if (document == null) {
         return const _Message(
-          'What can go on an interface, and how it looks, shows here.',
+          'Choose New interface on the canvas to add and style its elements.',
         );
       }
       return _Side(bench: bench, document: document);
@@ -172,6 +174,7 @@ final class InterfaceShelf extends StatelessWidget {
             children: [
               OrblitButton(
                 label: 'New interface',
+                tooltip: 'Create a screen to lay out menus and controls.',
                 icon: Icons.add,
                 tone: ButtonTone.quiet,
                 onPressed: onNew,
@@ -264,6 +267,7 @@ final class _NothingOpen extends StatelessWidget {
             const SizedBox(height: Space.md),
             OrblitButton(
               label: 'New interface',
+              tooltip: 'Create a screen to lay out menus and controls.',
               icon: Icons.add,
               tone: ButtonTone.primary,
               onPressed: onNew,

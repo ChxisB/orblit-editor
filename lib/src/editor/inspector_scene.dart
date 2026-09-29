@@ -106,6 +106,7 @@ class _SceneFields extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: Space.md),
           child: OrblitButton(
             label: 'Load scene',
+            tooltip: 'Open this scene for editing.',
             icon: Icons.folder_open,
             expand: true,
             onPressed: () => onLoad(entry),

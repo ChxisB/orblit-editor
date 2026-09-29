@@ -84,6 +84,7 @@ class _JointSection extends StatelessWidget {
 
   Widget _absent() => OrblitButton(
     label: 'Add joint',
+    tooltip: 'Connect this object to another physics body.',
     icon: Icons.add,
     tone: ButtonTone.quiet,
     expand: true,
@@ -164,6 +165,7 @@ class _JointSection extends StatelessWidget {
         const SizedBox(height: Space.xs),
         OrblitButton(
           label: 'Remove joint',
+          tooltip: 'Remove the connection between these bodies.',
           icon: Icons.remove,
           tone: ButtonTone.quiet,
           expand: true,

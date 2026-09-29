@@ -176,7 +176,7 @@ void main() {
         tester.getCenter(
           find.descendant(
             of: find.byType(Outliner),
-            matching: find.text('Shared'),
+            matching: find.text('In every scene'),
           ),
         ),
       );
@@ -214,7 +214,7 @@ void main() {
     /// The Shared scene's own row, which sits above every scene.
     Finder sharedRow() => find.descendant(
       of: find.byType(Outliner),
-      matching: find.text('Shared'),
+      matching: find.text('In every scene'),
     );
 
     Future<void> dragOnto(WidgetTester tester, Finder from, Finder to) async {

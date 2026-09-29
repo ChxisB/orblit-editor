@@ -56,6 +56,7 @@ class Inspector extends StatelessWidget {
     this.onOpenInterface,
     this.sections,
     this.keying,
+    this.onNewScene,
   });
 
   /// The scene being looked at, which need not be the loaded one — a scene can
@@ -112,6 +113,7 @@ class Inspector extends StatelessWidget {
   /// What keys a field into the clip being edited. Null where there is no
   /// timeline, and then no field offers to be keyed.
   final Keying? keying;
+  final VoidCallback? onNewScene;
 
   @override
   Widget build(BuildContext context) {
@@ -129,10 +131,22 @@ class Inspector extends StatelessWidget {
             child:
                 dataPanel ??
                 (entry == null
-                    ? const Center(
-                        child: Text(
-                          'No scene loaded.',
-                          style: OrblitText.caption,
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'Open or create a scene to edit its objects.',
+                              style: OrblitText.caption,
+                              textAlign: TextAlign.center,
+                            ),
+                            if (onNewScene != null)
+                              OrblitButton(
+                                label: 'New scene',
+                                tooltip: 'Create a scene to put objects in.',
+                                onPressed: onNewScene,
+                              ),
+                          ],
                         ),
                       )
                     : (selected == null

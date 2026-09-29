@@ -178,6 +178,7 @@ class _Toggle extends StatelessWidget {
   Widget build(BuildContext context) {
     return OrblitButton(
       label: label,
+      tooltip: '${on ? 'Turn off' : 'Turn on'} ${label.toLowerCase()}.',
       icon: icon,
       tone: on ? ButtonTone.primary : ButtonTone.quiet,
       onPressed: onChanged == null ? null : () => onChanged!(!on),

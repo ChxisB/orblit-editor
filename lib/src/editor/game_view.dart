@@ -5,6 +5,7 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 import '../platform/renderer_support.dart';
 import '../theme/orblit_theme.dart';
+import '../widgets/controls.dart';
 import 'scene.dart';
 import 'ui_canvas.dart';
 import 'workspace.dart';
@@ -30,9 +31,11 @@ class GameView extends StatelessWidget {
     this.plain = false,
     this.terrainOf,
     this.scatterOf,
+    this.onAddCamera,
   });
 
   final Workspace workspace;
+  final VoidCallback? onAddCamera;
   final String? projectRoot;
 
   /// Where an object's built geometry was written, if anywhere.
@@ -115,9 +118,11 @@ class GameView extends StatelessWidget {
     if (camera == null) {
       return plain
           ? const ColoredBox(color: OrblitColors.ground)
-          : const _Nothing(
-              saying: 'This scene has no camera.\n'
+          : _Nothing(
+              saying:
+                  'This scene has no camera.\n'
                   'Add one, and this is what it sees.',
+              onAddCamera: onAddCamera,
             );
     }
 
@@ -151,19 +156,31 @@ class GameView extends StatelessWidget {
 
 /// What the game view says when there is nothing to show.
 class _Nothing extends StatelessWidget {
-  const _Nothing({required this.saying});
+  const _Nothing({required this.saying, this.onAddCamera});
 
   final String saying;
+  final VoidCallback? onAddCamera;
 
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
       color: OrblitColors.ground,
       child: Center(
-        child: Text(
-          saying,
-          textAlign: TextAlign.center,
-          style: OrblitText.caption,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              saying,
+              textAlign: TextAlign.center,
+              style: OrblitText.caption,
+            ),
+            if (onAddCamera != null)
+              OrblitButton(
+                label: 'Add camera',
+                tooltip: 'Add the camera that shows the scene to the player.',
+                onPressed: onAddCamera,
+              ),
+          ],
         ),
       ),
     );

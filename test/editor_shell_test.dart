@@ -146,7 +146,7 @@ void main() {
     await add(tester, 'Mesh object');
 
     expect(find.byTooltip('Nothing to undo'), findsNothing);
-    expect(find.byTooltip('Undo Add Mesh'), findsOneWidget);
+    expect(find.byTooltip(RegExp(r'^Undo Add Mesh \(')), findsOneWidget);
   });
 
   testWidgets('saving writes a scene file that opens again', (tester) async {

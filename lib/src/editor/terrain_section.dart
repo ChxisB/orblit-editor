@@ -217,6 +217,7 @@ class _Editing {
         buttons: [
           OrblitButton(
             label: 'Add set',
+            tooltip: 'Add a ground material to paint with.',
             icon: Icons.add,
             tone: ButtonTone.quiet,
             expand: true,

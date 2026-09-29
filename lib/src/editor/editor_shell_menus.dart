@@ -89,6 +89,7 @@ class _AddMenu extends StatelessWidget {
       ],
       builder: (context, controller, child) => OrblitButton(
         label: 'Add',
+        tooltip: 'Choose an object to add to the scene.',
         tone: ButtonTone.flat,
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),
@@ -192,6 +193,7 @@ class _SceneMenu extends StatelessWidget {
       builder: (context, controller, child) => OrblitButton(
         // The dot is the unsaved marker, in the place somebody looks for it.
         label: dirty ? 'Scene •' : 'Scene',
+        tooltip: 'Create or save a scene. Save: ${commandShortcutLabel('S')}.',
         tone: ButtonTone.flat,
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),
@@ -263,6 +265,7 @@ class _EditMenu extends StatelessWidget {
       ],
       builder: (context, controller, child) => OrblitButton(
         label: 'Edit',
+        tooltip: 'Cut, copy, paste or duplicate the selection.',
         tone: ButtonTone.flat,
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),
@@ -314,6 +317,14 @@ class _ViewMenu extends StatelessWidget {
     required this.onLayout,
     required this.panels,
     required this.modeLayout,
+    required this.focused,
+    required this.onFocus,
+    required this.stats,
+    required this.onStats,
+    required this.saved,
+    required this.onSave,
+    required this.onLoad,
+    required this.onDelete,
   });
 
   final DockLayout layout;
@@ -321,6 +332,15 @@ class _ViewMenu extends StatelessWidget {
 
   /// The mode's own arrangement, which Reset panels puts back.
   final DockLayout Function() modeLayout;
+
+  final bool focused;
+  final VoidCallback onFocus;
+  final bool stats;
+  final VoidCallback onStats;
+  final List<String> saved;
+  final VoidCallback onSave;
+  final ValueChanged<String> onLoad;
+  final ValueChanged<String> onDelete;
 
   /// The panels that can be opened: whatever is registered, in the order it
   /// was registered.
@@ -340,6 +360,39 @@ class _ViewMenu extends StatelessWidget {
         ),
       ),
       menuChildren: [
+        MenuItemButton(
+          onPressed: onFocus,
+          leadingIcon: Icon(focused ? Icons.fullscreen_exit : Icons.fullscreen),
+          child: Text(focused ? 'Show panels' : 'Focus view'),
+        ),
+        MenuItemButton(
+          onPressed: onStats,
+          leadingIcon: Icon(stats ? Icons.check : Icons.speed),
+          child: const Text('Stats'),
+        ),
+        MenuItemButton(onPressed: onSave, child: const Text('Save layout…')),
+        if (saved.isNotEmpty) ...[
+          SubmenuButton(
+            menuChildren: [
+              for (final name in saved)
+                MenuItemButton(
+                  onPressed: () => onLoad(name),
+                  child: Text(name),
+                ),
+            ],
+            child: const Text('Load layout'),
+          ),
+          SubmenuButton(
+            menuChildren: [
+              for (final name in saved)
+                MenuItemButton(
+                  onPressed: () => onDelete(name),
+                  child: Text(name),
+                ),
+            ],
+            child: const Text('Delete layout'),
+          ),
+        ],
         MenuItemButton(
           onPressed: () => onLayout(layout.copyWith(locked: !layout.locked)),
           leadingIcon: Icon(
@@ -384,21 +437,27 @@ class _ViewMenu extends StatelessWidget {
         const Divider(height: 9, color: OrblitColors.line),
         // Opening one that is already open shows it rather than adding a
         // second, which is why every one of these can be pressed at any time.
-        for (final type in panels)
-          MenuItemButton(
-            onPressed: () => onLayout(layout.add(type.panel)),
-            leadingIcon: Icon(
-              type.kind.icon,
-              size: 14,
-              color: layout.holds(type.panel.id)
-                  ? OrblitColors.ember
-                  : OrblitColors.inkMid,
-            ),
-            child: Text(type.kind.label, style: OrblitText.label),
-          ),
+        SubmenuButton(
+          menuChildren: [
+            for (final type in panels)
+              MenuItemButton(
+                onPressed: () => onLayout(layout.add(type.panel)),
+                leadingIcon: Icon(
+                  type.kind.icon,
+                  size: 14,
+                  color: layout.holds(type.panel.id)
+                      ? OrblitColors.ember
+                      : OrblitColors.inkMid,
+                ),
+                child: Text(type.kind.label, style: OrblitText.label),
+              ),
+          ],
+          child: const Text('Panels', style: OrblitText.label),
+        ),
       ],
       builder: (context, controller, child) => OrblitButton(
         label: layout.locked ? 'View •' : 'View',
+        tooltip: 'Choose panels, saved layouts and view settings.',
         tone: ButtonTone.flat,
         onPressed: () =>
             controller.isOpen ? controller.close() : controller.open(),

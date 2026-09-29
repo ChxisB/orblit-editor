@@ -89,7 +89,10 @@ class SceneViewport extends StatefulWidget {
     this.modeOverlay,
     this.terrainOf,
     this.scatterOf,
+    this.showStats = false,
   });
+
+  final bool showStats;
 
   /// Only the loaded scene is drawn. The others are names and paths until
   /// somebody opens them.
@@ -690,8 +693,10 @@ class _SceneViewportState extends State<SceneViewport>
           const _ViewportChip('Perspective'),
           const SizedBox(width: Space.xs),
           const _ViewportChip('Shaded'),
-          const SizedBox(width: Space.xs),
-          _ViewportChip(_summary),
+          if (widget.showStats) ...[
+            const SizedBox(width: Space.xs),
+            _ViewportChip(_summary),
+          ],
           const SizedBox(width: Space.xs),
           // What the drag has done so far, while it is doing it.
           if (_dragged case final moved?)
@@ -718,9 +723,8 @@ class _SceneViewportState extends State<SceneViewport>
             ),
           _ViewportChip(
             widget.snapping.on
-                ? 'Grid ${_gridLabel(widget.snapping.step)} · '
-                      '${widget.snapping.to.label.toLowerCase()}'
-                : 'Grid off',
+                ? 'Snap: ${_gridLabel(widget.snapping.step)}'
+                : 'Snap off',
             on: widget.snapping.on,
             tooltip:
                 'Where a drag lands, and which part of the thing is '

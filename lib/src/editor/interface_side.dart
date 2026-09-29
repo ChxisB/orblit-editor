@@ -98,6 +98,8 @@ class _Side extends StatelessWidget {
           for (final what in UiElement.values)
             _Chip(
               label: what.label,
+              tooltip:
+                  'Add ${what.label.toLowerCase()} to the selected container.',
               icon: what.icon,
               onTap: () => bench.add(what),
             ),

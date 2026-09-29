@@ -35,17 +35,33 @@ class _Grid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final grid = entries.isEmpty
-        ? const Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('This folder is empty.', style: OrblitText.caption),
-                SizedBox(height: Space.xs),
-                Text(
-                  'Right-click to add something.',
-                  style: OrblitText.caption,
-                ),
-              ],
+        ? Center(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'This folder is empty.',
+                    style: OrblitText.caption,
+                  ),
+                  const SizedBox(height: Space.xs),
+                  const Text(
+                    'Create a file or copy assets into this folder.',
+                    style: OrblitText.caption,
+                    textAlign: TextAlign.center,
+                  ),
+                  Builder(
+                    builder: (context) => OrblitButton(
+                      label: 'New folder or file',
+                      tooltip: 'Choose what to make in this folder.',
+                      onPressed: () {
+                        final box = context.findRenderObject()! as RenderBox;
+                        AssetMenu.open(context, box.localToGlobal(Offset.zero));
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           )
         : _grid();

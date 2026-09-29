@@ -84,6 +84,7 @@ class UvPanel extends StatelessWidget {
             for (final one in UvGesture.values)
               OrblitButton(
                 label: one.label,
+                tooltip: '${one.label} the selected texture coordinates.',
                 icon: one.icon,
                 expand: true,
                 tone: one == gesture ? ButtonTone.primary : ButtonTone.quiet,
@@ -136,6 +137,7 @@ class UvPanel extends StatelessWidget {
             for (final action in UvAction.values)
               OrblitButton(
                 label: action.label,
+                tooltip: '${action.label} the selected texture coordinates.',
                 icon: action.icon,
                 tone: ButtonTone.quiet,
                 onPressed: chosen.isEmpty ? null : () => onAction(action),
@@ -487,6 +489,7 @@ class UvRuleControls extends StatelessWidget {
             ])
               OrblitButton(
                 label: one.label,
+                tooltip: '${one.label} the selected texture coordinates.',
                 expand: true,
                 tone: one.on ? ButtonTone.primary : ButtonTone.quiet,
                 onPressed: () => onChanged(

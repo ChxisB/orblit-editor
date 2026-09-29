@@ -521,6 +521,26 @@ class DockLayout {
 
   bool holds(String panelId) => panels.any((panel) => panel.id == panelId);
 
+  /// The group containing a panel, wherever it has been docked.
+  DockGroup? groupOf(String panelId) => _groupHolding(root, panelId);
+
+  /// Reveals a panel below the view, also in layouts with no bottom strip.
+  DockLayout openBottom(DockPanel panel) {
+    if (holds(panel.id)) return show(panel.id);
+    if (_hasGroup(root, 'bottom')) return add(panel, intoGroup: 'bottom');
+    return copyWith(
+      root: DockSplit(
+        id: _freshId('split'),
+        axis: Axis.vertical,
+        weights: const [0.75, 0.25],
+        children: [
+          root,
+          DockGroup(id: 'bottom', panels: [panel]),
+        ],
+      ),
+    );
+  }
+
   DockLayout copyWith({DockNode? root, bool? locked, int? revision}) =>
       DockLayout(
         root: root ?? this.root,

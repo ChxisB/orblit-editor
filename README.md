@@ -19,9 +19,15 @@ of empty states is worse than a screen that asks one question.
   before it is created, so nobody is surprised by where their project went.
 - **Editor shell.** Outliner, viewport region, inspector and status bar, with
   the transport where every editor puts it.
+- **Workspaces.** Scene, Modelling, Terrain, Animation and Interface each
+  have their own panels. View saves named layouts, resets the current
+  workspace and focuses the view. Stats reveals performance numbers.
+- **Animation.** Select an object and use Animation's Make a clip button.
+  The Inspector assigns clips and chooses which starts automatically.
+  Play, Pause and Stop preview scene properties without editing the scene.
 
-The viewport is marked unfinished rather than dressed up. It becomes real when
-the renderer can load a scene.
+The 3D viewport draws on macOS. The animation preview does not run scripts,
+physics or skeletal animation. Games wire their own clip players.
 
 ## Design
 

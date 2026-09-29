@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart' hide Clipboard;
 import 'package:flutter/services.dart' as services;
 import 'package:path/path.dart' as p;
@@ -42,9 +43,11 @@ import 'interface_bench.dart';
 import 'interface_mode.dart';
 import 'joint_gizmo.dart';
 import 'joint_section.dart';
+import 'layout_library.dart';
 import 'mesh_edit.dart';
 import 'mesh_panel.dart';
 import 'model_bounds.dart';
+import 'motion_section.dart';
 import 'modelling_panel.dart';
 import 'mesh_tools.dart';
 import 'outliner.dart';
@@ -61,9 +64,11 @@ import 'terrain_section.dart';
 import 'timeline.dart';
 import 'uv_panel.dart';
 import 'scene_document.dart';
+import 'scene_playback.dart';
 
 import 'package:orblit_mesh/orblit_mesh.dart';
-import 'package:orblit_motion/orblit_motion.dart' show ClipFormatException;
+import 'package:orblit_motion/orblit_motion.dart'
+    show ClipDocument, ClipFormatException;
 import 'package:orblit_scene/orblit_scene.dart' as doc;
 import 'package:orblit_terrain/orblit_terrain.dart'
     show RegionKey, Terrain, TerrainSet, terrainExtension;
@@ -81,6 +86,8 @@ part 'editor_shell_panels.dart';
 part 'editor_shell_documents.dart';
 part 'editor_shell_prefabs.dart';
 part 'editor_shell_clips.dart';
+part 'editor_shell_layouts.dart';
+part 'editor_shell_playback.dart';
 part 'editor_shell_intents.dart';
 part 'editor_shell_chrome.dart';
 part 'editor_shell_menus.dart';
@@ -252,6 +259,9 @@ class _EditorShellState extends State<EditorShell> {
   String? _primary;
 
   bool _playing = false;
+  ScenePlayback? _playback;
+  late final Ticker _playTicker = Ticker(_tickPlayback);
+  Duration? _lastPlaybackTick;
 
   /// What the renderer has already been heard on, so a note is said once
   /// rather than on every frame of a drag. A subject that stops being
@@ -276,6 +286,9 @@ class _EditorShellState extends State<EditorShell> {
 
   /// Whether the top bar was last built saying a clip has changes.
   bool _clipsUnsaved = false;
+
+  (String?, String?, doc.MotionComponent?)? _motionSelection;
+  bool _followingMotion = false;
 
   /// The terrains open for shaping, and the brush that shapes them.
   late final TerrainBench _terrains = TerrainBench(
@@ -303,6 +316,10 @@ class _EditorShellState extends State<EditorShell> {
     // Read once so the handlers are installed, since a late final is not
     // initialised until something asks for it.
     _stopCatching;
+    _layoutLibrary = LayoutLibrary(
+      File(p.join(widget.project.directory, '.orblit', 'layouts.json')),
+      kinds: _registry.panels.kinds,
+    );
     _history.addListener(_onHistoryChanged);
     _workspace.addListener(_onChanged);
     _bench.addListener(_onBenchChanged);
@@ -375,6 +392,8 @@ class _EditorShellState extends State<EditorShell> {
 
   @override
   void dispose() {
+    _playTicker.dispose();
+    _playback?.dispose();
     _bench
       ..removeListener(_onBenchChanged)
       ..dispose();
@@ -401,6 +420,10 @@ class _EditorShellState extends State<EditorShell> {
   }
 
   void _onChanged() {
+    if (_playback != null && !identical(_playback!.source, _current?.scene)) {
+      _stopPlayback();
+    }
+    _followMotion();
     // An undo can bring a shape back or change what it is, and the file the
     // renderer loads has to follow it.
     _refreshGeometry();
@@ -418,6 +441,7 @@ class _EditorShellState extends State<EditorShell> {
       _rebuildForMove();
       return;
     }
+    _followMotion();
     setState(() {});
   }
 
@@ -515,6 +539,7 @@ class _EditorShellState extends State<EditorShell> {
         ..add(id);
       _primary = id;
     });
+    _followMotion();
   }
 
   /// Object ids in the order the tree draws them.
@@ -531,10 +556,13 @@ class _EditorShellState extends State<EditorShell> {
     return order;
   }
 
-  void _clearSelection() => setState(() {
-    _selected.clear();
-    _primary = null;
-  });
+  void _clearSelection() {
+    setState(() {
+      _selected.clear();
+      _primary = null;
+    });
+    _followMotion();
+  }
 
   /// The scene an edit goes into. Only one is loaded, so there is only one.
   SceneEntry? get _current => _workspace.loaded;
@@ -591,6 +619,10 @@ class _EditorShellState extends State<EditorShell> {
 
   /// How the panels are arranged. Data, so it survives being closed.
   late DockLayout _layout = _layoutOf(_mode);
+
+  late final LayoutLibrary _layoutLibrary;
+  final Set<String> _focusedModes = {};
+  bool _showStats = false;
 
   /// A camera per scene view.
   ///
@@ -660,7 +692,8 @@ class _EditorShellState extends State<EditorShell> {
               playing: _playing,
               history: _history,
               dirty: _anyUnsaved,
-              onPlay: () => setState(() => _playing = !_playing),
+              onPlay: _togglePlayback,
+              onStop: _stopPlayback,
               onClose: widget.onClose,
               onAdd: _add,
               onAddShape: _addShape,
@@ -668,9 +701,7 @@ class _EditorShellState extends State<EditorShell> {
               onSave: _save,
               onSaveAs: _saveAs,
               onNewScene: () => _newScene(),
-              layout: _layout,
-              onLayout: _relayout,
-              panels: _registry.panels.all,
+              viewMenu: _viewMenu(),
               onOpenInCode: _openInCode,
               onReveal: () {
                 final problem = CodeEditor.reveal(widget.project.directory);
@@ -691,7 +722,7 @@ class _EditorShellState extends State<EditorShell> {
             // changed by dragging a tab rather than by editing this.
             Expanded(
               child: DockView(
-                layout: _layout,
+                layout: _visibleLayout,
                 panel: _buildPanel,
                 onChanged: _relayout,
               ),
@@ -704,6 +735,7 @@ class _EditorShellState extends State<EditorShell> {
                   _mode.status?.call(context) ??
                   _SceneStatus(
                     objects: open?.scene?.length ?? 0,
+                    stats: _showStats,
                     file: open == null
                         ? 'No scene loaded'
                         : (open.path == null

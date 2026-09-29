@@ -172,6 +172,7 @@ class MeshPanel extends StatelessWidget {
           const SizedBox(height: Space.xs),
           OrblitButton(
             label: 'Go to Modelling',
+            tooltip: 'Open the workspace for changing this shape.',
             icon: Icons.handyman_outlined,
             expand: true,
             tone: ButtonTone.quiet,
@@ -218,6 +219,7 @@ class MeshPanel extends StatelessWidget {
             ),
             OrblitButton(
               label: 'Turn it over',
+              tooltip: 'Reverse the direction this shape faces.',
               icon: Icons.flip_outlined,
               expand: true,
               tone: ButtonTone.quiet,

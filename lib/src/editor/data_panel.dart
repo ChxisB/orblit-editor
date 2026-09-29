@@ -175,6 +175,7 @@ class _DataPanelState extends State<DataPanel> {
           padding: const EdgeInsets.fromLTRB(Space.sm, Space.xs, Space.sm, 0),
           child: OrblitButton(
             label: 'Add a value',
+            tooltip: 'Add a named value to this data file.',
             icon: Icons.add,
             expand: true,
             onPressed: _addField,
@@ -189,6 +190,7 @@ class _DataPanelState extends State<DataPanel> {
                   'against these fields rather than guessing at string keys.',
               child: OrblitButton(
                 label: 'Write script bindings',
+                tooltip: 'Write the types scripts use to read this data.',
                 icon: Icons.code,
                 tone: ButtonTone.quiet,
                 expand: true,

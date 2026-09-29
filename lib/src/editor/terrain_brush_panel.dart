@@ -18,12 +18,14 @@ class TerrainBrushPanel extends StatelessWidget {
     super.key,
     required this.bench,
     required this.target,
+    this.onNew,
   });
 
   final TerrainBench bench;
 
   /// The terrain a stroke would land on, or null when there is none.
   final OpenTerrain? target;
+  final VoidCallback? onNew;
 
   /// Tints that read as ground. The colour multiplies what the textures
   /// paint, so white is no tint and anything darker darkens.
@@ -51,10 +53,22 @@ class TerrainBrushPanel extends StatelessWidget {
       title: 'Terrain',
       icon: Icons.landscape_outlined,
       child: open == null
-          ? Text(
-              'Nothing to shape. Select a terrain, or add one with '
-              'Add › Terrain.',
-              style: OrblitText.caption.copyWith(fontSize: 11),
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Nothing to shape. Select a terrain, or add one with '
+                  'Add › Terrain.',
+                  style: OrblitText.caption.copyWith(fontSize: 11),
+                ),
+                if (onNew != null)
+                  OrblitButton(
+                    label: 'Add terrain',
+                    tooltip: 'Make ground to shape and paint in this scene.',
+                    onPressed: onNew,
+                    expand: true,
+                  ),
+              ],
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

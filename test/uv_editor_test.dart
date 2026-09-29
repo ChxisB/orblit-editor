@@ -68,6 +68,8 @@ void main() {
     // 'View' exactly: 'Viewport' is on screen too and contains it.
     await tester.tap(find.text('View'));
     await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(SubmenuButton, 'Panels'));
+    await tester.pumpAndSettle();
     await tester.tap(find.descendant(
       of: find.byType(MenuItemButton),
       matching: find.text('UVs'),

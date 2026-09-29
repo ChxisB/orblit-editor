@@ -309,6 +309,7 @@ class TerrainToolShelf extends StatelessWidget {
           children: [
             for (final tool in BrushTool.values) ...[
               _ToolButton(
+                label: toolLabel(tool),
                 icon: toolIcon(tool),
                 tooltip: '${toolLabel(tool)}\n${toolHint(tool)}',
                 active: bench.tool == tool,
@@ -394,6 +395,7 @@ class _ShelfSlider extends StatelessWidget {
 
 class _ToolButton extends StatefulWidget {
   const _ToolButton({
+    required this.label,
     required this.icon,
     required this.tooltip,
     required this.active,
@@ -401,6 +403,7 @@ class _ToolButton extends StatefulWidget {
   });
 
   final IconData icon;
+  final String label;
   final String tooltip;
   final bool active;
   final VoidCallback onTap;
@@ -422,7 +425,7 @@ class _ToolButtonState extends State<_ToolButton> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          width: 30,
+          padding: const EdgeInsets.symmetric(horizontal: Space.sm),
           height: 28,
           alignment: Alignment.center,
           decoration: BoxDecoration(
@@ -431,12 +434,17 @@ class _ToolButtonState extends State<_ToolButton> {
                 : (_hovering ? OrblitColors.raised : Colors.transparent),
             borderRadius: BorderRadius.circular(Radii.control),
           ),
-          child: Icon(
-            widget.icon,
-            size: 17,
-            color: widget.active
-                ? OrblitColors.ember
-                : (_hovering ? OrblitColors.ink : OrblitColors.inkMid),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                widget.icon,
+                size: 17,
+                color: widget.active ? OrblitColors.ember : OrblitColors.inkMid,
+              ),
+              const SizedBox(width: Space.xs),
+              Text(widget.label, style: OrblitText.label),
+            ],
           ),
         ),
       ),

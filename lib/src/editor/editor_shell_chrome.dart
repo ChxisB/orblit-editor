@@ -47,6 +47,7 @@ class _TopBar extends StatelessWidget {
     required this.history,
     required this.dirty,
     required this.onPlay,
+    required this.onStop,
     required this.onClose,
     required this.onAdd,
     required this.onAddShape,
@@ -56,9 +57,7 @@ class _TopBar extends StatelessWidget {
     required this.onNewScene,
     required this.onOpenInCode,
     required this.onReveal,
-    required this.layout,
-    required this.onLayout,
-    required this.panels,
+    required this.viewMenu,
     required this.onUndo,
     required this.onRedo,
     required this.selectionCount,
@@ -78,6 +77,7 @@ class _TopBar extends StatelessWidget {
   final History history;
   final bool dirty;
   final VoidCallback onPlay;
+  final VoidCallback onStop;
   final VoidCallback onClose;
   final ValueChanged<ObjectKind> onAdd;
   final ValueChanged<ShapeKind> onAddShape;
@@ -89,12 +89,7 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onOpenInCode;
   final VoidCallback onReveal;
 
-  /// How the panels are arranged, and how to change it.
-  final DockLayout layout;
-  final ValueChanged<DockLayout> onLayout;
-
-  /// The panels there are to open.
-  final List<PanelType> panels;
+  final Widget viewMenu;
   final VoidCallback onUndo;
   final VoidCallback onRedo;
   final int selectionCount;
@@ -114,6 +109,7 @@ class _TopBar extends StatelessWidget {
       children: [
         OrblitButton(
           label: project.name,
+          tooltip: 'Return to the project launcher.',
           icon: Icons.chevron_left,
           tone: ButtonTone.flat,
           onPressed: onClose,
@@ -140,12 +136,7 @@ class _TopBar extends StatelessWidget {
           onPaste: onPaste,
           onDuplicate: onDuplicate,
         ),
-        _ViewMenu(
-          layout: layout,
-          onLayout: onLayout,
-          panels: panels,
-          modeLayout: mode.layout,
-        ),
+        viewMenu,
         const _BarDivider(),
         // Labelled with what they would undo, so the tooltip answers the
         // question somebody actually has before they press it.
@@ -153,7 +144,7 @@ class _TopBar extends StatelessWidget {
           icon: Icons.undo,
           tooltip: history.undoLabel == null
               ? 'Nothing to undo'
-              : 'Undo ${history.undoLabel}',
+              : 'Undo ${history.undoLabel} (${commandShortcutLabel('Z')}).',
           active: false,
           enabled: history.canUndo,
           onTap: onUndo,
@@ -162,7 +153,7 @@ class _TopBar extends StatelessWidget {
           icon: Icons.redo,
           tooltip: history.redoLabel == null
               ? 'Nothing to redo'
-              : 'Redo ${history.redoLabel}',
+              : 'Redo ${history.redoLabel} (${commandShortcutLabel('⇧Z')}).',
           active: false,
           enabled: history.canRedo,
           onTap: onRedo,
@@ -188,15 +179,17 @@ class _TopBar extends StatelessWidget {
             children: [
               _TransportButton(
                 icon: playing ? Icons.pause : Icons.play_arrow,
-                tooltip: playing ? 'Pause' : 'Play',
+                tooltip: playing
+                    ? 'Pause scene animation.'
+                    : 'Play scene animation.',
                 active: playing,
                 onTap: onPlay,
               ),
               _TransportButton(
                 icon: Icons.stop,
-                tooltip: 'Stop',
+                tooltip: 'Stop animation and return to editing.',
                 active: false,
-                onTap: () {},
+                onTap: onStop,
               ),
             ],
           ),
@@ -535,6 +528,7 @@ final class _SceneStatus extends StatelessWidget {
     this.rate,
     this.frameMs,
     this.gpuBound = false,
+    this.stats = false,
   });
 
   final int objects;
@@ -547,6 +541,7 @@ final class _SceneStatus extends StatelessWidget {
   /// How long the slower half of a frame takes, and which half it is.
   final double? frameMs;
   final bool gpuBound;
+  final bool stats;
 
   @override
   Widget build(BuildContext context) {
@@ -561,32 +556,31 @@ final class _SceneStatus extends StatelessWidget {
           ),
         ),
         const SizedBox(width: Space.lg),
-        Text(
-          '$objects objects',
-          style: OrblitText.mono.copyWith(fontSize: 11),
-        ),
-        const SizedBox(width: Space.lg),
-        Text(
-          rate == null ? '— fps' : '${rate!.round()} fps',
-          style: OrblitText.mono.copyWith(
-            fontSize: 11,
-            // Below about fifty a frame is late often enough to feel it.
-            color: rate != null && rate! < 50
-                ? OrblitColors.warn
-                : OrblitColors.inkDim,
-          ),
-        ),
-        if (frameMs != null) ...[
-          const SizedBox(width: Space.sm),
+        Text('$objects objects', style: OrblitText.mono.copyWith(fontSize: 11)),
+        if (stats) ...[
+          const SizedBox(width: Space.lg),
           Text(
-            // Which half of the frame the time went in, because "slow" and
-            // "slow at what" are different questions.
-            '${frameMs!.toStringAsFixed(1)} ms ${gpuBound ? "gpu" : "cpu"}',
+            rate == null ? '— fps' : '${rate!.round()} fps',
             style: OrblitText.mono.copyWith(
               fontSize: 11,
-              color: OrblitColors.inkDim,
+              // Below about fifty a frame is late often enough to feel it.
+              color: rate != null && rate! < 50
+                  ? OrblitColors.warn
+                  : OrblitColors.inkDim,
             ),
           ),
+          if (frameMs != null) ...[
+            const SizedBox(width: Space.sm),
+            Text(
+              // Which half of the frame the time went in, because "slow" and
+              // "slow at what" are different questions.
+              '${frameMs!.toStringAsFixed(1)} ms ${gpuBound ? "gpu" : "cpu"}',
+              style: OrblitText.mono.copyWith(
+                fontSize: 11,
+                color: OrblitColors.inkDim,
+              ),
+            ),
+          ],
         ],
       ],
     );
