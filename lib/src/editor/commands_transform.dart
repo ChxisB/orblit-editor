@@ -74,6 +74,64 @@ class SetTransform extends EditorCommand {
   }
 }
 
+/// Moves and turns one object together, the way steering a camera from the
+/// scene view does. A move and a turn run apart would be two undo steps for
+/// one gesture.
+final class PlaceObject extends EditorCommand {
+  PlaceObject({
+    required this.sceneId,
+    required this.id,
+    required this.name,
+    required ({Vector3 position, Vector3 rotation}) from,
+    required ({Vector3 position, Vector3 rotation}) to,
+  }) : _from = _copy(from),
+       _to = _copy(to);
+
+  @override
+  final String sceneId;
+
+  final String id;
+
+  /// Kept for the label so it survives the object being deleted and restored.
+  final String name;
+
+  final ({Vector3 position, Vector3 rotation}) _from;
+  ({Vector3 position, Vector3 rotation}) _to;
+
+  @override
+  String get label => 'Steer $name';
+
+  @override
+  Object? get mergeKey => (id, 'place');
+
+  @override
+  bool get onlyMoves => true;
+
+  @override
+  void absorb(EditorCommand later) {
+    if (later is PlaceObject) _to = _copy(later._to);
+  }
+
+  @override
+  void apply(SceneHost host) => _set(host, _to);
+
+  @override
+  void revert(SceneHost host) => _set(host, _from);
+
+  void _set(SceneHost host, ({Vector3 position, Vector3 rotation}) place) {
+    final scene = host.sceneFor(sceneId);
+    final object = scene?[id];
+    if (scene == null || object == null) return;
+    object.position.setFrom(place.position);
+    object.rotation.setFrom(place.rotation);
+    scene.invalidate();
+  }
+
+  static ({Vector3 position, Vector3 rotation}) _copy(
+    ({Vector3 position, Vector3 rotation}) place,
+  ) => (position: place.position.clone(), rotation: place.rotation.clone());
+}
+
 /// Changes an object's colour.
 /// Moves or turns several objects at once, as one step.
 ///

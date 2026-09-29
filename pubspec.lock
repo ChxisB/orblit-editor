@@ -375,7 +375,7 @@ packages:
       path: "../orblit/packages/orblit_motion"
       relative: true
     source: path
-    version: "0.2.0"
+    version: "0.3.0"
   orblit_native:
     dependency: "direct main"
     description:
@@ -424,7 +424,7 @@ packages:
       path: "../orblit/packages/orblit_stage"
       relative: true
     source: path
-    version: "0.6.0"
+    version: "0.7.0"
   orblit_terrain:
     dependency: "direct main"
     description:

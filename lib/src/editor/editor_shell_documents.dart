@@ -217,28 +217,30 @@ extension _Documents on _EditorShellState {
     _interfaceBench.openFile(p.join(widget.project.directory, path));
   }
 
+  /// Makes a new [kind] in the project's [folder], and the folder first if
+  /// it is not there. Null, having said why, when either cannot be made.
+  String? _makeIn(String folder, NewAsset kind) {
+    final directory = Directory(p.join(widget.project.directory, folder));
+    try {
+      directory.createSync(recursive: true);
+    } on FileSystemException catch (error) {
+      _say('Could not make the $folder folder: ${error.message}');
+      return null;
+    }
+    final made = _assets.create(directory.path, kind, kind.suggested);
+    if (made.path == null) {
+      _say('Could not make a new ${kind.label.toLowerCase()}: ${made.problem}');
+    }
+    return made.path;
+  }
+
   /// Makes an interface in the project's interfaces folder and opens it.
   ///
   /// A scene that shows nothing yet gets it on a new canvas object, because
   /// an interface the game never shows is a step somebody has to know about.
   void _newInterface() {
-    final folder = Directory(p.join(widget.project.directory, 'interfaces'));
-    try {
-      folder.createSync(recursive: true);
-    } on FileSystemException catch (error) {
-      _say('Could not make the interfaces folder: ${error.message}');
-      return;
-    }
-    final made = _assets.create(
-      folder.path,
-      NewAsset.canvas,
-      NewAsset.canvas.suggested,
-    );
-    final path = made.path;
-    if (path == null) {
-      _say('Could not make an interface: ${made.problem}');
-      return;
-    }
+    final path = _makeIn('interfaces', NewAsset.canvas);
+    if (path == null) return;
     if (_sceneInterfaceAsset == null && _working?.scene != null) {
       _putInterfaceOnScene(path);
     }

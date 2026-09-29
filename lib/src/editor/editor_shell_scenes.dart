@@ -15,6 +15,7 @@ extension _Scenes on _EditorShellState {
   bool get _anyUnsaved =>
       _workspace.entries.any(_isUnsaved) ||
       _bench.anyUnsaved ||
+      _cuts.anyUnsaved ||
       _terrains.anyUnsaved ||
       _interfaceBench.anyUnsaved;
 

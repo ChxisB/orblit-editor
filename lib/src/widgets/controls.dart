@@ -665,3 +665,38 @@ class _ValueFieldState extends State<ValueField> {
     );
   }
 }
+
+/// A sentence in the middle of a panel with nothing to show, saying what
+/// would be there.
+final class PanelMessage extends StatelessWidget {
+  const PanelMessage(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(Space.lg),
+        child: Text(
+          text,
+          style: OrblitText.caption,
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+}
+
+/// How a menu that drops from a control looks: raised, square, and lined
+/// like the panel it opens over.
+const orblitMenuStyle = MenuStyle(
+  backgroundColor: WidgetStatePropertyAll(OrblitColors.raised),
+  surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
+  shape: WidgetStatePropertyAll(
+    RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(Radii.panel)),
+      side: BorderSide(color: OrblitColors.line),
+    ),
+  ),
+);

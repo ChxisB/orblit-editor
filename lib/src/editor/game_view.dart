@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orblit_filament/orblit_filament.dart';
+import 'package:orblit_motion/orblit_motion.dart' show CutsceneDocument;
+import 'package:orblit_stage/orblit_stage.dart' show blendCameras;
 import 'package:orblit_ui/orblit_ui.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
@@ -28,6 +30,7 @@ class GameView extends StatelessWidget {
     this.geometryOf,
     this.interface,
     this.through,
+    this.camera,
     this.plain = false,
     this.terrainOf,
     this.scatterOf,
@@ -49,6 +52,11 @@ class GameView extends StatelessWidget {
   /// What the preview in the corner of a viewport passes: the one that is
   /// selected, which is the one somebody is asking about.
   final SceneObject? through;
+
+  /// A view to show that no one camera object gives, such as a cutscene
+  /// halfway through blending two shots. Null for [through], or the scene's
+  /// first camera, which is what a game shows between shots.
+  final OrblitCamera? camera;
 
   /// Whether to leave off everything but the picture.
   ///
@@ -82,28 +90,12 @@ class GameView extends StatelessWidget {
   }
 
   /// Where the game's camera is standing and what it is looking at.
-  OrblitCamera? _camera(EditorScene scene) {
-    final object = _cameraObject(scene);
-    if (object == null) return null;
-
-    final world = scene.worldOf(object.id);
-    final position = world.getTranslation();
-    // An unrotated camera looks down -Z, which is the convention the light
-    // direction and glTF both use.
-    //
-    // transform rather than the multiplication operator: vector_math's
-    // operator* on a matrix takes dynamic and decides what to do by looking at
-    // the argument, and it reads an integer as a scale factor. The named
-    // method says what is meant and cannot be read as something else.
-    final forward =
-        world.getRotation().transform(Vector3(0.0, 0.0, -1.0));
-
-    return OrblitCamera(
-      position: position,
-      target: position + forward.normalized() * 10,
-      fieldOfView: 50,
-    );
-  }
+  OrblitCamera? _camera(EditorScene scene) =>
+      camera ??
+      switch (_cameraObject(scene)) {
+        final object? => cameraOf(scene, object),
+        null => null,
+      };
 
   @override
   Widget build(BuildContext context) {
@@ -153,6 +145,41 @@ class GameView extends StatelessWidget {
     );
   }
 }
+
+/// Where [object] stands in [scene] and what it looks at, as a camera.
+///
+/// Shown or not: a cutscene cuts to cameras the game never looks through.
+OrblitCamera cameraOf(EditorScene scene, SceneObject object) {
+  final world = scene.worldOf(object.id);
+  final position = world.getTranslation();
+  // An unrotated camera looks down -Z, which is the convention the light
+  // direction and glTF both use.
+  //
+  // transform rather than the multiplication operator: vector_math's
+  // operator* on a matrix takes dynamic and decides what to do by looking at
+  // the argument, and it reads an integer as a scale factor. The named
+  // method says what is meant and cannot be read as something else.
+  final forward = world.getRotation().transform(Vector3(0.0, 0.0, -1.0));
+
+  return OrblitCamera(
+    position: position,
+    target: position + forward.normalized() * 10,
+    fieldOfView: 50,
+  );
+}
+
+/// What [cutscene] looks through [at] seconds in, on [scene]: its shots'
+/// cameras blended by how much each has to say, as the game blends them.
+/// Null between shots, or when no shot's camera is in the scene.
+OrblitCamera? cutsceneCamera(
+  EditorScene scene,
+  CutsceneDocument cutscene,
+  double at,
+) => blendCameras([
+  for (final shot in cutscene.shotsAt(at))
+    if (scene[shot.camera] case final object?)
+      (cameraOf(scene, object), shot.weight),
+]);
 
 /// What the game view says when there is nothing to show.
 class _Nothing extends StatelessWidget {

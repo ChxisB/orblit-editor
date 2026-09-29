@@ -50,6 +50,7 @@ void main() {
           'modelling',
           'terrain',
           'animation',
+          'cinematics',
           'interface',
         ])
           tester.getTopLeft(modeTab(name)).dx,
@@ -73,12 +74,12 @@ void main() {
 
       // The test font is wider than any real one, so these widths are
       // where it runs out of room rather than where a real window does.
-      await tester.binding.setSurfaceSize(const Size(1600, 900));
+      await tester.binding.setSurfaceSize(const Size(1800, 900));
       await tester.pumpAndSettle();
       expect(icon(), findsOneWidget);
       expect(word(), findsOneWidget);
 
-      await tester.binding.setSurfaceSize(const Size(1440, 900));
+      await tester.binding.setSurfaceSize(const Size(1600, 900));
       await tester.pumpAndSettle();
       expect(icon(), findsNothing);
       expect(word(), findsOneWidget);
@@ -103,6 +104,7 @@ void main() {
         'modelling',
         'terrain',
         'animation',
+        'cinematics',
         'interface',
         'scene',
       ]) {

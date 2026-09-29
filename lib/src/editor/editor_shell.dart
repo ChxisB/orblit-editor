@@ -16,6 +16,7 @@ import 'asset_browser.dart';
 import 'assets.dart';
 import 'body_gizmo.dart';
 import 'body_section.dart';
+import 'cinematics_mode.dart';
 import 'clip_bench.dart';
 import 'clip_preview.dart';
 import 'clipboard.dart';
@@ -68,7 +69,12 @@ import 'scene_playback.dart';
 
 import 'package:orblit_mesh/orblit_mesh.dart';
 import 'package:orblit_motion/orblit_motion.dart'
-    show ClipDocument, ClipFormatException;
+    show
+        ClipDocument,
+        ClipFormatException,
+        CutsceneDocument,
+        CutsceneFormatException,
+        cutsceneExtension;
 import 'package:orblit_scene/orblit_scene.dart' as doc;
 import 'package:orblit_terrain/orblit_terrain.dart'
     show RegionKey, Terrain, TerrainSet, terrainExtension;
@@ -86,6 +92,7 @@ part 'editor_shell_panels.dart';
 part 'editor_shell_documents.dart';
 part 'editor_shell_prefabs.dart';
 part 'editor_shell_clips.dart';
+part 'editor_shell_cinematics.dart';
 part 'editor_shell_layouts.dart';
 part 'editor_shell_playback.dart';
 part 'editor_shell_intents.dart';
@@ -281,7 +288,18 @@ class _EditorShellState extends State<EditorShell> {
     scene: () => _current?.scene,
   );
 
-  /// The timeline's clip, shown on the loaded scene.
+  /// The cutscenes open in Cinematics, played on the whole scene.
+  late final ClipBench _cuts = ClipBench(
+    history: _history,
+    scene: () => _current?.scene,
+    playedOn: PlayedOn.scene,
+  );
+
+  /// The camera the scene view steers in Cinematics, and which view.
+  ({String camera, String view})? _piloting;
+
+  /// The timeline's clip, or in Cinematics its cutscene, shown on the loaded
+  /// scene.
   final ClipPreview _preview = ClipPreview();
 
   /// Whether the top bar was last built saying a clip has changes.
@@ -323,6 +341,7 @@ class _EditorShellState extends State<EditorShell> {
     _history.addListener(_onHistoryChanged);
     _workspace.addListener(_onChanged);
     _bench.addListener(_onBenchChanged);
+    _cuts.addListener(_onBenchChanged);
     _terrains.addListener(_onTerrainsChanged);
     _frames
       ..start()
@@ -397,6 +416,9 @@ class _EditorShellState extends State<EditorShell> {
     _bench
       ..removeListener(_onBenchChanged)
       ..dispose();
+    _cuts
+      ..removeListener(_onBenchChanged)
+      ..dispose();
     _terrains
       ..removeListener(_onTerrainsChanged)
       ..dispose();
@@ -454,10 +476,8 @@ class _EditorShellState extends State<EditorShell> {
   /// does, and not every time the playhead moves.
   void _onBenchChanged() {
     final scene = _current?.scene;
-    final change = scene == null
-        ? PoseChange.none
-        : _preview.pose(scene, _bench.clip, _bench.owner, _bench.at);
-    final unsaved = _bench.anyUnsaved;
+    final change = scene == null ? PoseChange.none : _pose(scene);
+    final unsaved = _bench.anyUnsaved || _cuts.anyUnsaved;
     if (change == PoseChange.rebuilt || unsaved != _clipsUnsaved) {
       _clipsUnsaved = unsaved;
       setState(() {});
@@ -465,6 +485,13 @@ class _EditorShellState extends State<EditorShell> {
       _rebuildForMove();
     }
   }
+
+  /// Shows the workspace's own timeline on [scene]: in Cinematics the
+  /// cutscene, which moves the whole scene, and elsewhere the clip, which
+  /// moves only what plays it.
+  PoseChange _pose(EditorScene scene) => _mode.name == 'cinematics'
+      ? _preview.poseAll(scene, _cuts.clip, _cuts.at)
+      : _preview.pose(scene, _bench.clip, _bench.owner, _bench.at);
 
   /// Whether everything has to be built again, or only what shows movement.
   ///
@@ -677,7 +704,9 @@ class _EditorShellState extends State<EditorShell> {
   Widget _shell() {
     final open = _current;
 
-    return Focus(
+    // A scope, so a field that lets go on Enter hands focus to the shell and
+    // not to the page above it, where no shortcut would hear the next key.
+    return FocusScope(
       autofocus: true,
       child: Scaffold(
         backgroundColor: OrblitColors.ground,

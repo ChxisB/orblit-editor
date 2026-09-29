@@ -9,8 +9,13 @@ extension _Playback on _EditorShellState {
     }
     if (_current?.scene == null) return;
     _bench.playing = false;
+    _cuts.playing = false;
     _playback ??= _atRest(
-      () => ScenePlayback(_workspace, read: _clipForPlayback),
+      () => ScenePlayback(
+        _workspace,
+        read: _clipForPlayback,
+        cutscenes: _cutscenesForPlayback(),
+      ),
     );
     _lastPlaybackTick = null;
     _playTicker.start();

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart' hide Easing;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:orblit_motion/orblit_motion.dart'
-    show ClipDocument, Easing, Hold, WhenDone;
+    show ClipDocument, CutsceneShot, Easing, Hold, Mark, WhenDone;
 
 import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
@@ -15,6 +15,7 @@ import 'timeline_curves.dart';
 import 'timeline_sheet.dart';
 
 part 'timeline_controls.dart';
+part 'timeline_marks.dart';
 
 /// Which of the two ways of looking at a clip the panel shows.
 enum TimelineView { keys, curves }
@@ -77,6 +78,8 @@ class _TimelinePanelState extends State<TimelinePanel>
   List<TimelineRow> _rows = const [];
 
   ClipBench get _bench => widget.bench;
+
+  _Words get _words => _wordsFor(_bench.playedOn);
 
   @override
   void initState() {
@@ -235,15 +238,18 @@ class _TimelinePanelState extends State<TimelinePanel>
         child: Container(
           color: OrblitColors.surface,
           child: clip == null
-              ? _NoClip(onNew: widget.onNew)
+              ? _NoClip(words: _words, onNew: widget.onNew)
               : Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _toolbar(clip),
                     _rulerRow(clip),
+                    _MarkStrip(bench: _bench, clip: clip),
+                    if (_bench.shown?.shots case final shots?)
+                      _ShotStrip(clip: clip, shots: shots),
                     Expanded(
                       child: clip.channels.isEmpty
-                          ? const _Message(
+                          ? const PanelMessage(
                               'Nothing keyed yet. Select something, then '
                               'press the diamond beside a value in the '
                               'inspector to key it here.',
@@ -315,8 +321,12 @@ class _TimelinePanelState extends State<TimelinePanel>
                   _rateMenu(clip),
                   const SizedBox(width: Space.xs),
                   _whenDoneMenu(clip),
-                  const SizedBox(width: Space.sm),
-                  _ownerMenu(),
+                  // A cutscene names what it moves by the scene's own ids,
+                  // so there is nothing to choose to play it on.
+                  if (_bench.playedOn == PlayedOn.owner) ...[
+                    const SizedBox(width: Space.sm),
+                    _ownerMenu(),
+                  ],
                 ],
               ),
             ),
@@ -359,7 +369,7 @@ class _TimelinePanelState extends State<TimelinePanel>
     if (seconds == null || seconds <= 0 || seconds > 600) return;
     final gesture = _typing ??= Object();
     _bench.edit(
-      'Clip length',
+      _words.length,
       (clip) => clip.copyWith(duration: seconds),
       gesture: gesture,
     );
@@ -368,9 +378,10 @@ class _TimelinePanelState extends State<TimelinePanel>
   Widget _clipMenu(ClipDocument clip) {
     final shown = _bench.shown!;
     final unsaved = _bench.isUnsaved(shown);
+    final words = _words;
     return _Menu(
       label: '${clip.name}${unsaved ? ' •' : ''}',
-      icon: Icons.animation,
+      icon: words.icon,
       items: [
         for (final open in _bench.open)
           MenuItemButton(
@@ -392,7 +403,7 @@ class _TimelinePanelState extends State<TimelinePanel>
             size: 14,
             color: OrblitColors.inkMid,
           ),
-          child: const Text('Make a clip', style: OrblitText.label),
+          child: Text(words.make, style: OrblitText.label),
         ),
         const Divider(height: 1),
         MenuItemButton(
@@ -538,7 +549,7 @@ class _TimelinePanelState extends State<TimelinePanel>
             child: Text(_holdLabel(choice), style: OrblitText.label),
           ),
         SubmenuButton(
-          menuStyle: _menuStyle,
+          menuStyle: orblitMenuStyle,
           menuChildren: [
             for (final shape in Easing.values)
               MenuItemButton(

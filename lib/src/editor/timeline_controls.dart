@@ -2,14 +2,52 @@ part of 'timeline.dart';
 
 // The small pieces the panel is built from.
 
-/// The panel with no clip open: what a clip is, and the one button that
-/// makes one.
+/// What the panel calls what it edits.
+typedef _Words = ({
+  String none,
+  String about,
+  String make,
+  String makeTip,
+  String length,
+  IconData icon,
+});
+
+/// A clip in the Animation workspace, where it is played on one thing, and
+/// a cutscene in Cinematics, where it moves the whole scene.
+_Words _wordsFor(PlayedOn playedOn) => switch (playedOn) {
+  PlayedOn.owner => (
+    none: 'No clip open',
+    about:
+        'A clip is how something moves over time, such as a door that '
+        'swings or a light that flickers. Make one here, or open one '
+        'from Project.',
+    make: 'Make a clip',
+    makeTip: 'Create an animation clip for the selected object.',
+    length: 'Clip length',
+    icon: Icons.animation,
+  ),
+  PlayedOn.scene => (
+    none: 'No cutscene open',
+    about:
+        'A cutscene moves things in the scene and cuts between cameras, '
+        'such as an intro before a level. Make one here, or open one from '
+        'Project.',
+    make: 'New cutscene',
+    makeTip: 'Create a cutscene for this scene.',
+    length: 'Cutscene length',
+    icon: Icons.movie_outlined,
+  ),
+};
+
+/// The panel with nothing open: what a clip or cutscene is, and the one
+/// button that makes one.
 ///
 /// Scrolls rather than overflows, because the strip under the view can be
 /// dragged shorter than this.
 final class _NoClip extends StatelessWidget {
-  const _NoClip({required this.onNew});
+  const _NoClip({required this.words, required this.onNew});
 
+  final _Words words;
   final VoidCallback onNew;
 
   @override
@@ -20,50 +58,28 @@ final class _NoClip extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.animation, size: 32, color: OrblitColors.inkDim),
+            Icon(words.icon, size: 32, color: OrblitColors.inkDim),
             const SizedBox(height: Space.md),
-            const Text(
-              'No clip open',
+            Text(
+              words.none,
               style: OrblitText.title,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: Space.xs),
-            const Text(
-              'A clip is how something moves over time, such as a door that '
-              'swings or a light that flickers. Make one here, or open one '
-              'from Project.',
+            Text(
+              words.about,
               style: OrblitText.caption,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: Space.md),
             OrblitButton(
-              label: 'Make a clip',
-              tooltip: 'Create an animation clip for the selected object.',
+              label: words.make,
+              tooltip: words.makeTip,
               icon: Icons.add,
               tone: ButtonTone.primary,
               onPressed: onNew,
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Message extends StatelessWidget {
-  const _Message(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(Space.lg),
-        child: Text(
-          text,
-          style: OrblitText.caption,
-          textAlign: TextAlign.center,
         ),
       ),
     );
@@ -152,17 +168,6 @@ class _Chip extends StatelessWidget {
   }
 }
 
-const _menuStyle = MenuStyle(
-  backgroundColor: WidgetStatePropertyAll(OrblitColors.raised),
-  surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
-  shape: WidgetStatePropertyAll(
-    RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(Radius.circular(Radii.panel)),
-      side: BorderSide(color: OrblitColors.line),
-    ),
-  ),
-);
-
 /// A label that opens a menu, the way every choice on the toolbar is made.
 class _Menu extends StatelessWidget {
   const _Menu({
@@ -189,7 +194,7 @@ class _Menu extends StatelessWidget {
         ? OrblitColors.warn
         : OrblitColors.inkMid;
     final menu = MenuAnchor(
-      style: _menuStyle,
+      style: orblitMenuStyle,
       menuChildren: items,
       builder: (context, controller, _) => MouseRegion(
         cursor: enabled ? SystemMouseCursors.click : MouseCursor.defer,

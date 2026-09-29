@@ -54,7 +54,17 @@ class ClipPreview {
       doc.SceneDocument(entities: [SceneDocument.entityOf(playing)]),
       owner,
     );
-    final frame = clip.sampleAt(at);
+    return _show(scene, clip.sampleAt(at), scope);
+  }
+
+  /// Shows [clip] at [at] on [scene], naming things by the scene's own ids
+  /// the way a cutscene does.
+  PoseChange poseAll(EditorScene scene, ClipDocument? clip, double at) =>
+      clip == null
+      ? lift(scene)
+      : _show(scene, clip.sampleAt(at), ClipScope.wholeScene);
+
+  PoseChange _show(EditorScene scene, ClipFrame frame, ClipScope scope) {
     final ids = {for (final target in frame.values.keys) scope.resolve(target)};
     final document = doc.SceneDocument(
       entities: [
@@ -62,24 +72,7 @@ class ClipPreview {
           if (scene[id] case final object?) SceneDocument.entityOf(object),
       ],
     );
-
-    final driven = <_Field>{};
-    for (final MapEntry(key: target, value: properties)
-        in frame.values.entries) {
-      final entity = document[scope.resolve(target)];
-      if (entity == null) continue;
-      for (final property in properties.keys) {
-        final dot = property.indexOf('.');
-        if (dot <= 0) continue;
-        final type = property.substring(0, dot);
-        if (entity[type] == null) continue;
-        driven.add((
-          id: entity.id,
-          type: type,
-          field: property.substring(dot + 1),
-        ));
-      }
-    }
+    final driven = _drivenIn(frame, document, scope);
 
     final restoring = <doc.SetField>[];
     for (final field in _rest.keys.toList()) {
@@ -97,6 +90,32 @@ class ClipPreview {
       ...restoring,
       ...sceneOpsFor(frame, document, scope),
     ]);
+  }
+
+  /// The fields [frame] sets that [document] has somewhere to put.
+  static Set<_Field> _drivenIn(
+    ClipFrame frame,
+    doc.SceneDocument document,
+    ClipScope scope,
+  ) {
+    final driven = <_Field>{};
+    for (final MapEntry(key: target, value: properties)
+        in frame.values.entries) {
+      final entity = document[scope.resolve(target)];
+      if (entity == null) continue;
+      for (final property in properties.keys) {
+        final dot = property.indexOf('.');
+        if (dot <= 0) continue;
+        final type = property.substring(0, dot);
+        if (entity[type] == null) continue;
+        driven.add((
+          id: entity.id,
+          type: type,
+          field: property.substring(dot + 1),
+        ));
+      }
+    }
+    return driven;
   }
 
   /// Puts back every field the clip has taken.

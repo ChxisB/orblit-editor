@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:orblit_motion/orblit_motion.dart' show ClipDocument;
+import 'package:orblit_motion/orblit_motion.dart'
+    show ClipDocument, CutsceneDocument;
 import 'package:path/path.dart' as p;
 
 import 'package:orblit_ui/orblit_ui.dart';
@@ -27,6 +28,7 @@ enum AssetKind {
   dataObject('Data object', Icons.dataset_outlined),
   canvas('Canvas', Icons.web_asset),
   clip('Clip', Icons.animation),
+  cutscene('Cutscene', Icons.movie_outlined),
   audio('Audio', Icons.graphic_eq),
   data('Data', Icons.data_object),
   other('File', Icons.insert_drive_file_outlined);
@@ -50,6 +52,7 @@ enum AssetKind {
     '.odata': dataObject,
     '.oui': canvas,
     '.oclip': clip,
+    '.ocutscene': cutscene,
     '.wav': audio, '.mp3': audio, '.ogg': audio,
     '.json': data, '.yaml': data, '.yml': data,
   };
@@ -340,28 +343,11 @@ class AssetTree {
     try {
       if (what.isFolder) {
         Directory(path).createSync();
-      } else if (what == NewAsset.canvas) {
-        File(path).writeAsStringSync(
-          UiDocument.blank(p.basenameWithoutExtension(unique)).toText(),
-        );
-      } else if (what == NewAsset.dataObject) {
-        File(path).writeAsStringSync(
-          DataObject.blank(p.basenameWithoutExtension(unique)).toText(),
-        );
-      } else if (what == NewAsset.clip) {
-        File(path).writeAsStringSync(
-          ClipDocument(
-            name: p.basenameWithoutExtension(unique),
-            duration: 1,
-          ).encode(),
-        );
       } else {
-        File(path).writeAsStringSync(_starterFor(what, unique));
-
+        File(path).writeAsStringSync(_contentsFor(what, unique));
         // Written beside it and named after it, so the include in the source
         // resolves without anybody editing either file first.
-        final companion = what.companion;
-        if (companion != null) {
+        if (what.companion case final companion?) {
           final beside = p.join(
             directory,
             '${p.basenameWithoutExtension(unique)}${companion.extension}',
@@ -375,6 +361,23 @@ class AssetTree {
     }
 
     return (problem: null, path: path);
+  }
+
+  /// What a new file of kind [what] called [fileName] holds.
+  ///
+  /// The kinds with a format of their own are written by that format, so a
+  /// new one is whatever the format says an empty one is.
+  static String _contentsFor(NewAsset what, String fileName) {
+    final name = p.basenameWithoutExtension(fileName);
+    return switch (what) {
+      NewAsset.canvas => UiDocument.blank(name).toText(),
+      NewAsset.dataObject => DataObject.blank(name).toText(),
+      NewAsset.clip => ClipDocument(name: name, duration: 1).encode(),
+      NewAsset.cutscene => CutsceneDocument(
+        motion: ClipDocument(name: name, duration: 4),
+      ).encode(),
+      _ => _starterFor(what, fileName),
+    };
   }
 
   /// A starter with the file's own name written into it.
@@ -694,6 +697,15 @@ struct Drift {
     // Written by ClipDocument rather than as text here, so a new clip is
     // whatever the format says an empty one is.
     starter: null,
+  ),
+
+  cutscene(
+    label: 'Cutscene',
+    icon: Icons.movie_outlined,
+    extension: '.ocutscene',
+    suggested: 'cutscene',
+    // Written by CutsceneDocument, for the same reason as a clip.
+    starter: null,
   );
 
   const NewAsset({
@@ -766,5 +778,6 @@ enum NewAssetGroup {
     NewAsset.canvas,
     NewAsset.scene,
     NewAsset.clip,
+    NewAsset.cutscene,
   ];
 }

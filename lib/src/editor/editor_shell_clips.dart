@@ -43,23 +43,8 @@ extension _Clips on _EditorShellState {
 
   /// Makes a clip in the project's clips folder and opens it.
   void _newClip() {
-    final folder = Directory(p.join(widget.project.directory, 'clips'));
-    try {
-      folder.createSync(recursive: true);
-    } on FileSystemException catch (error) {
-      _say('Could not make the clips folder: ${error.message}');
-      return;
-    }
-    final made = _assets.create(
-      folder.path,
-      NewAsset.clip,
-      NewAsset.clip.suggested,
-    );
-    final path = made.path;
-    if (path == null) {
-      _say('Could not make a clip: ${made.problem}');
-      return;
-    }
+    final path = _makeIn('clips', NewAsset.clip);
+    if (path == null) return;
     _attachClip(path);
     _openClip(path);
     _bench.owner = _selectedObject?.id;
@@ -125,9 +110,10 @@ extension _Clips on _EditorShellState {
     }
   }
 
-  /// Writes every clip with changes, and says which could not be written.
+  /// Writes every clip and cutscene with changes, and says which could not
+  /// be written.
   void _saveClips() {
-    for (final problem in _bench.saveAll()) {
+    for (final problem in [..._bench.saveAll(), ..._cuts.saveAll()]) {
       _say(problem, level: LogLevel.error);
     }
   }

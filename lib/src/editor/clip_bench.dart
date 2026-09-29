@@ -16,19 +16,53 @@ import 'scene_document.dart';
 /// anything with an id. Prefixed so no scene can ever be given the same one.
 String clipSceneId(String path) => 'clip:$path';
 
+/// What a bench's documents are played on, which decides how a key names
+/// the thing it moves.
+enum PlayedOn {
+  /// A clip, played on whichever object is chosen. Targets are named from
+  /// that object, so one clip plays on every copy of a prefab.
+  owner,
+
+  /// A cutscene, played on the whole scene. Targets are the scene's own ids.
+  scene,
+}
+
 /// A clip open on the timeline.
 class OpenClip {
-  OpenClip({required this.path, required this.clip});
+  OpenClip({
+    required this.path,
+    required this.clip,
+    this.shots,
+    this.sounds = const [],
+  });
 
   final String path;
 
   /// As it is now, edits and all. Only ever replaced whole, by a [ClipEdit].
   ClipDocument clip;
 
+  /// A cutscene's shots in the order they start, or null for a clip. Only
+  /// ever replaced whole, by a [ShotEdit].
+  List<CutsceneShot>? shots;
+
+  /// A cutscene's sounds. Nothing here edits them yet, but saving must not
+  /// drop what another tool wrote.
+  final List<CutsceneSound> sounds;
+
   /// The undo stack's stamp for this clip when it was last written.
   int savedStamp = 0;
 
   String get id => clipSceneId(path);
+
+  /// The cutscene as it is now, or null for a clip.
+  CutsceneDocument? get cutscene => switch (shots) {
+    final shots? => CutsceneDocument(
+      motion: clip,
+      shots: shots,
+      sounds: sounds,
+    ),
+    null => null,
+  };
 }
 
 /// What the inspector asks of whatever is keying, so a row can grow a key
@@ -48,12 +82,19 @@ abstract interface class Keying implements Listenable {
 /// panel can be closed and opened again without the playhead going back to
 /// the start.
 class ClipBench extends ChangeNotifier implements Keying {
-  ClipBench({required this.history, required this.scene});
+  ClipBench({
+    required this.history,
+    required this.scene,
+    this.playedOn = PlayedOn.owner,
+  });
 
   final History history;
 
   /// The scene a clip is played on, which is whichever one is loaded.
   final EditorScene? Function() scene;
+
+  /// Whether this bench edits clips or cutscenes.
+  final PlayedOn playedOn;
 
   final List<OpenClip> _open = [];
 
@@ -140,21 +181,44 @@ class ClipBench extends ChangeNotifier implements Keying {
   /// Shows the clip at [path], reading it first if it is not open, and says
   /// what could not be read.
   ///
-  /// Throws a [ClipFormatException] or a [FileSystemException] for a file
-  /// that cannot be opened at all.
+  /// Throws a [ClipFormatException], a [CutsceneFormatException] or a
+  /// [FileSystemException] for a file that cannot be opened at all.
   List<String> openFile(String path) {
     if (this[path] != null) {
       show(path);
       return const [];
     }
-    final load = ClipDocument.decode(File(path).readAsStringSync());
-    openClip(path, load.clip);
-    return load.problems;
+    final text = File(path).readAsStringSync();
+    switch (playedOn) {
+      case PlayedOn.owner:
+        final load = ClipDocument.decode(text);
+        openClip(path, load.clip);
+        return load.problems;
+      case PlayedOn.scene:
+        final load = CutsceneDocument.decode(text);
+        openCutscene(path, load.cutscene);
+        return load.problems;
+    }
   }
 
   /// Shows [clip] as the one at [path].
   void openClip(String path, ClipDocument clip) {
     if (this[path] == null) _open.add(OpenClip(path: path, clip: clip));
+    show(path);
+  }
+
+  /// Shows [cutscene] as the one at [path].
+  void openCutscene(String path, CutsceneDocument cutscene) {
+    if (this[path] == null) {
+      _open.add(
+        OpenClip(
+          path: path,
+          clip: cutscene.motion,
+          shots: cutscene.shots,
+          sounds: cutscene.sounds,
+        ),
+      );
+    }
     show(path);
   }
 
@@ -207,7 +271,9 @@ class ClipBench extends ChangeNotifier implements Keying {
   /// Writes [clip], or says why it could not be.
   String? save(OpenClip clip) {
     try {
-      File(clip.path).writeAsStringSync(clip.clip.encode());
+      File(
+        clip.path,
+      ).writeAsStringSync(clip.cutscene?.encode() ?? clip.clip.encode());
     } on FileSystemException catch (error) {
       return '${clip.clip.name} could not be saved: ${error.message}';
     }
@@ -271,6 +337,44 @@ class ClipBench extends ChangeNotifier implements Keying {
     notifyListeners();
   }
 
+  /// Changes the shown cutscene's shots through the undo stack. A [gesture]
+  /// ties a typed number's worth of these into one step.
+  void editShots(
+    String label,
+    List<CutsceneShot> Function(List<CutsceneShot> shots) change, {
+    Object? gesture,
+  }) {
+    final shown = this.shown;
+    final shots = shown?.shots;
+    if (shown == null || shots == null) return;
+    history.run(
+      ShotEdit(
+        bench: this,
+        path: shown.path,
+        label: label,
+        from: shots,
+        to: List<CutsceneShot>.unmodifiable(
+          <CutsceneShot>[...change(shots)]
+            ..sort((a, b) => a.start.compareTo(b.start)),
+        ),
+        gesture: gesture,
+      ),
+    );
+  }
+
+  /// Where a [ShotEdit] puts a cutscene's shots, forwards or back.
+  void _putShots(String path, List<CutsceneShot> shots) {
+    final open = this[path];
+    if (open == null) return;
+    open.shots = shots;
+    if (_shown != path) {
+      _shown = path;
+      _playing = false;
+      _curve = null;
+    }
+    notifyListeners();
+  }
+
   // ---- keying from the inspector ----
 
   @override
@@ -298,8 +402,10 @@ class ClipBench extends ChangeNotifier implements Keying {
 
     // Keying something with nothing chosen to play on makes it the one: the
     // first key is where most clips start, and asking first would be a
-    // question with one sensible answer.
-    if (_ownerIn(scene()) == null) _owner = object.id;
+    // question with one sensible answer. A cutscene plays on the scene.
+    if (playedOn == PlayedOn.owner && _ownerIn(scene()) == null) {
+      _owner = object.id;
+    }
     final at = frame;
     edit(
       'Key ${object.name} ${_labelOf(property)}',
@@ -311,10 +417,15 @@ class ClipBench extends ChangeNotifier implements Keying {
   /// clip, played where it is, has no way to name it.
   ChannelAddress? _addressOf(SceneObject object, String property) {
     final scene = this.scene();
-    final owner = _ownerIn(scene);
     if (scene == null) return null;
-    if (owner == null) return (target: '', bone: null, property: property);
-    final target = _scopeIn(scene, owner).targetOf(object.id);
+    final target = switch ((playedOn, _ownerIn(scene))) {
+      (PlayedOn.scene, _) => object.id,
+      (PlayedOn.owner, null) => '',
+      (PlayedOn.owner, final owner?) => _scopeIn(
+        scene,
+        owner,
+      ).targetOf(object.id),
+    };
     if (target == null) return null;
     return (target: target, bone: null, property: property);
   }
@@ -323,9 +434,13 @@ class ClipBench extends ChangeNotifier implements Keying {
   /// scene has nothing by that name, or nothing is chosen to play it on.
   SceneObject? objectOf(String target) {
     final scene = this.scene();
-    final owner = _ownerIn(scene);
-    if (scene == null || owner == null) return null;
-    return scene[_scopeIn(scene, owner).resolve(target)];
+    if (scene == null) return null;
+    return switch ((playedOn, _ownerIn(scene))) {
+      (PlayedOn.scene, _) => scene[target],
+      (PlayedOn.owner, null) => null,
+      (PlayedOn.owner, final owner?) =>
+        scene[_scopeIn(scene, owner).resolve(target)],
+    };
   }
 
   static ClipScope _scopeIn(EditorScene scene, String owner) =>
@@ -413,5 +528,50 @@ class ClipEdit extends EditorCommand {
     if (later is! ClipEdit) return;
     to = later.to;
     keysAfter = later.keysAfter;
+  }
+}
+
+/// One change to a cutscene's shots, holding them whole from before and
+/// after the way a [ClipEdit] holds a clip.
+final class ShotEdit extends EditorCommand {
+  ShotEdit({
+    required this.bench,
+    required this.path,
+    required this.label,
+    required this.from,
+    required this.to,
+    this.gesture,
+  });
+
+  final ClipBench bench;
+
+  final String path;
+
+  @override
+  final String label;
+
+  final List<CutsceneShot> from;
+
+  /// Not final: a merged run of typing rewrites where it ends up.
+  List<CutsceneShot> to;
+
+  /// What ties a run of these together, or null for one alone.
+  final Object? gesture;
+
+  @override
+  String get sceneId => clipSceneId(path);
+
+  @override
+  Object? get mergeKey => gesture == null ? null : (path, 'shots', gesture);
+
+  @override
+  void apply(SceneHost host) => bench._putShots(path, to);
+
+  @override
+  void revert(SceneHost host) => bench._putShots(path, from);
+
+  @override
+  void absorb(EditorCommand later) {
+    if (later is ShotEdit) to = later.to;
   }
 }

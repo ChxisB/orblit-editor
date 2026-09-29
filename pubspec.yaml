@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.1.0+2
+version: 1.2.0+3
 
 environment:
   sdk: ^3.13.0
@@ -81,9 +81,9 @@ dependencies:
   orblit_mesh:
     path: ../orblit/packages/orblit_mesh
 
-  # Clips: the file the timeline edits, and the sampling that shows one on
-  # the scene. The runtime plays the same file through the same code, so a
-  # scrub here is what the game does at that moment.
+  # Clips and cutscenes: the files the timeline edits, and the sampling that
+  # shows one on the scene. The runtime plays the same file through the same
+  # code, so a scrub here is what the game does at that moment.
   orblit_motion:
     path: ../orblit/packages/orblit_motion
 
@@ -94,9 +94,9 @@ dependencies:
   orblit_terrain:
     path: ../orblit/packages/orblit_terrain
 
-  # Only for turning a terrain into what the renderer draws, which the
-  # runtime does through the same function. Two conversions would be two
-  # answers to how a set's pictures reach the GPU.
+  # For turning a terrain into what the renderer draws, and for blending a
+  # cutscene's cameras. The runtime does both through the same functions.
+  # Two copies would be two answers to what the game shows.
   orblit_stage:
     path: ../orblit/packages/orblit_stage
 

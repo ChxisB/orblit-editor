@@ -118,7 +118,7 @@ final class InterfaceElements extends StatelessWidget {
     builder: (context, _) {
       final document = bench.document;
       if (document == null) {
-        return const _Message(
+        return const PanelMessage(
           'The elements of an open interface show here. Choose New interface on the canvas.',
         );
       }
@@ -139,7 +139,7 @@ final class InterfaceDesign extends StatelessWidget {
     builder: (context, _) {
       final document = bench.document;
       if (document == null) {
-        return const _Message(
+        return const PanelMessage(
           'Choose New interface on the canvas to add and style its elements.',
         );
       }
@@ -305,24 +305,4 @@ final class _Status extends StatelessWidget {
       );
     },
   );
-}
-
-final class _Message extends StatelessWidget {
-  const _Message(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(Space.lg),
-        child: Text(
-          text,
-          style: OrblitText.caption,
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
 }

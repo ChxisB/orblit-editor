@@ -70,8 +70,21 @@ Future<void> enterMode(WidgetTester tester, String name) async {
 }
 
 /// Whether the workspace called [name] is the one open.
+///
+/// Read from the tab's own node. A tab too narrow for its word sits in a
+/// tooltip, whose node has no say in what is selected.
 bool inMode(WidgetTester tester, String name) =>
-    tester.getSemantics(modeTab(name)).flagsCollection.isSelected ==
+    tester
+        .getSemantics(
+          find.descendant(
+            of: modeTab(name),
+            matching: find.byWidgetPredicate(
+              (widget) => widget is Semantics && widget.properties.selected != null,
+            ),
+          ),
+        )
+        .flagsCollection
+        .isSelected ==
     Tristate.isTrue;
 
 /// Adds through the Add menu.

@@ -14,8 +14,8 @@ extension _Panels on _EditorShellState {
       ..register(bodyGizmo())
       ..register(jointGizmo());
     // In the order work usually goes: lay out a level, shape what is in it,
-    // shape the ground under it, make it move, then lay out what is shown
-    // over it.
+    // shape the ground under it, make it move, film it, then lay out what
+    // is shown over it.
     registry.modes
       ..register(
         const EditorMode(
@@ -53,6 +53,7 @@ extension _Panels on _EditorShellState {
           layout: DockLayout.animation,
         ),
       )
+      ..register(_cinematicsMode())
       ..register(
         interfaceMode(
           bench: _interfaceBench,
@@ -101,6 +102,7 @@ extension _Panels on _EditorShellState {
           projectRoot: widget.project.directory,
           geometryOf: _geometry.pathFor,
           interface: _sceneInterface,
+          camera: _playback?.camera,
           terrainOf: _terrains.renderFor,
           scatterOf: _terrains.scatterFor,
         ),
@@ -177,6 +179,37 @@ extension _Panels on _EditorShellState {
         kind: interfaceDesignPanel,
         build: (_, _) => InterfaceDesign(bench: _interfaceBench),
       ),
+    )
+    // The Cinematics workspace's three. The shot moves with the scene. The
+    // other two listen to the bench themselves, like the timeline.
+    ..register(
+      PanelType(
+        kind: shotPreviewPanel,
+        showsMovement: true,
+        build: (_, _) => _shotPreview(),
+      ),
+    )
+    ..register(
+      PanelType(
+        kind: shotListPanel,
+        build: (_, _) => ShotList(
+          bench: _cuts,
+          scene: _current?.scene,
+          lookingThrough: _piloting?.camera,
+          onLookThrough: _lookThrough,
+        ),
+      ),
+    )
+    ..register(
+      PanelType(
+        kind: cutsceneTimelinePanel,
+        build: (_, _) => TimelinePanel(
+          bench: _cuts,
+          selected: _selectedObject,
+          onProblem: (message) => _say(message, level: LogLevel.error),
+          onNew: _newCutscene,
+        ),
+      ),
     );
 
   /// The inspector's sections: the ones it has always had, the shape and
@@ -244,6 +277,8 @@ extension _Panels on _EditorShellState {
     });
     mode.onEnter?.call();
     _followMotion(force: true);
+    // Each workspace poses the scene with its own timeline.
+    _onBenchChanged();
   }
 
   /// Switches to the mode called [name], when something registered one.
@@ -365,7 +400,7 @@ extension _Panels on _EditorShellState {
     onApplyPrefab: _applyPrefab,
     onRevertPrefab: _revertPrefab,
     onUnpackPrefab: _unpackPrefab,
-    keying: _bench,
+    keying: _mode.name == 'cinematics' ? _cuts : _bench,
   );
 
   /// The shape and geometry controls, for an object that has geometry.
@@ -387,7 +422,10 @@ extension _Panels on _EditorShellState {
     showStats: _showStats,
     workspace: _workspace,
     camera: _cameraFor(panel.id),
-    onCameraChanged: (camera) => setState(() => _cameras[panel.id] = camera),
+    onCameraChanged: (camera) {
+      setState(() => _cameras[panel.id] = camera);
+      _steer(panel.id, camera);
+    },
     selected: _selected,
     primary: _primary,
     history: _history,
@@ -478,6 +516,10 @@ extension _Panels on _EditorShellState {
       }
       if (asset.kind == AssetKind.clip) {
         _openClip(asset.path);
+        return;
+      }
+      if (asset.kind == AssetKind.cutscene) {
+        _openCutscene(asset.path);
         return;
       }
       const editable = {
