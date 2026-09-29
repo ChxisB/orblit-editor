@@ -548,8 +548,7 @@ class _SceneViewportState extends State<SceneViewport>
                 if (widget.drawing?.tool.isDrawing ?? false) _outline(),
                 if (_box != null) _marquee(),
                 _chips(),
-                if (_rendererAvailable) _tools(),
-                _help(),
+                _footer(),
               ],
             );
           },
@@ -654,30 +653,41 @@ class _SceneViewportState extends State<SceneViewport>
     child: _CameraPreview(child: preview),
   );
 
-  Widget _tools() => Positioned(
+  // The tools and the hint share one row. Beside a mode's panel the view
+  // can be narrower than the hint, which then wraps rather than running
+  // under the tools or off the left edge.
+  Widget _footer() => Positioned(
     left: Space.md,
+    right: Space.md,
     bottom: Space.md,
     child: Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        for (final mode in GizmoMode.values) ...[
-          _ToolButton(
-            mode: mode,
-            selected: _mode == mode,
-            onPressed: () => setState(() => _mode = mode),
+        if (_rendererAvailable) _tools(),
+        const Expanded(
+          child: Align(
+            alignment: Alignment.bottomRight,
+            child: _ViewportChip(
+              'Drag to orbit · two fingers to orbit, shift to pan, pinch '
+              'to zoom · ` to fly, then WASD',
+            ),
           ),
-          const SizedBox(width: Space.xs),
-        ],
+        ),
       ],
     ),
   );
 
-  Widget _help() => const Positioned(
-    right: Space.md,
-    bottom: Space.md,
-    child: _ViewportChip(
-      'Drag to orbit · two fingers to orbit, shift to pan, pinch '
-      'to zoom · ` to fly, then WASD',
-    ),
+  Widget _tools() => Row(
+    children: [
+      for (final mode in GizmoMode.values) ...[
+        _ToolButton(
+          mode: mode,
+          selected: _mode == mode,
+          onPressed: () => setState(() => _mode = mode),
+        ),
+        const SizedBox(width: Space.xs),
+      ],
+    ],
   );
 
   // The tools themselves live in the modelling panel. What is here is
