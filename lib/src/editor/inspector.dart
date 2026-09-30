@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:orblit_filament/orblit_filament.dart';
 import 'package:orblit_light/orblit_light.dart';
-import 'package:orblit_scene/orblit_scene.dart' show EntityPath, PrefabState;
+import 'package:orblit_scene/orblit_scene.dart'
+    show EntityPath, PrefabState, SceneSettings;
 import 'package:orblit_weather/orblit_weather.dart';
 import 'package:path/path.dart' as p;
 import 'package:vector_math/vector_math_64.dart' hide Colors;
@@ -25,6 +27,7 @@ part 'inspector_rows.dart';
 part 'inspector_light.dart';
 part 'inspector_weather.dart';
 part 'inspector_sections.dart';
+part 'inspector_toggles.dart';
 
 /// Properties of whatever is selected.
 ///

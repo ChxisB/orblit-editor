@@ -338,6 +338,37 @@ class RenameScene extends EditorCommand {
   void revert(SceneHost host) => host.sceneFor(sceneId)?.name = from;
 }
 
+/// Names the scene's physics layers.
+class SetLayerNames extends EditorCommand {
+  SetLayerNames({required this.sceneId, required this.from, required this.to});
+
+  @override
+  final String sceneId;
+
+  final List<String> from;
+
+  /// Not final: typing in one name merges into one step, which ends holding
+  /// the names as they stood when the last key went down.
+  List<String> to;
+
+  @override
+  String get label => 'Name the layers';
+
+  @override
+  Object? get mergeKey => (sceneId, 'layerNames');
+
+  @override
+  void absorb(EditorCommand later) {
+    if (later is SetLayerNames) to = later.to;
+  }
+
+  @override
+  void apply(SceneHost host) => host.sceneFor(sceneId)?.layerNames = to;
+
+  @override
+  void revert(SceneHost host) => host.sceneFor(sceneId)?.layerNames = from;
+}
+
 /// A change stated as the difference between two documents.
 ///
 /// Every other command in this file names the field it touches: a colour, a

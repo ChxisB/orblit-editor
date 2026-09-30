@@ -281,6 +281,76 @@ class VectorRow extends StatelessWidget {
   }
 }
 
+/// A choice from a menu, for a list too long to lay side by side in a row as
+/// narrow as the inspector.
+class PickRow<T> extends StatelessWidget {
+  const PickRow({
+    super.key,
+    required this.label,
+    required this.shown,
+    required this.options,
+    required this.onSelect,
+  });
+
+  final String label;
+
+  /// What the row reads while it is closed. Not taken from [options], because
+  /// the value it stands for may not be one of them.
+  final String shown;
+
+  /// Each value the menu offers, by the name it goes under.
+  final Map<T, String> options;
+
+  final ValueChanged<T> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return FieldRow(
+      label: label,
+      child: PopupMenuButton<T>(
+        tooltip: '',
+        color: OrblitColors.raised,
+        onSelected: onSelect,
+        itemBuilder: (context) => [
+          for (final MapEntry(:key, :value) in options.entries)
+            PopupMenuItem(
+              value: key,
+              height: 28,
+              child: Text(value, style: OrblitText.label),
+            ),
+        ],
+        child: Container(
+          height: 24,
+          padding: const EdgeInsets.symmetric(horizontal: Space.sm),
+          decoration: BoxDecoration(
+            color: OrblitColors.raised,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  shown,
+                  overflow: TextOverflow.ellipsis,
+                  style: OrblitText.label.copyWith(
+                    fontSize: 11.5,
+                    color: OrblitColors.ink,
+                  ),
+                ),
+              ),
+              const Icon(
+                Icons.expand_more,
+                size: 14,
+                color: OrblitColors.inkDim,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// The diamond after a field that a clip can key.
 ///
 /// Filled where there is a key on the playhead's frame, hollow and lit where
@@ -407,44 +477,16 @@ class ChoiceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FieldRow(
+    return ToggleRow(
       label: label,
-      child: Container(
-        height: 24,
-        padding: const EdgeInsets.all(2),
-        decoration: BoxDecoration(
-          color: OrblitColors.raised,
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Row(
-          children: [
-            for (final option in options)
-              Expanded(
-                child: GestureDetector(
-                  onTap: onSelect == null ? null : () => onSelect!(option),
-                  child: Container(
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: option == selected
-                          ? OrblitColors.emberDeep
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(3),
-                    ),
-                    child: Text(
-                      option,
-                      style: OrblitText.label.copyWith(
-                        fontSize: 10.5,
-                        color: option == selected
-                            ? const Color(0xFFFFF0E2)
-                            : OrblitColors.inkDim,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
+      cells: [
+        for (final option in options)
+          ToggleCell(
+            label: option,
+            on: option == selected,
+            onTap: onSelect == null ? null : () => onSelect!(option),
+          ),
+      ],
     );
   }
 }

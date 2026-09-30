@@ -363,7 +363,11 @@ class _Editing {
 
   Widget automatic() {
     final auto = _terrain.autoCover;
-    final names = [for (final set in _sets) set.name];
+    final names = {
+      for (final (index, set) in _sets.indexed) index: set.name,
+    };
+    // A cover can name a set the terrain no longer has.
+    String shown(int index) => names[index] ?? 'Set ${index + 1} (missing)';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -374,18 +378,18 @@ class _Editing {
         ),
         const SizedBox(height: Space.xs),
         if (names.isNotEmpty) ...[
-          _SetChoice(
+          PickRow(
             label: 'Flat',
-            names: names,
-            selected: auto.flat,
+            shown: shown(auto.flat),
+            options: names,
             onSelect: (index) {
               if (index != auto.flat) _cover('flat set', flat: index);
             },
           ),
-          _SetChoice(
+          PickRow(
             label: 'Steep',
-            names: names,
-            selected: auto.steep,
+            shown: shown(auto.steep),
+            options: names,
             onSelect: (index) {
               if (index != auto.steep) _cover('steep set', steep: index);
             },
@@ -624,72 +628,6 @@ class _PictureRow extends StatelessWidget {
             style: path == null
                 ? OrblitText.caption.copyWith(fontSize: 11)
                 : OrblitText.monoValue.copyWith(fontSize: 11),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// A choice of one set, from a list that may be too long to lay side by
-/// side.
-class _SetChoice extends StatelessWidget {
-  const _SetChoice({
-    required this.label,
-    required this.names,
-    required this.selected,
-    required this.onSelect,
-  });
-
-  final String label;
-  final List<String> names;
-  final int selected;
-  final ValueChanged<int> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final shown = selected >= 0 && selected < names.length
-        ? names[selected]
-        : 'Set ${selected + 1} (missing)';
-    return FieldRow(
-      label: label,
-      child: PopupMenuButton<int>(
-        tooltip: '',
-        color: OrblitColors.raised,
-        onSelected: onSelect,
-        itemBuilder: (context) => [
-          for (final (index, name) in names.indexed)
-            PopupMenuItem(
-              value: index,
-              height: 28,
-              child: Text(name, style: OrblitText.label),
-            ),
-        ],
-        child: Container(
-          height: 24,
-          padding: const EdgeInsets.symmetric(horizontal: Space.sm),
-          decoration: BoxDecoration(
-            color: OrblitColors.raised,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  shown,
-                  overflow: TextOverflow.ellipsis,
-                  style: OrblitText.label.copyWith(
-                    fontSize: 11.5,
-                    color: OrblitColors.ink,
-                  ),
-                ),
-              ),
-              const Icon(
-                Icons.expand_more,
-                size: 14,
-                color: OrblitColors.inkDim,
-              ),
-            ],
           ),
         ),
       ),

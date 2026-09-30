@@ -59,6 +59,7 @@ class EditorScene {
     this.timeOfDay = 10,
     this.dayCycle = false,
     this.hoursPerSecond = 0.5,
+    this.layerNames = const [],
   }) : _objects = objects,
        skyColour = skyColour ?? const Color(0xFF1A2029) {
     for (final object in objects) {
@@ -212,6 +213,13 @@ class EditorScene {
   bool dayCycle;
 
   double hoursPerSecond;
+
+  /// What each physics layer is called, from the first. Shorter than
+  /// thirty-two when the last layers have no name.
+  ///
+  /// Replaced whole rather than edited in place, so a command holds the list
+  /// it started from and undo puts back exactly that.
+  List<String> layerNames;
 
   /// Seconds since the editor started animating this scene.
   ///

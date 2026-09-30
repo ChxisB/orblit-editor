@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.0
+
+- Hold a free body to a plane or a line with move and turn locks on each
+  axis. Set gravity, a speed cap and a spin cap for the body, and where its
+  weight sits and how it resists turning. Zero is no cap.
+- Choose a material for a body from Ice, Metal, Wood, Stone, Sandbag and
+  Rubber. It sets friction and bounce, and reads as Custom once either is
+  changed.
+- Choose what a body is in and what it sees from a grid of thirty-two layer
+  toggles. A pair meets when either body sees the other's layer.
+- Name the physics layers in the scene's inspector. The names show on the
+  layer toggles.
+
 ## 1.3.0
 
 - Make a physics body a trigger. A trigger is a place: nothing collides with

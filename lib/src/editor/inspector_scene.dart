@@ -78,6 +78,7 @@ class _SceneFields extends StatelessWidget {
         ),
         _sky(scene),
         _environment(scene),
+        _LayerNames(sceneId: entry.id, scene: scene, history: history),
         _contents(scene),
       ],
     );
@@ -333,6 +334,104 @@ class _SceneFields extends StatelessWidget {
             label: 'Lights',
             value:
                 '${scene.objects.where((o) => o.kind == ObjectKind.light).length}',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// What the scene calls its physics layers, one field for each.
+///
+/// Only as many rows as the names reach, and one more to type the next into.
+/// Thirty-two fields down a side panel would bury the ones somebody uses.
+class _LayerNames extends StatefulWidget {
+  const _LayerNames({
+    required this.sceneId,
+    required this.scene,
+    required this.history,
+  });
+
+  final String sceneId;
+  final EditorScene scene;
+  final History history;
+
+  @override
+  State<_LayerNames> createState() => _LayerNamesState();
+}
+
+class _LayerNamesState extends State<_LayerNames> {
+  static const _least = 4;
+
+  bool _all = false;
+
+  int get _rows {
+    if (_all) return SceneSettings.layerCount;
+    final named = widget.scene.layerNames.lastIndexWhere(
+      (name) => name.isNotEmpty,
+    );
+    return math.min(SceneSettings.layerCount, math.max(_least, named + 2));
+  }
+
+  /// The names with layer [index] called [name], and no empty names left
+  /// hanging off the end, which is how a file that names nothing is written.
+  List<String> _renamed(int index, String name) {
+    final names = [...widget.scene.layerNames];
+    while (names.length <= index) {
+      names.add('');
+    }
+    names[index] = name.trim();
+    while (names.isNotEmpty && names.last.isEmpty) {
+      names.removeLast();
+    }
+    return names;
+  }
+
+  void _rename(int index, String name) {
+    final names = _renamed(index, name);
+    if (listEquals(names, widget.scene.layerNames)) return;
+    widget.history.run(
+      SetLayerNames(
+        sceneId: widget.sceneId,
+        from: widget.scene.layerNames,
+        to: names,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final names = widget.scene.layerNames;
+    return OrblitSection(
+      title: 'Layers',
+      icon: Icons.layers_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var index = 0; index < _rows; index++)
+            FieldRow(
+              label: 'Layer ${index + 1}',
+              child: ValueField(
+                value: index < names.length ? names[index] : '',
+                hint: 'Unnamed',
+                onChanged: (name) => _rename(index, name),
+                onDone: widget.history.seal,
+              ),
+            ),
+          if (!_all && _rows < SceneSettings.layerCount)
+            OrblitButton(
+              label: 'Show all ${SceneSettings.layerCount}',
+              tooltip: 'Show a field for every layer.',
+              tone: ButtonTone.quiet,
+              expand: true,
+              onPressed: () => setState(() => _all = true),
+            ),
+          const Padding(
+            padding: EdgeInsets.only(top: Space.xs),
+            child: Text(
+              'Names show on the layer toggles of a physics body.',
+              style: OrblitText.caption,
+            ),
           ),
         ],
       ),

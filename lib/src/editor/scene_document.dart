@@ -88,6 +88,7 @@ abstract final class SceneDocument {
           timeOfDay: scene.timeOfDay,
           dayCycle: scene.dayCycle,
           hoursPerSecond: scene.hoursPerSecond,
+          layerNames: scene.layerNames,
         ),
         entities: [for (final object in scene.objects) entityOf(object)],
       );
@@ -113,6 +114,7 @@ abstract final class SceneDocument {
         timeOfDay: document.settings.timeOfDay,
         dayCycle: document.settings.dayCycle,
         hoursPerSecond: document.settings.hoursPerSecond,
+        layerNames: document.settings.layerNames,
       ),
       name: document.name,
       problems: [...read.problems, ...?opened?.problems],
@@ -259,7 +261,8 @@ abstract final class SceneDocument {
       ..ambient = document.settings.ambient
       ..timeOfDay = document.settings.timeOfDay
       ..dayCycle = document.settings.dayCycle
-      ..hoursPerSecond = document.settings.hoursPerSecond;
+      ..hoursPerSecond = document.settings.hoursPerSecond
+      ..layerNames = document.settings.layerNames;
   }
 
   /// An entity as the row the editor edits.

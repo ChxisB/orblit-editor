@@ -155,6 +155,21 @@ void main() {
       expect(after.weather.windSpeed, 7.5);
     });
 
+    test('the names of the physics layers come back as they were set', () {
+      final before = EditorScene([])..layerNames = ['Player', '', 'Enemy'];
+
+      final after = SceneDocument.decode(SceneDocument.encode(before)).scene;
+
+      expect(after.layerNames, ['Player', '', 'Enemy']);
+    });
+
+    test('a scene that names no layers writes no names', () {
+      final text = SceneDocument.encode(EditorScene([]));
+
+      expect(text, isNot(contains('layerNames')));
+      expect(SceneDocument.decode(text).scene.layerNames, isEmpty);
+    });
+
     test('a scene that had fog of its own gets an object to hold it', () {
       // Version two kept the air on the scene. Weather is a thing that
       // changes, and a set of fields can only hold one end of a change, so an

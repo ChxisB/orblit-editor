@@ -85,6 +85,10 @@ class _BodySection extends StatelessWidget {
     doc.BodyMotion.free: 'Free',
   };
 
+  static final _materials = {
+    for (final material in doc.BodyMaterial.presets) material: material.name,
+  };
+
   @override
   Widget build(BuildContext context) {
     final body = physicsBodyOf(_object);
@@ -176,6 +180,12 @@ class _BodySection extends StatelessWidget {
             minimum: 0.01,
             step: 0.1,
           ),
+        PickRow(
+          label: 'Material',
+          shown: doc.BodyMaterial.of(body)?.name ?? 'Custom',
+          options: _materials,
+          onSelect: (material) => _choose(body.madeOf(material)),
+        ),
         _slider(
           'Friction',
           body.friction,
@@ -213,7 +223,9 @@ class _BodySection extends StatelessWidget {
             onSelect: (label) =>
                 _choose(body.copyWith(startsAsleep: label == 'Asleep')),
           ),
+          ..._movement(body),
         ],
+        ..._layers(body),
         const SizedBox(height: Space.xs),
         OrblitButtonRow(
           buttons: [
@@ -274,6 +286,96 @@ class _BodySection extends StatelessWidget {
       selected: body.stay ? 'On' : 'Off',
       onSelect: (label) => _choose(body.copyWith(stay: label == 'On')),
     ),
+  ];
+
+  /// How a free body is held and limited, and where its weight sits.
+  List<Widget> _movement(doc.BodyComponent body) => [
+    _drag(
+      'Gravity',
+      (body) => [body.gravityScale],
+      (body, values) => body.copyWith(gravityScale: values.single),
+      step: 0.02,
+    ),
+    _locks('Lock move', body, [
+      doc.BodyLock.moveX,
+      doc.BodyLock.moveY,
+      doc.BodyLock.moveZ,
+    ]),
+    _locks('Lock turn', body, [
+      doc.BodyLock.turnX,
+      doc.BodyLock.turnY,
+      doc.BodyLock.turnZ,
+    ]),
+    _drag(
+      'Max speed',
+      (body) => [body.maxSpeed],
+      (body, values) => body.copyWith(maxSpeed: values.single),
+      minimum: 0,
+      step: 0.1,
+    ),
+    _drag(
+      'Max spin',
+      (body) => [body.maxSpin],
+      (body, values) => body.copyWith(maxSpin: values.single),
+      minimum: 0,
+      step: 0.1,
+    ),
+    const _Note('Zero is no limit.'),
+    _drag(
+      'Weight at',
+      (body) => body.centreOfMass.storage,
+      (body, values) => body.copyWith(centreOfMass: Vector3.array(values)),
+    ),
+    _drag(
+      'Inertia',
+      (body) => body.inertia.storage,
+      (body, values) => body.copyWith(inertia: Vector3.array(values)),
+      minimum: 0,
+    ),
+    const _Note('Give all three or the shape\'s own inertia is used.'),
+  ];
+
+  /// One switch for each of [axes], which a lock holds the body from.
+  Widget _locks(
+    String label,
+    doc.BodyComponent body,
+    List<doc.BodyLock> axes,
+  ) => ToggleRow(
+    label: label,
+    cells: [
+      for (final (index, lock) in axes.indexed)
+        ToggleCell(
+          label: 'XYZ'[index],
+          on: body.locks.contains(lock),
+          onTap: () => _choose(
+            body.copyWith(
+              locks: body.locks.contains(lock)
+                  ? (body.locks.toSet()..remove(lock))
+                  : {...body.locks, lock},
+            ),
+          ),
+        ),
+    ],
+  );
+
+  /// The layers a body is in and the layers it looks for. A pair meets when
+  /// either one looks for the other's layer.
+  List<Widget> _layers(doc.BodyComponent body) => [
+    LayerGrid(
+      label: 'Is in',
+      bits: body.layers,
+      names: target.scene.layerNames,
+      onToggle: (index) =>
+          _choose(body.copyWith(layers: body.layers ^ (1 << index))),
+    ),
+    LayerGrid(
+      label: 'Sees',
+      bits: body.cares,
+      names: target.scene.layerNames,
+      onToggle: (index) =>
+          _choose(body.copyWith(cares: body.cares ^ (1 << index))),
+    ),
+    const _Note('A pair meets when either one sees the other\'s layer.'),
   ];
 
   /// A row of numbers read off the body and dragged into a new one.
@@ -371,4 +473,20 @@ class _BodySection extends StatelessWidget {
 
   static T _key<T>(Map<T, String> labels, String label) =>
       labels.entries.firstWhere((entry) => entry.value == label).key;
+}
+
+/// A sentence under a group of rows, saying what a value means where the
+/// row's own label cannot.
+class _Note extends StatelessWidget {
+  const _Note(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: Space.xs),
+      child: Text(text, style: OrblitText.caption),
+    );
+  }
 }

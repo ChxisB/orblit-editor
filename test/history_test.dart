@@ -532,6 +532,25 @@ void main() {
       expect(scene.ambient, 28000);
     });
 
+    test('naming the layers is undoable and typing is one step', () {
+      final rig = open();
+      final scene = rig.scene;
+      for (final name in ['P', 'Pl', 'Player']) {
+        rig.history.run(SetLayerNames(
+          sceneId: 'a',
+          from: scene.layerNames,
+          to: [name],
+        ));
+      }
+
+      expect(rig.history.labels, ['Name the layers']);
+      expect(scene.layerNames, ['Player']);
+      rig.history.undo();
+      expect(scene.layerNames, isEmpty);
+      rig.history.redo();
+      expect(scene.layerNames, ['Player']);
+    });
+
     test('renaming the scene is undoable like anything else', () {
       final rig = open();
       rig.history.run(RenameScene(sceneId: 'a', from: 'Scene', to: 'Level 1'));

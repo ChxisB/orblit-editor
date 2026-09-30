@@ -104,11 +104,11 @@ class _JointSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         FieldRow(label: 'Holds', child: _holds()),
-        _KindChoice(
-          options: _kinds.values.toList(),
-          selected: _kinds[joint.kind]!,
-          onSelect: (label) =>
-              _put(joint.copyWith(kind: _key(_kinds, label)), alone: true),
+        PickRow(
+          label: 'Kind',
+          shown: _kinds[joint.kind]!,
+          options: _kinds,
+          onSelect: (kind) => _put(joint.copyWith(kind: kind), alone: true),
         ),
         for (final axis in joint.axes) ..._limitRows(joint, axis),
         if (joint.kind == doc.JointKind.cone)
@@ -362,69 +362,5 @@ class _JointSection extends StatelessWidget {
       ),
     );
     if (alone) target.history.seal();
-  }
-
-  static T _key<T>(Map<T, String> labels, String label) =>
-      labels.entries.firstWhere((entry) => entry.value == label).key;
-}
-
-/// The kind of joint, from a menu: seven are too many to lay side by side in
-/// a row as narrow as the inspector.
-class _KindChoice extends StatelessWidget {
-  const _KindChoice({
-    required this.options,
-    required this.selected,
-    required this.onSelect,
-  });
-
-  final List<String> options;
-  final String selected;
-  final ValueChanged<String> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    return FieldRow(
-      label: 'Kind',
-      child: PopupMenuButton<String>(
-        tooltip: '',
-        color: OrblitColors.raised,
-        onSelected: onSelect,
-        itemBuilder: (context) => [
-          for (final option in options)
-            PopupMenuItem(
-              value: option,
-              height: 28,
-              child: Text(option, style: OrblitText.label),
-            ),
-        ],
-        child: Container(
-          height: 24,
-          padding: const EdgeInsets.symmetric(horizontal: Space.sm),
-          decoration: BoxDecoration(
-            color: OrblitColors.raised,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  selected,
-                  overflow: TextOverflow.ellipsis,
-                  style: OrblitText.label.copyWith(
-                    fontSize: 11.5,
-                    color: OrblitColors.ink,
-                  ),
-                ),
-              ),
-              const Icon(
-                Icons.expand_more,
-                size: 14,
-                color: OrblitColors.inkDim,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
