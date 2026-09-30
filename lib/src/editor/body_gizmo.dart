@@ -41,15 +41,19 @@ class _BodyPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final outline = _Outline(target.projection);
+    final solid = _Outline(target.projection);
+    // A place is warm, so a trigger or a zone is not taken for a wall.
+    final places = _Outline(target.projection);
     for (final id in target.selected) {
       final object = target.scene[id];
       if (object == null) continue;
       final body = physicsBodyOf(object);
-      if (body != null) outline.body(body, target.scene.worldOf(id));
+      if (body == null) continue;
+      (isPlace(object) ? places : solid).body(body, target.scene.worldOf(id));
     }
 
-    outline.paint(canvas, OrblitColors.good);
+    solid.paint(canvas, OrblitColors.good);
+    places.paint(canvas, OrblitColors.warn);
   }
 
   @override

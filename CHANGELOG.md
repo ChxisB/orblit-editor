@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.3.0
+
+- Make a physics body a trigger. A trigger is a place: nothing collides with
+  it, and it reports what enters and leaves. Stay events make it report
+  every step as well.
+- Set a belt speed on a fixed or driven body to carry what stands on it.
+- Add a zone to a body that stays put, to change gravity and drag for what is
+  inside it. Each field is the body's own until it is switched to the zone's.
+  Priority decides which zone wins where two overlap.
+- Triggers and zones are outlined in amber in the scene view, apart from
+  solid bodies.
+
 ## 1.2.0
 
 - Make cutscenes in the Cinematics workspace. Cut between the scene's

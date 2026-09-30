@@ -235,6 +235,7 @@ extension _Panels on _EditorShellState {
       before: 'interface',
     );
     sections
+      ..register(zoneSection(), before: 'interface')
       ..register(jointSection(), before: 'interface')
       ..register(terrainSection(bench: _terrains), before: 'interface');
     sections.register(

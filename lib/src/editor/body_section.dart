@@ -21,6 +21,28 @@ doc.BodyComponent? physicsBodyOf(SceneObject object) =>
       _ => null,
     };
 
+/// The zone on [object], if it has one: a region that changes how the bodies
+/// inside it move. It uses the object's body as the region.
+doc.ZoneComponent? zoneOf(SceneObject object) =>
+    switch (object.components[doc.SceneComponents.zone]) {
+      final doc.ZoneComponent zone => zone,
+      _ => null,
+    };
+
+/// Whether the solver moves [body]. Ground never moves, whatever its file
+/// says.
+bool movesFreely(doc.BodyComponent body) =>
+    body.motion == doc.BodyMotion.free && body.shape != doc.BodyShape.plane;
+
+/// Whether [object] is a place rather than a thing: a body that asks to be a
+/// trigger, or that is a zone's region. The solver moves a free body and
+/// cannot make one a place, so a free body is never one.
+bool isPlace(SceneObject object) {
+  final body = physicsBodyOf(object);
+  if (body == null || movesFreely(body)) return false;
+  return body.trigger || zoneOf(object) != null;
+}
+
 /// How big an object's mesh is in its own space, for fitting a body to it.
 typedef BoundsOf = ({Vector3 min, Vector3 max}) Function(SceneObject object);
 
@@ -90,7 +112,8 @@ class _BodySection extends StatelessWidget {
 
   Widget _present(doc.BodyComponent body) {
     final ground = body.shape == doc.BodyShape.plane;
-    final free = body.motion == doc.BodyMotion.free && !ground;
+    final free = movesFreely(body);
+    final place = isPlace(_object);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -117,6 +140,7 @@ class _BodySection extends StatelessWidget {
                 onSelect: (label) =>
                     _choose(body.copyWith(motion: _key(_motions, label))),
               ),
+        ..._role(body, free: free),
         if (body.shape == doc.BodyShape.box)
           _drag(
             'Size',
@@ -162,6 +186,15 @@ class _BodySection extends StatelessWidget {
           body.restitution,
           (body, value) => body.copyWith(restitution: value),
         ),
+        // A place pushes nothing and a free body is not fixed to anything, so
+        // only a solid body that stays put can be a belt.
+        if (!free && !place)
+          _drag(
+            'Belt speed',
+            (body) => body.surface.storage,
+            (body, values) => body.copyWith(surface: Vector3.array(values)),
+            step: 0.05,
+          ),
         if (free) ...[
           _slider(
             'Drag',
@@ -214,6 +247,34 @@ class _BodySection extends StatelessWidget {
       ],
     );
   }
+
+  /// Whether the body is a thing or a place, and whether it hears every step
+  /// of what touches it or is inside it.
+  List<Widget> _role(doc.BodyComponent body, {required bool free}) => [
+    // The solver moves a free body and cannot move a place, so there is
+    // nothing to choose for one.
+    if (!free)
+      // A zone is a place whatever the body says, so that row reads as fact.
+      zoneOf(_object) != null
+          ? const ChoiceRow(
+              label: 'Acts as',
+              options: ['Trigger'],
+              selected: 'Trigger',
+            )
+          : ChoiceRow(
+              label: 'Acts as',
+              options: const ['Solid', 'Trigger'],
+              selected: body.trigger ? 'Trigger' : 'Solid',
+              onSelect: (label) =>
+                  _choose(body.copyWith(trigger: label == 'Trigger')),
+            ),
+    ChoiceRow(
+      label: 'Stay events',
+      options: const ['Off', 'On'],
+      selected: body.stay ? 'On' : 'Off',
+      onSelect: (label) => _choose(body.copyWith(stay: label == 'On')),
+    ),
+  ];
 
   /// A row of numbers read off the body and dragged into a new one.
   ///
