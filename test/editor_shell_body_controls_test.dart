@@ -94,6 +94,10 @@ void main() {
       await reach(tester, inInspector('Material'));
       expect(inRow('Material', 'Custom'), findsOneWidget);
 
+      // Built is not enough: scrolled only just into view, the row sits on the
+      // edge of the pane, where a tap lands on the window's border instead.
+      await tester.ensureVisible(inRow('Material', 'Custom'));
+      await tester.pumpAndSettle();
       await tester.tap(inRow('Material', 'Custom'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Ice'));

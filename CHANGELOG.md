@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.0
+
+- Give a body a cylinder or a convex hull from the Shape rows. A cylinder has
+  a radius and a height. Fit to mesh sizes it to the object.
+- A hull is cut from the mesh the object draws, so a rock collides as the
+  rock and not as its box. An object the editor holds no mesh for, such as an
+  imported model, gets the corners of its box. The inspector counts the
+  corners and says when the points enclose no volume, which is a body that
+  does nothing.
+- Both shapes are outlined in the scene view and scale with their object. A
+  hull of more than 255 corners is drawn whole. The simulation keeps the 255
+  that stand out most.
+
 ## 1.4.0
 
 - Hold a free body to a plane or a line with move and turn locks on each

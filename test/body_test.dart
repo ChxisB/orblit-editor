@@ -341,5 +341,106 @@ void main() {
 
       expectSame(capsule, ball);
     });
+
+    testWidgets('a cylinder takes its sideways and upright scales apart', (
+      tester,
+    ) async {
+      final same = await drawn(
+        tester,
+        EditorScene([
+          crate(
+            body: doc.BodyComponent(
+              shape: doc.BodyShape.cylinder,
+              radius: 1,
+              height: 3,
+            ),
+          ),
+        ]),
+      );
+
+      // The larger of x and z for the radius and y for the height, which is
+      // what the simulation reads. Either sideways scale can be the larger.
+      for (final scale in [Vector3(2, 3, 1), Vector3(1, 3, 2)]) {
+        final stretched = await drawn(
+          tester,
+          EditorScene([
+            crate(
+              body: doc.BodyComponent(
+                shape: doc.BodyShape.cylinder,
+                radius: 0.5,
+                height: 1,
+              ),
+              scale: scale,
+            ),
+          ]),
+        );
+
+        expectSame(stretched, same);
+      }
+    });
+
+    testWidgets('a hull of a cube is drawn as the box it is the shape of', (
+      tester,
+    ) async {
+      final hull = await drawn(
+        tester,
+        EditorScene([
+          crate(
+            body: doc.BodyComponent(
+              shape: doc.BodyShape.hull,
+              hull: _cube(0.5),
+            ),
+          ),
+        ]),
+      );
+      final box = await drawn(
+        tester,
+        EditorScene([crate(body: doc.BodyComponent())]),
+      );
+
+      expectSame(hull, box);
+    });
+
+    testWidgets('a hull is stretched by each of its scales', (tester) async {
+      final stretched = await drawn(
+        tester,
+        EditorScene([
+          crate(
+            body: doc.BodyComponent(shape: doc.BodyShape.hull, hull: _cube(1)),
+            scale: Vector3(1, 2, 3),
+          ),
+        ]),
+      );
+      final box = await drawn(
+        tester,
+        EditorScene([crate(body: doc.BodyComponent(size: Vector3(2, 4, 6)))]),
+      );
+
+      expectSame(stretched, box);
+    });
+
+    testWidgets('a hull with no volume is drawn as nothing', (tester) async {
+      // Four points in one plane: the world has no body for it either.
+      final flat = await drawn(
+        tester,
+        EditorScene([
+          crate(
+            body: doc.BodyComponent(
+              shape: doc.BodyShape.hull,
+              hull: const [0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1],
+            ),
+          ),
+        ]),
+      );
+
+      expect(flat, Rect.zero);
+    });
   });
 }
+
+/// The corners of a cube [half] either side of the origin, written flat.
+List<double> _cube(double half) => [
+  for (final x in [-half, half])
+    for (final y in [-half, half])
+      for (final z in [-half, half]) ...[x, y, z],
+];

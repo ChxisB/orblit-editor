@@ -7,6 +7,7 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'commands.dart';
+import 'convex_outline.dart';
 import 'inspector.dart';
 import 'scene.dart';
 
@@ -76,8 +77,13 @@ class _BodySection extends StatelessWidget {
     doc.BodyShape.box: 'Box',
     doc.BodyShape.sphere: 'Ball',
     doc.BodyShape.capsule: 'Capsule',
+    doc.BodyShape.cylinder: 'Cylinder',
+    doc.BodyShape.hull: 'Hull',
     doc.BodyShape.plane: 'Ground',
   };
+
+  /// The most corners the physics world keeps of a hull.
+  static const _keptCorners = 255;
 
   static const _motions = {
     doc.BodyMotion.fixed: 'Fixed',
@@ -122,13 +128,7 @@ class _BodySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ChoiceRow(
-          label: 'Shape',
-          options: _shapes.values.toList(),
-          selected: _shapes[body.shape]!,
-          onSelect: (label) =>
-              _choose(body.copyWith(shape: _key(_shapes, label))),
-        ),
+        ..._shapeRows(body),
         // Ground never moves, whatever the file says, so there is nothing to
         // choose and the row says so instead of offering a choice it ignores.
         ground
@@ -153,20 +153,23 @@ class _BodySection extends StatelessWidget {
             minimum: 0.01,
           ),
         if (body.shape == doc.BodyShape.sphere ||
-            body.shape == doc.BodyShape.capsule)
+            body.shape == doc.BodyShape.capsule ||
+            body.shape == doc.BodyShape.cylinder)
           _drag(
             'Radius',
             (body) => [body.radius],
             (body, values) => body.copyWith(radius: values.single),
             minimum: 0.01,
           ),
-        if (body.shape == doc.BodyShape.capsule)
+        if (body.shape == doc.BodyShape.capsule ||
+            body.shape == doc.BodyShape.cylinder)
           _drag(
             'Height',
             (body) => [body.height],
             (body, values) => body.copyWith(height: values.single),
             minimum: 0.01,
           ),
+        if (body.shape == doc.BodyShape.hull) _hullNote(body),
         _drag(
           ground ? 'Surface at' : 'Centre',
           (body) => body.centre.storage,
@@ -257,6 +260,41 @@ class _BodySection extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+
+  /// Every shape as a toggle, in rows of three because six labels do not fit
+  /// across the panel.
+  List<Widget> _shapeRows(doc.BodyComponent body) {
+    const across = 3;
+    final labels = _shapes.values.toList();
+    return [
+      for (var first = 0; first < labels.length; first += across)
+        ChoiceRow(
+          label: first == 0 ? 'Shape' : '',
+          options: labels.sublist(first, first + across),
+          selected: _shapes[body.shape]!,
+          onSelect: (label) => _choose(_reshaped(body, _key(_shapes, label))),
+        ),
+    ];
+  }
+
+  /// What a hull is made of. Its points are only in the file, so this says how
+  /// many there are, or what is missing.
+  Widget _hullNote(doc.BodyComponent body) {
+    final outline = ConvexOutline.of(body.hull);
+    final corners = outline.corners.length;
+    if (!outline.hasVolume) {
+      return const _Note(
+        'Needs four points that enclose a volume. Until then the body does '
+        'nothing.',
+      );
+    }
+    return _Note(
+      corners > _keptCorners
+          ? '$corners corners. The simulation keeps the $_keptCorners that '
+                'stand out most.'
+          : '$corners corners.',
     );
   }
 
@@ -449,7 +487,7 @@ class _BodySection extends StatelessWidget {
   /// In the object's own units, as a body is, so the fit is the mesh's size
   /// whatever the object is scaled to.
   doc.BodyComponent _fitted(doc.BodyComponent body) {
-    final bounds = boundsOf?.call(_object) ?? _object.localBounds();
+    final bounds = _boundsOfObject();
     final size = bounds.max - bounds.min;
     final middle = (bounds.min + bounds.max) * 0.5;
 
@@ -459,9 +497,13 @@ class _BodySection extends StatelessWidget {
         radius: math.max(size.x, math.max(size.y, size.z)) / 2,
         centre: middle,
       ),
-      doc.BodyShape.capsule => body.copyWith(
+      doc.BodyShape.capsule || doc.BodyShape.cylinder => body.copyWith(
         radius: math.max(size.x, size.z) / 2,
         height: size.y,
+        centre: middle,
+      ),
+      doc.BodyShape.hull => body.copyWith(
+        hull: _hullAround(bounds, middle),
         centre: middle,
       ),
       // Ground is the top of the mesh: a floor tile is stood on, not in.
@@ -469,6 +511,52 @@ class _BodySection extends StatelessWidget {
         centre: Vector3(middle.x, bounds.max.y, middle.z),
       ),
     };
+  }
+
+  /// [body] with [shape], and a hull that has no points yet cut from the mesh
+  /// so that choosing Hull gives a body that works.
+  doc.BodyComponent _reshaped(doc.BodyComponent body, doc.BodyShape shape) {
+    final next = body.copyWith(shape: shape);
+    return shape == doc.BodyShape.hull && next.hull.isEmpty
+        ? _fitted(next)
+        : next;
+  }
+
+  /// How big the object is in its own space. A place with nothing drawn is
+  /// the metre box a new body starts as, not the two metre placeholder.
+  ({Vector3 min, Vector3 max}) _boundsOfObject() {
+    if (!_object.isDrawable) {
+      return (min: Vector3.all(-0.5), max: Vector3.all(0.5));
+    }
+    return boundsOf?.call(_object) ?? _object.localBounds();
+  }
+
+  /// The corners of the mesh's hull, written flat and measured from [middle].
+  ///
+  /// The corners of [bounds] when the editor holds no geometry for the object,
+  /// as for an imported model, or when its points enclose no volume.
+  List<double> _hullAround(
+    ({Vector3 min, Vector3 max}) bounds,
+    Vector3 middle,
+  ) {
+    final mesh = _object.isDrawable ? _object.currentMesh : null;
+    final fromMesh = mesh == null || mesh.isEmpty
+        ? ConvexOutline.none
+        : ConvexOutline.around(mesh.positions);
+    final corners = fromMesh.hasVolume
+        ? fromMesh.corners
+        : [
+            for (final x in [bounds.min.x, bounds.max.x])
+              for (final y in [bounds.min.y, bounds.max.y])
+                for (final z in [bounds.min.z, bounds.max.z]) Vector3(x, y, z),
+          ];
+    return [
+      for (final corner in corners) ...[
+        corner.x - middle.x,
+        corner.y - middle.y,
+        corner.z - middle.z,
+      ],
+    ];
   }
 
   static T _key<T>(Map<T, String> labels, String label) =>
