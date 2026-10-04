@@ -297,6 +297,76 @@ void main() {
       expect(box.bottom, closeTo(ys.reduce(math.max), 1e-3));
     });
 
+    testWidgets('a compound gizmo shows its child centres and exact scaling', (
+      tester,
+    ) async {
+      final compound = await drawn(
+        tester,
+        EditorScene([
+          crate(
+            body: doc.BodyComponent(
+              shape: doc.BodyShape.compound,
+              parts: [
+                doc.BodyPart(
+                  size: Vector3.all(1),
+                  centre: Vector3(2, 0, 0),
+                  scale: Vector3(2, 1, 0.5),
+                ),
+              ],
+            ),
+            scale: Vector3(1, 2, 1),
+          ),
+        ]),
+      );
+      final box = await drawn(
+        tester,
+        EditorScene([
+          crate(
+            body: doc.BodyComponent(
+              size: Vector3(2, 1, 0.5),
+              centre: Vector3(2, 0, 0),
+            ),
+            scale: Vector3(1, 2, 1),
+          ),
+        ]),
+      );
+      expectSame(compound, box);
+    });
+
+    testWidgets(
+      'a shape scale draws the same ellipsoid as a single scaled part',
+      (tester) async {
+        final scaled = await drawn(
+          tester,
+          EditorScene([
+            crate(
+              body: doc.BodyComponent(
+                shape: doc.BodyShape.sphere,
+                shapeScale: Vector3(2, 1, 0.5),
+              ),
+            ),
+          ]),
+        );
+        final part = await drawn(
+          tester,
+          EditorScene([
+            crate(
+              body: doc.BodyComponent(
+                shape: doc.BodyShape.compound,
+                parts: [
+                  doc.BodyPart(
+                    shape: doc.BodyShape.sphere,
+                    scale: Vector3(2, 1, 0.5),
+                  ),
+                ],
+              ),
+            ),
+          ]),
+        );
+        expectSame(scaled, part);
+      },
+    );
+
     testWidgets('a ball takes the largest of its scales', (tester) async {
       // The simulation cannot stretch a ball, so neither does the drawing: it
       // is the ball the physics will use, not an egg nobody simulates.

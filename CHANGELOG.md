@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.0+7
+
+- Add Compound to body shapes, controls for local parts and shape scaling, and collider outlines for their transformed geometry.
+
+
 ## 1.5.0
 
 - Give a body a cylinder or a convex hull from the Shape rows. A cylinder has

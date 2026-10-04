@@ -87,7 +87,14 @@ class _Outline extends WorldLines {
       y: turning.getColumn(1),
       z: turning.getColumn(2),
     );
-    _shape(body, world.transformed3(body.centre), axes, scale);
+    final centre = world.transformed3(body.centre);
+    if (body.shape == doc.BodyShape.compound ||
+        body.shapeScale != Vector3.all(1)) {
+      scale.multiply(body.shapeScale);
+      _shape(body, centre, _stretched(axes, scale), Vector3.all(1));
+      return;
+    }
+    _shape(body, centre, axes, scale);
   }
 
   void _shape(
@@ -97,6 +104,10 @@ class _Outline extends WorldLines {
     Vector3 scale,
   ) {
     switch (body.shape) {
+      case doc.BodyShape.compound:
+        for (final part in body.parts) {
+          _part(part, centre, axes);
+        }
       case doc.BodyShape.box:
         final half = (body.size.clone()..multiply(scale))
           ..absolute()
@@ -123,6 +134,33 @@ class _Outline extends WorldLines {
       case doc.BodyShape.plane:
         _ground(centre, axes);
     }
+  }
+
+  void _part(doc.BodyPart part, Vector3 centre, _Axes axes) {
+    if (part.shape == doc.BodyShape.compound ||
+        part.shape == doc.BodyShape.plane) {
+      return;
+    }
+    Vector3 mapped(Vector3 p) => axes.x * p.x + axes.y * p.y + axes.z * p.z;
+    final rotation = part.rotation.clone()..normalize();
+    final turn = rotation.asRotationMatrix();
+    final ownAxes = _stretched((
+      x: mapped(turn.getColumn(0)),
+      y: mapped(turn.getColumn(1)),
+      z: mapped(turn.getColumn(2)),
+    ), part.scale);
+    _shape(
+      doc.BodyComponent(
+        shape: part.shape,
+        size: part.size,
+        radius: part.radius,
+        height: part.height,
+        hull: part.hull,
+      ),
+      centre + mapped(part.centre),
+      ownAxes,
+      Vector3.all(1),
+    );
   }
 
   /// [axes] each made as long as the matching part of [by].

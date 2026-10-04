@@ -7,6 +7,7 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'commands.dart';
+import 'body_parts.dart';
 import 'convex_outline.dart';
 import 'inspector.dart';
 import 'scene.dart';
@@ -79,6 +80,7 @@ class _BodySection extends StatelessWidget {
     doc.BodyShape.capsule: 'Capsule',
     doc.BodyShape.cylinder: 'Cylinder',
     doc.BodyShape.hull: 'Hull',
+    doc.BodyShape.compound: 'Compound',
     doc.BodyShape.plane: 'Ground',
   };
 
@@ -170,6 +172,21 @@ class _BodySection extends StatelessWidget {
             minimum: 0.01,
           ),
         if (body.shape == doc.BodyShape.hull) _hullNote(body),
+        if (body.shape == doc.BodyShape.compound)
+          BodyParts(
+            read: () => physicsBodyOf(_object) ?? body,
+            put: _put,
+            settle: target.history.seal,
+            listenable: target.history,
+            hull: _fitted(body.copyWith(shape: doc.BodyShape.hull)).hull,
+          ),
+        if (!ground)
+          _drag(
+            'Shape scale',
+            (body) => body.shapeScale.storage,
+            (body, values) => body.copyWith(shapeScale: Vector3.array(values)),
+            minimum: 0.01,
+          ),
         _drag(
           ground ? 'Surface at' : 'Centre',
           (body) => body.centre.storage,
@@ -263,7 +280,7 @@ class _BodySection extends StatelessWidget {
     );
   }
 
-  /// Every shape as a toggle, in rows of three because six labels do not fit
+  /// Every shape as a toggle, in rows of three because the labels do not fit
   /// across the panel.
   List<Widget> _shapeRows(doc.BodyComponent body) {
     const across = 3;
@@ -272,7 +289,10 @@ class _BodySection extends StatelessWidget {
       for (var first = 0; first < labels.length; first += across)
         ChoiceRow(
           label: first == 0 ? 'Shape' : '',
-          options: labels.sublist(first, first + across),
+          options: labels.sublist(
+            first,
+            math.min(first + across, labels.length),
+          ),
           selected: _shapes[body.shape]!,
           onSelect: (label) => _choose(_reshaped(body, _key(_shapes, label))),
         ),
@@ -492,6 +512,10 @@ class _BodySection extends StatelessWidget {
     final middle = (bounds.min + bounds.max) * 0.5;
 
     return switch (body.shape) {
+      doc.BodyShape.compound => body.copyWith(
+        parts: [doc.BodyPart(size: size)],
+        centre: middle,
+      ),
       doc.BodyShape.box => body.copyWith(size: size, centre: middle),
       doc.BodyShape.sphere => body.copyWith(
         radius: math.max(size.x, math.max(size.y, size.z)) / 2,
@@ -517,6 +541,9 @@ class _BodySection extends StatelessWidget {
   /// so that choosing Hull gives a body that works.
   doc.BodyComponent _reshaped(doc.BodyComponent body, doc.BodyShape shape) {
     final next = body.copyWith(shape: shape);
+    if (shape == doc.BodyShape.compound && next.parts.isEmpty) {
+      return _fitted(next);
+    }
     return shape == doc.BodyShape.hull && next.hull.isEmpty
         ? _fitted(next)
         : next;

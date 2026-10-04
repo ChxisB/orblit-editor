@@ -96,6 +96,26 @@ void main() {
       expect(body.size, Vector3.all(2));
     });
 
+    testWidgets('compound parts survive save, removal and undo', (
+      tester,
+    ) async {
+      await open(tester);
+      await tester.tap(row('Crate'));
+      await tester.pumpAndSettle();
+      await tapInInspector(tester, 'Add body');
+      await tapInInspector(tester, 'Compound');
+      await tapInInspector(tester, 'Add part');
+      await save(tester);
+      expect(savedBody('crate')!.parts.length, 2);
+      expect(wireframe, findsOneWidget);
+      await tapInInspector(tester, 'Remove part 2');
+      await save(tester);
+      expect(savedBody('crate')!.parts.length, 1);
+      await undo(tester);
+      await save(tester);
+      expect(savedBody('crate')!.parts.length, 2);
+    });
+
     testWidgets('becomes a cylinder, and is fitted to what is drawn', (
       tester,
     ) async {
