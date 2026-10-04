@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.7.0+8
+
+- Make fixed mesh colliders from imported models or edited geometry.
+- Show triangle outlines and preserve collision geometry through save and undo.
+
+
 ## 1.6.0+7
 
 - Add Compound to body shapes, controls for local parts and shape scaling, and collider outlines for their transformed geometry.

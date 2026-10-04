@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/collision_button.dart';
 import 'package:orblit_editor/src/editor/scene_document.dart';
 import 'package:orblit_editor/src/editor/viewport.dart';
 import 'package:orblit_scene/orblit_scene.dart' as doc;
+import 'package:orblit_mesh/orblit_mesh.dart' as mesh;
 import 'package:path/path.dart' as p;
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
@@ -94,6 +96,42 @@ void main() {
       expect(body.shape, doc.BodyShape.sphere);
       // Written whole, so switching back is the box it was.
       expect(body.size, Vector3.all(2));
+    });
+
+    testWidgets('model triangles survive save, removal and undo', (
+      tester,
+    ) async {
+      final object = SceneObject(
+        id: 'model',
+        name: 'Cube',
+        kind: ObjectKind.shape,
+        shape: const mesh.Shape(kind: mesh.ShapeKind.cube),
+      );
+      File(p.join(root.path, 'scenes', 'main$sceneExtension'))
+          .writeAsStringSync(SceneDocument.encode(EditorScene([object])));
+      await open(tester);
+      await tester.tap(row('Cube'));
+      await tester.pumpAndSettle();
+      final collide = find.byType(CollisionButton);
+      await reach(tester, collide);
+      await tester.ensureVisible(collide);
+      await tester.pumpAndSettle();
+      await tester.tap(collide);
+      await tester.pumpAndSettle();
+      await save(tester);
+      final text = File(p.join(root.path, 'scenes', 'main$sceneExtension'))
+          .readAsStringSync();
+      final document = doc.SceneDocument.decode(text).document;
+      final cube = document.entities.firstWhere((e) => e.name == 'Cube');
+      final body = cube[doc.SceneComponents.body] as doc.BodyComponent;
+      expect(body.shape, doc.BodyShape.mesh);
+      expect(body.motion, doc.BodyMotion.fixed);
+      expect(body.meshIndices.length, 36);
+      expect(wireframe, findsOneWidget);
+      await tapInInspector(tester, 'Remove body');
+      await undo(tester);
+      await save(tester);
+      expect(savedBody(cube.id)!.meshIndices, body.meshIndices);
     });
 
     testWidgets('compound parts survive save, removal and undo', (

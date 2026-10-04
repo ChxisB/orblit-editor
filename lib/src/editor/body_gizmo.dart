@@ -104,6 +104,13 @@ class _Outline extends WorldLines {
     Vector3 scale,
   ) {
     switch (body.shape) {
+      case doc.BodyShape.mesh:
+        _mesh(
+          centre,
+          _stretched(axes, scale),
+          body.meshVertices,
+          body.meshIndices,
+        );
       case doc.BodyShape.compound:
         for (final part in body.parts) {
           _part(part, centre, axes);
@@ -136,8 +143,29 @@ class _Outline extends WorldLines {
     }
   }
 
+  void _mesh(
+    Vector3 centre,
+    _Axes axes,
+    List<double> vertices,
+    List<int> indices,
+  ) {
+    Vector3 point(int i) =>
+        centre +
+        axes.x * vertices[i * 3] +
+        axes.y * vertices[i * 3 + 1] +
+        axes.z * vertices[i * 3 + 2];
+    for (var i = 0; i + 2 < indices.length; i += 3) {
+      final triangle = indices.sublist(i, i + 3);
+      if (triangle.any((v) => v < 0 || v * 3 + 2 >= vertices.length)) continue;
+      for (var k = 0; k < 3; k++) {
+        line(point(triangle[k]), point(triangle[(k + 1) % 3]));
+      }
+    }
+  }
+
   void _part(doc.BodyPart part, Vector3 centre, _Axes axes) {
-    if (part.shape == doc.BodyShape.compound ||
+    if (part.shape == doc.BodyShape.mesh ||
+        part.shape == doc.BodyShape.compound ||
         part.shape == doc.BodyShape.plane) {
       return;
     }

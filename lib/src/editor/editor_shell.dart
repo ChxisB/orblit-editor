@@ -16,6 +16,7 @@ import 'asset_browser.dart';
 import 'assets.dart';
 import 'body_gizmo.dart';
 import 'body_section.dart';
+import 'collision_model.dart';
 import 'cinematics_mode.dart';
 import 'clip_bench.dart';
 import 'clip_preview.dart';

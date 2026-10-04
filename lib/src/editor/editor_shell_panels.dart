@@ -231,6 +231,7 @@ extension _Panels on _EditorShellState {
     sections.register(
       bodySection(
         boundsOf: (object) => object.localBounds(reported: _models.of(object)),
+        collisionOf: ModelCollision(widget.project.directory).read,
       ),
       before: 'interface',
     );

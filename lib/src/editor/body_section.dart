@@ -1,12 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:orblit_asset/orblit_asset.dart';
 import 'package:orblit_scene/orblit_scene.dart' as doc;
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import 'commands.dart';
+import 'collision_button.dart';
 import 'body_parts.dart';
 import 'convex_outline.dart';
 import 'inspector.dart';
@@ -34,7 +36,9 @@ doc.ZoneComponent? zoneOf(SceneObject object) =>
 /// Whether the solver moves [body]. Ground never moves, whatever its file
 /// says.
 bool movesFreely(doc.BodyComponent body) =>
-    body.motion == doc.BodyMotion.free && body.shape != doc.BodyShape.plane;
+    body.motion == doc.BodyMotion.free &&
+    body.shape != doc.BodyShape.plane &&
+    body.shape != doc.BodyShape.mesh;
 
 /// Whether [object] is a place rather than a thing: a body that asks to be a
 /// trigger, or that is a zone's region. The solver moves a free body and
@@ -54,7 +58,12 @@ typedef BoundsOf = ({Vector3 min, Vector3 max}) Function(SceneObject object);
 /// because the inspector has no idea what a body is and should not need one.
 /// [boundsOf] is how big each mesh is, which the shell knows and the
 /// inspector does not: an imported model's size comes from the file.
-InspectorSection bodySection({BoundsOf? boundsOf}) => InspectorSection(
+typedef CollisionOf = Future<CollisionMesh> Function(SceneObject object);
+
+InspectorSection bodySection({
+  BoundsOf? boundsOf,
+  CollisionOf? collisionOf,
+}) => InspectorSection(
   name: 'body',
   // What something can stand on or knock over: anything drawn, and a place in
   // the tree for a trigger with nothing to draw. Lights, cameras and the
@@ -63,14 +72,23 @@ InspectorSection bodySection({BoundsOf? boundsOf}) => InspectorSection(
       physicsBodyOf(target.object) != null ||
       target.object.isDrawable ||
       target.object.kind == ObjectKind.group,
-  build: (target) => _BodySection(target: target, boundsOf: boundsOf),
+  build: (target) => _BodySection(
+    target: target,
+    boundsOf: boundsOf,
+    collisionOf: collisionOf,
+  ),
 );
 
 class _BodySection extends StatelessWidget {
-  const _BodySection({required this.target, required this.boundsOf});
+  const _BodySection({
+    required this.target,
+    required this.boundsOf,
+    required this.collisionOf,
+  });
 
   final InspectorTarget target;
   final BoundsOf? boundsOf;
+  final CollisionOf? collisionOf;
 
   SceneObject get _object => target.object;
 
@@ -82,6 +100,7 @@ class _BodySection extends StatelessWidget {
     doc.BodyShape.hull: 'Hull',
     doc.BodyShape.compound: 'Compound',
     doc.BodyShape.plane: 'Ground',
+    doc.BodyShape.mesh: 'Mesh',
   };
 
   /// The most corners the physics world keeps of a hull.
@@ -107,23 +126,47 @@ class _BodySection extends StatelessWidget {
     );
   }
 
-  Widget _absent() => OrblitButton(
-    label: 'Add body',
-    tooltip: 'Give this object a shape for physics.',
-    icon: Icons.add,
-    tone: ButtonTone.quiet,
-    expand: true,
-    onPressed: () => _put(
-      // A drawn thing gets a body its own shape, which is what somebody adding
-      // one to a crate means. A place in the tree gets a metre box to start.
-      _object.isDrawable ? _fitted(doc.BodyComponent()) : doc.BodyComponent(),
-      label: 'Add body to ${_object.name}',
+  Widget _absent() => Column(
+    children: [
+      if (collisionOf != null && _object.isDrawable) _collisionButton(),
+      OrblitButton(
+        label: 'Add body',
+        tooltip: 'Give this object a shape for physics.',
+        icon: Icons.add,
+        tone: ButtonTone.quiet,
+        expand: true,
+        onPressed: () => _put(
+          // A drawn thing gets a body its own shape, which is what somebody adding
+          // one to a crate means. A place in the tree gets a metre box to start.
+          _object.isDrawable
+              ? _fitted(doc.BodyComponent())
+              : doc.BodyComponent(),
+          label: 'Add body to ${_object.name}',
+          alone: true,
+        ),
+      ),
+    ],
+  );
+
+  Widget _collisionButton() => CollisionButton(
+    read: () => collisionOf!(_object),
+    put: (geometry) => _put(
+      (physicsBodyOf(_object) ?? doc.BodyComponent()).copyWith(
+        shape: doc.BodyShape.mesh,
+        motion: doc.BodyMotion.fixed,
+        meshVertices: geometry.vertices,
+        meshIndices: geometry.indices,
+        centre: Vector3.zero(),
+        shapeScale: Vector3.all(1),
+      ),
+      label: 'Collide with ${_object.name}',
       alone: true,
     ),
   );
 
   Widget _present(doc.BodyComponent body) {
-    final ground = body.shape == doc.BodyShape.plane;
+    final ground =
+        body.shape == doc.BodyShape.plane || body.shape == doc.BodyShape.mesh;
     final free = movesFreely(body);
     final place = isPlace(_object);
 
@@ -172,6 +215,10 @@ class _BodySection extends StatelessWidget {
             minimum: 0.01,
           ),
         if (body.shape == doc.BodyShape.hull) _hullNote(body),
+        if (body.shape == doc.BodyShape.mesh)
+          _Note(
+            '${body.meshIndices.length ~/ 3} triangles. Fixed, two-sided surface.',
+          ),
         if (body.shape == doc.BodyShape.compound)
           BodyParts(
             read: () => physicsBodyOf(_object) ?? body,
@@ -180,7 +227,7 @@ class _BodySection extends StatelessWidget {
             listenable: target.history,
             hull: _fitted(body.copyWith(shape: doc.BodyShape.hull)).hull,
           ),
-        if (!ground)
+        if (body.shape != doc.BodyShape.plane)
           _drag(
             'Shape scale',
             (body) => body.shapeScale.storage,
@@ -188,7 +235,7 @@ class _BodySection extends StatelessWidget {
             minimum: 0.01,
           ),
         _drag(
-          ground ? 'Surface at' : 'Centre',
+          body.shape == doc.BodyShape.plane ? 'Surface at' : 'Centre',
           (body) => body.centre.storage,
           (body, values) => body.copyWith(centre: Vector3.array(values)),
         ),
@@ -247,9 +294,10 @@ class _BodySection extends StatelessWidget {
         ],
         ..._layers(body),
         const SizedBox(height: Space.xs),
+        if (collisionOf != null && _object.isDrawable) _collisionButton(),
         OrblitButtonRow(
           buttons: [
-            if (_object.isDrawable)
+            if (_object.isDrawable && body.shape != doc.BodyShape.mesh)
               OrblitButton(
                 label: 'Fit to mesh',
                 tooltip: 'Resize the physics shape to fit this object.',
@@ -512,6 +560,7 @@ class _BodySection extends StatelessWidget {
     final middle = (bounds.min + bounds.max) * 0.5;
 
     return switch (body.shape) {
+      doc.BodyShape.mesh => body,
       doc.BodyShape.compound => body.copyWith(
         parts: [doc.BodyPart(size: size)],
         centre: middle,
