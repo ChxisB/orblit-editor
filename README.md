@@ -12,13 +12,15 @@ of empty states is worse than a screen that asks one question.
 
 ## What works
 
-- **Launcher.** Recent projects, with their paths and when they were last
-  opened. A project whose folder has moved is marked rather than hidden, and
-  you can open a folder that already holds a project.
+- **Launcher.** Template cards to start from, and recent projects with their
+  paths and when they were last opened. A project whose folder has moved is
+  marked rather than hidden, and you can open a folder that already holds a
+  project.
 - **New project.** Name, location and a template, with the folder path shown
   before it is created, so nobody is surprised by where their project went.
-- **Editor shell.** Outliner, viewport region, inspector and status bar, with
-  the transport where every editor puts it.
+- **Editor shell.** A top bar, a workspace rail, and panels for the outliner,
+  viewport, inspector and project. Cmd+K searches commands and objects. The
+  play controls sit in the scene view's header.
 - **Workspaces.** Scene, Modelling, Terrain, Animation and Interface each
   have their own panels. View saves named layouts, resets the current
   workspace and focuses the view. Stats reveals performance numbers.
