@@ -10,9 +10,18 @@ final class FilterField extends StatefulWidget {
     required this.controller,
     required this.hint,
     required this.onChanged,
+    this.height = 28,
+    this.fill = OrblitColors.raised,
+    this.radius = Radii.control,
   });
 
   final TextEditingController controller;
+
+  /// A taller, rounder field with a lighter fill sits on a page rather than in
+  /// a panel, so the page can ask for it.
+  final double height;
+  final Color fill;
+  final double radius;
 
   /// What the field says when it is empty, which is also its name for
   /// anything that reads the screen aloud.
@@ -32,11 +41,11 @@ class _FilterFieldState extends State<FilterField> {
     canRequestFocus: false,
     onFocusChange: (focused) => setState(() => _focused = focused),
     child: Container(
-      height: 28,
+      height: widget.height,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: OrblitColors.raised,
-        borderRadius: BorderRadius.circular(Radii.control),
+        color: widget.fill,
+        borderRadius: BorderRadius.circular(widget.radius),
         border: Border.all(
           color: _focused ? OrblitColors.ember : Colors.transparent,
         ),

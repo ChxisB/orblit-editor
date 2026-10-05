@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
+import '../widgets/orblit_mark.dart';
 import 'create_view.dart';
 import 'examples_view.dart';
 import 'project.dart';
@@ -46,6 +47,7 @@ class _LauncherScreenState extends State<LauncherScreen> {
 
   final ProjectStore _store = ProjectStore();
   _View _view = _View.projects;
+  ProjectTemplate _template = ProjectTemplate.scene;
   List<Project> _recents = const [];
   bool _loading = true;
 
@@ -79,6 +81,11 @@ class _LauncherScreenState extends State<LauncherScreen> {
     widget.onOpen(project);
   }
 
+  void _startFrom(ProjectTemplate template) => setState(() {
+    _template = template;
+    _view = _View.create;
+  });
+
   void _complain(String title, String detail) {
     showDialog<void>(
       context: context,
@@ -96,7 +103,6 @@ class _LauncherScreenState extends State<LauncherScreen> {
             _Rail(
               view: _view,
               onView: (view) => setState(() => _view = view),
-              onOpenFolder: _openFolder,
             ),
           Expanded(
             child: Container(
@@ -118,10 +124,13 @@ class _LauncherScreenState extends State<LauncherScreen> {
                       await _store.forget(project);
                       await _load();
                     },
-                    onCreate: () => setState(() => _view = _View.create),
+                    onCreate: () => _startFrom(ProjectTemplate.scene),
+                    onTemplate: _startFrom,
+                    onOpenFolder: _openFolder,
                   ),
                 _View.create => CreateView(
                     store: _store,
+                    template: _template,
                     onCancel: () => setState(() => _view = _View.projects),
                     onCreated: widget.onOpen,
                     onFailed: _complain,
@@ -141,107 +150,67 @@ class _LauncherScreenState extends State<LauncherScreen> {
   }
 }
 
-/// The left rail: identity, then the two things a launcher can do.
+/// The left rail: identity, then the two places a launcher goes.
 class _Rail extends StatelessWidget {
-  const _Rail({
-    required this.view,
-    required this.onView,
-    required this.onOpenFolder,
-  });
+  const _Rail({required this.view, required this.onView});
 
   final _View view;
   final ValueChanged<_View> onView;
-  final VoidCallback onOpenFolder;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 232,
-      decoration: const BoxDecoration(
-        color: OrblitColors.surface,
-        border: Border(right: BorderSide(color: OrblitColors.lineSoft)),
+      color: OrblitColors.surface,
+      padding: const EdgeInsets.symmetric(
+        horizontal: Space.md,
+        vertical: Space.xl,
       ),
-      padding: const EdgeInsets.fromLTRB(Space.lg, Space.xxl, Space.lg, Space.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: Space.xl,
         children: [
-          Row(
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: Space.sm),
+            child: Row(
+              spacing: 10,
+              children: [
+                OrblitMark(size: 26),
+                Text('Orblit', style: OrblitText.title),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 2,
             children: [
-              const _Mark(),
-              const SizedBox(width: Space.md),
-              // Constrained rather than left to its natural width: the rail is
-              // a fixed size and the version string is not, so an unbounded
-              // column here overflows the moment either changes.
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Orblit',
-                        style: OrblitText.title, overflow: TextOverflow.ellipsis),
-                    Text(
-                      'Engine 0.1.0 · pre-alpha',
-                      style: OrblitText.caption.copyWith(fontSize: 11),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
+              _RailItem(
+                label: 'Projects',
+                icon: Icons.folder_outlined,
+                // Making a project is part of this page, so it keeps the mark.
+                selected: view != _View.examples,
+                onTap: () => onView(_View.projects),
+              ),
+              _RailItem(
+                label: 'Examples',
+                icon: Icons.auto_stories_outlined,
+                selected: view == _View.examples,
+                onTap: () => onView(_View.examples),
               ),
             ],
           ),
-          const SizedBox(height: Space.xl),
-          _RailItem(
-            label: 'Projects',
-            icon: Icons.folder_outlined,
-            selected: view == _View.projects,
-            onTap: () => onView(_View.projects),
-          ),
-          _RailItem(
-            label: 'New project',
-            icon: Icons.add_box_outlined,
-            selected: view == _View.create,
-            onTap: () => onView(_View.create),
-          ),
-          _RailItem(
-            label: 'Examples',
-            icon: Icons.auto_stories_outlined,
-            selected: view == _View.examples,
-            onTap: () => onView(_View.examples),
-          ),
           const Spacer(),
-          OrblitButton(
-            label: 'Open a folder…',
-            icon: Icons.folder_open_outlined,
-            tone: ButtonTone.quiet,
-            expand: true,
-            onPressed: onOpenFolder,
+          // Constrained rather than left to its natural width: the rail is a
+          // fixed size and the version string is not.
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: Space.sm),
+            child: Text(
+              'Engine 0.1.0 · pre-alpha',
+              overflow: TextOverflow.ellipsis,
+              style: OrblitText.mono,
+            ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// The mark. A cube seen corner-on, which is both what the engine draws first
-/// and the shape an orbit is drawn around.
-class _Mark extends StatelessWidget {
-  const _Mark();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 30,
-      height: 30,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [OrblitColors.ember, OrblitColors.emberDeep],
-        ),
-        borderRadius: BorderRadius.circular(Radii.control),
-      ),
-      child: const Center(
-        child: Icon(Icons.view_in_ar_outlined, size: 18, color: Color(0xFF1A1206)),
       ),
     );
   }
@@ -269,9 +238,7 @@ class _RailItemState extends State<_RailItem> {
 
   @override
   Widget build(BuildContext context) {
-    final colour = widget.selected
-        ? OrblitColors.ember
-        : (_hovering ? OrblitColors.ink : OrblitColors.inkMid);
+    final selected = widget.selected;
 
     return MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -280,27 +247,27 @@ class _RailItemState extends State<_RailItem> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          height: 34,
-          margin: const EdgeInsets.only(bottom: Space.xs),
-          padding: const EdgeInsets.symmetric(horizontal: Space.sm),
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
-            // Selection is a wash rather than a fill: the rail should read as
-            // one surface with something marked on it, not as stacked buttons.
-            color: widget.selected
-                ? OrblitColors.emberWash
-                : (_hovering ? OrblitColors.raised : Colors.transparent),
-            borderRadius: BorderRadius.circular(Radii.control),
+            color: selected
+                ? OrblitColors.raised
+                : (_hovering ? OrblitColors.hover : Colors.transparent),
+            borderRadius: BorderRadius.circular(Radii.card),
           ),
           child: Row(
+            spacing: 10,
             children: [
-              Icon(widget.icon, size: 16, color: colour),
-              const SizedBox(width: Space.md),
+              Icon(
+                widget.icon,
+                size: 16,
+                color: selected ? OrblitColors.ember : OrblitColors.inkMid,
+              ),
               Text(
                 widget.label,
                 style: OrblitText.label.copyWith(
-                  color: colour,
-                  fontWeight:
-                      widget.selected ? FontWeight.w600 : FontWeight.w500,
+                  fontSize: 13,
+                  color: selected ? OrblitColors.ink : OrblitColors.inkMid,
                 ),
               ),
             ],

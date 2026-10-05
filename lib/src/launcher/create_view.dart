@@ -17,7 +17,11 @@ class CreateView extends StatefulWidget {
     required this.onCancel,
     required this.onCreated,
     required this.onFailed,
+    this.template = ProjectTemplate.scene,
   });
+
+  /// The template that starts out chosen.
+  final ProjectTemplate template;
 
   final ProjectStore store;
   final VoidCallback onCancel;
@@ -41,7 +45,7 @@ class _CreateViewState extends State<CreateView> {
     ),
   );
 
-  ProjectTemplate _template = ProjectTemplate.scene;
+  late ProjectTemplate _template = widget.template;
   bool _creating = false;
 
   @override

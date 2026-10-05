@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
-import 'launcher_screen.dart' show ago;
+import '../widgets/filter_field.dart';
 import 'project.dart';
+import 'project_cards.dart';
 
-/// The list of projects the editor has opened.
-class ProjectsView extends StatelessWidget {
+/// The launcher's home: ways to start a project, then the ones already opened.
+class ProjectsView extends StatefulWidget {
   const ProjectsView({
     super.key,
     required this.loading,
@@ -14,6 +15,8 @@ class ProjectsView extends StatelessWidget {
     required this.onOpen,
     required this.onForget,
     required this.onCreate,
+    required this.onTemplate,
+    required this.onOpenFolder,
   });
 
   final bool loading;
@@ -21,306 +24,224 @@ class ProjectsView extends StatelessWidget {
   final ValueChanged<Project> onOpen;
   final ValueChanged<Project> onForget;
   final VoidCallback onCreate;
+  final ValueChanged<ProjectTemplate> onTemplate;
+  final VoidCallback onOpenFolder;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(Space.xxl, Space.xxl, Space.xxl, Space.lg),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
+  State<ProjectsView> createState() => _ProjectsViewState();
+}
+
+class _ProjectsViewState extends State<ProjectsView> {
+  final TextEditingController _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  List<Project> get _matching => [
+    for (final project in widget.projects)
+      if (project.name.toLowerCase().contains(_query)) project,
+  ];
+
+  @override
+  Widget build(BuildContext context) => SingleChildScrollView(
+    padding: const EdgeInsets.all(Space.xxl),
+    child: Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1120),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: Space.xxl,
+          children: [
+            _Header(
+              search: _search,
+              onSearch: (text) =>
+                  setState(() => _query = text.trim().toLowerCase()),
+              onOpenFolder: widget.onOpenFolder,
+              onCreate: widget.onCreate,
+            ),
+            _Section(
+              title: 'Start from a template',
+              child: CardGrid(
                 children: [
-                  const Text('Projects', style: OrblitText.display),
-                  const SizedBox(height: Space.xs),
-                  Text(
-                    projects.isEmpty
-                        ? 'Nothing here yet.'
-                        : '${projects.length} recent',
-                    style: OrblitText.caption,
-                  ),
+                  for (final template in ProjectTemplate.values)
+                    TemplateCard(
+                      template: template,
+                      onTap: () => widget.onTemplate(template),
+                    ),
                 ],
               ),
-              const Spacer(),
-              OrblitButton(
-                label: 'New project',
-                icon: Icons.add,
-                tone: ButtonTone.primary,
-                onPressed: onCreate,
+            ),
+            _Section(
+              title: 'Recent',
+              child: _Recent(
+                loading: widget.loading,
+                anyOpened: widget.projects.isNotEmpty,
+                shown: _matching,
+                onOpen: widget.onOpen,
+                onForget: widget.onForget,
               ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: loading
-              ? const SizedBox.shrink()
-              : projects.isEmpty
-                  ? _Empty(onCreate: onCreate)
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(
-                          Space.xxl, 0, Space.xxl, Space.xxl),
-                      itemCount: projects.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(height: Space.sm),
-                      itemBuilder: (context, index) => ProjectRow(
-                        project: projects[index],
-                        onOpen: () => onOpen(projects[index]),
-                        onForget: () => onForget(projects[index]),
-                      ),
-                    ),
-        ),
-      ],
-    );
-  }
-}
-
-/// One project in the list.
-class ProjectRow extends StatefulWidget {
-  const ProjectRow({
-    super.key,
-    required this.project,
-    required this.onOpen,
-    required this.onForget,
-  });
-
-  final Project project;
-  final VoidCallback onOpen;
-  final VoidCallback onForget;
-
-  @override
-  State<ProjectRow> createState() => _ProjectRowState();
-}
-
-class _ProjectRowState extends State<ProjectRow> {
-  bool _hovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    // A project whose folder has gone is shown rather than hidden, so somebody
-    // who moved a directory sees why it will not open instead of wondering
-    // where their work went.
-    final missing = !widget.project.exists;
-
-    return MouseRegion(
-      cursor: missing ? SystemMouseCursors.basic : SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      child: GestureDetector(
-        onTap: widget.onOpen,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 90),
-          padding: const EdgeInsets.all(Space.md),
-          decoration: BoxDecoration(
-            color: _hovering ? OrblitColors.raised : OrblitColors.surface,
-            borderRadius: BorderRadius.circular(Radii.card),
-            border: Border.all(
-              color: _hovering ? OrblitColors.line : OrblitColors.lineSoft,
-            ),
-          ),
-          child: Row(
-            children: [
-              _Thumbnail(missing: missing),
-              const SizedBox(width: Space.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            widget.project.name,
-                            overflow: TextOverflow.ellipsis,
-                            style: OrblitText.title.copyWith(
-                              fontSize: 14,
-                              color: missing
-                                  ? OrblitColors.inkDim
-                                  : OrblitColors.ink,
-                            ),
-                          ),
-                        ),
-                        if (missing) ...[
-                          const SizedBox(width: Space.sm),
-                          const _Tag('moved', tone: OrblitColors.warn),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      widget.project.displayPath,
-                      overflow: TextOverflow.ellipsis,
-                      style: OrblitText.mono,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: Space.md),
-              Text(ago(widget.project.lastOpened), style: OrblitText.caption),
-              SizedBox(
-                width: 34,
-                child: _hovering
-                    ? _IconAction(
-                        icon: Icons.close,
-                        tooltip: 'Remove from this list',
-                        onTap: widget.onForget,
-                      )
-                    : null,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Stands in for a scene thumbnail until scenes can render one.
-class _Thumbnail extends StatelessWidget {
-  const _Thumbnail({required this.missing});
-
-  final bool missing;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: OrblitColors.ground,
-        borderRadius: BorderRadius.circular(Radii.control),
-        border: Border.all(color: OrblitColors.lineSoft),
-      ),
-      child: Icon(
-        missing ? Icons.link_off : Icons.view_in_ar_outlined,
-        size: 19,
-        color: missing ? OrblitColors.inkDim : OrblitColors.emberDeep,
-      ),
-    );
-  }
-}
-
-class _Tag extends StatelessWidget {
-  const _Tag(this.label, {required this.tone});
-
-  final String label;
-  final Color tone;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-      decoration: BoxDecoration(
-        color: tone.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: tone.withValues(alpha: 0.4)),
-      ),
-      child: Text(
-        label,
-        style: OrblitText.caption.copyWith(fontSize: 10, color: tone),
-      ),
-    );
-  }
-}
-
-class _IconAction extends StatefulWidget {
-  const _IconAction({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  @override
-  State<_IconAction> createState() => _IconActionState();
-}
-
-class _IconActionState extends State<_IconAction> {
-  bool _hovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: widget.tooltip,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _hovering = true),
-        onExit: (_) => setState(() => _hovering = false),
-        child: GestureDetector(
-          // Stops the row's own tap from firing and opening the project.
-          onTap: () => widget.onTap(),
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            width: 26,
-            height: 26,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: _hovering ? OrblitColors.hover : Colors.transparent,
-              borderRadius: BorderRadius.circular(Radii.control),
-            ),
-            child: Icon(
-              widget.icon,
-              size: 14,
-              color: _hovering ? OrblitColors.ink : OrblitColors.inkDim,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Empty extends StatelessWidget {
-  const _Empty({required this.onCreate});
-
-  final VoidCallback onCreate;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 340),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: OrblitColors.surface,
-                borderRadius: BorderRadius.circular(Radii.card),
-                border: Border.all(color: OrblitColors.lineSoft),
-              ),
-              child: const Icon(Icons.view_in_ar_outlined,
-                  size: 28, color: OrblitColors.inkDim),
-            ),
-            const SizedBox(height: Space.lg),
-            const Text('No projects yet', style: OrblitText.title),
-            const SizedBox(height: Space.sm),
-            const Text(
-              'Make one, or open a folder that already has an '
-              '$projectFileName in it.',
-              textAlign: TextAlign.center,
-              style: OrblitText.body,
-            ),
-            const SizedBox(height: Space.xl),
-            OrblitButton(
-              label: 'New project',
-              icon: Icons.add,
-              tone: ButtonTone.primary,
-              onPressed: onCreate,
             ),
           ],
         ),
       ),
-    );
+    ),
+  );
+}
+
+class _Header extends StatelessWidget {
+  const _Header({
+    required this.search,
+    required this.onSearch,
+    required this.onOpenFolder,
+    required this.onCreate,
+  });
+
+  final TextEditingController search;
+  final ValueChanged<String> onSearch;
+  final VoidCallback onOpenFolder;
+  final VoidCallback onCreate;
+
+  @override
+  Widget build(BuildContext context) => Wrap(
+    alignment: WrapAlignment.spaceBetween,
+    crossAxisAlignment: WrapCrossAlignment.end,
+    spacing: Space.lg,
+    runSpacing: Space.lg,
+    children: [
+      const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        spacing: Space.xs,
+        children: [
+          Text('Projects', style: OrblitText.display),
+          Text(
+            'Pick up where you left off, or start something new.',
+            style: OrblitText.body,
+          ),
+        ],
+      ),
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: Space.sm,
+        children: [
+          SizedBox(
+            width: 220,
+            child: FilterField(
+              controller: search,
+              hint: 'Search projects',
+              onChanged: onSearch,
+              height: 36,
+              fill: OrblitColors.surface,
+              radius: Radii.card,
+            ),
+          ),
+          OrblitButton(
+            label: 'Open a folder',
+            icon: Icons.folder_open_outlined,
+            onPressed: onOpenFolder,
+          ),
+          OrblitButton(
+            label: 'New project',
+            icon: Icons.add,
+            tone: ButtonTone.primary,
+            onPressed: onCreate,
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
+class _Section extends StatelessWidget {
+  const _Section({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    spacing: Space.md,
+    children: [
+      Text(title, style: OrblitText.title),
+      child,
+    ],
+  );
+}
+
+/// The projects the editor has opened, or the reason there are none to show.
+class _Recent extends StatelessWidget {
+  const _Recent({
+    required this.loading,
+    required this.anyOpened,
+    required this.shown,
+    required this.onOpen,
+    required this.onForget,
+  });
+
+  final bool loading;
+
+  /// Whether the editor has opened anything at all, as opposed to whether
+  /// the search left anything standing.
+  final bool anyOpened;
+  final List<Project> shown;
+  final ValueChanged<Project> onOpen;
+  final ValueChanged<Project> onForget;
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) return const SizedBox.shrink();
+    if (shown.isNotEmpty) {
+      return CardGrid(
+        children: [
+          for (final project in shown)
+            ProjectCard(
+              project: project,
+              onOpen: () => onOpen(project),
+              onForget: () => onForget(project),
+            ),
+        ],
+      );
+    }
+    return anyOpened
+        ? const _Note(
+            title: 'Nothing matches',
+            detail: 'No project has that in its name.',
+          )
+        : const _Note(
+            title: 'No projects yet',
+            detail:
+                'Make one from a template, or open a folder that already '
+                'has an $projectFileName in it.',
+          );
   }
+}
+
+class _Note extends StatelessWidget {
+  const _Note({required this.title, required this.detail});
+
+  final String title;
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(Space.xl),
+    decoration: BoxDecoration(
+      color: OrblitColors.surface,
+      borderRadius: BorderRadius.circular(Radii.window),
+      border: Border.all(color: OrblitColors.lineSoft),
+    ),
+    child: Column(
+      spacing: Space.sm,
+      children: [
+        Text(title, style: OrblitText.title),
+        Text(detail, textAlign: TextAlign.center, style: OrblitText.body),
+      ],
+    ),
+  );
 }
