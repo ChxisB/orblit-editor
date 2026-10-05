@@ -7,6 +7,8 @@ import 'package:path/path.dart' as p;
 
 import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
+import '../widgets/filter_field.dart';
+import '../widgets/icon_tile.dart';
 import 'asset_preview.dart';
 import 'assets.dart';
 import 'cook_status.dart';
@@ -94,7 +96,17 @@ class _AssetBrowserState extends State<AssetBrowser> {
   /// Bumped to force a re-read, by the watcher or by the button.
   int _revision = 0;
 
+  /// What is typed in the filter. It is kept when a folder is opened, so a
+  /// search for "rock" can be carried through the folders that might hold one.
+  final _filter = TextEditingController();
+
   StreamSubscription<void>? _changes;
+
+  /// Narrower than this and the folders go over the files.
+  static const _stackedBelow = 360.0;
+
+  /// Narrower than this and the preview is left out.
+  static const _previewFrom = 560.0;
 
   @override
   void initState() {
@@ -126,6 +138,7 @@ class _AssetBrowserState extends State<AssetBrowser> {
   void dispose() {
     _changes?.cancel();
     widget.cookStatus?.removeListener(_onCookStatus);
+    _filter.dispose();
     super.dispose();
   }
 
@@ -237,7 +250,11 @@ class _AssetBrowserState extends State<AssetBrowser> {
   @override
   Widget build(BuildContext context) {
     // Read once per build rather than per row.
-    final entries = widget.tree.read(_directory);
+    final query = _filter.text.trim().toLowerCase();
+    final entries = [
+      for (final asset in widget.tree.read(_directory))
+        if (asset.name.toLowerCase().contains(query)) asset,
+    ];
     final folders = widget.tree.folders();
 
     return _sized(
@@ -248,16 +265,18 @@ class _AssetBrowserState extends State<AssetBrowser> {
         onCreate: _promptCreate,
         child: ColoredBox(
           color: OrblitColors.surface,
-          // Side by side where there is room for a grid worth having between
-          // the folders and the preview, and the folders over the files where
-          // there is not: the panel is as likely to be a tall strip down the
-          // side of the window as a wide one under the view.
+          // Folders beside the files where there is room for both, and a
+          // preview as well where there is room for a grid worth having
+          // between them. Under that the folders go over the files: the
+          // panel is as likely to be a tall strip down the side of the
+          // window as a wide one under the view.
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final narrow = constraints.maxWidth < 560;
+              final stacked = constraints.maxWidth < _stackedBelow;
+              final roomForPreview = constraints.maxWidth >= _previewFrom;
               final tree = _FolderTree(
                 key: ValueKey(_revision),
-                stacked: narrow,
+                stacked: stacked,
                 tree: widget.tree,
                 folders: folders,
                 current: _directory,
@@ -274,6 +293,7 @@ class _AssetBrowserState extends State<AssetBrowser> {
               final grid = _Grid(
                 key: ValueKey('$_directory/$_revision'),
                 entries: entries,
+                filtered: query.isNotEmpty,
                 cookStatus: widget.cookStatus,
                 selected: _selected,
                 onSelect: (asset) {
@@ -309,9 +329,11 @@ class _AssetBrowserState extends State<AssetBrowser> {
                     crumb: widget.tree.relative(_directory),
                     count: entries.length,
                     cookStatus: widget.cookStatus,
+                    filter: _filter,
+                    onFilter: (_) => setState(() {}),
                     // No room for a preview beside the files in a narrow
                     // panel, so no switch for one either.
-                    previewing: narrow ? null : _previewing,
+                    previewing: roomForPreview ? _previewing : null,
                     onPreview: () =>
                         setState(() => _previewing = !_previewing),
                     canGoUp: !p.equals(_directory, widget.tree.root),
@@ -323,7 +345,7 @@ class _AssetBrowserState extends State<AssetBrowser> {
                     onRefresh: () => setState(() => _revision++),
                   ),
                   Expanded(
-                    child: narrow
+                    child: stacked
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
@@ -336,7 +358,8 @@ class _AssetBrowserState extends State<AssetBrowser> {
                             children: [
                               tree,
                               Expanded(child: grid),
-                              if (_previewing) AssetPreview(asset: _showing),
+                              if (roomForPreview && _previewing)
+                                AssetPreview(asset: _showing),
                             ],
                           ),
                   ),

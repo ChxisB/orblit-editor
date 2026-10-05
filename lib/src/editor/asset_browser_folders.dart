@@ -37,7 +37,7 @@ class _FolderTree extends StatelessWidget {
             : const Border(right: edge),
       ),
       child: ListView(
-        padding: const EdgeInsets.symmetric(vertical: Space.xs),
+        padding: const EdgeInsets.fromLTRB(6, 6, 6, 8),
         children: [
           _FolderRow(
             name: 'Project',
@@ -94,14 +94,18 @@ class _FolderRowState extends State<_FolderRow> {
   bool _hovering = false;
 
   /// Whether something is being held over this row, which is worth showing:
-  /// the rows are 24 pixels apart and dropping on the wrong one is easy.
+  /// the rows are 26 pixels apart and dropping on the wrong one is easy.
   bool _catching = false;
+
+  Color get _fill {
+    if (_catching) return OrblitColors.emberWash;
+    if (widget.selected) return OrblitColors.raised;
+    return _hovering ? OrblitColors.hover : Colors.transparent;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final colour = widget.selected || _catching
-        ? OrblitColors.ember
-        : (_hovering ? OrblitColors.ink : OrblitColors.inkMid);
+    final lit = widget.selected || _hovering || _catching;
 
     final row = MouseRegion(
       cursor: SystemMouseCursors.click,
@@ -110,25 +114,37 @@ class _FolderRowState extends State<_FolderRow> {
       child: GestureDetector(
         onTap: widget.onTap,
         child: Container(
-          height: 24,
+          height: 26,
+          margin: const EdgeInsets.only(bottom: 1),
           padding: EdgeInsets.only(
             left: Space.sm + widget.depth * 12.0,
             right: Space.sm,
           ),
-          color: widget.selected || _catching
-              ? OrblitColors.emberWash
-              : (_hovering ? OrblitColors.raised : Colors.transparent),
+          decoration: BoxDecoration(
+            color: _fill,
+            borderRadius: BorderRadius.circular(Radii.control),
+            border: Border.all(
+              color: _catching ? OrblitColors.ember : Colors.transparent,
+            ),
+          ),
           child: Row(
+            spacing: Space.sm,
             children: [
-              Icon(widget.icon, size: 13, color: colour),
-              const SizedBox(width: Space.sm),
+              Icon(
+                widget.icon,
+                size: 14,
+                color: widget.selected || _catching
+                    ? OrblitColors.ember
+                    : OrblitColors.inkDim,
+              ),
               Expanded(
                 child: Text(
                   widget.name,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: OrblitText.label.copyWith(
-                    fontSize: 11.5,
-                    color: colour,
+                    fontSize: 12.5,
+                    color: lit ? OrblitColors.ink : OrblitColors.inkMid,
                   ),
                 ),
               ),

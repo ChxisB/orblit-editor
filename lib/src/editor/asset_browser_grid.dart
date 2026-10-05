@@ -16,9 +16,14 @@ class _Grid extends StatelessWidget {
     this.onBuild,
     this.onDropObject,
     this.cookStatus,
+    this.filtered = false,
   });
 
   final List<Asset> entries;
+
+  /// Whether [entries] was narrowed by the filter, which changes what an
+  /// empty list means: nothing matched, not nothing is here.
+  final bool filtered;
   final CookStatusIndex? cookStatus;
   final String? selected;
   final ValueChanged<Asset> onSelect;
@@ -35,35 +40,7 @@ class _Grid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final grid = entries.isEmpty
-        ? Center(
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'This folder is empty.',
-                    style: OrblitText.caption,
-                  ),
-                  const SizedBox(height: Space.xs),
-                  const Text(
-                    'Create a file or copy assets into this folder.',
-                    style: OrblitText.caption,
-                    textAlign: TextAlign.center,
-                  ),
-                  Builder(
-                    builder: (context) => OrblitButton(
-                      label: 'New folder or file',
-                      tooltip: 'Choose what to make in this folder.',
-                      onPressed: () {
-                        final box = context.findRenderObject()! as RenderBox;
-                        AssetMenu.open(context, box.localToGlobal(Offset.zero));
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          )
+        ? (filtered ? const _NothingMatches() : _empty())
         : _grid();
 
     // Opaque so the right-click lands on the gaps between tiles and on the
@@ -106,37 +83,85 @@ class _Grid extends StatelessWidget {
     );
   }
 
-  Widget _grid() {
-    return GridView.builder(
-      padding: const EdgeInsets.all(Space.sm),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 96,
-        // Taller than it was, for the thumbnail. A grid of identical glyphs
-        // tells you the kind of every file and which file is which of none
-        // of them, and finding a texture by name in four hundred is not
-        // finding it.
-        mainAxisExtent: 100,
-        crossAxisSpacing: Space.xs,
-        mainAxisSpacing: Space.xs,
+  Widget _empty() => Center(
+    child: SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text('This folder is empty.', style: OrblitText.caption),
+          const SizedBox(height: Space.xs),
+          const Text(
+            'Create a file or copy assets into this folder.',
+            style: OrblitText.caption,
+            textAlign: TextAlign.center,
+          ),
+          Builder(
+            builder: (context) => OrblitButton(
+              label: 'New folder or file',
+              tooltip: 'Choose what to make in this folder.',
+              onPressed: () {
+                final box = context.findRenderObject()! as RenderBox;
+                AssetMenu.open(context, box.localToGlobal(Offset.zero));
+              },
+            ),
+          ),
+        ],
       ),
-      itemCount: entries.length,
-      itemBuilder: (context, index) {
-        final asset = entries[index];
-        return _Tile(
-          asset: asset,
-          cookState: asset.isFolder ? null : cookStatus?[asset.path],
-          selected: asset.path == selected,
-          onTap: () => onSelect(asset),
-          onDoubleTap: () => onOpen(asset),
-          onDelete: () => onDelete(asset),
-          onRename: () => onRename(asset),
-          onBuild: onBuild == null || !asset.canBuild
-              ? null
-              : () => onBuild!(asset),
+    ),
+  );
+
+  Widget _grid() {
+    const gap = 8.0;
+    const padding = EdgeInsets.fromLTRB(6, 6, 12, 12);
+    return LayoutBuilder(
+      builder: (context, box) {
+        // As many as fit without any being narrower than the minimum, so a
+        // wide panel gets more tiles and not fatter ones.
+        final across = ((box.maxWidth - padding.horizontal + gap) /
+                (_Tile.minWidth + gap))
+            .floor()
+            .clamp(1, 64);
+        return GridView.builder(
+          padding: padding,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: across,
+            // Tall enough for the thumbnail and one line of name. A grid of
+            // identical glyphs tells you the kind of every file and which
+            // file is which of none of them, and finding a texture by name
+            // in four hundred is not finding it.
+            mainAxisExtent: _Tile.height,
+            crossAxisSpacing: gap,
+            mainAxisSpacing: gap,
+          ),
+          itemCount: entries.length,
+          itemBuilder: (context, index) {
+            final asset = entries[index];
+            return _Tile(
+              asset: asset,
+              cookState: asset.isFolder ? null : cookStatus?[asset.path],
+              selected: asset.path == selected,
+              onTap: () => onSelect(asset),
+              onDoubleTap: () => onOpen(asset),
+              onDelete: () => onDelete(asset),
+              onRename: () => onRename(asset),
+              onBuild: onBuild == null || !asset.canBuild
+                  ? null
+                  : () => onBuild!(asset),
+            );
+          },
         );
       },
     );
   }
+}
+
+class _NothingMatches extends StatelessWidget {
+  const _NothingMatches();
+
+  @override
+  Widget build(BuildContext context) => const Center(
+    child: Text('Nothing here has that name.', style: OrblitText.caption),
+  );
 }
 
 class _Tile extends StatefulWidget {
@@ -163,6 +188,12 @@ class _Tile extends StatefulWidget {
   final VoidCallback onDelete;
   final VoidCallback onRename;
   final VoidCallback? onBuild;
+
+  /// The narrowest a tile is drawn, which is what the grid counts columns by.
+  static const minWidth = 112.0;
+
+  /// Padding, thumbnail, the gap, one line of name, padding.
+  static const height = 92.0;
 
   @override
   State<_Tile> createState() => _TileState();
@@ -198,39 +229,30 @@ class _TileState extends State<_Tile> {
             onBuild: widget.onBuild,
           ),
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: Space.sm),
+            padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: widget.selected
                   ? OrblitColors.emberWash
-                  : (_hovering ? OrblitColors.raised : Colors.transparent),
-              borderRadius: BorderRadius.circular(Radii.control),
-              border: Border.all(
-                color: widget.selected
-                    ? OrblitColors.ember
-                    : Colors.transparent,
-              ),
+                  : (_hovering ? OrblitColors.hover : Colors.transparent),
+              borderRadius: BorderRadius.circular(Radii.card),
             ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 6,
               children: [
                 _CookMark(
                   state: state,
                   child: _Thumbnail(asset: asset, selected: widget.selected),
                 ),
-                const SizedBox(height: Space.xs),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text(
-                    asset.name,
-                    maxLines: 2,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    style: OrblitText.label.copyWith(
-                      fontSize: 11,
-                      color: widget.selected
-                          ? OrblitColors.ink
-                          : OrblitColors.inkMid,
-                    ),
+                Text(
+                  asset.name,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: OrblitText.mono.copyWith(
+                    color: widget.selected
+                        ? OrblitColors.ink
+                        : OrblitColors.inkMid,
                   ),
                 ),
               ],
@@ -281,35 +303,31 @@ class _Thumbnail extends StatelessWidget {
     final colour = asset.isFolder
         ? OrblitColors.inkMid
         : (selected ? OrblitColors.ember : OrblitColors.inkDim);
-
-    if (!showsPicture(asset)) {
-      return SizedBox(
-        height: 44,
-        child: Center(child: Icon(asset.kind.icon, size: 26, color: colour)),
-      );
-    }
+    final glyph = Icon(asset.kind.icon, size: 24, color: colour);
 
     return SizedBox(
-      height: 44,
-      width: 44,
+      height: 56,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(3),
-        // Checked, so a texture with transparency reads as transparent
-        // rather than as a hole or as black.
+        borderRadius: BorderRadius.circular(Radii.control),
         child: ColoredBox(
-          color: OrblitColors.ground,
-          child: Image.file(
-            File(asset.path),
-            fit: BoxFit.cover,
-            filterQuality: FilterQuality.medium,
-            // Decoded at the size it is drawn at rather than at the size it
-            // was authored at. A folder of 4K maps is a gigabyte of pixels
-            // nobody is looking at closely.
-            cacheWidth: 88,
-            gaplessPlayback: true,
-            errorBuilder: (context, error, stack) =>
-                Center(child: Icon(asset.kind.icon, size: 26, color: colour)),
-          ),
+          // Behind a picture it is the ground, so a texture with
+          // transparency reads as transparent rather than as a hole.
+          color: showsPicture(asset)
+              ? OrblitColors.ground
+              : OrblitColors.raised,
+          child: showsPicture(asset)
+              ? Image.file(
+                  File(asset.path),
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.medium,
+                  // Decoded at the size it is drawn at rather than at the
+                  // size it was authored at. A folder of 4K maps is a
+                  // gigabyte of pixels nobody is looking at closely.
+                  cacheWidth: 224,
+                  gaplessPlayback: true,
+                  errorBuilder: (context, error, stack) => Center(child: glyph),
+                )
+              : Center(child: glyph),
         ),
       ),
     );

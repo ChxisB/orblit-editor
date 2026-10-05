@@ -205,4 +205,73 @@ void main() {
       expect(find.byIcon(AssetKind.script.icon), findsOneWidget);
     });
   });
+
+  group('the filter', () {
+    void makeFiles(List<String> names) {
+      for (final name in names) {
+        File(p.join(root.path, name)).writeAsStringSync('x');
+      }
+    }
+
+    Future<void> filterFor(WidgetTester tester, String text) async {
+      await tester.enterText(find.byType(TextField), text);
+      await tester.pump();
+    }
+
+    testWidgets('keeps the files whose name has what was typed', (
+      tester,
+    ) async {
+      makeFiles(['rock.dart', 'rocket.dart', 'tree.dart']);
+      await show(tester);
+
+      await filterFor(tester, 'rock');
+
+      expect(find.text('rock.dart'), findsOneWidget);
+      expect(find.text('rocket.dart'), findsOneWidget);
+      expect(find.text('tree.dart'), findsNothing);
+    });
+
+    testWidgets('ignores case and the spaces around it', (tester) async {
+      makeFiles(['Rock.dart', 'tree.dart']);
+      await show(tester);
+
+      await filterFor(tester, '  rOCK ');
+
+      expect(find.text('Rock.dart'), findsOneWidget);
+      expect(find.text('tree.dart'), findsNothing);
+    });
+
+    testWidgets('counts what is left in the header', (tester) async {
+      makeFiles(['rock.dart', 'tree.dart', 'bush.dart']);
+      await show(tester);
+      expect(find.text('3 items'), findsOneWidget);
+
+      await filterFor(tester, 'rock');
+
+      expect(find.text('1 item'), findsOneWidget);
+    });
+
+    testWidgets('says nothing matched rather than that the folder is empty', (
+      tester,
+    ) async {
+      makeFiles(['rock.dart']);
+      await show(tester);
+
+      await filterFor(tester, 'zzz');
+
+      expect(find.text('Nothing here has that name.'), findsOneWidget);
+      expect(find.text('This folder is empty.'), findsNothing);
+    });
+
+    testWidgets('brings every file back when it is cleared', (tester) async {
+      makeFiles(['rock.dart', 'tree.dart']);
+      await show(tester);
+      await filterFor(tester, 'rock');
+
+      await filterFor(tester, '');
+
+      expect(find.text('rock.dart'), findsOneWidget);
+      expect(find.text('tree.dart'), findsOneWidget);
+    });
+  });
 }
