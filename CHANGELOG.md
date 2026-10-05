@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.8.0+9
+
+- Redraw the editor to the new design. The top bar holds the file menus,
+  the project name, the object count and search. The workspace tabs run
+  down a rail beside the panels, and the play control sits in the scene
+  view's header. Cmd+K opens one palette for commands and objects.
+- Add a filter and an add menu to the Hierarchy, and a filter and a
+  breadcrumb to the asset browser, with a preview beside it.
+- Draw the viewport tool strip, orientation gizmo and a stats chip.
+- Open the Inspector as collapsible sections with a Visible switch in the
+  header. Open sections are remembered by title.
+- Put the mode shelf in a rounded panel beside the rail.
+- Redraw the launcher with a side rail, template cards and project cards
+  that show a picture of the scene. A template card opens the create view
+  with that template chosen.
+- Remove the status bar. The last change is in the Undo tooltip.
+- Test the command palette.
+
 ## 1.7.0+8
 
 - Make fixed mesh colliders from imported models or edited geometry.
