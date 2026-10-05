@@ -70,16 +70,21 @@ void main() {
       final layout = DockLayout.standard();
 
       expect(panelsIn(layout.root, 'right'), ['inspector']);
-      expect(panelsIn(layout.root, 'bottom'), ['console']);
-      expect(layout.revision, 1);
+      expect(panelsIn(layout.root, 'left'), ['outliner']);
+      expect(panelsIn(layout.root, 'bottom'), ['project', 'console']);
+      expect(layout.revision, 2);
     });
 
-    test('modelling puts its tools first and folds the UVs away', () {
+    test('the project and the console are open under the view', () {
+      expect(middleOf(DockLayout.standard()).folded, [false, false]);
+    });
+
+    test('modelling puts its tools first and opens the UVs', () {
       final layout = DockLayout.modelling();
 
       expect(panelsIn(layout.root, 'right'), ['modelling', 'inspector']);
       expect(panelsIn(layout.root, 'bottom'), ['uvs']);
-      expect(middleOf(layout).folded, [false, true]);
+      expect(middleOf(layout).folded, [false, false]);
       expect(layout.holds('game'), isFalse);
     });
 
@@ -145,12 +150,11 @@ void main() {
       final now = was.dock('outliner', 'right', DockSide.centre);
 
       expect(panelsIn(now.root, 'left'), isEmpty);
-      // The left column held the outliner over the project and now holds
-      // the project alone, so it is that group rather than a column of one.
+      // The left column held the outliner alone, so with it gone the row is
+      // the middle and the right rather than three with one of them empty.
       final root = now.root as DockSplit;
-      expect(root.children, hasLength(3));
-      expect(root.children.first, isA<DockGroup>());
-      expect((root.children.first as DockGroup).id, 'files');
+      expect(root.children, hasLength(2));
+      expect((root.children.first as DockSplit).id, 'middle');
     });
 
     test('a split left with one child is replaced by that child', () {
@@ -288,13 +292,13 @@ void main() {
   group('closing', () {
     test('takes the panel out and collapses what it leaves', () {
       // The outliner, which is the panel with a group to itself: closing it
-      // leaves the left column with one group, for the split to collapse.
+      // leaves the left column empty, for the row to close up around.
       final now = crowded().close('outliner');
 
       expect(now.holds('outliner'), isFalse);
       final root = now.root as DockSplit;
-      expect(root.children, hasLength(3));
-      expect(root.children.first, isA<DockGroup>());
+      expect(root.children, hasLength(2));
+      expect(root.children.first, isA<DockSplit>());
     });
 
     test('a tab beside others leaves the others alone', () {
@@ -420,7 +424,7 @@ void main() {
     test('keeps the revision it grew from', () {
       final now = DockLayout.read(DockLayout.standard().toText())!;
 
-      expect(now.revision, 1);
+      expect(now.revision, 2);
     });
 
     test('one saved before there were revisions reads as the first', () {

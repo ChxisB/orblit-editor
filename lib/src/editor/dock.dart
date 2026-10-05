@@ -363,14 +363,16 @@ class DockLayout {
   /// The arrangement the editor opens with, which is the Scene mode's.
   ///
   /// Three columns, each the height of the window apart from the middle one:
-  /// what is in the scene and what is in the project on the left, the view in
-  /// the middle with the console folded under it, and the inspector down the
+  /// what is in the scene on the left, the view in the middle with the
+  /// project and the console open under it, and the inspector down the
   /// whole right side, because a component with twenty fields is the one
   /// thing that is always short of height.
   ///
   /// Revision 1 took the modelling, UV and timeline panels out. Each has a
   /// mode of its own now, and a panel for a job nobody is doing is one more
-  /// thing for a newcomer to wonder about.
+  /// thing for a newcomer to wonder about. Revision 2 moved the project from
+  /// under the tree to under the view, open, so a mesh is dragged across the
+  /// shortest distance and the tree has the whole column.
   factory DockLayout.standard() => DockLayout.columns(
         const DockGroup(
           id: 'centre',
@@ -379,14 +381,18 @@ class DockLayout {
             DockPanel(id: 'game', kind: PanelKind.game),
           ],
         ),
-        bottom: const [DockPanel(id: 'console', kind: PanelKind.console)],
+        bottom: const [
+          DockPanel(id: 'project', kind: PanelKind.project),
+          DockPanel(id: 'console', kind: PanelKind.console),
+        ],
         right: const [DockPanel(id: 'inspector', kind: PanelKind.inspector)],
-        revision: 1,
+        folded: false,
+        revision: 2,
       );
 
   /// Shaping one object. The modelling tools come first on the right, and
-  /// the UVs wait folded under the view. No game view: nothing is played
-  /// while a shape is being made.
+  /// the UVs are open under the view, because unwrapping is half the work
+  /// of a shape. No game view: nothing is played while a shape is being made.
   factory DockLayout.modelling() => DockLayout.columns(
         const DockGroup(
           id: 'centre',
@@ -397,6 +403,9 @@ class DockLayout {
           DockPanel(id: 'modelling', kind: PanelKind.modelling),
           DockPanel(id: 'inspector', kind: PanelKind.inspector),
         ],
+        folded: false,
+        below: 0.3,
+        revision: 1,
       );
 
   /// Making things move. The timeline is open under the view and taller than
@@ -447,7 +456,10 @@ class DockLayout {
               ),
           ],
         ),
-        bottom: const [DockPanel(id: 'console', kind: PanelKind.console)],
+        bottom: const [
+          DockPanel(id: 'project', kind: PanelKind.project),
+          DockPanel(id: 'console', kind: PanelKind.console),
+        ],
         right: const [DockPanel(id: 'inspector', kind: PanelKind.inspector)],
       );
 
@@ -458,8 +470,8 @@ class DockLayout {
   /// The panels under the view start [folded] unless a mode says otherwise:
   /// the view is what somebody opens the editor to look at, and the console
   /// is a click away when there is something in it worth reading. [below] is
-  /// how much of the middle column they take once open. [left] is the tree
-  /// over Project, which is the scene's unless a mode edits something else.
+  /// how much of the middle column they take once open. [left] is the tree,
+  /// which is the scene's unless a mode edits something else.
   factory DockLayout.columns(
     DockNode centre, {
     required List<DockPanel> bottom,
@@ -478,18 +490,7 @@ class DockLayout {
           axis: Axis.horizontal,
           weights: const [0.2, 0.58, 0.22],
           children: [
-            DockSplit(
-              id: 'leftColumn',
-              axis: Axis.vertical,
-              weights: const [0.55, 0.45],
-              children: [
-                DockGroup(id: 'left', panels: left),
-                const DockGroup(
-                  id: 'files',
-                  panels: [DockPanel(id: 'project', kind: PanelKind.project)],
-                ),
-              ],
-            ),
+            DockGroup(id: 'left', panels: left),
             DockSplit(
               id: 'middle',
               axis: Axis.vertical,

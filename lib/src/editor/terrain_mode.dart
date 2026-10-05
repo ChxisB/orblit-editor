@@ -50,7 +50,8 @@ EditorMode terrainMode({
 /// The scene's arrangement with the brush in front on the right, since the
 /// brush's settings are what is reached for most while shaping, and only the
 /// console under the view: the other tools there have nothing to say about
-/// the ground.
+/// the ground. The console is a short open strip, so a brush that cannot
+/// reach a place says so where it is seen.
 DockLayout terrainLayout() => DockLayout.columns(
   const DockGroup(
     id: 'centre',
@@ -64,6 +65,9 @@ DockLayout terrainLayout() => DockLayout.columns(
     DockPanel(id: 'brush', kind: terrainBrushPanel),
     DockPanel(id: 'inspector', kind: PanelKind.inspector),
   ],
+  folded: false,
+  below: 0.14,
+  revision: 1,
 );
 
 /// Each tool's icon on the shelf.

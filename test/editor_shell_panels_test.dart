@@ -126,7 +126,7 @@ void main() {
       File(p.join(root.path, '.orblit', 'layout.json')).writeAsStringSync(
         _savedBeforeRegistration.replaceFirst(
           '"locked":false',
-          '"locked":false,"revision":1',
+          '"locked":false,"revision":2',
         ),
       );
 

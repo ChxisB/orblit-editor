@@ -68,7 +68,9 @@ DockLayout interfaceLayout() => DockLayout.columns(
   left: const [DockPanel(id: 'elements', kind: interfaceElementsPanel)],
   bottom: const [DockPanel(id: 'console', kind: PanelKind.console)],
   right: const [DockPanel(id: 'design', kind: interfaceDesignPanel)],
-  revision: 1,
+  folded: false,
+  below: 0.14,
+  revision: 2,
 );
 
 /// The canvas, laid out at the size being previewed.
