@@ -105,6 +105,22 @@ void main() {
       }
     });
 
+    testWidgets('the tool shelf sits over the panels and beside the rail', (
+      tester,
+    ) async {
+      await open(tester);
+      await enterMode(tester, 'terrain');
+
+      final shelf = tester.getRect(find.byType(ModeShelf));
+      final rail = tester.getRect(find.byKey(const ValueKey('mode/terrain')));
+      final scene = tester.getRect(dockTab('scene'));
+
+      // The rail runs the full height, so the shelf starts to its right.
+      expect(shelf.left, greaterThan(rail.right));
+      expect(shelf.height, 40);
+      expect(shelf.bottom, lessThanOrEqualTo(scene.top));
+    });
+
     testWidgets('each one shows the panels for its job', (tester) async {
       await open(tester);
       for (final tab in ['modelling', 'uvs', 'timeline']) {

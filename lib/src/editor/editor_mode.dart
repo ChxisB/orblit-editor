@@ -40,7 +40,7 @@ class EditorMode implements Registered {
   /// are however they were left, kept for each mode separately.
   final DockLayout Function() layout;
 
-  /// Its tool shelf, shown under the menus while it is the mode, in a
+  /// Its tool shelf, shown over the panels while it is the mode, in a
   /// [ModeShelf] it builds itself. Null for none.
   final WidgetBuilder? tools;
 
@@ -65,7 +65,7 @@ class EditorMode implements Registered {
   final VoidCallback? onLeave;
 }
 
-/// The strip under the menus that a mode's tools sit in.
+/// The strip over the panels that a mode's tools sit in.
 ///
 /// Built by the shelf rather than around it, so a shelf with nothing to hold
 /// builds nothing and leaves no empty strip.
@@ -77,11 +77,12 @@ final class ModeShelf extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 36,
-      padding: const EdgeInsets.symmetric(horizontal: Space.md),
-      decoration: const BoxDecoration(
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: Space.sm),
+      decoration: BoxDecoration(
         color: OrblitColors.surface,
-        border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
+        borderRadius: BorderRadius.circular(Radii.panel),
+        border: Border.all(color: OrblitColors.rim),
       ),
       child: Row(children: [Expanded(child: child)]),
     );

@@ -761,7 +761,6 @@ class _EditorShellState extends State<EditorShell> {
               onPaste: _paste,
               onDuplicate: _duplicate,
             ),
-            if (_mode.tools case final tools?) tools(context),
             // The panels, arranged as the layout says. What is where is
             // data, saved with the project, put back exactly, and
             // changed by dragging a tab rather than by editing this.
@@ -783,11 +782,22 @@ class _EditorShellState extends State<EditorShell> {
                       const SizedBox(width: 6),
                     ],
                     Expanded(
-                      child: DockView(
-                        layout: _visibleLayout,
-                        panel: _buildPanel,
-                        onChanged: _relayout,
-                        accessory: _accessory,
+                      // The shelf sits over the panels and not over the rail,
+                      // which runs the full height beside both.
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        spacing: 6,
+                        children: [
+                          if (_mode.tools case final tools?) tools(context),
+                          Expanded(
+                            child: DockView(
+                              layout: _visibleLayout,
+                              panel: _buildPanel,
+                              onChanged: _relayout,
+                              accessory: _accessory,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],

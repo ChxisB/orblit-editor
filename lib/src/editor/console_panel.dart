@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/orblit_theme.dart';
+import '../widgets/icon_tile.dart';
 import 'console.dart';
 
 /// What the editor has said, in the order it said it.
@@ -73,7 +74,13 @@ class _ConsolePanelState extends State<ConsolePanel> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _header(),
+            _Toolbar(
+              log: widget.log,
+              showing: _showing,
+              onToggle: (level) => setState(() {
+                if (!_showing.remove(level)) _showing.add(level);
+              }),
+            ),
             Expanded(
               child: shown.isEmpty
                   ? Center(
@@ -105,50 +112,66 @@ class _ConsolePanelState extends State<ConsolePanel> {
         ? panel
         : SizedBox(height: widget.height, child: panel);
   }
+}
 
-  Widget _header() {
-    return Container(
-      height: 30,
-      padding: const EdgeInsets.only(left: Space.md, right: Space.xs),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
-      ),
-      child: Row(
-        children: [
-          for (final level in LogLevel.values) ...[
-            _Filter(
-              level: level,
-              count: widget.log.countOf(level),
-              on: _showing.contains(level),
-              onTap: () => setState(() {
-                if (!_showing.remove(level)) _showing.add(level);
-              }),
-            ),
-            const SizedBox(width: Space.xs),
-          ],
-          const Spacer(),
-          _Action(
-            icon: Icons.content_copy,
-            tooltip: 'Copy everything shown',
-            onTap: () {
-              final text = [
-                for (final entry in widget.log.entries)
-                  if (_showing.contains(entry.level))
-                    '[${entry.level.name}] ${entry.message}'
-                    '${entry.detail.isEmpty ? '' : '\n${entry.detail}'}',
-              ].join('\n');
-              Clipboard.setData(ClipboardData(text: text));
-            },
+/// The levels, with how many there are of each, and what to do with them all.
+class _Toolbar extends StatelessWidget {
+  const _Toolbar({
+    required this.log,
+    required this.showing,
+    required this.onToggle,
+  });
+
+  final EditorLog log;
+  final Set<LogLevel> showing;
+  final ValueChanged<LogLevel> onToggle;
+
+  String get _shownText => [
+    for (final entry in log.entries)
+      if (showing.contains(entry.level))
+        '[${entry.level.name}] ${entry.message}'
+        '${entry.detail.isEmpty ? '' : '\n${entry.detail}'}',
+  ].join('\n');
+
+  @override
+  Widget build(BuildContext context) => Container(
+    // As short as it was: at the smallest window the console's strip is not
+    // much taller than this, and a taller toolbar overflows it.
+    height: 28,
+    padding: const EdgeInsets.only(left: Space.sm, right: Space.xs),
+    decoration: const BoxDecoration(
+      border: Border(bottom: BorderSide(color: OrblitColors.lineSoft)),
+    ),
+    child: Row(
+      spacing: 2,
+      children: [
+        for (final level in LogLevel.values)
+          _Filter(
+            level: level,
+            count: log.countOf(level),
+            on: showing.contains(level),
+            onTap: () => onToggle(level),
           ),
-          _Action(
-            icon: Icons.delete_sweep_outlined,
-            tooltip: 'Clear',
-            onTap: widget.log.clear,
-          ),
-        ],
-      ),
-    );
-  }
+        const Spacer(),
+        IconTile(
+          tooltip: 'Copy everything shown',
+          size: 24,
+          iconSize: 14,
+          radius: Radii.control,
+          onTap: () => Clipboard.setData(ClipboardData(text: _shownText)),
+          child: const Icon(Icons.content_copy),
+        ),
+        IconTile(
+          tooltip: 'Clear',
+          size: 24,
+          iconSize: 14,
+          radius: Radii.control,
+          onTap: log.clear,
+          child: const Icon(Icons.delete_sweep_outlined),
+        ),
+      ],
+    ),
+  );
 }
 
 /// A level, with how many there are and whether it is being shown.
@@ -186,53 +209,22 @@ class _Filter extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: Space.sm, vertical: 3),
+          height: 24,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           decoration: BoxDecoration(
             color: on ? OrblitColors.raised : Colors.transparent,
             borderRadius: BorderRadius.circular(Radii.control),
-            border: Border.all(
-              color: on ? OrblitColors.line : Colors.transparent,
-            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(iconOf(level), size: 12, color: colour),
-              const SizedBox(width: 5),
+              Icon(iconOf(level), size: 13, color: colour),
+              const SizedBox(width: 6),
               Text(
                 '${level.label} $count',
-                style: OrblitText.caption.copyWith(fontSize: 11, color: colour),
+                style: OrblitText.label.copyWith(color: colour),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Action extends StatelessWidget {
-  const _Action({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(Space.xs),
-            child: Icon(icon, size: 14, color: OrblitColors.inkDim),
           ),
         ),
       ),
@@ -273,7 +265,7 @@ class _RowState extends State<_Row> {
       child: GestureDetector(
         onTap: hasDetail ? widget.onTap : null,
         child: Container(
-          color: _hovering ? OrblitColors.raised : Colors.transparent,
+          color: _hovering ? OrblitColors.hover : Colors.transparent,
           padding: const EdgeInsets.symmetric(
             horizontal: Space.md,
             vertical: 3,
