@@ -121,7 +121,6 @@ class _BodySection extends StatelessWidget {
     final body = physicsBodyOf(_object);
     return OrblitSection(
       title: 'Physics body',
-      icon: Icons.sports_baseball_outlined,
       child: body == null ? _absent() : _present(body),
     );
   }

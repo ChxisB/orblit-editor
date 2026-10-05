@@ -42,9 +42,10 @@ abstract final class OrblitColors {
   /// The hairline round a panel, a white at four percent.
   static const rim = Color(0x0AFFFFFF);
 
-  /// The three axes, in the order a gizmo draws them.
-  static const axisX = Color(0xFFD9634F);
-  static const axisY = Color(0xFF5FB483);
+  /// The letters of the three axes, in the order a gizmo draws them. Lighter
+  /// than the gizmo's own, which are drawn big and on a mid grey.
+  static const axisX = Color(0xFFF0736A);
+  static const axisY = Color(0xFF7FD083);
   static const axisZ = Color(0xFF62A0E8);
 
   static const good = Color(0xFF5FB483);
@@ -188,10 +189,10 @@ ThemeData orblitTheme() {
       trackHeight: 3,
       activeTrackColor: OrblitColors.ember,
       inactiveTrackColor: OrblitColors.line,
-      thumbColor: OrblitColors.ember,
+      thumbColor: OrblitColors.ink,
       overlayColor: OrblitColors.emberWash,
-      thumbShape: RoundSliderThumbShape(enabledThumbRadius: 6.5),
-      overlayShape: RoundSliderOverlayShape(overlayRadius: 14),
+      thumbShape: RoundSliderThumbShape(enabledThumbRadius: 7),
+      overlayShape: RoundSliderOverlayShape(overlayRadius: 10),
     ),
     scrollbarTheme: const ScrollbarThemeData(
       thumbColor: WidgetStatePropertyAll(OrblitColors.line),

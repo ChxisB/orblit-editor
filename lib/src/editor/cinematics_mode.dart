@@ -354,7 +354,6 @@ final class _ShotCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) => OrblitSection(
     title: 'Shot $number',
-    icon: Icons.videocam_outlined,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

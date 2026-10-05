@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:orblit_editor/src/editor/scene.dart';
 import 'package:orblit_editor/src/editor/scene_document.dart';
 import 'package:orblit_editor/src/editor/viewport.dart';
+import 'package:orblit_editor/src/widgets/controls.dart';
 import 'package:path/path.dart' as p;
 
 import 'support/editor_shell.dart';
@@ -158,11 +159,14 @@ void main() {
     await tester.pumpAndSettle();
 
     // The sky belongs to the scene, not to anything in it.
-    expect(find.text('ENVIRONMENT'), findsOneWidget);
-    expect(find.text('Sky'), findsOneWidget);
+    expect(find.text('Environment'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate((w) => w is OrblitSection && w.title == 'Sky'),
+      findsOneWidget,
+    );
     expect(find.text('Ambient'), findsOneWidget);
     // And not an object's fields.
-    expect(find.text('TRANSFORM'), findsNothing);
+    expect(find.text('Transform'), findsNothing);
   });
 
   testWidgets('the scene settings are saved with the scene', (tester) async {
@@ -361,7 +365,7 @@ void main() {
 
       // No environment fields to fiddle with — there is no document behind them.
       expect(find.text('Load scene'), findsOneWidget);
-      expect(find.text('ENVIRONMENT'), findsNothing);
+      expect(find.text('Environment'), findsNothing);
     },
   );
 }

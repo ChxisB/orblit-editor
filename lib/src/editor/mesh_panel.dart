@@ -85,7 +85,6 @@ class MeshPanel extends StatelessWidget {
 
     return OrblitSection(
       title: 'Boundary',
-      icon: Icons.select_all_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -187,7 +186,6 @@ class MeshPanel extends StatelessWidget {
     final drawn = outline!;
     return OrblitSection(
       title: 'Drawn shape',
-      icon: Icons.polyline_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -243,7 +241,6 @@ class MeshPanel extends StatelessWidget {
 
     return OrblitSection(
       title: current.kind.label,
-      icon: Icons.category_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

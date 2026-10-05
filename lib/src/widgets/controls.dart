@@ -346,60 +346,103 @@ class OrblitPanel extends StatelessWidget {
   }
 }
 
-/// A titled card, for one group of fields inside a side panel.
+/// One group of fields inside a side panel, which folds away to its title.
 ///
 /// The inspector, the mesh panel, the modelling panel and the UI editor each
 /// stack several of these down a column, and they have to agree: a panel whose
-/// cards sit on different margins or whose headings are different heights
+/// groups sit on different margins or whose headings are different heights
 /// reads as broken rather than as varied.
-class OrblitSection extends StatelessWidget {
-  const OrblitSection({
-    super.key,
-    required this.title,
-    required this.icon,
-    required this.child,
-  });
+///
+/// Whether it is open is remembered by title in the page storage, so a group
+/// someone folded stays folded when the inspector is showing a different
+/// object.
+class OrblitSection extends StatefulWidget {
+  const OrblitSection({super.key, required this.title, required this.child});
 
   final String title;
-  final IconData icon;
   final Widget child;
 
   @override
+  State<OrblitSection> createState() => _OrblitSectionState();
+}
+
+class _OrblitSectionState extends State<OrblitSection> {
+  bool _open = true;
+  bool _hovering = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final stored = PageStorage.maybeOf(
+      context,
+    )?.readState(context, identifier: widget.title);
+    if (stored is bool) _open = stored;
+  }
+
+  void _toggle() {
+    setState(() => _open = !_open);
+    PageStorage.maybeOf(
+      context,
+    )?.writeState(context, _open, identifier: widget.title);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(Space.sm, 0, Space.sm, Space.sm),
-      decoration: BoxDecoration(
-        color: OrblitColors.ground,
-        borderRadius: BorderRadius.circular(Radii.card),
-        border: Border.all(color: OrblitColors.lineSoft),
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        border: Border(top: BorderSide(color: OrblitColors.lineSoft)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            height: 30,
-            padding: const EdgeInsets.symmetric(horizontal: Space.md),
-            child: Row(
-              children: [
-                Icon(icon, size: 13, color: OrblitColors.inkDim),
-                const SizedBox(width: Space.sm),
-                // A side panel at the smallest window is narrower than the
-                // longest heading.
-                Flexible(
-                  child: Text(
-                    title.toUpperCase(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: OrblitText.section,
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            onEnter: (_) => setState(() => _hovering = true),
+            onExit: (_) => setState(() => _hovering = false),
+            child: Semantics(
+              button: true,
+              expanded: _open,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _toggle,
+                child: Container(
+                  height: 36,
+                  color: _hovering ? OrblitColors.hover : null,
+                  padding: const EdgeInsets.symmetric(horizontal: Space.lg),
+                  child: Row(
+                    spacing: 6,
+                    children: [
+                      Icon(
+                        _open ? Icons.expand_more : Icons.chevron_right,
+                        size: 14,
+                        color: OrblitColors.inkDim,
+                      ),
+                      // A side panel at the smallest window is narrower than
+                      // the longest heading.
+                      Flexible(
+                        child: Text(
+                          widget.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: OrblitText.panelTitle,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.sm),
-            child: child,
-          ),
+          if (_open)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                Space.lg,
+                Space.xs,
+                Space.lg,
+                Space.lg,
+              ),
+              child: widget.child,
+            ),
         ],
       ),
     );

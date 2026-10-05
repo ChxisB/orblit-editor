@@ -168,7 +168,7 @@ void main() {
 
       // Listed on the object, and named as what it is rather than a path.
       await scrollInspector(tester);
-      expect(find.text('DATA'), findsOneWidget);
+      expect(find.text('Data'), findsOneWidget);
       expect(find.text('weight.odata'), findsWidgets);
     });
 
@@ -187,10 +187,10 @@ void main() {
       await gesture.up();
       await tester.pumpAndSettle();
       await scrollInspector(tester);
-      expect(find.text('DATA'), findsOneWidget);
+      expect(find.text('Data'), findsOneWidget);
 
       await press(tester, LogicalKeyboardKey.keyZ);
-      expect(find.text('DATA'), findsNothing);
+      expect(find.text('Data'), findsNothing);
     });
 
     testWidgets('what it says is saved with the scene', (tester) async {
@@ -208,7 +208,7 @@ void main() {
       await gesture.up();
       await tester.pumpAndSettle();
       await scrollInspector(tester);
-      expect(find.text('DATA'), findsOneWidget);
+      expect(find.text('Data'), findsOneWidget);
 
       await save(tester);
       final written = File(p.join(root.path, 'scenes', 'main.oscene'))
@@ -284,7 +284,13 @@ void main() {
       await open(tester);
       await dropOnViewport(tester, tile);
 
-      expect(find.text('INTERFACE'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(Inspector),
+          matching: find.text('Interface'),
+        ),
+        findsOneWidget,
+      );
       expect(
         find.descendant(
           of: find.byType(Inspector),
@@ -327,7 +333,7 @@ void main() {
       await tester.tap(
         find.descendant(
           of: find.byType(Inspector),
-          matching: find.text('Hidden'),
+          matching: find.byTooltip('Visible'),
         ),
       );
       await tester.pumpAndSettle();

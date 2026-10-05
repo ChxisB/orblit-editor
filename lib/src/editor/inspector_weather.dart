@@ -8,7 +8,6 @@ extension _Weather on InspectorTarget {
   Widget _weather() {
     return OrblitSection(
       title: 'Weather',
-      icon: Icons.cloud_outlined,
       child: Column(
         children: [
           ..._condition(),
@@ -165,7 +164,7 @@ extension _Weather on InspectorTarget {
     final spare = scene.hasSpareWeather && !identical(object, scene.weather);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(Space.md, Space.xs, Space.md, 0),
+      padding: const EdgeInsets.only(top: Space.xs),
       child: Text(
         spare
             ? 'Another Weather object is already deciding what the air '
@@ -188,7 +187,6 @@ extension _Weather on InspectorTarget {
 
     return OrblitSection(
       title: 'Air',
-      icon: Icons.foggy,
       child: Column(
         children: [
           ColourRow(
@@ -249,12 +247,7 @@ extension _Weather on InspectorTarget {
                 onSettled: history.seal,
               ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                Space.md,
-                Space.xs,
-                Space.md,
-                0,
-              ),
+              padding: const EdgeInsets.only(top: Space.xs),
               child: Text(
                 air.mist > 0
                     ? 'Mist is the air at ground level given a shape, moving '

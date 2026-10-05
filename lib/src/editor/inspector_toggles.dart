@@ -25,14 +25,14 @@ class ToggleCell extends StatelessWidget {
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: on ? OrblitColors.emberDeep : Colors.transparent,
-          borderRadius: BorderRadius.circular(3),
+          color: on ? OrblitColors.emberWash : Colors.transparent,
+          borderRadius: BorderRadius.circular(Radii.control - 2),
         ),
         child: Text(
           label,
           style: OrblitText.label.copyWith(
             fontSize: 10.5,
-            color: on ? const Color(0xFFFFF0E2) : OrblitColors.inkDim,
+            color: on ? OrblitColors.ember : OrblitColors.inkDim,
           ),
         ),
       ),
@@ -53,11 +53,11 @@ class ToggleRow extends StatelessWidget {
     return FieldRow(
       label: label,
       child: Container(
-        height: 24,
+        height: 28,
         padding: const EdgeInsets.all(2),
         decoration: BoxDecoration(
           color: OrblitColors.raised,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(Radii.control),
         ),
         child: Row(children: [for (final cell in cells) Expanded(child: cell)]),
       ),

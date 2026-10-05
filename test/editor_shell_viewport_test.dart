@@ -214,7 +214,7 @@ void main() {
       await tester.tap(
         find.descendant(
           of: find.byType(Inspector),
-          matching: find.text('Hidden'),
+          matching: find.byTooltip('Visible'),
         ),
       );
       await tester.pumpAndSettle();

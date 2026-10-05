@@ -51,7 +51,6 @@ class TerrainBrushPanel extends StatelessWidget {
     final open = target;
     return OrblitSection(
       title: 'Terrain',
-      icon: Icons.landscape_outlined,
       child: open == null
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -88,7 +87,6 @@ class TerrainBrushPanel extends StatelessWidget {
     final tool = bench.tool;
     return OrblitSection(
       title: toolLabel(tool),
-      icon: toolIcon(tool),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -164,7 +162,6 @@ class TerrainBrushPanel extends StatelessWidget {
     final brush = bench.brush;
     return OrblitSection(
       title: 'Brush',
-      icon: Icons.brush_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

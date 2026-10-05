@@ -41,7 +41,6 @@ class _ZoneSection extends StatelessWidget {
     final zone = zoneOf(_object);
     return OrblitSection(
       title: 'Zone',
-      icon: Icons.blur_circular_outlined,
       child: zone == null ? _absent() : _present(zone),
     );
   }

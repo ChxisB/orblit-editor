@@ -90,7 +90,6 @@ class _Side extends StatelessWidget {
   Widget _add() {
     return OrblitSection(
       title: 'Add',
-      icon: Icons.add,
       child: Wrap(
         spacing: Space.xs,
         runSpacing: Space.xs,
@@ -113,7 +112,6 @@ class _Side extends StatelessWidget {
     final container = _containers.contains(selected.type);
     return OrblitSection(
       title: selected.type,
-      icon: _TreeRow._iconFor(selected.type),
       child: Column(
         children: [
           if (selected.text != null ||
@@ -251,7 +249,6 @@ class _Side extends StatelessWidget {
     final canvas = document.canvas;
     return OrblitSection(
       title: 'Canvas',
-      icon: Icons.aspect_ratio,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -365,7 +362,6 @@ class _Side extends StatelessWidget {
     final canvas = document.canvas;
     return OrblitSection(
       title: 'Grid',
-      icon: Icons.view_week_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

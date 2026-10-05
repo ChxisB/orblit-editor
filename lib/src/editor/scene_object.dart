@@ -384,6 +384,18 @@ class SceneObject {
     ObjectKind.shape => Icons.category_outlined,
   };
 
+  /// What the inspector calls this kind of object, under its name.
+  String get kindLabel => switch (kind) {
+    ObjectKind.scene => 'Scene',
+    ObjectKind.group => 'Group',
+    ObjectKind.mesh => 'Mesh object',
+    ObjectKind.light => 'Light',
+    ObjectKind.camera => 'Camera',
+    ObjectKind.weather => 'Weather',
+    ObjectKind.canvas => 'Interface canvas',
+    ObjectKind.shape => 'Drawn shape',
+  };
+
   /// Whether this object is drawn.
   bool get isDrawable => kind == ObjectKind.mesh || kind == ObjectKind.shape;
 

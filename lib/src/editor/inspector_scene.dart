@@ -65,9 +65,10 @@ class _SceneFields extends StatelessWidget {
             );
           },
           onRenameDone: history.seal,
+          caption: 'Scene',
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.sm),
+          padding: const EdgeInsets.fromLTRB(Space.lg, 0, Space.lg, Space.sm),
           child: Text(
             entry.path == null
                 ? 'Not saved to a file yet'
@@ -96,7 +97,7 @@ class _SceneFields extends StatelessWidget {
           editable: false,
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.md),
+          padding: const EdgeInsets.fromLTRB(Space.lg, 0, Space.lg, Space.md),
           child: Text(
             entry.path ?? 'Never saved',
             overflow: TextOverflow.ellipsis,
@@ -104,7 +105,7 @@ class _SceneFields extends StatelessWidget {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Space.md),
+          padding: const EdgeInsets.symmetric(horizontal: Space.lg),
           child: OrblitButton(
             label: 'Load scene',
             tooltip: 'Open this scene for editing.',
@@ -114,7 +115,7 @@ class _SceneFields extends StatelessWidget {
           ),
         ),
         const Padding(
-          padding: EdgeInsets.all(Space.md),
+          padding: EdgeInsets.all(Space.lg),
           child: Text(
             'Loading a scene replaces the one open. Only one scene is in the '
             'viewport at a time.',
@@ -137,7 +138,7 @@ class _SceneFields extends StatelessWidget {
           editable: false,
         ),
         const Padding(
-          padding: EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.md),
+          padding: EdgeInsets.fromLTRB(Space.lg, 0, Space.lg, Space.md),
           child: Text(
             'What every scene in this project has in it. Objects here are '
             'drawn and lit alongside whichever scene is open, and saved '
@@ -147,7 +148,6 @@ class _SceneFields extends StatelessWidget {
         ),
         OrblitSection(
           title: 'Contents',
-          icon: Icons.list,
           child: Column(
             children: [
               TextRow(label: 'Objects', value: '${scene.length}'),
@@ -164,7 +164,7 @@ class _SceneFields extends StatelessWidget {
           ),
         ),
         const Padding(
-          padding: EdgeInsets.all(Space.md),
+          padding: EdgeInsets.all(Space.lg),
           child: Text(
             'A scene of its own overrules it: a sun or a Weather object in '
             'the open scene is used instead of the one here, so a level can '
@@ -179,7 +179,6 @@ class _SceneFields extends StatelessWidget {
   Widget _sky(EditorScene scene) {
     return OrblitSection(
       title: 'Sky',
-      icon: Icons.schedule,
       child: Column(
         children: [
           ChoiceRow(
@@ -247,12 +246,7 @@ class _SceneFields extends StatelessWidget {
               onSettled: history.seal,
             ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(
-              Space.md,
-              Space.xs,
-              Space.md,
-              0,
-            ),
+            padding: const EdgeInsets.only(top: Space.xs),
             child: Text(
               scene.dayCycle
                   ? 'The time runs from where it is set, and the light '
@@ -271,7 +265,6 @@ class _SceneFields extends StatelessWidget {
   Widget _environment(EditorScene scene) {
     return OrblitSection(
       title: 'Environment',
-      icon: Icons.wb_twilight,
       child: Column(
         children: [
           // Under a running day these are answers rather than questions:
@@ -322,7 +315,6 @@ class _SceneFields extends StatelessWidget {
   Widget _contents(EditorScene scene) {
     return OrblitSection(
       title: 'Contents',
-      icon: Icons.list,
       child: Column(
         children: [
           TextRow(label: 'Objects', value: '${scene.length}'),
@@ -404,7 +396,6 @@ class _LayerNamesState extends State<_LayerNames> {
     final names = widget.scene.layerNames;
     return OrblitSection(
       title: 'Layers',
-      icon: Icons.layers_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

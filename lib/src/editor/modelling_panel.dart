@@ -142,7 +142,6 @@ class ModellingPanel extends StatelessWidget {
   Widget _gridSection() {
     return OrblitSection(
       title: 'Grid',
-      icon: Icons.grid_4x4,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -204,7 +203,6 @@ class ModellingPanel extends StatelessWidget {
   Widget _drawSection() {
     return OrblitSection(
       title: 'Draw',
-      icon: Icons.polyline_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -247,7 +245,6 @@ class ModellingPanel extends StatelessWidget {
 
     return OrblitSection(
       title: 'Geometry',
-      icon: Icons.build_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -348,7 +345,6 @@ class ModellingPanel extends StatelessWidget {
 
     return OrblitSection(
       title: 'Materials',
-      icon: Icons.palette_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -407,7 +403,6 @@ class ModellingPanel extends StatelessWidget {
   Widget _exportSection() {
     return OrblitSection(
       title: 'Export',
-      icon: Icons.ios_share_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

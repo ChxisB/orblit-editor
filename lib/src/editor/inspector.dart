@@ -12,6 +12,7 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
+import '../widgets/orblit_switch.dart';
 import 'clip_bench.dart' show Keying;
 import 'clip_edits.dart' show KeyMark;
 import 'colour.dart';
@@ -275,10 +276,22 @@ class _Fields extends StatelessWidget {
             );
           },
           onRenameDone: history.seal,
+          caption: object.kindLabel,
+          trailing: object.kind == ObjectKind.scene
+              ? null
+              : target._visibleSwitch(),
         ),
+        if (target.hiddenAbove)
+          const Padding(
+            padding: EdgeInsets.fromLTRB(Space.lg, 0, Space.lg, Space.md),
+            child: Text(
+              'Hidden anyway, because something it is inside is hidden.',
+              style: OrblitText.caption,
+            ),
+          ),
         if (parent != null)
           Padding(
-            padding: const EdgeInsets.fromLTRB(Space.md, 0, Space.md, Space.sm),
+            padding: const EdgeInsets.fromLTRB(Space.lg, 0, Space.lg, Space.sm),
             child: Row(
               children: [
                 const Icon(
@@ -291,7 +304,7 @@ class _Fields extends StatelessWidget {
                   child: Text(
                     'in ${parent.name}',
                     overflow: TextOverflow.ellipsis,
-                    style: OrblitText.caption.copyWith(fontSize: 11.5),
+                    style: OrblitText.caption,
                   ),
                 ),
               ],
@@ -318,7 +331,6 @@ extension _Sections on InspectorTarget {
 
     return OrblitSection(
       title: 'Interface',
-      icon: Icons.web_asset,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -376,7 +388,6 @@ extension _Sections on InspectorTarget {
   Widget _data() {
     return OrblitSection(
       title: 'Data',
-      icon: Icons.dataset_outlined,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -398,52 +409,30 @@ extension _Sections on InspectorTarget {
     );
   }
 
-  Widget _visibility(EditorScene scene) {
-    // Hidden by something further up is a different state from hidden here,
-    // and an object that says "shown" while nothing appears is worse than no
-    // control at all.
-    final hiddenAbove = object.visible && !scene.isShown(object.id);
+  /// The switch in the header that shows the object or hides it.
+  Widget _visibleSwitch() => OrblitSwitch(
+    label: 'Visible',
+    value: object.visible,
+    onChanged: (wanted) => history
+      ..run(
+        SetVisible(
+          sceneId: sceneId,
+          id: object.id,
+          name: object.name,
+          to: wanted,
+        ),
+      )
+      ..seal(),
+  );
 
-    return OrblitSection(
-      title: 'Object',
-      icon: Icons.visibility_outlined,
-      child: Column(
-        children: [
-          ChoiceRow(
-            label: 'Visible',
-            options: const ['Hidden', 'Shown'],
-            selected: object.visible ? 'Shown' : 'Hidden',
-            onSelect: (value) {
-              final wanted = value == 'Shown';
-              if (wanted == object.visible) return;
-              history
-                ..run(
-                  SetVisible(
-                    sceneId: sceneId,
-                    id: object.id,
-                    name: object.name,
-                    to: wanted,
-                  ),
-                )
-                ..seal();
-            },
-          ),
-          if (hiddenAbove)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(Space.md, Space.xs, Space.md, 0),
-              child: Text(
-                'Hidden anyway, because something it is inside is hidden.',
-                style: OrblitText.caption,
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+  /// Whether something it is inside hides it while it is shown itself.
+  ///
+  /// A different state from hidden here, and an object that says "shown"
+  /// while nothing appears is worse than no control at all.
+  bool get hiddenAbove => object.visible && !scene.isShown(object.id);
 
   Widget _transform() => OrblitSection(
     title: 'Transform',
-    icon: Icons.open_with,
     child: Column(
       children: [
         VectorRow(
@@ -481,7 +470,6 @@ extension _Sections on InspectorTarget {
 
   Widget _mesh() => OrblitSection(
     title: 'Mesh renderer',
-    icon: Icons.view_in_ar_outlined,
     child: Column(
       children: [
         ColourRow(
@@ -607,7 +595,7 @@ extension _Sections on InspectorTarget {
           ),
         ),
         const Padding(
-          padding: EdgeInsets.fromLTRB(Space.md, Space.xs, Space.md, 0),
+          padding: EdgeInsets.only(top: Space.xs),
           child: Text(
             'A ground plane that casts shadows casts them onto itself, '
             'which is most of what makes a scene look dirty.',

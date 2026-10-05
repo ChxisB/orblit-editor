@@ -77,7 +77,6 @@ class _JointSection extends StatelessWidget {
     final joint = jointOf(_object);
     return OrblitSection(
       title: 'Joint',
-      icon: Icons.link,
       child: joint == null ? _absent() : _present(joint),
     );
   }

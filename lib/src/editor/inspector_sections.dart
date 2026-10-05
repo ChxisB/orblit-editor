@@ -66,11 +66,6 @@ class InspectorSection implements Registered {
 
   /// The sections the editor has always had, in the order they stack.
   static final List<InspectorSection> builtIn = List.unmodifiable([
-    InspectorSection(
-      name: 'visibility',
-      appliesTo: (target) => target.object.kind != ObjectKind.scene,
-      build: (target) => target._visibility(target.scene),
-    ),
     // Weather is everywhere at once, so it has no position to show.
     InspectorSection(
       name: 'transform',

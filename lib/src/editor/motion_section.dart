@@ -64,7 +64,6 @@ final class _MotionSection extends StatelessWidget {
       final motion = motionOf(target.object);
       return OrblitSection(
         title: 'Animation clips',
-        icon: Icons.animation,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

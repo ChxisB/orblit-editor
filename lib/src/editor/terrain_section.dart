@@ -46,23 +46,19 @@ class _TerrainSection extends StatelessWidget {
       children: [
         OrblitSection(
           title: 'Terrain',
-          icon: Icons.landscape_outlined,
           child: _about(component, open),
         ),
         if (editing != null) ...[
           OrblitSection(
             title: 'Regions',
-            icon: Icons.grid_view,
             child: editing.regions(),
           ),
           OrblitSection(
             title: 'Sets',
-            icon: Icons.layers_outlined,
             child: editing.sets(),
           ),
           OrblitSection(
             title: 'Automatic cover',
-            icon: Icons.auto_awesome_outlined,
             child: editing.automatic(),
           ),
         ],

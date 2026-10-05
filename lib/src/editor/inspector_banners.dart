@@ -45,7 +45,7 @@ class _PrefabBand extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: Space.md,
+        horizontal: Space.lg,
         vertical: Space.sm,
       ),
       decoration: const BoxDecoration(
@@ -206,7 +206,7 @@ class _MultipleNotice extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: Space.md,
+        horizontal: Space.lg,
         vertical: Space.sm,
       ),
       color: OrblitColors.emberWash,
@@ -231,13 +231,16 @@ class _MultipleNotice extends StatelessWidget {
   }
 }
 
-/// The object's icon and its name, which is editable in place.
+/// The object's icon and its name, which is editable in place, with what kind
+/// of thing it is under the name.
 class _Header extends StatefulWidget {
   const _Header({
     required this.name,
     required this.icon,
     required this.onRename,
     required this.onRenameDone,
+    this.caption,
+    this.trailing,
     this.editable = true,
   });
 
@@ -245,6 +248,11 @@ class _Header extends StatefulWidget {
   final IconData icon;
   final ValueChanged<String> onRename;
   final VoidCallback onRenameDone;
+  final String? caption;
+
+  /// A control for the whole object, such as the switch that hides it.
+  final Widget? trailing;
+
   final bool editable;
 
   @override
@@ -289,42 +297,50 @@ class _HeaderState extends State<_Header> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        Space.md,
-        Space.sm,
-        Space.md,
-        Space.sm,
+        Space.lg,
+        Space.xs,
+        Space.lg,
+        Space.lg,
       ),
       child: Row(
+        spacing: 10,
         children: [
           Container(
-            width: 22,
-            height: 22,
+            width: 32,
+            height: 32,
             decoration: BoxDecoration(
               color: OrblitColors.emberWash,
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(Radii.card),
             ),
-            child: Icon(widget.icon, size: 13, color: OrblitColors.ember),
+            child: Icon(widget.icon, size: 18, color: OrblitColors.ember),
           ),
-          const SizedBox(width: Space.sm),
           Expanded(
-            child: TextField(
-              controller: _controller,
-              focusNode: _focus,
-              readOnly: !widget.editable,
-              style: OrblitText.title.copyWith(fontSize: 13.5),
-              cursorColor: OrblitColors.ember,
-              decoration: const InputDecoration(
-                isDense: true,
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 4),
-              ),
-              onChanged: (value) {
-                if (value.trim().isEmpty) return;
-                widget.onRename(value.trim());
-              },
-              onSubmitted: (_) => widget.onRenameDone(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _controller,
+                  focusNode: _focus,
+                  readOnly: !widget.editable,
+                  style: OrblitText.panelTitle.copyWith(fontSize: 14),
+                  cursorColor: OrblitColors.ember,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  onChanged: (value) {
+                    if (value.trim().isEmpty) return;
+                    widget.onRename(value.trim());
+                  },
+                  onSubmitted: (_) => widget.onRenameDone(),
+                ),
+                if (widget.caption case final caption?)
+                  Text(caption, style: OrblitText.caption),
+              ],
             ),
           ),
+          ?widget.trailing,
         ],
       ),
     );

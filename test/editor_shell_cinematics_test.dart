@@ -52,7 +52,7 @@ void main() {
 
   /// The card of the shot numbered [number], by its title, which a section
   /// draws in capitals.
-  Finder card(int number) => inShots('SHOT $number');
+  Finder card(int number) => inShots('Shot $number');
 
   Finder onShelf(String label) => find.descendant(
     of: find.byType(CinematicsShelf),

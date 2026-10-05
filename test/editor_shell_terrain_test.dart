@@ -48,7 +48,7 @@ void main() {
     );
 
     expect(lastChange('Add Terrain'), findsOneWidget);
-    for (final part in const ['REGIONS', 'SETS', 'AUTOMATIC COVER']) {
+    for (final part in const ['Regions', 'Sets', 'Automatic cover']) {
       await reach(tester, find.text(part));
       expect(find.text(part), findsOneWidget);
     }
@@ -95,7 +95,7 @@ void main() {
     expect(
       find.descendant(
         of: find.byType(TerrainBrushPanel),
-        matching: find.text('LOWER'),
+        matching: find.text('Lower'),
       ),
       findsOneWidget,
     );

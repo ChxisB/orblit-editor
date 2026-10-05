@@ -3,6 +3,9 @@ part of 'inspector.dart';
 // The controls a field is built from. They are public because every
 // other panel in the editor lays its fields out with the same ones.
 
+/// How tall a field is, and so the least a row is.
+const _fieldHeight = 28.0;
+
 /// A labelled row, so every field lines up on the same column.
 class FieldRow extends StatelessWidget {
   const FieldRow({
@@ -21,23 +24,20 @@ class FieldRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 74,
-            child: Text(
-              label,
-              style: OrblitText.label.copyWith(fontSize: 11.5),
-            ),
-          ),
-          Expanded(child: child),
-          if (trailing case final trailing?) ...[
-            const SizedBox(width: Space.xs),
-            trailing,
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: _fieldHeight),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(width: 80, child: Text(label, style: OrblitText.label)),
+            Expanded(child: child),
+            if (trailing case final trailing?) ...[
+              const SizedBox(width: Space.xs),
+              trailing,
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -92,12 +92,17 @@ class SliderRow extends StatelessWidget {
               ),
             ),
           ),
+          // A unit such as " W/m²" is wider than the number, and a value that
+          // wraps would make the row jump as the slider moves.
           SizedBox(
             width: 56,
-            child: Text(
-              '${value.toStringAsFixed(decimals)}${unit ?? ''}',
-              textAlign: TextAlign.right,
-              style: OrblitText.monoValue.copyWith(fontSize: 11.5),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(
+                '${value.toStringAsFixed(decimals)}${unit ?? ''}',
+                style: OrblitText.monoValue,
+              ),
             ),
           ),
         ],
@@ -156,10 +161,10 @@ class DragRow extends StatelessWidget {
 
   // X, Y, Z tinted the way every 3D tool tints them, because the convention is
   // older than any of them and reading is faster than remembering.
-  static const _axisColours = [
-    Color(0xFFD9634F),
-    Color(0xFF7FB069),
-    Color(0xFF5B8DD9),
+  static const _axes = [
+    ('X', OrblitColors.axisX),
+    ('Y', OrblitColors.axisY),
+    ('Z', OrblitColors.axisZ),
   ];
 
   @override
@@ -179,36 +184,51 @@ class DragRow extends StatelessWidget {
 
   Widget _row() {
     final values = read();
-
-    return FieldRow(
-      label: label,
-      trailing: trailing,
-      child: Row(
-        children: [
-          for (var i = 0; i < values.length; i++) ...[
-            if (i > 0) const SizedBox(width: Space.xs),
-            Expanded(
-              child: _NumberField(
-                value: values[i],
-                accent: values.length == 3
-                    ? _axisColours[i]
-                    : OrblitColors.inkDim,
-                decimals: decimals,
-                onDrag: (pixels) {
-                  final next = List.of(read());
-                  final moved = next[i] + pixels * step;
-                  next[i] = minimum == null
-                      ? moved
-                      : (moved < minimum! ? minimum! : moved);
-                  onChanged(next);
-                },
-                onSettled: onSettled,
-              ),
+    final axes = values.length == 3;
+    final fields = Row(
+      spacing: 6,
+      children: [
+        for (var i = 0; i < values.length; i++)
+          Expanded(
+            child: _NumberField(
+              value: values[i],
+              axis: axes ? _axes[i] : null,
+              decimals: decimals,
+              onDrag: (pixels) => _dragged(i, pixels),
+              onSettled: onSettled,
             ),
-          ],
+          ),
+      ],
+    );
+
+    // Three numbers are a point in space and want the whole width to
+    // themselves, under their name. One or two sit beside it.
+    if (!axes) return FieldRow(label: label, trailing: trailing, child: fields);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 6,
+        children: [
+          Row(
+            children: [
+              Expanded(child: Text(label, style: OrblitText.label)),
+              ?trailing,
+            ],
+          ),
+          fields,
         ],
       ),
     );
+  }
+
+  void _dragged(int index, double pixels) {
+    final next = List.of(read());
+    final moved = next[index] + pixels * step;
+    next[index] = minimum == null
+        ? moved
+        : (moved < minimum! ? minimum! : moved);
+    onChanged(next);
   }
 }
 
@@ -320,11 +340,11 @@ class PickRow<T> extends StatelessWidget {
             ),
         ],
         child: Container(
-          height: 24,
-          padding: const EdgeInsets.symmetric(horizontal: Space.sm),
+          height: _fieldHeight,
+          padding: const EdgeInsets.fromLTRB(10, 0, Space.sm, 0),
           decoration: BoxDecoration(
             color: OrblitColors.raised,
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(Radii.control),
           ),
           child: Row(
             children: [
@@ -332,14 +352,11 @@ class PickRow<T> extends StatelessWidget {
                 child: Text(
                   shown,
                   overflow: TextOverflow.ellipsis,
-                  style: OrblitText.label.copyWith(
-                    fontSize: 11.5,
-                    color: OrblitColors.ink,
-                  ),
+                  style: OrblitText.label.copyWith(color: OrblitColors.ink),
                 ),
               ),
               const Icon(
-                Icons.expand_more,
+                Icons.unfold_more,
                 size: 14,
                 color: OrblitColors.inkDim,
               ),
@@ -405,18 +422,19 @@ class KeyButton extends StatelessWidget {
   );
 }
 
-/// One draggable number.
+/// One draggable number, with the letter of its axis in front where it has
+/// one.
 class _NumberField extends StatefulWidget {
   const _NumberField({
     required this.value,
-    required this.accent,
+    required this.axis,
     required this.decimals,
     required this.onDrag,
     required this.onSettled,
   });
 
   final double value;
-  final Color accent;
+  final (String, Color)? axis;
   final int decimals;
   final ValueChanged<double> onDrag;
   final VoidCallback onSettled;
@@ -439,17 +457,33 @@ class _NumberFieldState extends State<_NumberField> {
         onHorizontalDragEnd: (_) => widget.onSettled(),
         onHorizontalDragCancel: widget.onSettled,
         child: Container(
-          height: 24,
+          height: _fieldHeight,
           padding: const EdgeInsets.symmetric(horizontal: Space.sm),
           decoration: BoxDecoration(
-            color: _hovering ? OrblitColors.line : OrblitColors.raised,
-            borderRadius: BorderRadius.circular(4),
-            border: Border(left: BorderSide(color: widget.accent, width: 2)),
+            color: _hovering ? OrblitColors.hover : OrblitColors.raised,
+            borderRadius: BorderRadius.circular(Radii.control),
           ),
-          alignment: Alignment.centerRight,
-          child: Text(
-            widget.value.toStringAsFixed(widget.decimals),
-            style: OrblitText.monoValue.copyWith(fontSize: 11),
+          child: Row(
+            spacing: 6,
+            children: [
+              if (widget.axis case (final name, final colour))
+                Text(
+                  name,
+                  style: OrblitText.label.copyWith(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: colour,
+                  ),
+                ),
+              Expanded(
+                child: Text(
+                  widget.value.toStringAsFixed(widget.decimals),
+                  maxLines: 1,
+                  textAlign: TextAlign.right,
+                  style: OrblitText.monoValue,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -562,14 +596,14 @@ class TextRow extends StatelessWidget {
     return FieldRow(
       label: label,
       child: Container(
-        height: 24,
-        padding: const EdgeInsets.symmetric(horizontal: Space.sm),
+        height: _fieldHeight,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         alignment: Alignment.centerLeft,
         decoration: BoxDecoration(
           color: OrblitColors.raised,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(Radii.control),
         ),
-        child: Text(value, style: OrblitText.monoValue.copyWith(fontSize: 11)),
+        child: Text(value, style: OrblitText.monoValue),
       ),
     );
   }

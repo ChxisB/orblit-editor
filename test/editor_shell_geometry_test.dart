@@ -127,7 +127,7 @@ void main() {
       // In the modelling panel now, not four scrolls down the inspector.
       await openTools(tester);
 
-      expect(find.text('GEOMETRY'), findsOneWidget);
+      expect(find.text('Geometry'), findsOneWidget);
       expect(find.text('Editing'), findsOneWidget);
     });
 
@@ -140,7 +140,13 @@ void main() {
       expect(find.textContaining('Modelling tab'), findsOneWidget);
       expect(find.text('Go to Modelling'), findsOneWidget);
       // And the shape's own numbers are still where they belong.
-      expect(find.text('CUBE'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(Inspector),
+          matching: find.text('Cube'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('G goes into the geometry and round the modes', (tester) async {
@@ -253,6 +259,8 @@ void main() {
       await addShape(tester, 'Cube');
       await openTools(tester);
 
+      // Below the fold at this height, now the groups are taller.
+      await tester.ensureVisible(find.text('Flip all normals'));
       await tester.tap(find.text('Flip all normals'));
       await tester.pumpAndSettle();
 

@@ -45,7 +45,6 @@ extension _Light on InspectorTarget {
 
     return OrblitSection(
       title: 'Light',
-      icon: Icons.wb_sunny_outlined,
       child: Column(
         children: [
           if (isCelestial && isSun) ..._celestial(),
@@ -91,12 +90,7 @@ extension _Light on InspectorTarget {
     ),
     if (scene.dayCycle)
       const Padding(
-        padding: EdgeInsets.fromLTRB(
-          Space.md,
-          Space.xs,
-          Space.md,
-          0,
-        ),
+        padding: EdgeInsets.only(top: Space.xs),
         child: Text(
           'The day cycle is deciding: whichever body is above the '
           'horizon lights the scene, and its colour, strength and '
@@ -259,7 +253,7 @@ extension _Light on InspectorTarget {
     final type = object.lightType;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(Space.md, Space.xs, Space.md, 0),
+      padding: const EdgeInsets.only(top: Space.xs),
       child: Text(switch (type) {
         LightType.sun =>
           'Sun size is the width of the source in the sky. It is what '
