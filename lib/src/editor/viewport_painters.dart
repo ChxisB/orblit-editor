@@ -27,6 +27,76 @@ class _GridPainter extends CustomPainter {
   bool shouldRepaint(covariant _GridPainter oldDelegate) => false;
 }
 
+/// The world's three axes as the camera sees them, with a disc and a letter
+/// on the end of each.
+///
+/// The handles use the same colours, so an axis here is the one to grab there.
+class _OrientationPainter extends CustomPainter {
+  const _OrientationPainter(this.basis);
+
+  final ({Vector3 right, Vector3 up, Vector3 forward}) basis;
+
+  static const _arm = 15.0;
+  static const _disc = 6.0;
+
+  // Along the camera's right and against its up, because the screen's y runs
+  // downwards.
+  Offset _tip(GizmoAxis axis, Offset centre) {
+    final direction = axis.direction;
+    return centre +
+        Offset(direction.dot(basis.right), -direction.dot(basis.up)) * _arm;
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centre = size.center(Offset.zero);
+    canvas.drawCircle(
+      centre,
+      size.width / 2 - 2,
+      Paint()..color = OrblitColors.surface.withValues(alpha: 0.7),
+    );
+
+    // Furthest first, so an axis pointing at the camera is drawn over the
+    // ones behind it.
+    final axes = [...GizmoAxis.values]
+      ..sort(
+        (a, b) => b.direction
+            .dot(basis.forward)
+            .compareTo(a.direction.dot(basis.forward)),
+      );
+    for (final axis in axes) {
+      final tip = _tip(axis, centre);
+      canvas
+        ..drawLine(
+          centre,
+          tip,
+          Paint()
+            ..color = axis.colour
+            ..strokeWidth = 2
+            ..strokeCap = StrokeCap.round,
+        )
+        ..drawCircle(tip, _disc, Paint()..color = axis.colour);
+      final letter = TextPainter(
+        text: TextSpan(
+          text: axis.name.toUpperCase(),
+          style: const TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            color: OrblitColors.ground,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      letter.paint(canvas, tip - letter.size.center(Offset.zero));
+      letter.dispose();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _OrientationPainter oldDelegate) =>
+      oldDelegate.basis != basis;
+}
+
 /// Draws a box round the selected object.
 class _SelectionPainter extends CustomPainter {
   const _SelectionPainter({

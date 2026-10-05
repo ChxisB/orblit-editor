@@ -12,6 +12,7 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 import '../platform/command_shortcuts.dart';
 import '../platform/renderer_support.dart';
 import '../theme/orblit_theme.dart';
+import '../widgets/icon_tile.dart';
 import 'commands.dart';
 import 'drawing.dart';
 import 'editor_mode.dart';
@@ -552,8 +553,10 @@ class _SceneViewportState extends State<SceneViewport>
                   ),
                 if (widget.drawing?.tool.isDrawing ?? false) _outline(),
                 if (_box != null) _marquee(),
+                if (_rendererAvailable) _tools(),
                 _chips(),
-                _footer(),
+                _orientation(),
+                _hint(),
               ],
             );
           },
@@ -658,41 +661,34 @@ class _SceneViewportState extends State<SceneViewport>
     child: _CameraPreview(child: preview),
   );
 
-  // The tools and the hint share one row. Beside a mode's panel the view
-  // can be narrower than the hint, which then wraps rather than running
-  // under the tools or off the left edge.
-  Widget _footer() => Positioned(
+  // Beside a mode's panel the view can be narrower than the hint, which then
+  // wraps rather than running off the left edge.
+  Widget _hint() => const Positioned(
     left: Space.md,
     right: Space.md,
     bottom: Space.md,
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        if (_rendererAvailable) _tools(),
-        const Expanded(
-          child: Align(
-            alignment: Alignment.bottomRight,
-            child: _ViewportChip(
-              'Drag to orbit · two fingers to orbit, shift to pan, pinch '
-              'to zoom · ` to fly, then WASD',
-            ),
-          ),
-        ),
-      ],
+    child: Align(
+      alignment: Alignment.bottomRight,
+      child: _ViewportChip(
+        'Drag to orbit · two fingers to orbit, shift to pan, pinch '
+        'to zoom · ` to fly, then WASD',
+      ),
     ),
   );
 
-  Widget _tools() => Row(
-    children: [
-      for (final mode in GizmoMode.values) ...[
-        _ToolButton(
-          mode: mode,
-          selected: _mode == mode,
-          onPressed: () => setState(() => _mode = mode),
-        ),
-        const SizedBox(width: Space.xs),
-      ],
-    ],
+  Widget _tools() => Positioned(
+    left: Space.md,
+    top: Space.md,
+    child: _ToolPalette(
+      mode: _mode,
+      onSelect: (mode) => setState(() => _mode = mode),
+    ),
+  );
+
+  Widget _orientation() => Positioned(
+    right: Space.md,
+    top: Space.md,
+    child: _OrientationGizmo(camera: widget.camera),
   );
 
   // The tools themselves live in the modelling panel. What is here is
@@ -701,34 +697,34 @@ class _SceneViewportState extends State<SceneViewport>
   // are somewhere else as well.
   Widget _chips() {
     return Positioned(
-      left: Space.md,
+      // Clear of the tools on one side and the orientation on the other, and
+      // wrapping when that leaves too little room for one line.
+      left: _rendererAvailable
+          ? Space.md + _ToolPalette.width + Space.sm
+          : Space.md,
+      right: Space.md + _OrientationGizmo.size + Space.sm,
       top: Space.md,
-      child: Row(
+      child: Wrap(
+        spacing: Space.xs,
+        runSpacing: Space.xs,
         children: [
           const _ViewportChip('Perspective'),
-          const SizedBox(width: Space.xs),
           const _ViewportChip('Shaded'),
-          if (widget.showStats) ...[
-            const SizedBox(width: Space.xs),
+          if (widget.showStats)
             _ViewportChip(
               widget.frameRate == null
                   ? _summary
                   : '${widget.frameRate} · $_summary',
             ),
-          ],
-          const SizedBox(width: Space.xs),
           // What the drag has done so far, while it is doing it.
           if (_dragged case final moved?)
-            Padding(
-              padding: const EdgeInsets.only(right: Space.xs),
-              child: _ViewportChip(
-                widget.snapping.on
-                    ? '${_signed(moved.squares, 0)} '
-                          '${moved.squares.abs() == 1 ? "square" : "squares"}'
-                          ' · ${_signed(moved.metres, 2)} m'
-                    : '${_signed(moved.metres, 2)} m',
-                on: true,
-              ),
+            _ViewportChip(
+              widget.snapping.on
+                  ? '${_signed(moved.squares, 0)} '
+                        '${moved.squares.abs() == 1 ? "square" : "squares"}'
+                        ' · ${_signed(moved.metres, 2)} m'
+                  : '${_signed(moved.metres, 2)} m',
+              on: true,
             ),
           if (widget.drawing?.tool.isDrawing ?? false)
             _ViewportChip(
@@ -762,8 +758,7 @@ class _SceneViewportState extends State<SceneViewport>
           ),
           // Only when there is one to hide. A switch for something that
           // is not there is a switch that teaches somebody nothing.
-          if (_flying) ...[
-            const SizedBox(width: Space.xs),
+          if (_flying)
             _ViewportChip(
               'Flying · ${_flySpeed.toStringAsFixed(1)} m/s',
               on: true,
@@ -773,12 +768,10 @@ class _SceneViewportState extends State<SceneViewport>
                   'the wheel to change how fast. Escape or ` to stop.',
               onTap: _toggleFlying,
             ),
-          ],
           // Only while something is selected: it is a switch for how the
           // selection is shown, and with nothing selected it would change
           // nothing anybody could see.
-          if (widget.selected.isNotEmpty) ...[
-            const SizedBox(width: Space.xs),
+          if (widget.selected.isNotEmpty)
             _ViewportChip(
               widget.outlineSelection ? 'Outline' : 'Boundary',
               on: widget.outlineSelection,
@@ -790,9 +783,7 @@ class _SceneViewportState extends State<SceneViewport>
                   'meets instead.',
               onTap: widget.onToggleOutline,
             ),
-          ],
-          if (widget.interface != null) ...[
-            const SizedBox(width: Space.xs),
+          if (widget.interface != null)
             _ViewportChip(
               'Interface',
               on: widget.showInterface,
@@ -803,7 +794,6 @@ class _SceneViewportState extends State<SceneViewport>
                   'game.',
               onTap: widget.onToggleInterface,
             ),
-          ],
         ],
       ),
     );

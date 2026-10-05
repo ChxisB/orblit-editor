@@ -34,7 +34,7 @@ class _IconTileState extends State<IconTile> {
   bool _hovering = false;
 
   Color get _fill {
-    if (widget.active) return OrblitColors.raised;
+    if (widget.active) return OrblitColors.emberWash;
     return _hovering ? OrblitColors.hover : Colors.transparent;
   }
 

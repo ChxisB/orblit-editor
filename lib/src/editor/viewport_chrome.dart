@@ -3,40 +3,68 @@ part of 'viewport.dart';
 // The small widgets around the render -- toolbar buttons, readouts, and
 // the stand-in shown where there is no renderer to show.
 
-/// One of the two things a drag on a handle can do.
-class _ToolButton extends StatelessWidget {
-  const _ToolButton({
-    required this.mode,
-    required this.selected,
-    required this.onPressed,
-  });
+/// The tools a drag on a handle can be, in a strip that floats over the
+/// corner of the view.
+///
+/// Translucent, so the scene shows through the gaps rather than ending at a
+/// panel edge.
+class _ToolPalette extends StatelessWidget {
+  const _ToolPalette({required this.mode, required this.onSelect});
+
+  /// A tile and the padding either side of it.
+  static const width = 40.0;
 
   final GizmoMode mode;
-  final bool selected;
-  final VoidCallback onPressed;
+  final ValueChanged<GizmoMode> onSelect;
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: mode.label,
-      child: GestureDetector(
-        onTap: onPressed,
-        child: Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: selected ? OrblitColors.ember : OrblitColors.raised,
-            borderRadius: BorderRadius.circular(Radii.control),
-            border: Border.all(
-              color: selected ? OrblitColors.ember : OrblitColors.lineSoft,
-            ),
-          ),
-          child: Icon(
-            mode.icon,
-            size: 15,
-            color: selected ? Colors.white : OrblitColors.inkDim,
-          ),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: OrblitColors.surface.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(Radii.panel),
+        border: Border.all(color: const Color(0x0FFFFFFF)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(Space.xs),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 2,
+          children: [
+            for (final each in GizmoMode.values)
+              IconTile(
+                tooltip: each.label,
+                iconSize: 16,
+                radius: Radii.control,
+                active: each == mode,
+                onTap: () => onSelect(each),
+                child: Icon(each.icon),
+              ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+/// Which way the world's axes run on screen, so that somebody who has
+/// orbited away from the grid can find their way back.
+///
+/// Out of the pointer's way: it is a readout, and a drag that starts on it
+/// should still orbit the view.
+class _OrientationGizmo extends StatelessWidget {
+  const _OrientationGizmo({required this.camera});
+
+  static const size = 56.0;
+
+  final OrbitCamera camera;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: CustomPaint(
+        size: const Size.square(size),
+        painter: _OrientationPainter(camera.basis),
       ),
     );
   }
