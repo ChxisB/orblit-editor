@@ -153,8 +153,15 @@ Future<void> answerPrompt(
   await tester.pumpAndSettle();
 }
 
-/// The unsaved marker in the status bar, rather than the one on the Scene
-/// menu — both are shown, in the two places somebody looks.
+/// What the editor says the last change was: the tooltip on Undo, which names
+/// the change it would take back.
+Finder lastChange(String label) => find.byWidgetPredicate(
+  (widget) =>
+      widget is Tooltip && (widget.message ?? '').startsWith('Undo $label'),
+);
+
+/// The unsaved marker beside the file name in the header, rather than the one
+/// on the Scene menu — both are shown, in the two places somebody looks.
 Finder unsavedMarker() => find.descendant(
   of: find.byType(Row),
   matching: find.textContaining(RegExp(r'\.oscene •|Unsaved')),

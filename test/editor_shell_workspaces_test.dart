@@ -39,12 +39,12 @@ void main() {
         tester.widget<SceneViewport>(find.byType(SceneViewport)).editing !=
         null;
 
-    testWidgets('the tabs follow the order a level is made in', (
+    testWidgets('the rail follows the order a level is made in', (
       tester,
     ) async {
       await open(tester);
 
-      final lefts = [
+      final tops = [
         for (final name in [
           'scene',
           'modelling',
@@ -53,13 +53,14 @@ void main() {
           'cinematics',
           'interface',
         ])
-          tester.getTopLeft(modeTab(name)).dx,
+          tester.getTopLeft(modeTab(name)).dy,
       ];
-      expect(lefts, [...lefts]..sort());
+      expect(tops, [...tops]..sort());
+      expect(tops.toSet(), hasLength(tops.length), reason: 'one below another');
       expect(inMode(tester, 'scene'), isTrue);
     });
 
-    testWidgets('the tabs give up their icons before their words', (
+    testWidgets('the rail shows an icon and names each one in a tooltip', (
       tester,
     ) async {
       await open(tester);
@@ -72,23 +73,15 @@ void main() {
         matching: find.text('Interface'),
       );
 
-      // The test font is wider than any real one, so these widths are
-      // where it runs out of room rather than where a real window does.
-      await tester.binding.setSurfaceSize(const Size(1800, 900));
-      await tester.pumpAndSettle();
-      expect(icon(), findsOneWidget);
-      expect(word(), findsOneWidget);
-
-      await tester.binding.setSurfaceSize(const Size(1600, 900));
-      await tester.pumpAndSettle();
-      expect(icon(), findsNothing);
-      expect(word(), findsOneWidget);
-
-      await tester.binding.setSurfaceSize(const Size(960, 620));
-      await tester.pumpAndSettle();
-      expect(icon(), findsOneWidget);
-      expect(word(), findsNothing);
-      expect(find.byTooltip('Interface'), findsOneWidget);
+      // The same at the widest window and the smallest: the rail never has
+      // a word to give up, so nothing in it depends on the width.
+      for (final size in const [Size(1800, 900), Size(960, 620)]) {
+        await tester.binding.setSurfaceSize(size);
+        await tester.pumpAndSettle();
+        expect(icon(), findsOneWidget, reason: '$size');
+        expect(word(), findsNothing, reason: '$size');
+        expect(find.byTooltip('Interface'), findsOneWidget, reason: '$size');
+      }
     });
 
     testWidgets('each one fits the smallest window', (tester) async {
@@ -358,9 +351,7 @@ void main() {
       expect(row('screen'), findsOneWidget);
     });
 
-    testWidgets('the bar along the bottom names the interface', (
-      tester,
-    ) async {
+    testWidgets('the top bar names the interface', (tester) async {
       final counts = find.textContaining(RegExp(r'^\d+ objects$'));
       await open(tester);
       expect(counts, findsOneWidget);
@@ -372,9 +363,9 @@ void main() {
       // Where it is in the project, since the shelf gives only its name.
       final where = find.text('interfaces/screen.oui');
       expect(where, findsOneWidget);
-      // Against the bar's right edge, not left wherever the last change's
-      // words happen to end.
-      expect(tester.getTopRight(where).dx, closeTo(1440 - 12, 1));
+      // In the top bar, with whether it is on disk beside it.
+      expect(tester.getBottomLeft(where).dy, lessThan(48));
+      expect(find.text('Saved'), findsOneWidget);
       expect(find.byType(ModeShelf), findsOneWidget);
       // The scene's count and frame rate say nothing about a screen.
       expect(counts, findsNothing);

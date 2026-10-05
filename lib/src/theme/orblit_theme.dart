@@ -28,13 +28,24 @@ abstract final class OrblitColors {
 
   static const ink = Color(0xFFE4E9F0);
   static const inkMid = Color(0xFFA6B0BF);
-  static const inkDim = Color(0xFF78828F);
+  static const inkDim = Color(0xFF8791A1);
 
   /// The accent. Warm, because everything else is cold, and because it is the
   /// colour of the first frame the engine ever rendered.
   static const ember = Color(0xFFE5893F);
   static const emberDeep = Color(0xFFC25E22);
-  static const emberWash = Color(0x1FE5893F);
+  static const emberWash = Color(0x24E5893F);
+
+  /// Text and glyphs on an ember fill. Dark, because the ember is bright.
+  static const emberInk = Color(0xFF1A1206);
+
+  /// The hairline round a panel, a white at four percent.
+  static const rim = Color(0x0AFFFFFF);
+
+  /// The three axes, in the order a gizmo draws them.
+  static const axisX = Color(0xFFD9634F);
+  static const axisY = Color(0xFF5FB483);
+  static const axisZ = Color(0xFF62A0E8);
 
   static const good = Color(0xFF5FB483);
   static const warn = Color(0xFFE0B252);
@@ -57,10 +68,13 @@ abstract final class Space {
 
 abstract final class Radii {
   /// Controls: inputs, buttons, chips.
-  static const control = 5.0;
+  static const control = 6.0;
 
-  /// Panels and cards.
-  static const panel = 8.0;
+  /// Cards, menus and the picture inside a panel.
+  static const card = 8.0;
+
+  /// Panels.
+  static const panel = 10.0;
 
   /// The window itself.
   static const window = 12.0;
@@ -105,6 +119,14 @@ abstract final class OrblitText {
     color: OrblitColors.inkMid,
   );
 
+  /// The name of a panel, in its header.
+  static const panelTitle = TextStyle(
+    fontSize: 12,
+    height: 1.3,
+    fontWeight: FontWeight.w600,
+    color: OrblitColors.ink,
+  );
+
   /// Section headings inside panels.
   static const section = TextStyle(
     fontSize: 10.5,
@@ -143,7 +165,7 @@ abstract final class OrblitText {
 ThemeData orblitTheme() {
   const scheme = ColorScheme.dark(
     primary: OrblitColors.ember,
-    onPrimary: Color(0xFF1A1206),
+    onPrimary: OrblitColors.emberInk,
     secondary: OrblitColors.ember,
     surface: OrblitColors.surface,
     onSurface: OrblitColors.ink,

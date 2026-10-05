@@ -68,7 +68,7 @@ class _OrblitButtonState extends State<OrblitButton> {
         _pressed ? OrblitColors.emberDeep : OrblitColors.ember,
       ButtonTone.normal => _hovering ? OrblitColors.hover : OrblitColors.raised,
       ButtonTone.quiet ||
-      ButtonTone.flat => _hovering ? OrblitColors.raised : Colors.transparent,
+      ButtonTone.flat => _hovering ? OrblitColors.hover : Colors.transparent,
     };
   }
 
@@ -77,7 +77,7 @@ class _OrblitButtonState extends State<OrblitButton> {
     return switch (widget.tone) {
       // Near-black on ember rather than white: the accent is bright enough
       // that white text on it is the lower-contrast choice, not the higher.
-      ButtonTone.primary => const Color(0xFF1A1206),
+      ButtonTone.primary => OrblitColors.emberInk,
       ButtonTone.normal => OrblitColors.ink,
       ButtonTone.quiet ||
       ButtonTone.flat => _hovering ? OrblitColors.ink : OrblitColors.inkMid,
@@ -313,7 +313,7 @@ class OrblitPanel extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: OrblitColors.surface,
-        borderRadius: BorderRadius.circular(Radii.panel),
+        borderRadius: BorderRadius.circular(Radii.card),
         border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: Column(
@@ -370,7 +370,7 @@ class OrblitSection extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(Space.sm, 0, Space.sm, Space.sm),
       decoration: BoxDecoration(
         color: OrblitColors.ground,
-        borderRadius: BorderRadius.circular(Radii.panel),
+        borderRadius: BorderRadius.circular(Radii.card),
         border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: Column(
@@ -695,7 +695,7 @@ const orblitMenuStyle = MenuStyle(
   surfaceTintColor: WidgetStatePropertyAll(Colors.transparent),
   shape: WidgetStatePropertyAll(
     RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(Radius.circular(Radii.panel)),
+      borderRadius: BorderRadius.all(Radius.circular(Radii.card)),
       side: BorderSide(color: OrblitColors.line),
     ),
   ),

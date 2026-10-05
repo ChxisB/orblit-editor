@@ -37,7 +37,7 @@ void main() {
 
     // Named after the file, and recorded as referencing it.
     expect(row('crate'), findsOneWidget);
-    expect(find.textContaining('Add crate'), findsOneWidget);
+    expect(lastChange('Add crate'), findsOneWidget);
   });
 
   Future<void> dropTexture(WidgetTester tester) async {

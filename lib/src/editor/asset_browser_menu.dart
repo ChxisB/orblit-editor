@@ -83,7 +83,7 @@ class _AssetMenuState extends State<AssetMenu> {
     surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
     shape: WidgetStatePropertyAll(
       RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(Radii.panel),
+        borderRadius: BorderRadius.circular(Radii.card),
         side: const BorderSide(color: OrblitColors.line),
       ),
     ),

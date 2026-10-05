@@ -1,53 +1,18 @@
 part of 'editor_shell.dart';
 
-// The frame around the panels: the bar above them with the menus, the
-// modes and the transport on it, the mode's tool shelf under it, the bar
-// below, and the handle between two panels.
+// The frame around the panels: the header above them with the menus, the
+// search and undo on it, the rail of workspaces beside them, and the play
+// controls the scene view carries.
 
-/// The bar between the viewport and the project browser.
-class _Splitter extends StatefulWidget {
-  const _Splitter({required this.onDrag});
-
-  final ValueChanged<double> onDrag;
-
-  @override
-  State<_Splitter> createState() => _SplitterState();
-}
-
-class _SplitterState extends State<_Splitter> {
-  bool _hovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.resizeRow,
-      onEnter: (_) => setState(() => _hovering = true),
-      onExit: (_) => setState(() => _hovering = false),
-      child: GestureDetector(
-        onVerticalDragUpdate: (details) => widget.onDrag(details.delta.dy),
-        child: Container(
-          height: 6,
-          color: _hovering ? OrblitColors.line : Colors.transparent,
-        ),
-      ),
-    );
-  }
-}
-
-/// Menus on the left, the modes in the middle, and running the game on the
-/// right, all on one bar so the panels start as high up the window as they
-/// can.
-class _TopBar extends StatelessWidget {
-  const _TopBar({
-    required this.modes,
-    required this.mode,
-    required this.onMode,
-    required this.project,
-    required this.playing,
+/// The header: the menus and the file on the left, search in the middle of the
+/// window, and undo and redo on the right.
+final class _AppHeader extends StatelessWidget {
+  const _AppHeader({
+    required this.projectName,
+    required this.file,
     required this.history,
     required this.dirty,
-    required this.onPlay,
-    required this.onStop,
+    required this.onSearch,
     required this.onClose,
     required this.onAdd,
     required this.onAddShape,
@@ -68,16 +33,14 @@ class _TopBar extends StatelessWidget {
     required this.onDuplicate,
   });
 
-  final List<EditorMode> modes;
-  final EditorMode mode;
-  final ValueChanged<EditorMode> onMode;
+  final String projectName;
 
-  final Project project;
-  final bool playing;
+  /// What the workspace in use says about the file it is working on.
+  final Widget file;
+
   final History history;
   final bool dirty;
-  final VoidCallback onPlay;
-  final VoidCallback onStop;
+  final VoidCallback onSearch;
   final VoidCallback onClose;
   final ValueChanged<ObjectKind> onAdd;
   final ValueChanged<ShapeKind> onAddShape;
@@ -107,14 +70,7 @@ class _TopBar extends StatelessWidget {
     final menus = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        OrblitButton(
-          label: project.name,
-          tooltip: 'Return to the project launcher.',
-          icon: Icons.chevron_left,
-          tone: ButtonTone.flat,
-          onPressed: onClose,
-        ),
-        const _BarDivider(),
+        _LogoMenu(onClose: onClose, onSearch: onSearch),
         _SceneMenu(
           dirty: dirty,
           onSave: onSave,
@@ -138,133 +94,183 @@ class _TopBar extends StatelessWidget {
         ),
         viewMenu,
         const _BarDivider(),
-        // Labelled with what they would undo, so the tooltip answers the
-        // question somebody actually has before they press it.
-        _TransportButton(
-          icon: Icons.undo,
-          tooltip: history.undoLabel == null
-              ? 'Nothing to undo'
-              : 'Undo ${history.undoLabel} (${commandShortcutLabel('Z')}).',
-          active: false,
-          enabled: history.canUndo,
-          onTap: onUndo,
+        Flexible(
+          child: Text(
+            projectName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: OrblitText.label.copyWith(
+              fontWeight: FontWeight.w500,
+              color: OrblitColors.ink,
+            ),
+          ),
         ),
-        _TransportButton(
-          icon: Icons.redo,
-          tooltip: history.redoLabel == null
-              ? 'Nothing to redo'
-              : 'Redo ${history.redoLabel} (${commandShortcutLabel('⇧Z')}).',
-          active: false,
-          enabled: history.canRedo,
-          onTap: onRedo,
-        ),
+        const SizedBox(width: Space.md),
+        Flexible(child: file),
       ],
     );
 
-    final run = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Text('pre-alpha', style: OrblitText.caption),
-        const SizedBox(width: Space.md),
-        // Set apart on a pad of its own, since it is the one control on the
-        // bar that leaves the editor rather than changing something in it.
-        Container(
-          padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            color: OrblitColors.surface,
-            borderRadius: BorderRadius.circular(Radii.control + 2),
-          ),
-          child: Row(
+    return SizedBox(
+      height: 48,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: Space.md),
+        child: CentredBar(
+          start: menus,
+          // Up to 360 wide and no wider, and narrower in a window with less
+          // room: the bar hands it only what the two ends leave.
+          middle: SizedBox(width: 360, child: _SearchButton(onTap: onSearch)),
+          end: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _TransportButton(
-                icon: playing ? Icons.pause : Icons.play_arrow,
-                tooltip: playing
-                    ? 'Pause scene animation.'
-                    : 'Play scene animation.',
-                active: playing,
-                onTap: onPlay,
+              // Labelled with what they would undo, so the tooltip answers
+              // the question somebody actually has before they press it.
+              _HeaderButton(
+                tooltip: history.undoLabel == null
+                    ? 'Nothing to undo'
+                    : 'Undo ${history.undoLabel} '
+                          '(${commandShortcutLabel('Z')}).',
+                enabled: history.canUndo,
+                onTap: onUndo,
+                child: const Icon(Icons.undo),
               ),
-              _TransportButton(
-                icon: Icons.stop,
-                tooltip: 'Stop animation and return to editing.',
-                active: false,
-                onTap: onStop,
+              _HeaderButton(
+                tooltip: history.redoLabel == null
+                    ? 'Nothing to redo'
+                    : 'Redo ${history.redoLabel} '
+                          '(${commandShortcutLabel('⇧Z')}).',
+                enabled: history.canRedo,
+                onTap: onRedo,
+                child: const Icon(Icons.redo),
               ),
             ],
           ),
         ),
-      ],
-    );
-
-    return Container(
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: Space.sm),
-      // The same colour as the gaps between the panels, so the bar is part of
-      // the frame the panels sit in rather than one more panel on top.
-      color: OrblitColors.ground,
-      child: CustomMultiChildLayout(
-        delegate: _BarLayout(),
-        children: [
-          LayoutId(id: _BarSlot.start, child: menus),
-          // With one mode there is nothing to switch between, and a single
-          // tab would only be a label saying what the editor is.
-          if (modes.length > 1)
-            LayoutId(
-              id: _BarSlot.middle,
-              child: _ModeTabs(modes: modes, mode: mode, onMode: onMode),
-            ),
-          LayoutId(id: _BarSlot.end, child: run),
-        ],
       ),
     );
   }
 }
 
-enum _BarSlot { start, middle, end }
+/// The scene's file, and how many objects are in it.
+final class _SceneFile extends StatelessWidget {
+  const _SceneFile({
+    required this.file,
+    required this.unsaved,
+    required this.objects,
+  });
 
-/// Lays out the top bar with its middle in the middle of the window.
-///
-/// Not in the middle of the room left between the two ends: the ends are
-/// different widths, and modes that shift along whenever a menu gains an
-/// unsaved dot are modes somebody has to look for. Pushed aside only when an
-/// end would otherwise run into them.
-class _BarLayout extends MultiChildLayoutDelegate {
+  /// Null before any scene is open.
+  final String? file;
+  final bool unsaved;
+  final int objects;
+
   @override
-  void performLayout(Size size) {
-    final loose = BoxConstraints.loose(size);
-    final start = layoutChild(_BarSlot.start, loose);
-    final end = layoutChild(
-      _BarSlot.end,
-      loose.copyWith(maxWidth: (size.width - start.width).clamp(0, size.width)),
-    );
-    positionChild(_BarSlot.start, Offset(0, (size.height - start.height) / 2));
-    positionChild(
-      _BarSlot.end,
-      Offset(size.width - end.width, (size.height - end.height) / 2),
-    );
-
-    if (!hasChild(_BarSlot.middle)) return;
-    const gap = Space.lg;
-    final room = size.width - start.width - end.width - gap * 2;
-    final middle = layoutChild(
-      _BarSlot.middle,
-      loose.copyWith(maxWidth: room.clamp(0, size.width)),
-    );
-    final lowest = start.width + gap;
-    final highest = size.width - end.width - gap - middle.width;
-    final centred = (size.width - middle.width) / 2;
-    positionChild(
-      _BarSlot.middle,
-      Offset(
-        highest < lowest ? lowest : centred.clamp(lowest, highest),
-        (size.height - middle.height) / 2,
-      ),
+  Widget build(BuildContext context) {
+    final name = file;
+    if (name == null) {
+      return const Text('No scene loaded', style: OrblitText.caption);
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: FileStatus(file: name, unsaved: unsaved),
+        ),
+        const SizedBox(width: Space.md),
+        Text(
+          objects == 1 ? '1 object' : '$objects objects',
+          maxLines: 1,
+          style: OrblitText.caption.copyWith(fontSize: 11.5),
+        ),
+      ],
     );
   }
+}
+
+/// The engine's mark, which opens what belongs to the app and not to the
+/// project: the way back to the launcher, and the palette.
+final class _LogoMenu extends StatelessWidget {
+  const _LogoMenu({required this.onClose, required this.onSearch});
+
+  final VoidCallback onClose;
+  final VoidCallback onSearch;
 
   @override
-  bool shouldRelayout(_BarLayout oldDelegate) => false;
+  Widget build(BuildContext context) => MenuAnchor(
+    style: orblitMenuStyle,
+    menuChildren: [
+      MenuItemButton(
+        onPressed: onClose,
+        leadingIcon: const Icon(Icons.chevron_left),
+        child: const Text('All projects'),
+      ),
+      MenuItemButton(
+        onPressed: onSearch,
+        leadingIcon: const Icon(Icons.search),
+        trailingIcon: Text(
+          commandShortcutLabel('K'),
+          style: OrblitText.mono.copyWith(fontSize: 11),
+        ),
+        child: const Text('Command palette'),
+      ),
+    ],
+    builder: (context, controller, child) => _HeaderButton(
+      tooltip: 'Orblit menu',
+      onTap: () => controller.isOpen ? controller.close() : controller.open(),
+      child: const OrblitMark(),
+    ),
+  );
+}
+
+/// The way into the palette, which stands in the middle of the header so it is
+/// the first thing the eye lands on.
+final class _SearchButton extends StatefulWidget {
+  const _SearchButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  State<_SearchButton> createState() => _SearchButtonState();
+}
+
+class _SearchButtonState extends State<_SearchButton> {
+  bool _hovering = false;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    child: MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onTap,
+        child: Container(
+          height: 30,
+          padding: const EdgeInsets.only(left: 10, right: 6),
+          decoration: BoxDecoration(
+            color: _hovering ? OrblitColors.raised : OrblitColors.surface,
+            borderRadius: BorderRadius.circular(Radii.card),
+          ),
+          child: Row(
+            spacing: Space.sm,
+            children: [
+              const Icon(Icons.search, size: 14, color: OrblitColors.inkDim),
+              const Expanded(
+                child: Text(
+                  'Search commands and objects',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12.5, color: OrblitColors.inkDim),
+                ),
+              ),
+              Keycap(commandShortcutLabel('K')),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /// A short upright line between groups of controls on the bar.
@@ -274,181 +280,36 @@ class _BarDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     width: 1,
-    height: 18,
-    margin: const EdgeInsets.symmetric(horizontal: Space.sm),
+    height: 16,
+    margin: const EdgeInsets.symmetric(horizontal: 10),
     color: OrblitColors.line,
   );
 }
 
-/// How much of each workspace tab the bar has room for.
-enum _TabFit { iconAndWord, word, icon }
-
-/// The workspace tabs, with as much of each as the bar has room for.
-///
-/// The icon goes first and the word last, because the word is what tells
-/// somebody new what a tab is for. Only a window too narrow for the words
-/// gets icons alone, and those say their word when pointed at.
-final class _ModeTabs extends StatelessWidget {
-  const _ModeTabs({
-    required this.modes,
-    required this.mode,
-    required this.onMode,
-  });
-
-  final List<EditorMode> modes;
-  final EditorMode mode;
-  final ValueChanged<EditorMode> onMode;
-
-  @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) {
-      final fit = _fitIn(context, constraints.maxWidth);
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (final each in modes)
-            _ModeTab(
-              key: ValueKey('mode/${each.name}'),
-              mode: each,
-              fit: fit,
-              selected: each.name == mode.name,
-              onTap: () => onMode(each),
-            ),
-        ],
-      );
-    },
-  );
-
-  _TabFit _fitIn(BuildContext context, double room) {
-    // Merged as Text merges it, or an inherited letter spacing makes the
-    // words wider on screen than they measured.
-    final style = DefaultTextStyle.of(context).style.merge(_ModeTab.wording);
-    var words = 0.0;
-    for (final each in modes) {
-      final painter = TextPainter(
-        text: TextSpan(text: each.label, style: style),
-        textDirection: TextDirection.ltr,
-        textScaler: MediaQuery.textScalerOf(context),
-      )..layout();
-      words += painter.width;
-      painter.dispose();
-    }
-    final padding = modes.length * _ModeTab.padding * 2;
-    final icons = modes.length * (_ModeTab.iconSize + _ModeTab.iconGap);
-    if (padding + icons + words <= room) return _TabFit.iconAndWord;
-    if (padding + words <= room) return _TabFit.word;
-    return _TabFit.icon;
-  }
-}
-
-/// One mode on the top bar. The one the editor is in is lit, not boxed: the
-/// row is a choice of what the middle of the window is for, not a row of
-/// buttons.
-class _ModeTab extends StatefulWidget {
-  const _ModeTab({
-    super.key,
-    required this.mode,
-    required this.fit,
-    required this.selected,
-    required this.onTap,
-  });
-
-  // What [_ModeTabs] measures a row of tabs by before it builds one.
-  static const padding = Space.sm + 2;
-  static const iconSize = 16.0;
-  static const iconGap = Space.xs + 2;
-  static final wording = OrblitText.label.copyWith(
-    fontSize: 13,
-    fontWeight: FontWeight.w600,
-  );
-
-  final EditorMode mode;
-  final _TabFit fit;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  State<_ModeTab> createState() => _ModeTabState();
-}
-
-class _ModeTabState extends State<_ModeTab> {
-  bool _hovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final colour = widget.selected
-        ? OrblitColors.ember
-        : (_hovering ? OrblitColors.ink : OrblitColors.inkMid);
-
-    final fit = widget.fit;
-    // Colour alone does not tell a screen reader which workspace is open.
-    final tab = Semantics(
-      container: true,
-      button: true,
-      selected: widget.selected,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _hovering = true),
-        onExit: (_) => setState(() => _hovering = false),
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: widget.onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: _ModeTab.padding,
-              vertical: Space.xs,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (fit != _TabFit.word)
-                  Icon(
-                    widget.mode.icon,
-                    size: _ModeTab.iconSize,
-                    color: colour,
-                  ),
-                if (fit == _TabFit.iconAndWord)
-                  const SizedBox(width: _ModeTab.iconGap),
-                if (fit != _TabFit.icon)
-                  Text(
-                    widget.mode.label,
-                    style: _ModeTab.wording.copyWith(color: colour),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-    if (fit != _TabFit.icon) return tab;
-    return Tooltip(message: widget.mode.label, child: tab);
-  }
-}
-
-class _TransportButton extends StatefulWidget {
-  const _TransportButton({
-    required this.icon,
+/// An icon on the header, with a tooltip because it has no word.
+final class _HeaderButton extends StatefulWidget {
+  const _HeaderButton({
+    required this.child,
     required this.tooltip,
-    required this.active,
     required this.onTap,
     this.enabled = true,
   });
 
-  final IconData icon;
+  final Widget child;
   final String tooltip;
-  final bool active;
   final VoidCallback onTap;
   final bool enabled;
 
   @override
-  State<_TransportButton> createState() => _TransportButtonState();
+  State<_HeaderButton> createState() => _HeaderButtonState();
 }
 
-class _TransportButtonState extends State<_TransportButton> {
+class _HeaderButtonState extends State<_HeaderButton> {
   bool _hovering = false;
 
   @override
   Widget build(BuildContext context) {
+    final lit = _hovering && widget.enabled;
     return Tooltip(
       message: widget.tooltip,
       child: MouseRegion(
@@ -461,24 +322,20 @@ class _TransportButtonState extends State<_TransportButton> {
           onTap: widget.enabled ? widget.onTap : null,
           child: Container(
             width: 32,
-            height: 28,
+            height: 32,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: widget.active
-                  ? OrblitColors.emberWash
-                  : (_hovering && widget.enabled
-                        ? OrblitColors.raised
-                        : Colors.transparent),
-              borderRadius: BorderRadius.circular(Radii.control),
+              color: lit ? OrblitColors.hover : Colors.transparent,
+              borderRadius: BorderRadius.circular(Radii.card),
             ),
-            child: Icon(
-              widget.icon,
-              size: 17,
-              color: !widget.enabled
-                  ? OrblitColors.line
-                  : (widget.active
-                        ? OrblitColors.ember
-                        : (_hovering ? OrblitColors.ink : OrblitColors.inkMid)),
+            child: IconTheme(
+              data: IconThemeData(
+                size: 17,
+                color: !widget.enabled
+                    ? OrblitColors.line
+                    : (lit ? OrblitColors.ink : OrblitColors.inkMid),
+              ),
+              child: widget.child,
             ),
           ),
         ),
@@ -487,102 +344,224 @@ class _TransportButtonState extends State<_TransportButton> {
   }
 }
 
-/// The bar along the bottom: the last change on the left, and on the right
-/// whatever the workspace in use says about what it is working on.
-final class _StatusBar extends StatelessWidget {
-  const _StatusBar({required this.message, required this.status});
-
-  final String message;
-  final Widget status;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 24,
-      padding: const EdgeInsets.symmetric(horizontal: Space.md),
-      // The frame's colour, like the bar at the top.
-      color: OrblitColors.ground,
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              message,
-              overflow: TextOverflow.ellipsis,
-              style: OrblitText.caption.copyWith(fontSize: 11),
-            ),
-          ),
-          status,
-        ],
-      ),
-    );
-  }
-}
-
-/// The scene's side of the bar along the bottom: its file, how many objects
-/// it has and how fast it draws.
-final class _SceneStatus extends StatelessWidget {
-  const _SceneStatus({
-    required this.objects,
-    required this.file,
-    required this.dirty,
-    this.rate,
-    this.frameMs,
-    this.gpuBound = false,
-    this.stats = false,
+/// The workspaces, one icon each, in a column beside the panels.
+///
+/// A column and not tabs along the top: it is a choice of what the whole
+/// window is for, so it sits outside the panels it rearranges, and it costs
+/// no height. The one the editor is in is lit; the others say their word
+/// when pointed at.
+final class _WorkspaceRail extends StatelessWidget {
+  const _WorkspaceRail({
+    required this.modes,
+    required this.mode,
+    required this.onMode,
   });
 
-  final int objects;
-  final String file;
-  final bool dirty;
+  final List<EditorMode> modes;
+  final EditorMode mode;
+  final ValueChanged<EditorMode> onMode;
 
-  /// Frames a second, or null before there has been anything to measure.
-  final double? rate;
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 44,
+    padding: const EdgeInsets.all(6),
+    decoration: BoxDecoration(
+      color: OrblitColors.surface,
+      borderRadius: BorderRadius.circular(Radii.panel),
+      border: Border.all(color: OrblitColors.rim),
+    ),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 2,
+      children: [
+        for (final each in modes)
+          _RailButton(
+            key: ValueKey('mode/${each.name}'),
+            mode: each,
+            selected: each.name == mode.name,
+            onTap: () => onMode(each),
+          ),
+      ],
+    ),
+  );
+}
 
-  /// How long the slower half of a frame takes, and which half it is.
-  final double? frameMs;
-  final bool gpuBound;
-  final bool stats;
+class _RailButton extends StatefulWidget {
+  const _RailButton({
+    super.key,
+    required this.mode,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final EditorMode mode;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  State<_RailButton> createState() => _RailButtonState();
+}
+
+class _RailButtonState extends State<_RailButton> {
+  bool _hovering = false;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          dirty ? '$file •' : file,
-          style: OrblitText.mono.copyWith(
-            fontSize: 11,
-            color: dirty ? OrblitColors.ember : OrblitColors.inkDim,
-          ),
-        ),
-        const SizedBox(width: Space.lg),
-        Text('$objects objects', style: OrblitText.mono.copyWith(fontSize: 11)),
-        if (stats) ...[
-          const SizedBox(width: Space.lg),
-          Text(
-            rate == null ? '— fps' : '${rate!.round()} fps',
-            style: OrblitText.mono.copyWith(
-              fontSize: 11,
-              // Below about fifty a frame is late often enough to feel it.
-              color: rate != null && rate! < 50
-                  ? OrblitColors.warn
-                  : OrblitColors.inkDim,
-            ),
-          ),
-          if (frameMs != null) ...[
-            const SizedBox(width: Space.sm),
-            Text(
-              // Which half of the frame the time went in, because "slow" and
-              // "slow at what" are different questions.
-              '${frameMs!.toStringAsFixed(1)} ms ${gpuBound ? "gpu" : "cpu"}',
-              style: OrblitText.mono.copyWith(
-                fontSize: 11,
-                color: OrblitColors.inkDim,
+    final selected = widget.selected;
+    // Colour alone does not tell a screen reader which workspace is open.
+    return Semantics(
+      container: true,
+      button: true,
+      selected: selected,
+      label: widget.mode.label,
+      child: Tooltip(
+        message: widget.mode.label,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          onEnter: (_) => setState(() => _hovering = true),
+          onExit: (_) => setState(() => _hovering = false),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: widget.onTap,
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: selected
+                    ? OrblitColors.raised
+                    : (_hovering ? OrblitColors.hover : Colors.transparent),
+                borderRadius: BorderRadius.circular(Radii.card),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                children: [
+                  // Out in the rail's padding, so the lit one is marked by
+                  // more than a change of colour.
+                  if (selected)
+                    Positioned(
+                      left: -6,
+                      top: 8,
+                      child: Container(
+                        width: 3,
+                        height: 16,
+                        decoration: BoxDecoration(
+                          color: OrblitColors.ember,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                  Icon(
+                    widget.mode.icon,
+                    size: 18,
+                    color: selected
+                        ? OrblitColors.ember
+                        : (_hovering ? OrblitColors.ink : OrblitColors.inkMid),
+                  ),
+                ],
               ),
             ),
-          ],
-        ],
-      ],
+          ),
+        ),
+      ),
     );
   }
+}
+
+/// Play, and stop, on a pad of their own in the middle of the scene view's
+/// header: they are the one pair of controls that leaves the editor rather
+/// than changing something in it.
+final class _PlayPill extends StatelessWidget {
+  const _PlayPill({
+    required this.playing,
+    required this.onPlay,
+    required this.onStop,
+  });
+
+  final bool playing;
+  final VoidCallback onPlay;
+  final VoidCallback onStop;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(3),
+    decoration: BoxDecoration(
+      color: OrblitColors.raised,
+      borderRadius: BorderRadius.circular(9),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 2,
+      children: [
+        _PillButton(
+          icon: playing ? Icons.pause : Icons.play_arrow,
+          tooltip: playing
+              ? 'Pause scene animation.'
+              : 'Play scene animation.',
+          // Ember while it is the thing to press, so a paused scene reads as
+          // waiting for somebody.
+          filled: !playing,
+          onTap: onPlay,
+        ),
+        _PillButton(
+          icon: Icons.stop,
+          tooltip: 'Stop animation and return to editing.',
+          filled: false,
+          onTap: onStop,
+        ),
+      ],
+    ),
+  );
+}
+
+class _PillButton extends StatefulWidget {
+  const _PillButton({
+    required this.icon,
+    required this.tooltip,
+    required this.filled,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final bool filled;
+  final VoidCallback onTap;
+
+  @override
+  State<_PillButton> createState() => _PillButtonState();
+}
+
+class _PillButtonState extends State<_PillButton> {
+  bool _hovering = false;
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: widget.tooltip,
+    child: MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovering = true),
+      onExit: (_) => setState(() => _hovering = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          width: 36,
+          height: 26,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: widget.filled
+                ? OrblitColors.ember
+                : (_hovering ? OrblitColors.hover : Colors.transparent),
+            borderRadius: BorderRadius.circular(Radii.control),
+          ),
+          child: Icon(
+            widget.icon,
+            size: 16,
+            color: widget.filled
+                ? OrblitColors.emberInk
+                : (_hovering ? OrblitColors.ink : OrblitColors.inkMid),
+          ),
+        ),
+      ),
+    ),
+  );
 }

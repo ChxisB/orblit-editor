@@ -57,9 +57,13 @@ class _Header extends StatelessWidget {
             Flexible(child: _CookSummary(status: cookStatus!)),
             const SizedBox(width: Space.sm),
           ],
-          Text(
-            '$count item${count == 1 ? '' : 's'}',
-            style: OrblitText.caption.copyWith(fontSize: 11),
+          Flexible(
+            child: Text(
+              '$count item${count == 1 ? '' : 's'}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: OrblitText.caption.copyWith(fontSize: 11),
+            ),
           ),
           const SizedBox(width: Space.xs),
           // The same menu the right-click opens. Here as well, because a

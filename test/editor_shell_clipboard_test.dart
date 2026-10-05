@@ -88,7 +88,7 @@ void main() {
     await press(tester, LogicalKeyboardKey.keyX);
 
     expect(row('Crate'), findsNothing);
-    expect(find.textContaining('Delete Crate'), findsOneWidget);
+    expect(lastChange('Delete Crate'), findsOneWidget);
   });
 
   testWidgets('duplicate leaves the original alone', (tester) async {
@@ -100,7 +100,7 @@ void main() {
 
     // Two now, sharing a name and nothing else.
     expect(row('Crate'), findsNWidgets(2));
-    expect(find.textContaining('Paste Crate'), findsOneWidget);
+    expect(lastChange('Paste Crate'), findsOneWidget);
   });
 
   testWidgets('pasting is undoable in one step', (tester) async {
@@ -199,7 +199,7 @@ void main() {
 
     expect(row('Sun'), findsNothing);
     expect(row('Ground'), findsNothing);
-    expect(find.textContaining('Delete 2 objects'), findsOneWidget);
+    expect(lastChange('Delete 2 objects'), findsOneWidget);
 
     await press(tester, LogicalKeyboardKey.keyZ);
     expect(row('Sun'), findsOneWidget);

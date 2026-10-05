@@ -12,6 +12,10 @@ import '../launcher/project.dart';
 import '../platform/command_shortcuts.dart';
 import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
+import '../widgets/centred_bar.dart';
+import '../widgets/file_status.dart';
+import '../widgets/keycap.dart';
+import '../widgets/orblit_mark.dart';
 import 'asset_browser.dart';
 import 'assets.dart';
 import 'body_gizmo.dart';
@@ -22,6 +26,7 @@ import 'clip_bench.dart';
 import 'clip_preview.dart';
 import 'clipboard.dart';
 import 'code_editor.dart';
+import 'command_palette.dart';
 import 'boundary.dart';
 import 'commands.dart';
 import 'console.dart';
@@ -99,6 +104,7 @@ part 'editor_shell_layouts.dart';
 part 'editor_shell_playback.dart';
 part 'editor_shell_intents.dart';
 part 'editor_shell_chrome.dart';
+part 'editor_shell_palette.dart';
 part 'editor_shell_menus.dart';
 part 'editor_shell_terrain.dart';
 
@@ -702,7 +708,8 @@ class _EditorShellState extends State<EditorShell> {
     );
   }
 
-  // The window itself: a bar, the panels the layout asks for, a bar.
+  // The window itself: one bar, the rail of workspaces, and the panels the
+  // layout asks for.
   Widget _shell() {
     final open = _current;
 
@@ -715,16 +722,22 @@ class _EditorShellState extends State<EditorShell> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _TopBar(
-              modes: _registry.modes.all,
-              mode: _mode,
-              onMode: _enterMode,
-              project: widget.project,
-              playing: _playing,
+            _AppHeader(
+              projectName: widget.project.name,
+              file:
+                  _mode.status?.call(context) ??
+                  _SceneFile(
+                    file: open == null
+                        ? null
+                        : (open.path == null
+                              ? open.title
+                              : _assets.relative(open.path!)),
+                    unsaved: open != null && _isUnsaved(open),
+                    objects: open?.scene?.length ?? 0,
+                  ),
               history: _history,
               dirty: _anyUnsaved,
-              onPlay: _togglePlayback,
-              onStop: _stopPlayback,
+              onSearch: _openPalette,
               onClose: widget.onClose,
               onAdd: _add,
               onAddShape: _addShape,
@@ -749,42 +762,55 @@ class _EditorShellState extends State<EditorShell> {
             ),
             if (_mode.tools case final tools?) tools(context),
             // The panels, arranged as the layout says. What is where is
-            // data — saved with the project, put back exactly, and
+            // data, saved with the project, put back exactly, and
             // changed by dragging a tab rather than by editing this.
             Expanded(
-              child: DockView(
-                layout: _visibleLayout,
-                panel: _buildPanel,
-                onChanged: _relayout,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(0, 0, 6, 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_registry.modes.all.length > 1) ...[
+                      Align(
+                        alignment: Alignment.topCenter,
+                        child: _WorkspaceRail(
+                          modes: _registry.modes.all,
+                          mode: _mode,
+                          onMode: _enterMode,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Expanded(
+                      child: DockView(
+                        layout: _visibleLayout,
+                        panel: _buildPanel,
+                        onChanged: _relayout,
+                        accessory: _accessory,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            _StatusBar(
-              message: _history.undoLabel == null
-                  ? 'Ready'
-                  : 'Last change: ${_history.undoLabel}',
-              status:
-                  _mode.status?.call(context) ??
-                  _SceneStatus(
-                    objects: open?.scene?.length ?? 0,
-                    stats: _showStats,
-                    file: open == null
-                        ? 'No scene loaded'
-                        : (open.path == null
-                              ? '${open.title} (unsaved)'
-                              : _assets.relative(open.path!)),
-                    dirty: open != null && _isUnsaved(open),
-                    rate: _frames.fps,
-                    frameMs: _frames.fps == null
-                        ? null
-                        : (_frames.gpuBound
-                              ? _frames.rasterMs
-                              : _frames.buildMs),
-                    gpuBound: _frames.gpuBound,
-                  ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  // What sits in the middle of a panel's header. Only the group the scene is
+  // viewed in has something: the controls for running it. The group and not
+  // the scene tab, because playing opens the game view as another tab there,
+  // and the controls have to stay while it is the one showing.
+  Widget? _accessory(BuildContext context, DockPanel panel) {
+    final layout = _visibleLayout;
+    final home = layout.groupOf('scene') ?? layout.groupOf('canvas');
+    if (home == null || layout.groupOf(panel.id)?.id != home.id) return null;
+    return _PlayPill(
+      playing: _playing,
+      onPlay: _togglePlayback,
+      onStop: _stopPlayback,
     );
   }
 }

@@ -222,7 +222,7 @@ class _FieldEditor extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(Space.sm, 0, Space.sm, Space.sm),
       decoration: BoxDecoration(
         color: OrblitColors.ground,
-        borderRadius: BorderRadius.circular(Radii.panel),
+        borderRadius: BorderRadius.circular(Radii.card),
         border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: Column(

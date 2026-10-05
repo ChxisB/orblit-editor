@@ -210,7 +210,7 @@ class _TemplateCardState extends State<_TemplateCard> {
             color: widget.selected
                 ? OrblitColors.emberWash
                 : (_hovering ? OrblitColors.raised : OrblitColors.surface),
-            borderRadius: BorderRadius.circular(Radii.panel),
+            borderRadius: BorderRadius.circular(Radii.card),
             border: Border.all(
               color: widget.selected
                   ? OrblitColors.ember

@@ -17,6 +17,8 @@ class _SaveAsIntent extends Intent {}
 
 class _NewSceneIntent extends Intent {}
 
+class _PaletteIntent extends Intent {}
+
 class _CopyIntent extends Intent {}
 
 class _CutIntent extends Intent {}
@@ -96,6 +98,7 @@ extension _Keys on _EditorShellState {
     commandShortcut(LogicalKeyboardKey.keyS): _SaveIntent(),
     commandShortcut(LogicalKeyboardKey.keyS, shift: true): _SaveAsIntent(),
     commandShortcut(LogicalKeyboardKey.keyN): _NewSceneIntent(),
+    commandShortcut(LogicalKeyboardKey.keyK): _PaletteIntent(),
     commandShortcut(LogicalKeyboardKey.keyC): _CopyIntent(),
     commandShortcut(LogicalKeyboardKey.keyX): _CutIntent(),
     commandShortcut(LogicalKeyboardKey.keyV): _PasteIntent(),
@@ -196,6 +199,12 @@ extension _Keys on _EditorShellState {
     _NewSceneIntent: CallbackAction<_NewSceneIntent>(
       onInvoke: (_) {
         _newScene();
+        return null;
+      },
+    ),
+    _PaletteIntent: CallbackAction<_PaletteIntent>(
+      onInvoke: (_) {
+        unawaited(_openPalette());
         return null;
       },
     ),

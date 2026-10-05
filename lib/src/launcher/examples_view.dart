@@ -138,7 +138,7 @@ class _ExamplesViewState extends State<ExamplesView>
                       : const EdgeInsets.fromLTRB(0, 0, Space.lg, Space.lg),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(
-                      _full ? 0 : Radii.panel,
+                      _full ? 0 : Radii.card,
                     ),
                     child: Stack(
                       children: [
@@ -316,7 +316,7 @@ class _List extends StatelessWidget {
       margin: const EdgeInsets.only(right: Space.lg, bottom: Space.lg),
       decoration: BoxDecoration(
         color: OrblitColors.surface,
-        borderRadius: BorderRadius.circular(Radii.panel),
+        borderRadius: BorderRadius.circular(Radii.card),
         border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: ListView.builder(
@@ -545,7 +545,7 @@ class _Panel extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: Space.lg, right: Space.lg),
       decoration: BoxDecoration(
         color: OrblitColors.surface,
-        borderRadius: BorderRadius.circular(Radii.panel),
+        borderRadius: BorderRadius.circular(Radii.card),
         border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: ListView(

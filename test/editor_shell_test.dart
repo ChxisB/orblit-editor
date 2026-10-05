@@ -100,14 +100,14 @@ void main() {
     await add(tester, 'Group');
 
     expect(
-      find.textContaining('Add Group'),
+      lastChange('Add Group'),
       findsOneWidget,
-      reason: 'the status bar should name the last change',
+      reason: 'Undo should name the last change',
     );
 
     await undo(tester);
 
-    expect(find.textContaining('Add Group'), findsNothing);
+    expect(lastChange('Add Group'), findsNothing);
   });
 
   testWidgets('a second object of the same kind gets its own name', (
@@ -118,7 +118,7 @@ void main() {
     await add(tester, 'Group');
     await add(tester, 'Group');
 
-    expect(find.textContaining('Add Group 2'), findsOneWidget);
+    expect(lastChange('Add Group 2'), findsOneWidget);
   });
 
   testWidgets('the project browser lists what is on disk', (tester) async {

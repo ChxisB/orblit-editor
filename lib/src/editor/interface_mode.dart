@@ -3,6 +3,7 @@ import 'package:orblit_ui/orblit_ui.dart';
 
 import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
+import '../widgets/file_status.dart';
 import 'dock.dart';
 import 'editor_mode.dart';
 import 'inspector.dart' show FieldRow, SliderRow;
@@ -279,9 +280,9 @@ final class _NothingOpen extends StatelessWidget {
   }
 }
 
-/// The right of the bar along the bottom: where the interface shown is in
-/// the project, marked while it has changes. Nothing with nothing open,
-/// since the canvas already says so.
+/// The middle of the top bar: where the interface shown is in the project,
+/// and whether it has changes. Nothing with nothing open, since the canvas
+/// already says so.
 final class _Status extends StatelessWidget {
   const _Status({required this.bench, required this.relative});
 
@@ -294,14 +295,9 @@ final class _Status extends StatelessWidget {
     builder: (context, _) {
       final shown = bench.shown;
       if (shown == null) return const SizedBox.shrink();
-      final dirty = bench.isUnsaved(shown);
-      final where = relative(shown.path);
-      return Text(
-        dirty ? '$where •' : where,
-        style: OrblitText.mono.copyWith(
-          fontSize: 11,
-          color: dirty ? OrblitColors.ember : OrblitColors.inkDim,
-        ),
+      return FileStatus(
+        file: relative(shown.path),
+        unsaved: bench.isUnsaved(shown),
       );
     },
   );

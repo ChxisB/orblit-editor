@@ -420,8 +420,18 @@ extension _Panels on _EditorShellState {
     onOpenTools: () => _enterModeNamed('modelling'),
   );
 
+  // Null until the first second of frames has been counted.
+  String? get _frameRate {
+    final rate = _frames.fps;
+    if (rate == null) return '— fps';
+    final ms = _frames.gpuBound ? _frames.rasterMs : _frames.buildMs;
+    return '${rate.round()} fps · ${ms.toStringAsFixed(1)} ms '
+        '${_frames.gpuBound ? "gpu" : "cpu"}';
+  }
+
   Widget _viewport(DockPanel panel) => SceneViewport(
     showStats: _showStats,
+    frameRate: _frameRate,
     workspace: _workspace,
     camera: _cameraFor(panel.id),
     onCameraChanged: (camera) {

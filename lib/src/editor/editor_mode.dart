@@ -44,8 +44,9 @@ class EditorMode implements Registered {
   /// [ModeShelf] it builds itself. Null for none.
   final WidgetBuilder? tools;
 
-  /// What the bar along the bottom says on its right while it is the mode.
-  /// Null for the scene's file, how many objects it has and the frame rate.
+  /// What the top bar says in its middle about the file while it is the mode.
+  /// Null for the scene's file, whether it is saved and how many objects it
+  /// has.
   final WidgetBuilder? status;
 
   /// First refusal on every gesture in a scene view, ahead of the handles and

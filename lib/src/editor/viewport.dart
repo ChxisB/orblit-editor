@@ -90,9 +90,14 @@ class SceneViewport extends StatefulWidget {
     this.terrainOf,
     this.scatterOf,
     this.showStats = false,
+    this.frameRate,
   });
 
   final bool showStats;
+
+  /// How fast the editor is drawing, said in words. Shown beside the count
+  /// of what is on screen when [showStats] is on.
+  final String? frameRate;
 
   /// Only the loaded scene is drawn. The others are names and paths until
   /// somebody opens them.
@@ -483,7 +488,7 @@ class _SceneViewportState extends State<SceneViewport>
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: const Color(0xFF14181F),
-        borderRadius: BorderRadius.circular(Radii.panel),
+        borderRadius: BorderRadius.circular(Radii.card),
         border: Border.all(color: OrblitColors.lineSoft),
       ),
       child: DragTarget<String>(
@@ -566,7 +571,7 @@ class _SceneViewportState extends State<SceneViewport>
             color: OrblitColors.ember,
             width: 2,
           ),
-          borderRadius: BorderRadius.circular(Radii.panel),
+          borderRadius: BorderRadius.circular(Radii.card),
         ),
       ),
     ),
@@ -705,7 +710,11 @@ class _SceneViewportState extends State<SceneViewport>
           const _ViewportChip('Shaded'),
           if (widget.showStats) ...[
             const SizedBox(width: Space.xs),
-            _ViewportChip(_summary),
+            _ViewportChip(
+              widget.frameRate == null
+                  ? _summary
+                  : '${widget.frameRate} · $_summary',
+            ),
           ],
           const SizedBox(width: Space.xs),
           // What the drag has done so far, while it is doing it.

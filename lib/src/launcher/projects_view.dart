@@ -117,7 +117,7 @@ class _ProjectRowState extends State<ProjectRow> {
           padding: const EdgeInsets.all(Space.md),
           decoration: BoxDecoration(
             color: _hovering ? OrblitColors.raised : OrblitColors.surface,
-            borderRadius: BorderRadius.circular(Radii.panel),
+            borderRadius: BorderRadius.circular(Radii.card),
             border: Border.all(
               color: _hovering ? OrblitColors.line : OrblitColors.lineSoft,
             ),
@@ -296,7 +296,7 @@ class _Empty extends StatelessWidget {
               height: 64,
               decoration: BoxDecoration(
                 color: OrblitColors.surface,
-                borderRadius: BorderRadius.circular(Radii.panel),
+                borderRadius: BorderRadius.circular(Radii.card),
                 border: Border.all(color: OrblitColors.lineSoft),
               ),
               child: const Icon(Icons.view_in_ar_outlined,

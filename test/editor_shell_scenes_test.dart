@@ -194,7 +194,7 @@ void main() {
     await gesture.up();
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Move Ground'), findsOneWidget);
+    expect(lastChange('Move Ground'), findsOneWidget);
   });
 
   testWidgets('dragging to the edge of a row reorders instead', (tester) async {
@@ -209,7 +209,7 @@ void main() {
     await gesture.up();
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Reorder Ground'), findsOneWidget);
+    expect(lastChange('Reorder Ground'), findsOneWidget);
   });
 
   testWidgets('a thing cannot be dropped into its own child', (tester) async {

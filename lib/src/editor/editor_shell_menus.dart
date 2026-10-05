@@ -34,28 +34,10 @@ class _AddMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MenuAnchor(
-      style: MenuStyle(
-        backgroundColor: const WidgetStatePropertyAll(OrblitColors.raised),
-        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(Radii.panel),
-            side: const BorderSide(color: OrblitColors.line),
-          ),
-        ),
-      ),
+      style: orblitMenuStyle,
       menuChildren: [
         SubmenuButton(
-          menuStyle: MenuStyle(
-            backgroundColor: const WidgetStatePropertyAll(OrblitColors.raised),
-            surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
-            shape: WidgetStatePropertyAll(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(Radii.panel),
-                side: const BorderSide(color: OrblitColors.line),
-              ),
-            ),
-          ),
+          menuStyle: orblitMenuStyle,
           leadingIcon: const Icon(
             Icons.category_outlined,
             size: 14,
@@ -124,16 +106,7 @@ class _SceneMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MenuAnchor(
-      style: MenuStyle(
-        backgroundColor: const WidgetStatePropertyAll(OrblitColors.raised),
-        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(Radii.panel),
-            side: const BorderSide(color: OrblitColors.line),
-          ),
-        ),
-      ),
+      style: orblitMenuStyle,
       menuChildren: [
         MenuItemButton(
           onPressed: onNewScene,
@@ -227,16 +200,7 @@ class _EditMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MenuAnchor(
-      style: MenuStyle(
-        backgroundColor: const WidgetStatePropertyAll(OrblitColors.raised),
-        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(Radii.panel),
-            side: const BorderSide(color: OrblitColors.line),
-          ),
-        ),
-      ),
+      style: orblitMenuStyle,
       menuChildren: [
         _item(
           selectionCount > 1 ? 'Cut $selectionCount objects' : 'Cut',
@@ -349,16 +313,7 @@ class _ViewMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MenuAnchor(
-      style: MenuStyle(
-        backgroundColor: const WidgetStatePropertyAll(OrblitColors.raised),
-        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
-        shape: WidgetStatePropertyAll(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(Radii.panel),
-            side: const BorderSide(color: OrblitColors.line),
-          ),
-        ),
-      ),
+      style: orblitMenuStyle,
       menuChildren: [
         MenuItemButton(
           onPressed: onFocus,

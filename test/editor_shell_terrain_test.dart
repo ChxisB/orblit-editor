@@ -47,7 +47,7 @@ void main() {
       ['Rock', 'Grass'],
     );
 
-    expect(find.textContaining('Add Terrain'), findsOneWidget);
+    expect(lastChange('Add Terrain'), findsOneWidget);
     for (final part in const ['REGIONS', 'SETS', 'AUTOMATIC COVER']) {
       await reach(tester, find.text(part));
       expect(find.text(part), findsOneWidget);
@@ -112,7 +112,7 @@ void main() {
     await tester.dragFrom(view, const Offset(60, 0));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Raise terrain'), findsOneWidget);
+    expect(lastChange('Raise terrain'), findsOneWidget);
     expect(
       find.text('Scene •'),
       findsOneWidget,
@@ -128,6 +128,6 @@ void main() {
     expect(raised, isNotEmpty);
 
     await undo(tester);
-    expect(find.textContaining('Raise terrain'), findsNothing);
+    expect(lastChange('Raise terrain'), findsNothing);
   });
 }

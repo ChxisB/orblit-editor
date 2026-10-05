@@ -232,7 +232,7 @@ void main() {
 
       // Out of the scene it was in and into the set every scene has: still
       // one row, but the scene is one object lighter.
-      expect(find.textContaining('Move Crate'), findsOneWidget);
+      expect(lastChange('Move Crate'), findsOneWidget);
       expect(row('Crate'), findsOneWidget);
       expect(find.textContaining('6 objects'), findsOneWidget);
     });
