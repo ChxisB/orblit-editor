@@ -375,6 +375,7 @@ extension _Panels on _EditorShellState {
     onMove: _move,
     onDelete: _delete,
     onCloseScene: _closeScene,
+    onAdd: () => _openPalette(query: 'Add '),
   );
 
   Widget _inspector(SceneObject? selected) => Inspector(

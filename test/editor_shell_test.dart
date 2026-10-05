@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:orblit_editor/src/editor/inspector.dart';
 import 'package:orblit_editor/src/editor/scene.dart';
 import 'package:orblit_editor/src/editor/scene_document.dart';
 import 'package:path/path.dart' as p;
@@ -51,7 +52,14 @@ void main() {
     await tester.pumpAndSettle();
 
     // The name field carries the selection.
-    final field = tester.widget<TextField>(find.byType(TextField).first);
+    final field = tester.widget<TextField>(
+      find
+          .descendant(
+            of: find.byType(Inspector),
+            matching: find.byType(TextField),
+          )
+          .first,
+    );
     expect(field.controller?.text, 'Ground');
   });
 

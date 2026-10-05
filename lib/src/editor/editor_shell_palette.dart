@@ -19,8 +19,12 @@ PaletteEntry _command(
 );
 
 extension _Palette on _EditorShellState {
-  Future<void> _openPalette() async {
-    final chosen = await showCommandPalette(context, _paletteEntries());
+  Future<void> _openPalette({String query = ''}) async {
+    final chosen = await showCommandPalette(
+      context,
+      _paletteEntries(),
+      initialQuery: query,
+    );
     // Run once the palette has gone, so a command that opens a dialog does it
     // over the editor and not under the palette's barrier.
     if (chosen != null && mounted) chosen.onRun();

@@ -124,22 +124,20 @@ final class _AppHeader extends StatelessWidget {
             children: [
               // Labelled with what they would undo, so the tooltip answers
               // the question somebody actually has before they press it.
-              _HeaderButton(
+              IconTile(
                 tooltip: history.undoLabel == null
                     ? 'Nothing to undo'
                     : 'Undo ${history.undoLabel} '
                           '(${commandShortcutLabel('Z')}).',
-                enabled: history.canUndo,
-                onTap: onUndo,
+                onTap: history.canUndo ? onUndo : null,
                 child: const Icon(Icons.undo),
               ),
-              _HeaderButton(
+              IconTile(
                 tooltip: history.redoLabel == null
                     ? 'Nothing to redo'
                     : 'Redo ${history.redoLabel} '
                           '(${commandShortcutLabel('⇧Z')}).',
-                enabled: history.canRedo,
-                onTap: onRedo,
+                onTap: history.canRedo ? onRedo : null,
                 child: const Icon(Icons.redo),
               ),
             ],
@@ -213,7 +211,7 @@ final class _LogoMenu extends StatelessWidget {
         child: const Text('Command palette'),
       ),
     ],
-    builder: (context, controller, child) => _HeaderButton(
+    builder: (context, controller, child) => IconTile(
       tooltip: 'Orblit menu',
       onTap: () => controller.isOpen ? controller.close() : controller.open(),
       child: const OrblitMark(),
@@ -284,64 +282,6 @@ class _BarDivider extends StatelessWidget {
     margin: const EdgeInsets.symmetric(horizontal: 10),
     color: OrblitColors.line,
   );
-}
-
-/// An icon on the header, with a tooltip because it has no word.
-final class _HeaderButton extends StatefulWidget {
-  const _HeaderButton({
-    required this.child,
-    required this.tooltip,
-    required this.onTap,
-    this.enabled = true,
-  });
-
-  final Widget child;
-  final String tooltip;
-  final VoidCallback onTap;
-  final bool enabled;
-
-  @override
-  State<_HeaderButton> createState() => _HeaderButtonState();
-}
-
-class _HeaderButtonState extends State<_HeaderButton> {
-  bool _hovering = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final lit = _hovering && widget.enabled;
-    return Tooltip(
-      message: widget.tooltip,
-      child: MouseRegion(
-        cursor: widget.enabled
-            ? SystemMouseCursors.click
-            : SystemMouseCursors.basic,
-        onEnter: (_) => setState(() => _hovering = true),
-        onExit: (_) => setState(() => _hovering = false),
-        child: GestureDetector(
-          onTap: widget.enabled ? widget.onTap : null,
-          child: Container(
-            width: 32,
-            height: 32,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: lit ? OrblitColors.hover : Colors.transparent,
-              borderRadius: BorderRadius.circular(Radii.card),
-            ),
-            child: IconTheme(
-              data: IconThemeData(
-                size: 17,
-                color: !widget.enabled
-                    ? OrblitColors.line
-                    : (lit ? OrblitColors.ink : OrblitColors.inkMid),
-              ),
-              child: widget.child,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// The workspaces, one icon each, in a column beside the panels.

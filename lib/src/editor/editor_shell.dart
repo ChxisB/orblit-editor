@@ -14,6 +14,7 @@ import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import '../widgets/centred_bar.dart';
 import '../widgets/file_status.dart';
+import '../widgets/icon_tile.dart';
 import '../widgets/keycap.dart';
 import '../widgets/orblit_mark.dart';
 import 'asset_browser.dart';

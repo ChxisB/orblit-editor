@@ -92,33 +92,42 @@ PaletteMatch? _match(PaletteEntry entry, List<String> words) {
 
 /// Opens the palette over the editor. Gives back what was chosen, so the
 /// caller runs it once the palette is gone and not from under it.
+///
+/// [initialQuery] is what the field holds when it opens, so a button that
+/// means "add something" can land on the add commands.
 Future<PaletteEntry?> showCommandPalette(
   BuildContext context,
-  List<PaletteEntry> entries,
-) => showGeneralDialog<PaletteEntry>(
+  List<PaletteEntry> entries, {
+  String initialQuery = '',
+}) => showGeneralDialog<PaletteEntry>(
   context: context,
   barrierDismissible: true,
   barrierLabel: 'Close the command palette',
   barrierColor: const Color(0xA8080A0E),
   transitionDuration: const Duration(milliseconds: 90),
-  pageBuilder: (context, _, _) => _CommandPalette(entries: entries),
+  pageBuilder: (context, _, _) =>
+      _CommandPalette(entries: entries, initialQuery: initialQuery),
   transitionBuilder: (context, animation, _, child) =>
       FadeTransition(opacity: animation, child: child),
 );
 
 class _CommandPalette extends StatefulWidget {
-  const _CommandPalette({required this.entries});
+  const _CommandPalette({required this.entries, required this.initialQuery});
 
   final List<PaletteEntry> entries;
+  final String initialQuery;
 
   @override
   State<_CommandPalette> createState() => _CommandPaletteState();
 }
 
 class _CommandPaletteState extends State<_CommandPalette> {
-  final _query = TextEditingController();
+  late final _query = TextEditingController(text: widget.initialQuery);
   final _selectedRow = GlobalKey();
-  late List<PaletteMatch> _results = searchPalette(widget.entries, '');
+  late List<PaletteMatch> _results = searchPalette(
+    widget.entries,
+    widget.initialQuery,
+  );
   int _index = 0;
 
   @override
