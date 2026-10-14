@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.0+10
+
+- Add a Continuous row to the Inspector's Body section. It stops a small fast
+  body at a thin fixed wall, and costs a cast while the body moves.
+
 ## 1.8.0+9
 
 - Redraw the editor to the new design. The top bar holds the file menus,
