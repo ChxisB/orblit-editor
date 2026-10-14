@@ -171,4 +171,29 @@ void main() {
       expect(savedDocument().settings.layerNames, isEmpty);
     });
   });
+
+  group('a character', () {
+    testWidgets('is chosen as a motion, and takes its walking numbers', (
+      tester,
+    ) async {
+      await freeCrate(tester);
+      await tapIn(tester, 'Motion', 'Character');
+
+      await reach(tester, inInspector('Crouch height'));
+      expect(inInspector('Step height'), findsOneWidget);
+      expect(inInspector('Steepest'), findsOneWidget);
+      expect(inInspector('Strength'), findsOneWidget);
+      // It is swept, not solved, and no place or belt.
+      expect(inInspector('Lock move'), findsNothing);
+      expect(inInspector('Acts as'), findsNothing);
+      expect(inInspector('Belt speed'), findsNothing);
+
+      await save(tester);
+      expect(savedBody('crate').motion, doc.BodyMotion.character);
+
+      await undo(tester);
+      await save(tester);
+      expect(savedBody('crate').motion, doc.BodyMotion.free);
+    });
+  });
 }

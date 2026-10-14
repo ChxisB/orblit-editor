@@ -110,6 +110,7 @@ class _BodySection extends StatelessWidget {
     doc.BodyMotion.fixed: 'Fixed',
     doc.BodyMotion.driven: 'Driven',
     doc.BodyMotion.free: 'Free',
+    doc.BodyMotion.character: 'Character',
   };
 
   static final _materials = {
@@ -168,6 +169,7 @@ class _BodySection extends StatelessWidget {
         body.shape == doc.BodyShape.plane || body.shape == doc.BodyShape.mesh;
     final free = movesFreely(body);
     final place = isPlace(_object);
+    final character = body.motion == doc.BodyMotion.character;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -188,7 +190,10 @@ class _BodySection extends StatelessWidget {
                 onSelect: (label) =>
                     _choose(body.copyWith(motion: _key(_motions, label))),
               ),
-        ..._role(body, free: free),
+        // A character is swept by the world and is neither a place nor moved
+        // by a belt, so those rows would be choices it ignores.
+        if (!character) ..._role(body, free: free),
+        if (character) ..._walking(body),
         if (body.shape == doc.BodyShape.box)
           _drag(
             'Size',
@@ -264,7 +269,7 @@ class _BodySection extends StatelessWidget {
         ),
         // A place pushes nothing and a free body is not fixed to anything, so
         // only a solid body that stays put can be a belt.
-        if (!free && !place)
+        if (!free && !place && !character)
           _drag(
             'Belt speed',
             (body) => body.surface.storage,
@@ -390,6 +395,45 @@ class _BodySection extends StatelessWidget {
       options: const ['Off', 'On'],
       selected: body.stay ? 'On' : 'Off',
       onSelect: (label) => _choose(body.copyWith(stay: label == 'On')),
+    ),
+  ];
+
+  /// What a character climbs, stands on, pushes and crouches to.
+  List<Widget> _walking(doc.BodyComponent body) => [
+    _drag(
+      'Step height',
+      (body) => [body.stepHeight],
+      (body, values) => body.copyWith(stepHeight: values.single),
+      minimum: 0,
+      step: 0.01,
+    ),
+    _drag(
+      'Steepest',
+      (body) => [body.steepest],
+      (body, values) => body.copyWith(steepest: values.single),
+      minimum: 0,
+      step: 0.01,
+    ),
+    _drag(
+      'Skin',
+      (body) => [body.skin],
+      (body, values) => body.copyWith(skin: values.single),
+      minimum: 0,
+      step: 0.001,
+    ),
+    _drag(
+      'Strength',
+      (body) => [body.strength],
+      (body, values) => body.copyWith(strength: values.single),
+      minimum: 0,
+      step: 10,
+    ),
+    _drag(
+      'Crouch height',
+      (body) => [body.crouchHeight],
+      (body, values) => body.copyWith(crouchHeight: values.single),
+      minimum: 0,
+      step: 0.05,
     ),
   ];
 
