@@ -126,18 +126,22 @@ class _Action extends StatelessWidget {
 }
 
 class _Chip extends StatelessWidget {
-  const _Chip({required this.label, required this.on, required this.onTap});
+  const _Chip({
+    required this.label,
+    required this.tooltip,
+    required this.on,
+    required this.onTap,
+  });
 
   final String label;
+  final String tooltip;
   final bool on;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: label == 'Keys'
-          ? 'Show the timing of each key.'
-          : 'Show how values change between keys.',
+      message: tooltip,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
@@ -236,5 +240,79 @@ class _Menu extends StatelessWidget {
       ),
     );
     return tooltip == null ? menu : Tooltip(message: tooltip, child: menu);
+  }
+}
+
+/// Bones and onion skin: whether the model's skeleton is drawn in the view,
+/// and the poses either side of the playhead with it.
+///
+/// Turning onion skin on turns bones on, since there is nothing to ghost
+/// without them. Which ghosts to show is a menu that appears only while the
+/// skin is on.
+final class _SkeletonControls extends StatelessWidget {
+  const _SkeletonControls({required this.settings});
+
+  final ValueNotifier<SkeletonSettings> settings;
+
+  static const List<int> _counts = [1, 2, 3];
+  static const List<int> _strides = [1, 2, 4];
+
+  static String _stride(int frames) =>
+      frames == 1 ? 'every frame' : 'every $frames frames';
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<SkeletonSettings>(
+      valueListenable: settings,
+      builder: (_, now, _) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _Chip(
+            label: 'Bones',
+            tooltip: 'Draw the bones of the selected model in the view.',
+            on: now.bones,
+            onTap: () => settings.value = now.copyWith(
+              bones: !now.bones,
+              onion: now.bones ? false : now.onion,
+            ),
+          ),
+          _Chip(
+            label: 'Onion',
+            tooltip: 'Draw the pose before and after the playhead as ghosts.',
+            on: now.onion,
+            onTap: () => settings.value = now.copyWith(
+              bones: !now.onion || now.bones,
+              onion: !now.onion,
+            ),
+          ),
+          if (now.onion) ...[
+            const SizedBox(width: Space.xs),
+            _Menu(
+              label: '${now.before} each side, ${_stride(now.stride)}',
+              tooltip: 'How many ghosts, and how many frames apart',
+              items: [
+                for (final count in _counts)
+                  MenuItemButton(
+                    onPressed: count == now.before
+                        ? null
+                        : () => settings.value = now.copyWith(
+                            before: count,
+                            after: count,
+                          ),
+                    child: Text('$count each side', style: OrblitText.label),
+                  ),
+                for (final frames in _strides)
+                  MenuItemButton(
+                    onPressed: frames == now.stride
+                        ? null
+                        : () => settings.value = now.copyWith(stride: frames),
+                    child: Text(_stride(frames), style: OrblitText.label),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

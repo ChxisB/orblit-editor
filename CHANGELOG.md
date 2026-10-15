@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.12.0+13
+
+- Draw a model's bones in the view. **Bones** on the timeline toolbar
+  shows the skeleton of each selected model, in the pose the open clip
+  gives at the playhead, or at rest when the clip does not reach it.
+- Add onion skin. **Onion** draws the poses before and after the playhead
+  as ghosts, with a menu for how many and how many frames apart. A looping
+  clip wraps and any other clip has no ghost past either end.
+- Add a tooltip to every timeline toolbar chip.
+
 ## 1.8.0+9
 
 - Redraw the editor to the new design. The top bar holds the file menus,
