@@ -19,6 +19,13 @@ extension _Panels on _EditorShellState {
           models: _skeletons,
           settings: _skeletonView,
         ),
+      )
+      ..register(
+        limbGizmo(
+          bench: _bench,
+          models: _skeletons,
+          settings: _skeletonView,
+        ),
       );
     // In the order work usually goes: lay out a level, shape what is in it,
     // shape the ground under it, make it move, film it, then lay out what

@@ -54,6 +54,7 @@ import 'interface_mode.dart';
 import 'joint_gizmo.dart';
 import 'joint_section.dart';
 import 'layout_library.dart';
+import 'limb_gizmo.dart';
 import 'mesh_edit.dart';
 import 'mesh_panel.dart';
 import 'model_bounds.dart';

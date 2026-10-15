@@ -443,6 +443,23 @@ class ClipBench extends ChangeNotifier implements Keying {
     };
   }
 
+  /// What the open clip's names point at in [scene], or null when the clip
+  /// is not being played on something in that scene.
+  ///
+  /// Null for any other scene than the loaded one, whose names mean nothing
+  /// there, and for a cutscene, which moves what is in the scene and not the
+  /// bones of a model.
+  ClipScope? scopeIn(EditorScene scene) {
+    final owner = _ownerIn(scene);
+    if (playedOn == PlayedOn.scene ||
+        clip == null ||
+        owner == null ||
+        !identical(scene, this.scene())) {
+      return null;
+    }
+    return _scopeIn(scene, owner);
+  }
+
   static ClipScope _scopeIn(EditorScene scene, String owner) =>
       ClipScope.inScene(
         doc.SceneDocument(entities: [SceneDocument.entityOf(scene[owner]!)]),
