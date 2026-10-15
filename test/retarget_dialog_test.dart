@@ -43,11 +43,15 @@ final class FakeFiles implements RetargetFiles {
   FakeFiles({
     this.skeletons = const {},
     this.stored = const {},
+    this.broken = const [],
     this.fails = false,
   });
 
   final Map<String, RestSkeleton> skeletons;
   final Map<String, BoneMapLoad> stored;
+
+  /// Paths of files that are listed as maps and are not.
+  final List<String> broken;
   final bool fails;
 
   final List<(String, BoneMap)> written = [];
@@ -56,7 +60,7 @@ final class FakeFiles implements RetargetFiles {
   List<String> get models => [...skeletons.keys, 'plain.glb']..sort();
 
   @override
-  List<String> get maps => stored.keys.toList();
+  List<String> get maps => [...stored.keys, ...broken];
 
   @override
   RestSkeleton? skeletonOf(String model) => skeletons[model];
@@ -307,11 +311,49 @@ void main() {
       expect(button(tester, 'Make clip').onPressed, isNotNull);
     });
 
+    testWidgets('keeps the model chosen when the map names one gone', (
+      tester,
+    ) async {
+      final files = FakeFiles(
+        skeletons: twoModels().skeletons,
+        stored: {
+          'retargets/a.obonemap': BoneMapLoad(
+            map: BoneMap(
+              fromAsset: 'gone.glb',
+              toAsset: 'dwarf.glb',
+              bones: {'neck': 'head'},
+            ),
+          ),
+        },
+      );
+      await show(tester, files, from: 'hero.glb');
+
+      await choose(tester, modelPick('Bone map'), 'retargets/a.obonemap');
+
+      expect(find.text('hero.glb'), findsOneWidget);
+      expect(find.text('dwarf.glb'), findsOneWidget);
+      expect(find.text('gone.glb'), findsNothing);
+      expect(find.text('3 of 4 bones are moved by something.'), findsOneWidget);
+    });
+
     testWidgets('says what was wrong with a file that is not one', (
       tester,
     ) async {
-      final files = FakeFiles(skeletons: twoModels().skeletons, stored: {});
-      await show(tester, files);
+      final files = FakeFiles(
+        skeletons: twoModels().skeletons,
+        broken: ['retargets/junk.obonemap'],
+      );
+      await show(tester, files, from: 'hero.glb');
+
+      await choose(tester, modelPick('Bone map'), 'retargets/junk.obonemap');
+
+      expect(find.text('junk.obonemap: It is not a map.'), findsOneWidget);
+      expect(find.text('hero.glb'), findsOneWidget);
+    });
+
+    testWidgets('says when none are saved', (tester) async {
+      await show(tester, twoModels());
+
       expect(find.text('None saved yet'), findsOneWidget);
     });
   });
