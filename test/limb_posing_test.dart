@@ -72,6 +72,17 @@ void main() {
       expect(identical(limbsOf(skeleton), limbsOf(skeleton)), isTrue);
     });
 
+    test('leaves out an arm the finder cannot read as one', () {
+      // Five bones in a line from the chest are more than an arm has, so
+      // the finder places neither arm and there is no ring to offer.
+      File('${root.path}/twist.glb')
+          .writeAsBytesSync(personGlb(forearmTwist: true));
+      final twisted = ModelSkeletons(root.path).ofAsset('twist.glb')!;
+      final names = limbsOf(twisted).map((limb) => limb.name);
+      expect(names, isNot(contains('left arm')));
+      expect(names, containsAll(['left leg', 'right leg']));
+    });
+
     test('has none for a skeleton that is not a person', () {
       File('${root.path}/spine.glb')
           .writeAsBytesSync(chainGlb(['hips', 'spine', 'head']));

@@ -39,10 +39,10 @@ final _found = Expando<List<Limb>>('limbs');
 
 /// The arms and legs of [skeleton] that two turns can reach with.
 ///
-/// Found as the parts of a person are, so a model that is not one has none.
-/// A limb is left out when something sits between its bones, such as a twist
-/// bone in a forearm, because the turn of one bone could not then carry the
-/// next.
+/// Found as the parts of a person are, so a model that is not one has none,
+/// and an arm or leg with more bones than the finder expects is not placed.
+/// A limb whose bones do not hang one from the next is left out as well,
+/// because the turn of one bone could not then carry the next.
 List<Limb> limbsOf(RestSkeleton skeleton) =>
     _found[skeleton] ??= _search(skeleton);
 

@@ -11,9 +11,9 @@
   reach straightens towards the pointer.
 - The rings are hidden while the clip plays, and in a cutscene, which
   cannot move a model's bones.
-- A model that is not a person, or whose arm or leg has another bone
-  between its joints, gets no ring for that limb. Key its bones from the
-  timeline as before.
+- A rig that cannot be read as a person gets no rings, nor does a limb
+  with more bones than a person's. Key its bones from the timeline as
+  before.
 
 ## 1.14.0+15
 

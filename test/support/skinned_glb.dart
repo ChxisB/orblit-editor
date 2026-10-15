@@ -48,7 +48,9 @@ Uint8List chainGlb(List<String> names) => glb({
 ///
 /// Names are the plain ones. Which bone is which comes from how they hang
 /// and where they stand, which is what an imported model has to be read by.
-Uint8List personGlb() {
+/// With [forearmTwist] each arm has a twist bone between the elbow and the
+/// hand, as a rig made for skinning often does.
+Uint8List personGlb({bool forearmTwist = false}) {
   final nodes = <Map<String, Object?>>[];
   final children = <int, List<int>>{};
 
@@ -71,7 +73,12 @@ Uint8List personGlb() {
     final shoulder = add('$side shoulder', chest, sign * 0.06, 0.2, 0);
     final upper = add('$side upper arm', shoulder, sign * 0.1, 0, 0);
     final lower = add('$side lower arm', upper, sign * 0.28, 0, 0.02);
-    add('$side hand', lower, sign * 0.25, 0, -0.02);
+    // A bone that only twists the forearm, standing between the elbow and
+    // the wrist.
+    final wrist = forearmTwist
+        ? add('$side forearm twist', lower, sign * 0.12, 0, -0.01)
+        : lower;
+    add('$side hand', wrist, sign * (forearmTwist ? 0.13 : 0.25), 0, -0.02);
     final thigh = add('$side thigh', hips, sign * 0.1, -0.05, 0);
     final shin = add('$side shin', thigh, 0, -0.45, 0.02);
     final foot = add('$side foot', shin, 0, -0.42, -0.02);
