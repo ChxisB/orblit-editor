@@ -168,6 +168,18 @@ extension _Panels on _EditorShellState {
         ),
       ),
     )
+    // Listens to the bench itself, like the timeline: an edit to a blend
+    // changes nothing the scene view shows.
+    ..register(
+      PanelType(
+        kind: blendGraphPanel,
+        build: (_, _) => BlendGraphPanel(
+          bench: _blends,
+          clips: _clipNames,
+          onNew: _newBlend,
+        ),
+      ),
+    )
     // The Interface workspace's three. They listen to the bench themselves,
     // since an edit there changes nothing the rest of the editor shows.
     ..register(
@@ -542,6 +554,10 @@ extension _Panels on _EditorShellState {
       }
       if (asset.kind == AssetKind.cutscene) {
         _openCutscene(asset.path);
+        return;
+      }
+      if (asset.kind == AssetKind.blend) {
+        _openBlend(asset.path);
         return;
       }
       const editable = {

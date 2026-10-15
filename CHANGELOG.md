@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.14.0+15
+
+- Edit a blend as a graph. A `.oblend` file opens in the **Blend** panel
+  beside the timeline. States are boxes and changes are arrows. Drag from
+  a state's handle onto another to make a change.
+- Choose a state or an arrow to edit it. A state sets what it plays, its
+  speed, what happens at the end and its sync marks. A change sets where it
+  leaves from and goes to, its condition and its fade. The order of the
+  changes is the order they are tried in.
+- Every edit is a step on the undo stack, saved with Cmd+S beside clips and
+  cutscenes.
+- Make a blend from the Project panel's New menu or the Blend panel's
+  **New blend** button. New blends go in `blends/`.
+- Show `.oblend` files in the asset browser as blends.
+
 ## 1.13.0+14
 
 - Move a clip onto another model. **Retarget to another model…** in the

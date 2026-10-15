@@ -18,14 +18,15 @@ final class ProjectRetargetFiles implements RetargetFiles {
   static const String folder = 'retargets';
 
   @override
-  List<String> get models => _found(
+  List<String> get models => assets.find(
     (asset) =>
         asset.kind == AssetKind.mesh &&
         const {'.glb', '.gltf'}.contains(p.extension(asset.path).toLowerCase()),
   );
 
   @override
-  List<String> get maps => _found((asset) => asset.kind == AssetKind.boneMap);
+  List<String> get maps =>
+      assets.find((asset) => asset.kind == AssetKind.boneMap);
 
   @override
   RestSkeleton? skeletonOf(String model) => skeletons.ofAsset(model);
@@ -56,21 +57,5 @@ final class ProjectRetargetFiles implements RetargetFiles {
       problem: made.problem,
       path: made.path == null ? null : assets.relative(made.path!),
     );
-  }
-
-  /// The project paths of every file under the project that [test] takes.
-  List<String> _found(bool Function(Asset) test) {
-    final out = <String>[];
-    for (final directory in [
-      assets.root,
-      for (final found in assets.folders()) found.path,
-    ]) {
-      for (final asset in assets.read(directory)) {
-        if (!asset.isFolder && test(asset)) {
-          out.add(assets.relative(asset.path));
-        }
-      }
-    }
-    return out;
   }
 }
