@@ -306,6 +306,13 @@ class _TimelinePanelState extends State<TimelinePanel>
                       ..playing = false
                       ..at = clip.duration,
                   ),
+                  // Inside the part that scrolls and ahead of the length: the
+                  // ghost menu is the widest thing on the bar and would
+                  // overflow a narrow panel among the controls that stay put.
+                  if (widget.skeleton case final skeleton?) ...[
+                    const SizedBox(width: Space.md),
+                    _SkeletonControls(settings: skeleton),
+                  ],
                   const SizedBox(width: Space.md),
                   const Text('Length', style: OrblitText.caption),
                   const SizedBox(width: Space.xs),
@@ -338,10 +345,6 @@ class _TimelinePanelState extends State<TimelinePanel>
             ),
           ),
           const SizedBox(width: Space.sm),
-          if (widget.skeleton case final skeleton?) ...[
-            _SkeletonControls(settings: skeleton),
-            const SizedBox(width: Space.sm),
-          ],
           _Chip(
             label: 'Keys',
             tooltip: 'Show the timing of each key.',
