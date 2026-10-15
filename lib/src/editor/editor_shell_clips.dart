@@ -51,6 +51,58 @@ extension _Clips on _EditorShellState {
     _followingMotion = _selectedObject != null;
   }
 
+  /// Asks which model the shown clip should move, and makes the answer a
+  /// clip of its own beside the first. The first is left as it was.
+  Future<void> _retargetClip() async {
+    final shown = _bench.shown;
+    if (shown == null) return;
+    final owner = _bench.owner;
+    final made = await showRetargetDialog(
+      context,
+      clip: shown.clip,
+      files: _retargetFiles,
+      from: owner == null ? null : _current?.scene?[owner]?.meshAsset,
+    );
+    if (!mounted || made == null) return;
+    _saveRetargeted(made);
+  }
+
+  void _saveRetargeted(RetargetMade made) {
+    final folder = Directory(p.join(widget.project.directory, 'clips'));
+    try {
+      folder.createSync(recursive: true);
+    } on FileSystemException catch (error) {
+      _say('Could not make the clips folder: ${error.message}');
+      return;
+    }
+    final written = _assets.write(
+      folder.path,
+      '${made.clip.name}.oclip',
+      made.clip.encode(),
+    );
+    final path = written.path;
+    if (path == null) {
+      _say('Could not save the clip: ${written.problem}');
+      return;
+    }
+    _openClip(path);
+    // Played by the model it was made for, so it goes on the one that is
+    // chosen only when that is the model.
+    final selected = _selectedObject;
+    if (selected != null && selected.meshAsset == made.model) {
+      _attachClip(path);
+      _bench.owner = selected.id;
+      _followingMotion = true;
+    }
+    _say(
+      made.problems.isEmpty
+          ? 'Made ${p.basename(path)}.'
+          : 'Made ${p.basename(path)}. ${made.problems.length} things could '
+                'not be carried. First: ${made.problems.first}',
+      level: made.problems.isEmpty ? LogLevel.info : LogLevel.warning,
+    );
+  }
+
   /// Links the asset through the same component the game reads.
   void _attachClip(String path) {
     final object = _selectedObject;

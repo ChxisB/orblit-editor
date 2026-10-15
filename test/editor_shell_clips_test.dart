@@ -1,13 +1,16 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Key;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orblit_editor/src/editor/inspector.dart';
 import 'package:orblit_editor/src/editor/timeline_sheet.dart';
-import 'package:orblit_motion/orblit_motion.dart' show ClipDocument;
+import 'package:orblit_motion/orblit_motion.dart'
+    show ChannelKind, ClipChannel, ClipDocument, Hold, Key;
 import 'package:path/path.dart' as p;
+import 'package:vector_math/vector_math_64.dart' show Quaternion, Vector3;
 
 import 'support/editor_shell.dart';
+import 'support/skinned_glb.dart';
 
 // A clip in the editor: opened from the project, keyed from the inspector,
 // and saved along with everything else.
@@ -101,6 +104,106 @@ void main() {
 
       await save(tester);
       expect(clipFile().readAsStringSync(), contains('transform.position'));
+    });
+  });
+
+  group('retargeting', () {
+    ClipDocument spineTurn() => ClipDocument(
+      name: 'wave',
+      duration: 1,
+      channels: [
+        ClipChannel<Quaternion>(
+          target: '',
+          bone: 'spine',
+          property: 'rotation',
+          kind: ChannelKind.rotation,
+          keys: [
+            Key(0, Quaternion.identity(), hold: Hold.linear),
+            Key(
+              1,
+              Quaternion.axisAngle(Vector3(1, 0, 0), 0.5),
+              hold: Hold.linear,
+            ),
+          ],
+        ),
+      ],
+    );
+
+    Finder model(String label) => find.descendant(
+      of: find.ancestor(of: find.text(label), matching: find.byType(Row)).first,
+      matching: find.byType(DropdownButton<String>),
+    );
+
+    Future<void> pick(WidgetTester tester, Finder from, String text) async {
+      await tester.tap(from);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(text).last);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('makes a clip for another model and opens it', (tester) async {
+      File(p.join(root.path, 'hero.glb')).writeAsBytesSync(
+        chainGlb(['hips', 'spine', 'head']),
+      );
+      File(p.join(root.path, 'dwarf.glb')).writeAsBytesSync(
+        chainGlb(['hips', 'spine', 'neck']),
+      );
+      File(p.join(root.path, 'wave.oclip')).writeAsStringSync(
+        spineTurn().encode(),
+      );
+      await open(tester);
+      final tile = find.descendant(
+        of: find.byType(GridView),
+        matching: find.text('wave.oclip'),
+      );
+      // Three files wrap the grid onto a second row, below the panel's edge.
+      await tester.ensureVisible(tile);
+      await tester.pumpAndSettle();
+      await tester.tap(tile);
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('wave'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Retarget to another model…'));
+      await tester.pumpAndSettle();
+      await pick(tester, model('Made for'), 'hero.glb');
+      await pick(tester, model('Move'), 'dwarf.glb');
+      await tester.tap(find.text('Make clip'));
+      await tester.pumpAndSettle();
+
+      final made = File(p.join(root.path, 'clips', 'wave (dwarf).oclip'));
+      expect(made.existsSync(), isTrue);
+      final decoded = ClipDocument.decode(made.readAsStringSync()).clip;
+      expect(decoded.name, 'wave (dwarf)');
+      expect({for (final channel in decoded.channels) channel.bone}, {'spine'});
+      // Shown, in place of the clip it came from.
+      expect(find.text('wave (dwarf)'), findsOneWidget);
+    });
+
+    testWidgets('leaves the project alone on cancel', (tester) async {
+      File(p.join(root.path, 'wave.oclip')).writeAsStringSync(
+        spineTurn().encode(),
+      );
+      await open(tester);
+      final tile = find.descendant(
+        of: find.byType(GridView),
+        matching: find.text('wave.oclip'),
+      );
+      await tester.tap(tile);
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('wave'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Retarget to another model…'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(Directory(p.join(root.path, 'clips')).existsSync(), isFalse);
     });
   });
 }

@@ -133,6 +133,7 @@ extension _Panels on _EditorShellState {
           selected: _selectedObject,
           onProblem: (message) => _say(message, level: LogLevel.error),
           onNew: _newClip,
+          onRetarget: _retargetClip,
         ),
       ),
     )

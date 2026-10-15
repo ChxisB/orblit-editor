@@ -27,8 +27,11 @@ class ModelSkeletons {
   ///
   /// A file with several skins answers the one with the most bones, which is
   /// the character and not a prop riding on it.
-  RestSkeleton? of(SceneObject object) {
-    final asset = object.meshAsset;
+  RestSkeleton? of(SceneObject object) => ofAsset(object.meshAsset);
+
+  /// The skeleton of the model at project path [asset], with the same
+  /// answers as [of] for a missing or skinless file.
+  RestSkeleton? ofAsset(String? asset) {
     if (asset == null || asset.isEmpty) return null;
     if (_known.containsKey(asset)) return _known[asset];
     final found = _read(

@@ -19,6 +19,8 @@ import 'package:orblit_editor/src/theme/orblit_theme.dart';
 import 'package:orblit_motion/orblit_motion.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
+import 'support/skinned_glb.dart';
+
 // A model's bones drawn over the scene: read from the file the model came
 // from, posed by the open clip, and ghosted either side of the playhead.
 
@@ -54,21 +56,6 @@ Map<String, Object?> spineDocument({List<Map<String, Object?>>? buffers}) => {
   ],
   'buffers': ?buffers,
 };
-
-Uint8List glb(Map<String, Object?> document) {
-  final json = utf8.encode(jsonEncode(document));
-  final padded = Uint8List.fromList([
-    ...json,
-    ...List.filled((4 - json.length % 4) % 4, 0x20),
-  ]);
-  final header = ByteData(20)
-    ..setUint32(0, 0x46546C67, Endian.little)
-    ..setUint32(4, 2, Endian.little)
-    ..setUint32(8, 20 + padded.length, Endian.little)
-    ..setUint32(12, padded.length, Endian.little)
-    ..setUint32(16, 0x4E4F534A, Endian.little);
-  return Uint8List.fromList([...header.buffer.asUint8List(), ...padded]);
-}
 
 SceneObject model(String asset, {String id = 'man'}) =>
     SceneObject(id: id, name: 'Man', kind: ObjectKind.mesh, meshAsset: asset);

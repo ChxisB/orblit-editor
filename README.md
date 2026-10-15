@@ -27,6 +27,8 @@ of empty states is worse than a screen that asks one question.
 - **Animation.** Select an object and use Animation's Make a clip button.
   The Inspector assigns clips and chooses which starts automatically.
   Play, Pause and Stop preview scene properties without editing the scene.
+  The clip menu's Retarget to another model makes a copy of a clip that
+  moves another model's skeleton, from a bone map you can save and reuse.
 
 The 3D viewport draws on macOS. The animation preview does not run scripts,
 physics or skeletal animation. Games wire their own clip players.
