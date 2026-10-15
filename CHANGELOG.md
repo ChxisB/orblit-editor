@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.11.0+12
+
+- Add Gear, Rack, Pulley and Path to the joint kinds, with a ratio row for
+  the first three, a second axis for gears and racks, two fixed points for a
+  pulley and a list of points for a path.
+- Give each way of a joint a Spring row with its frequency, damping ratio and
+  rest, a Soft limit row, and a Goal row on a driven way. A drive set to
+  Place holds a place instead of a speed.
+- Draw a path as its line with the body's place on it, a pulley as its rope
+  over the two points, and a gear or rack as a pinion.
+
 ## 1.10.0+11
 
 - Offer Character as a body's motion, with its step height, steepest slope,

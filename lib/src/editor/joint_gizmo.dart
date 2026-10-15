@@ -72,6 +72,7 @@ class _JointLines extends WorldLines {
     // the columns of its rotation, not `Quaternion.rotated`, which turns the
     // other way.
     final turning = turn.asRotationMatrix();
+    final frame = Matrix4.compose(at, turn, Vector3.all(1));
     final x = turning.getColumn(0);
     final y = turning.getColumn(1);
     final z = turning.getColumn(2);
@@ -92,6 +93,7 @@ class _JointLines extends WorldLines {
     if (body != null) line(at, body);
     if (holder != null) line(at, holder);
 
+    final shape = (at: at, x: x, y: y, z: z, reach: reach);
     final limits = joint.limits;
     switch (joint.kind) {
       case doc.JointKind.fixed:
@@ -103,35 +105,92 @@ class _JointLines extends WorldLines {
       case doc.JointKind.slider:
         _travel(at, x, y, limits[doc.JointAxis.alongX], reach);
       case doc.JointKind.distance:
-        final towards = body == null || (body - at).length < 1e-6
-            ? x
-            : (body - at).normalized();
-        final range = limits[doc.JointAxis.alongX];
-        if (range != null) _travel(at, towards, _across(towards), range, reach);
+        _rope(shape, limits[doc.JointAxis.alongX], body);
       case doc.JointKind.cone:
         _cone(at, x, y, z, joint.swing, reach);
         final twist = limits[doc.JointAxis.aboutX];
         if (twist != null) _turn(at, x, y, z, twist, reach * 0.3);
       case doc.JointKind.sixAxis:
-        final axes = [x, y, z];
-        for (var i = 0; i < 3; i++) {
-          final along = limits[doc.JointAxis.values[i]];
-          if (along != null) {
-            _travel(at, axes[i], axes[(i + 1) % 3], along, reach);
-          }
-          final about = limits[doc.JointAxis.values[i + 3]];
-          if (about != null) {
-            _turn(
-              at,
-              axes[i],
-              axes[(i + 1) % 3],
-              axes[(i + 2) % 3],
-              about,
-              reach * 0.5,
-            );
-          }
-        }
+        _sixAxes(shape, limits);
+      case doc.JointKind.gear || doc.JointKind.rack:
+        _pinion(shape, frame, joint.axisB);
+      case doc.JointKind.pulley:
+        _pulley(shape, frame, joint.over, holder: holder, body: body);
+      case doc.JointKind.path:
+        _path(shape, frame, joint.path);
     }
+  }
+
+  /// A distance joint's range along the line to its body, or along x when
+  /// the two are at the same place and there is no line.
+  void _rope(_Frame shape, doc.JointRange? range, Vector3? body) {
+    final toward = body == null || (body - shape.at).length < 1e-6
+        ? shape.x
+        : (body - shape.at).normalized();
+    if (range == null) return;
+    _travel(shape.at, toward, _across(toward), range, shape.reach);
+  }
+
+  /// The three ways along and the three about, each from the axis after it.
+  void _sixAxes(_Frame shape, Map<doc.JointAxis, doc.JointRange> limits) {
+    final axes = [shape.x, shape.y, shape.z];
+    for (var i = 0; i < 3; i++) {
+      final along = limits[doc.JointAxis.values[i]];
+      if (along != null) {
+        _travel(shape.at, axes[i], axes[(i + 1) % 3], along, shape.reach);
+      }
+      final about = limits[doc.JointAxis.values[i + 3]];
+      if (about != null) {
+        _turn(
+          shape.at,
+          axes[i],
+          axes[(i + 1) % 3],
+          axes[(i + 2) % 3],
+          about,
+          shape.reach * 0.5,
+        );
+      }
+    }
+  }
+
+  /// The axis a gear or a rack's body turns about, when it is not the
+  /// joint's own x, which is drawn already.
+  void _pinion(_Frame shape, Matrix4 frame, Vector3 axisB) {
+    if (axisB.length2 == 0) return;
+    final across = frame.rotated3(axisB.clone()).normalized();
+    line(shape.at, shape.at + across * (shape.reach * 0.7));
+  }
+
+  /// A rope over two fixed points: from the body it hangs from to the first,
+  /// across to the second, and down to the body. A ring at each point, so
+  /// there is something to find when they are dragged.
+  void _pulley(
+    _Frame shape,
+    Matrix4 frame,
+    List<Vector3> over, {
+    required Vector3? holder,
+    required Vector3? body,
+  }) {
+    if (over.length != 2) return;
+    final first = frame.transformed3(over[0].clone());
+    final second = frame.transformed3(over[1].clone());
+    line(first, second);
+    if (holder != null) line(holder, first);
+    if (body != null) line(second, body);
+    for (final point in [first, second]) {
+      _ball(point, shape.x, shape.y, shape.z, shape.reach * 0.12);
+    }
+  }
+
+  /// A path's line in the world, with a ring at its start, which is where
+  /// the body is measured from.
+  void _path(_Frame shape, Matrix4 frame, List<Vector3> points) {
+    if (points.isEmpty) return;
+    final world = [for (final p in points) frame.transformed3(p.clone())];
+    for (var i = 0; i + 1 < world.length; i++) {
+      line(world[i], world[i + 1]);
+    }
+    _ball(world.first, shape.x, shape.y, shape.z, shape.reach * 0.12);
   }
 
   /// How far a joint turns about [axis]: a whole ring when it is free, an
@@ -214,3 +273,7 @@ class _JointLines extends WorldLines {
     return axis.cross(other)..normalize();
   }
 }
+
+/// A joint's own place, axes and size on screen, for the shapes drawn from
+/// it.
+typedef _Frame = ({Vector3 at, Vector3 x, Vector3 y, Vector3 z, double reach});
