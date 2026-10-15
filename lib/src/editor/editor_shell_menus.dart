@@ -80,13 +80,14 @@ class _AddMenu extends StatelessWidget {
   }
 }
 
-/// New, Save and Save As.
+/// New, Save, Save As and Export.
 class _SceneMenu extends StatelessWidget {
   const _SceneMenu({
     required this.dirty,
     required this.onSave,
     required this.onSaveAs,
     required this.onNewScene,
+    required this.onExport,
     required this.onOpenInCode,
     required this.onReveal,
   });
@@ -96,6 +97,9 @@ class _SceneMenu extends StatelessWidget {
   final VoidCallback onSaveAs;
 
   final VoidCallback onNewScene;
+
+  /// Opens the export dialog, which packs the project for an app.
+  final VoidCallback onExport;
 
   /// Opens the project folder in whatever code editor is installed.
   final VoidCallback onOpenInCode;
@@ -136,6 +140,15 @@ class _SceneMenu extends StatelessWidget {
           child: const Text('Save as…', style: OrblitText.label),
         ),
         const Divider(height: 9, color: OrblitColors.line),
+        MenuItemButton(
+          onPressed: onExport,
+          leadingIcon: const Icon(
+            Icons.inventory_2_outlined,
+            size: 14,
+            color: OrblitColors.inkMid,
+          ),
+          child: const Text('Export…', style: OrblitText.label),
+        ),
         MenuItemButton(
           onPressed: onOpenInCode,
           leadingIcon: const Icon(

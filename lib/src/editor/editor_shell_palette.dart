@@ -57,6 +57,7 @@ extension _Palette on _EditorShellState {
       _saveAs,
       keys: commandShortcutLabel('S', shift: true),
     ),
+    _command('Export…', Icons.inventory_2_outlined, _openExport),
     _command('Open in code editor', Icons.code, _openInCode),
     _command('All projects', Icons.chevron_left, widget.onClose),
   ];

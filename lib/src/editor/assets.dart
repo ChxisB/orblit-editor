@@ -92,11 +92,16 @@ class Asset {
   /// A size somebody can read at a glance.
   String get size {
     final value = bytes;
-    if (value == null) return '';
-    if (value < 1024) return '$value B';
-    if (value < 1024 * 1024) return '${(value / 1024).toStringAsFixed(0)} KB';
-    return '${(value / (1024 * 1024)).toStringAsFixed(1)} MB';
+    return value == null ? '' : sizeLabel(value);
   }
+}
+
+/// [bytes] as something to read at a glance: bytes, then kilobytes, then
+/// megabytes to a tenth.
+String sizeLabel(int bytes) {
+  if (bytes < 1024) return '$bytes B';
+  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(0)} KB';
+  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
 }
 
 /// Reads what is actually in a project folder, and says when it changes.

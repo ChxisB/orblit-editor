@@ -22,6 +22,23 @@ extension _Documents on _EditorShellState {
     );
   }
 
+  /// Shows [path] in the desktop's file browser, or says why it cannot.
+  void _reveal(String path) {
+    final problem = CodeEditor.reveal(path);
+    if (problem != null) _say(problem);
+  }
+
+  /// Opens the export dialog, which cooks the project and packs it.
+  void _openExport() {
+    unawaited(
+      showExportDialog(
+        context,
+        projectDirectory: widget.project.directory,
+        onReveal: _reveal,
+      ),
+    );
+  }
+
   /// Puts a texture on the selected object.
   ///
   /// The case this is for is an asset pack that ships a model and its colour

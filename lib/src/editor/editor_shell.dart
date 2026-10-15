@@ -38,6 +38,7 @@ import 'data_store.dart';
 import 'dock.dart';
 import 'grid.dart';
 import 'drawing.dart';
+import 'export_dialog.dart';
 import 'frame_rate.dart';
 import 'dock_view.dart';
 import 'editor_mode.dart';
@@ -747,11 +748,9 @@ class _EditorShellState extends State<EditorShell> {
               onSaveAs: _saveAs,
               onNewScene: () => _newScene(),
               viewMenu: _viewMenu(),
+              onExport: _openExport,
               onOpenInCode: _openInCode,
-              onReveal: () {
-                final problem = CodeEditor.reveal(widget.project.directory);
-                if (problem != null) _say(problem);
-              },
+              onReveal: () => _reveal(widget.project.directory),
               onUndo: _undo,
               onRedo: _redo,
               selectionCount: _selected.length,
