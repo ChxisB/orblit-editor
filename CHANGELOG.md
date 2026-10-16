@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.0+11
+
+- Offer Character as a body's motion, with its step height, steepest slope,
+  skin, push strength and crouch height. A character shows no lock, place
+  or belt rows, because the world sweeps it.
+
 ## 1.9.0+10
 
 - Add a Continuous row to the Inspector's Body section. It stops a small fast
