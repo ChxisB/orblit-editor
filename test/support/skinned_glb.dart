@@ -41,3 +41,63 @@ Uint8List chainGlb(List<String> names) => glb({
     {'joints': List.generate(names.length, (i) => i)},
   ],
 });
+
+/// A person standing in Y up and facing +Z, so their left is +X, as a
+/// `.glb` file: hips, a spine, two arms and two legs with the bones a limb
+/// needs and no more.
+///
+/// Names are the plain ones. Which bone is which comes from how they hang
+/// and where they stand, which is what an imported model has to be read by.
+/// With [forearmTwist] each arm has a twist bone between the elbow and the
+/// hand, as a rig made for skinning often does.
+Uint8List personGlb({bool forearmTwist = false}) {
+  final nodes = <Map<String, Object?>>[];
+  final children = <int, List<int>>{};
+
+  int add(String name, int parent, double x, double y, double z) {
+    final index = nodes.length;
+    nodes.add({
+      'name': name,
+      'translation': [x, y, z],
+    });
+    if (parent >= 0) children.putIfAbsent(parent, () => []).add(index);
+    return index;
+  }
+
+  final hips = add('hips', -1, 0, 1, 0);
+  final spine = add('spine', hips, 0, 0.15, 0);
+  final chest = add('chest', spine, 0, 0.2, 0);
+  final neck = add('neck', chest, 0, 0.25, 0);
+  add('head', neck, 0, 0.12, 0);
+  for (final (side, sign) in [('left', 1.0), ('right', -1.0)]) {
+    final shoulder = add('$side shoulder', chest, sign * 0.06, 0.2, 0);
+    final upper = add('$side upper arm', shoulder, sign * 0.1, 0, 0);
+    final lower = add('$side lower arm', upper, sign * 0.28, 0, 0.02);
+    // A bone that only twists the forearm, standing between the elbow and
+    // the wrist.
+    final wrist = forearmTwist
+        ? add('$side forearm twist', lower, sign * 0.12, 0, -0.01)
+        : lower;
+    add('$side hand', wrist, sign * (forearmTwist ? 0.13 : 0.25), 0, -0.02);
+    final thigh = add('$side thigh', hips, sign * 0.1, -0.05, 0);
+    final shin = add('$side shin', thigh, 0, -0.45, 0.02);
+    final foot = add('$side foot', shin, 0, -0.42, -0.02);
+    add('$side toes', foot, 0, -0.05, 0.12);
+  }
+  for (final entry in children.entries) {
+    nodes[entry.key]['children'] = entry.value;
+  }
+  return glb({
+    'asset': {'version': '2.0'},
+    'scene': 0,
+    'scenes': [
+      {
+        'nodes': [0],
+      },
+    ],
+    'nodes': nodes,
+    'skins': [
+      {'joints': List.generate(nodes.length, (i) => i)},
+    ],
+  });
+}

@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.15.0+16
+
+- Pose a limb by dragging its hand or foot. With **Bones** on, a selected
+  model that has a person's skeleton shows a ring on each hand and foot,
+  over the pose the open clip gives at the playhead. Drag a ring and the
+  arm or leg follows the pointer.
+- A drag keys the two bones above the ring at the playhead, as one step of
+  undo. Everything else of the pose is left as it was. A limb that cannot
+  reach straightens towards the pointer.
+- The rings are hidden while the clip plays, and in a cutscene, which
+  cannot move a model's bones.
+- A rig that cannot be read as a person gets no rings, nor does a limb
+  with more bones than a person's. Key its bones from the timeline as
+  before.
+
 ## 1.14.0+15
 
 - Edit a blend as a graph. A `.oblend` file opens in the **Blend** panel

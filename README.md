@@ -31,6 +31,8 @@ of empty states is worse than a screen that asks one question.
   moves another model's skeleton, from a bone map you can save and reuse.
   A `.oblend` file opens in the Blend panel as a graph of states and
   changes. Drag from a state onto another to join them.
+  With Bones on, drag a hand or foot ring to pose a limb and key it at the
+  playhead.
 
 The 3D viewport draws on macOS. The animation preview does not run scripts,
 physics or skeletal animation. Games wire their own clip players.

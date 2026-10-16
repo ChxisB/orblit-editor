@@ -1,14 +1,11 @@
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/widgets.dart';
-import 'package:orblit_motion/orblit_motion.dart'
-    show BoneLocal, ClipFrame, ClipScope;
-import 'package:orblit_scene/orblit_scene.dart' as doc;
+import 'package:orblit_motion/orblit_motion.dart' show BoneLocal, ClipFrame;
 
 import '../theme/orblit_theme.dart';
 import 'clip_bench.dart';
 import 'gizmo_registry.dart';
 import 'model_skeletons.dart';
-import 'scene_document.dart';
 import 'skeleton_view.dart';
 import 'world_lines.dart';
 
@@ -73,7 +70,7 @@ class _SkeletonPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (!settings.bones) return;
-    final scope = _scope();
+    final scope = bench.scopeIn(target.scene);
     final ghosts = _ghosts(scope != null);
     for (final id in target.selected) {
       final object = target.scene[id];
@@ -105,19 +102,6 @@ class _SkeletonPainter extends CustomPainter {
         }
       }
     }
-  }
-
-  /// Where the open clip's names point, or null when it is not being played
-  /// on something in the scene this view shows.
-  ClipScope? _scope() {
-    final owner = bench.owner;
-    final playing = owner == null ? null : target.scene[owner];
-    if (bench.clip == null || playing == null) return null;
-    if (!identical(target.scene, bench.scene())) return null;
-    return ClipScope.inScene(
-      doc.SceneDocument(entities: [SceneDocument.entityOf(playing)]),
-      owner!,
-    );
   }
 
   /// The poses to draw, ghosts first so the current one is on top.
