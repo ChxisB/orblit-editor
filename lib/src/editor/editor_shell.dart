@@ -23,6 +23,8 @@ import 'body_gizmo.dart';
 import 'body_section.dart';
 import 'collision_model.dart';
 import 'cinematics_mode.dart';
+import 'blend_bench.dart';
+import 'blend_graph_panel.dart';
 import 'clip_bench.dart';
 import 'clip_preview.dart';
 import 'clipboard.dart';
@@ -83,6 +85,7 @@ import 'scene_playback.dart';
 import 'package:orblit_mesh/orblit_mesh.dart';
 import 'package:orblit_motion/orblit_motion.dart'
     show
+        BlendFormatException,
         ClipDocument,
         ClipFormatException,
         CutsceneDocument,
@@ -104,6 +107,7 @@ part 'editor_shell_objects.dart';
 part 'editor_shell_panels.dart';
 part 'editor_shell_documents.dart';
 part 'editor_shell_prefabs.dart';
+part 'editor_shell_blends.dart';
 part 'editor_shell_clips.dart';
 part 'editor_shell_cinematics.dart';
 part 'editor_shell_layouts.dart';
@@ -326,6 +330,10 @@ class _EditorShellState extends State<EditorShell> {
     playedOn: PlayedOn.scene,
   );
 
+  /// The blends open in the graph. Editing one changes nothing the scene
+  /// shows, so the shell asks only whether any has changes.
+  late final BlendBench _blends = BlendBench(history: _history);
+
   /// The camera the scene view steers in Cinematics, and which view.
   ({String camera, String view})? _piloting;
 
@@ -373,6 +381,7 @@ class _EditorShellState extends State<EditorShell> {
     _workspace.addListener(_onChanged);
     _bench.addListener(_onBenchChanged);
     _cuts.addListener(_onBenchChanged);
+    _blends.addListener(_onBenchChanged);
     _terrains.addListener(_onTerrainsChanged);
     _frames
       ..start()
@@ -450,6 +459,9 @@ class _EditorShellState extends State<EditorShell> {
     _cuts
       ..removeListener(_onBenchChanged)
       ..dispose();
+    _blends
+      ..removeListener(_onBenchChanged)
+      ..dispose();
     _terrains
       ..removeListener(_onTerrainsChanged)
       ..dispose();
@@ -509,7 +521,7 @@ class _EditorShellState extends State<EditorShell> {
   void _onBenchChanged() {
     final scene = _current?.scene;
     final change = scene == null ? PoseChange.none : _pose(scene);
-    final unsaved = _bench.anyUnsaved || _cuts.anyUnsaved;
+    final unsaved = _bench.anyUnsaved || _cuts.anyUnsaved || _blends.anyUnsaved;
     if (change == PoseChange.rebuilt || unsaved != _clipsUnsaved) {
       _clipsUnsaved = unsaved;
       setState(() {});

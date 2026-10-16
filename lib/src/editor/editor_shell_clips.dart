@@ -162,10 +162,14 @@ extension _Clips on _EditorShellState {
     }
   }
 
-  /// Writes every clip and cutscene with changes, and says which could not
-  /// be written.
+  /// Writes every clip, cutscene and blend with changes, and says which could
+  /// not be written.
   void _saveClips() {
-    for (final problem in [..._bench.saveAll(), ..._cuts.saveAll()]) {
+    for (final problem in [
+      ..._bench.saveAll(),
+      ..._cuts.saveAll(),
+      ..._blends.saveAll(),
+    ]) {
       _say(problem, level: LogLevel.error);
     }
   }

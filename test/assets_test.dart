@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orblit_editor/src/editor/assets.dart';
+import 'package:orblit_motion/orblit_motion.dart' show BlendDocument;
 import 'package:path/path.dart' as p;
 
 void main() {
@@ -383,6 +384,29 @@ void main() {
         expect(what.companion, what == NewAsset.native ? isNotNull : isNull,
             reason: what.name);
       }
+    });
+  });
+
+  group('blends', () {
+    test('a blend is kinded by its extension and found by kind', () {
+      final tree = AssetTree(root.path);
+      final made = tree.create(root.path, NewAsset.blend, 'moves');
+
+      expect(made.path, endsWith('moves.oblend'));
+      expect(tree.describe(made.path!).kind, AssetKind.blend);
+      expect(tree.find((asset) => asset.kind == AssetKind.blend), [
+        'moves.oblend',
+      ]);
+    });
+
+    test('a new blend reads back with a state to start in', () {
+      final tree = AssetTree(root.path);
+      final made = tree.create(root.path, NewAsset.blend, 'moves');
+
+      final load = BlendDocument.decode(File(made.path!).readAsStringSync());
+      expect(load.problems, isEmpty);
+      expect(load.blend.name, 'moves');
+      expect(load.blend.writtenStates.map((state) => state.name), ['idle']);
     });
   });
 }

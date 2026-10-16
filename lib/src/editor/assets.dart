@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:orblit_motion/orblit_motion.dart'
-    show ClipDocument, CutsceneDocument;
+    show BlendClip, BlendDocument, BlendState, ClipDocument, CutsceneDocument;
 import 'package:path/path.dart' as p;
 
 import 'package:orblit_ui/orblit_ui.dart';
@@ -28,6 +28,7 @@ enum AssetKind {
   dataObject('Data object', Icons.dataset_outlined),
   canvas('Canvas', Icons.web_asset),
   clip('Clip', Icons.animation),
+  blend('Blend', Icons.hub_outlined),
   boneMap('Bone map', Icons.account_tree_outlined),
   cutscene('Cutscene', Icons.movie_outlined),
   audio('Audio', Icons.graphic_eq),
@@ -53,6 +54,7 @@ enum AssetKind {
     '.odata': dataObject,
     '.oui': canvas,
     '.oclip': clip,
+    '.oblend': blend,
     '.obonemap': boneMap,
     '.ocutscene': cutscene,
     '.wav': audio, '.mp3': audio, '.ogg': audio,
@@ -227,6 +229,17 @@ class AssetTree {
     return found;
   }
 
+  /// The project paths of every file under the project that [test] takes.
+  List<String> find(bool Function(Asset) test) {
+    final out = <String>[];
+    for (final directory in [root, for (final one in folders()) one.path]) {
+      for (final asset in read(directory)) {
+        if (!asset.isFolder && test(asset)) out.add(relative(asset.path));
+      }
+    }
+    return out;
+  }
+
   /// Where a path sits relative to the project, for the breadcrumb — and for
   /// the asset references written into scene files, which is why this
   /// always answers with `/` regardless of the host's own separator.
@@ -375,6 +388,10 @@ class AssetTree {
       NewAsset.canvas => UiDocument.blank(name).toText(),
       NewAsset.dataObject => DataObject.blank(name).toText(),
       NewAsset.clip => ClipDocument(name: name, duration: 1).encode(),
+      NewAsset.blend => BlendDocument(
+        name: name,
+        states: [BlendState('idle', plays: const BlendClip('idle'))],
+      ).encode(),
       NewAsset.cutscene => CutsceneDocument(
         motion: ClipDocument(name: name, duration: 4),
       ).encode(),
@@ -701,6 +718,15 @@ struct Drift {
     starter: null,
   ),
 
+  blend(
+    label: 'Blend',
+    icon: Icons.hub_outlined,
+    extension: '.oblend',
+    suggested: 'blend',
+    // Written by BlendDocument, for the same reason as a clip.
+    starter: null,
+  ),
+
   cutscene(
     label: 'Cutscene',
     icon: Icons.movie_outlined,
@@ -780,6 +806,7 @@ enum NewAssetGroup {
     NewAsset.canvas,
     NewAsset.scene,
     NewAsset.clip,
+    NewAsset.blend,
     NewAsset.cutscene,
   ];
 }

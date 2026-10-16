@@ -29,6 +29,8 @@ of empty states is worse than a screen that asks one question.
   Play, Pause and Stop preview scene properties without editing the scene.
   The clip menu's Retarget to another model makes a copy of a clip that
   moves another model's skeleton, from a bone map you can save and reuse.
+  A `.oblend` file opens in the Blend panel as a graph of states and
+  changes. Drag from a state onto another to join them.
 
 The 3D viewport draws on macOS. The animation preview does not run scripts,
 physics or skeletal animation. Games wire their own clip players.
