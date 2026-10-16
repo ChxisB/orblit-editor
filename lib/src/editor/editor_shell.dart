@@ -55,6 +55,7 @@ import 'layout_library.dart';
 import 'mesh_edit.dart';
 import 'mesh_panel.dart';
 import 'model_bounds.dart';
+import 'model_skeletons.dart';
 import 'motion_section.dart';
 import 'modelling_panel.dart';
 import 'mesh_tools.dart';
@@ -63,6 +64,8 @@ import 'panel_registry.dart';
 import 'prefab.dart';
 import 'registry.dart';
 import 'scene.dart';
+import 'skeleton_gizmo.dart';
+import 'skeleton_view.dart';
 import 'snapping.dart';
 import 'surface.dart';
 import 'terrain_bench.dart';
@@ -220,6 +223,17 @@ class _EditorShellState extends State<EditorShell> {
 
   /// How big each imported model says it is, read once a file.
   late final ModelBounds _models = ModelBounds(widget.project.directory);
+
+  /// The skeleton each imported model says it has, read once a file.
+  late final ModelSkeletons _skeletons = ModelSkeletons(
+    widget.project.directory,
+  );
+
+  /// Whether bones and onion skin are drawn. A way of looking, so it is
+  /// neither saved nor put on the undo stack.
+  final ValueNotifier<SkeletonSettings> _skeletonView = ValueNotifier(
+    const SkeletonSettings(),
+  );
 
   /// The outline or cut being drawn, if one is.
   ///
@@ -432,6 +446,7 @@ class _EditorShellState extends State<EditorShell> {
       ..removeListener(_onTerrainsChanged)
       ..dispose();
     _interfaceBench.dispose();
+    _skeletonView.dispose();
     _history
       ..removeListener(_onHistoryChanged)
       ..dispose();

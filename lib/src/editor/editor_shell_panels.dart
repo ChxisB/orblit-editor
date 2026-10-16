@@ -12,7 +12,14 @@ extension _Panels on _EditorShellState {
     _registerSections(registry.sections);
     registry.gizmos
       ..register(bodyGizmo())
-      ..register(jointGizmo());
+      ..register(jointGizmo())
+      ..register(
+        skeletonGizmo(
+          bench: _bench,
+          models: _skeletons,
+          settings: _skeletonView,
+        ),
+      );
     // In the order work usually goes: lay out a level, shape what is in it,
     // shape the ground under it, make it move, film it, then lay out what
     // is shown over it.
@@ -122,6 +129,7 @@ extension _Panels on _EditorShellState {
         kind: PanelKind.timeline,
         build: (_, _) => TimelinePanel(
           bench: _bench,
+          skeleton: _skeletonView,
           selected: _selectedObject,
           onProblem: (message) => _say(message, level: LogLevel.error),
           onNew: _newClip,

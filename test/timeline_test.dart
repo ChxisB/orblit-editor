@@ -6,6 +6,7 @@ import 'package:orblit_editor/src/editor/clip_edits.dart';
 import 'package:orblit_editor/src/editor/history.dart';
 import 'package:orblit_editor/src/editor/inspector.dart';
 import 'package:orblit_editor/src/editor/scene.dart';
+import 'package:orblit_editor/src/editor/skeleton_view.dart';
 import 'package:orblit_editor/src/editor/timeline.dart';
 import 'package:orblit_editor/src/editor/timeline_sheet.dart';
 import 'package:orblit_editor/src/editor/workspace.dart';
@@ -38,6 +39,7 @@ Future<void> showPanel(
   WidgetTester tester,
   ClipBench bench, {
   VoidCallback? onNew,
+  ValueNotifier<SkeletonSettings>? skeleton,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -45,6 +47,7 @@ Future<void> showPanel(
         body: TimelinePanel(
           bench: bench,
           selected: null,
+          skeleton: skeleton,
           onProblem: (_) {},
           onNew: onNew ?? () {},
         ),
@@ -115,6 +118,76 @@ void main() {
 
       expect(channelAt(bench.clip!, lampPower), isNull);
       expect(history.labels.last, 'Delete key');
+    });
+  });
+
+  group('skeleton chips', () {
+    testWidgets('are not there when the shell gives no settings', (
+      tester,
+    ) async {
+      await showPanel(tester, rig().bench);
+      expect(find.text('Bones'), findsNothing);
+      expect(find.text('Onion'), findsNothing);
+    });
+
+    testWidgets('Bones switches the bones on and off', (tester) async {
+      final settings = ValueNotifier(const SkeletonSettings());
+      await showPanel(tester, rig().bench, skeleton: settings);
+
+      await tester.tap(find.text('Bones'));
+      await tester.pump();
+      expect(settings.value.bones, isTrue);
+
+      await tester.tap(find.text('Bones'));
+      await tester.pump();
+      expect(settings.value.bones, isFalse);
+    });
+
+    testWidgets('Onion brings the bones with it, and they take it back', (
+      tester,
+    ) async {
+      final settings = ValueNotifier(const SkeletonSettings());
+      await showPanel(tester, rig().bench, skeleton: settings);
+
+      await tester.tap(find.text('Onion'));
+      await tester.pump();
+      expect(settings.value.onion, isTrue);
+      expect(settings.value.bones, isTrue);
+
+      await tester.tap(find.text('Bones'));
+      await tester.pump();
+      expect(settings.value.bones, isFalse);
+      expect(settings.value.onion, isFalse);
+    });
+
+    testWidgets('the ghost menu appears with onion skin and says its count', (
+      tester,
+    ) async {
+      final settings = ValueNotifier(const SkeletonSettings());
+      await showPanel(tester, rig().bench, skeleton: settings);
+      expect(find.text('2 each side, every 2 frames'), findsNothing);
+
+      settings.value = settings.value.copyWith(bones: true, onion: true);
+      await tester.pump();
+      expect(find.text('2 each side, every 2 frames'), findsOneWidget);
+
+      settings.value = settings.value.copyWith(before: 1, after: 1, stride: 1);
+      await tester.pump();
+      expect(find.text('1 each side, every frame'), findsOneWidget);
+    });
+    testWidgets('fit a narrow panel with onion skin on', (tester) async {
+      tester.view.physicalSize = const Size(480, 300);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final settings = ValueNotifier(
+        const SkeletonSettings(bones: true, onion: true),
+      );
+
+      await showPanel(tester, rig().bench, skeleton: settings);
+
+      // An overflow is an exception, which the test would report.
+      expect(tester.takeException(), isNull);
+      expect(find.text('Bones'), findsOneWidget);
     });
   });
 

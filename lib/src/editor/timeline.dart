@@ -11,6 +11,7 @@ import '../widgets/controls.dart';
 import 'clip_bench.dart';
 import 'clip_edits.dart';
 import 'scene.dart';
+import 'skeleton_view.dart';
 import 'timeline_curves.dart';
 import 'timeline_sheet.dart';
 
@@ -39,12 +40,17 @@ class TimelinePanel extends StatefulWidget {
   const TimelinePanel({
     super.key,
     required this.bench,
+    this.skeleton,
     this.selected,
     this.onProblem,
     required this.onNew,
   });
 
   final ClipBench bench;
+
+  /// What the view shows of the model's skeleton. Null where there is no
+  /// model to show it on, such as a cutscene, which has no bones to pose.
+  final ValueNotifier<SkeletonSettings>? skeleton;
 
   /// What is selected in the scene, which is what the clip can be played on.
   final SceneObject? selected;
@@ -300,6 +306,13 @@ class _TimelinePanelState extends State<TimelinePanel>
                       ..playing = false
                       ..at = clip.duration,
                   ),
+                  // Inside the part that scrolls and ahead of the length: the
+                  // ghost menu is the widest thing on the bar and would
+                  // overflow a narrow panel among the controls that stay put.
+                  if (widget.skeleton case final skeleton?) ...[
+                    const SizedBox(width: Space.md),
+                    _SkeletonControls(settings: skeleton),
+                  ],
                   const SizedBox(width: Space.md),
                   const Text('Length', style: OrblitText.caption),
                   const SizedBox(width: Space.xs),
@@ -334,11 +347,13 @@ class _TimelinePanelState extends State<TimelinePanel>
           const SizedBox(width: Space.sm),
           _Chip(
             label: 'Keys',
+            tooltip: 'Show the timing of each key.',
             on: _view == TimelineView.keys,
             onTap: () => setState(() => _view = TimelineView.keys),
           ),
           _Chip(
             label: 'Curves',
+            tooltip: 'Show how values change between keys.',
             on: _view == TimelineView.curves,
             onTap: () => setState(() => _view = TimelineView.curves),
           ),
