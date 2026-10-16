@@ -73,6 +73,22 @@ void main() {
       expect(savedBody('crate').locks, isEmpty);
     });
 
+    testWidgets('is cast against fixed bodies on request, and undoes it', (
+      tester,
+    ) async {
+      await freeCrate(tester);
+      await save(tester);
+      expect(savedBody('crate').continuous, isFalse);
+
+      await tapIn(tester, 'Continuous', 'On');
+      await save(tester);
+      expect(savedBody('crate').continuous, isTrue);
+
+      await undo(tester);
+      await save(tester);
+      expect(savedBody('crate').continuous, isFalse);
+    });
+
     testWidgets('is offered no movement controls once it is fixed', (
       tester,
     ) async {
@@ -83,6 +99,7 @@ void main() {
 
       expect(inInspector('Lock move'), findsNothing);
       expect(inInspector('Gravity'), findsNothing);
+      expect(inInspector('Continuous'), findsNothing);
       // What it collides with does not depend on whether it moves.
       expect(inInspector('Is in'), findsOneWidget);
     });

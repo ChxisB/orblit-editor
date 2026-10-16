@@ -426,6 +426,13 @@ class _BodySection extends StatelessWidget {
       step: 0.1,
     ),
     const _Note('Zero is no limit.'),
+    ChoiceRow(
+      label: 'Continuous',
+      options: const ['Off', 'On'],
+      selected: body.continuous ? 'On' : 'Off',
+      onSelect: (label) => _choose(body.copyWith(continuous: label == 'On')),
+    ),
+    const _Note('Stops a small fast body at a thin fixed wall. Costs a cast.'),
     _drag(
       'Weight at',
       (body) => body.centreOfMass.storage,
