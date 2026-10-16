@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.17.0+18
+
+- Add a Vehicle section to a body the solver moves. It sets the steer lock,
+  the anti-roll bar, the idle speed, the final drive, reverse and the
+  differential lock. The torque curve and the gears stay in the scene file.
+- Add a Wheel section to a direct child of a car. It sets whether the wheel
+  steers, drives and takes the handbrake, and its radius, travel, spring,
+  damping, grip and brake. Place the wheel where it sits at rest.
+
 ## 1.16.0+17
 
 - Add Scene > Export. It cooks the project for each target chosen and packs

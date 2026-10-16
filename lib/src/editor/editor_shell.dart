@@ -80,6 +80,7 @@ import 'terrain_mode.dart';
 import 'terrain_section.dart';
 import 'timeline.dart';
 import 'uv_panel.dart';
+import 'vehicle_section.dart';
 import 'zone_section.dart';
 import 'scene_document.dart';
 import 'scene_playback.dart';
