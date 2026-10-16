@@ -63,6 +63,8 @@ import 'outliner.dart';
 import 'panel_registry.dart';
 import 'prefab.dart';
 import 'registry.dart';
+import 'retarget_dialog.dart';
+import 'retarget_files.dart';
 import 'scene.dart';
 import 'skeleton_gizmo.dart';
 import 'skeleton_view.dart';
@@ -227,6 +229,12 @@ class _EditorShellState extends State<EditorShell> {
   /// The skeleton each imported model says it has, read once a file.
   late final ModelSkeletons _skeletons = ModelSkeletons(
     widget.project.directory,
+  );
+
+  /// What the retarget dialog reads and writes in the project.
+  late final ProjectRetargetFiles _retargetFiles = ProjectRetargetFiles(
+    assets: _assets,
+    skeletons: _skeletons,
   );
 
   /// Whether bones and onion skin are drawn. A way of looking, so it is

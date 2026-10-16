@@ -44,6 +44,7 @@ class TimelinePanel extends StatefulWidget {
     this.selected,
     this.onProblem,
     required this.onNew,
+    this.onRetarget,
   });
 
   final ClipBench bench;
@@ -60,6 +61,10 @@ class TimelinePanel extends StatefulWidget {
 
   /// Makes a clip in the project and opens it here.
   final VoidCallback onNew;
+
+  /// Asks which other model the shown clip should move. Null where a clip
+  /// has no bones to carry, such as a cutscene.
+  final VoidCallback? onRetarget;
 
   @override
   State<TimelinePanel> createState() => _TimelinePanelState();
@@ -420,6 +425,19 @@ class _TimelinePanelState extends State<TimelinePanel>
           ),
           child: Text(words.make, style: OrblitText.label),
         ),
+        if (widget.onRetarget case final retarget?)
+          MenuItemButton(
+            onPressed: retarget,
+            leadingIcon: const Icon(
+              Icons.swap_horiz,
+              size: 14,
+              color: OrblitColors.inkMid,
+            ),
+            child: const Text(
+              'Retarget to another model…',
+              style: OrblitText.label,
+            ),
+          ),
         const Divider(height: 1),
         MenuItemButton(
           onPressed: unsaved

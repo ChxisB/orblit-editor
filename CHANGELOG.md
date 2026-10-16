@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.13.0+14
+
+- Move a clip onto another model. **Retarget to another model…** in the
+  clip menu opens a dialog with the model the clip was made for, the model
+  to move, and a row for each bone of the second. A row says what moves the
+  bone: the automatic match, a bone picked by hand, or nothing.
+- Save and load a bone map. A map is an `.obonemap` file under
+  `retargets/`, so the same pairing carries every clip made for one model
+  onto the other. A pair a model lacks is named and left out.
+- Make clip writes `clips/<clip> (<model>).oclip` and opens it. The clip is
+  put on the selected object only when that object is the target model.
+- Show `.obonemap` files in the asset browser as bone maps.
+
 ## 1.12.0+13
 
 - Draw a model's bones in the view. **Bones** on the timeline toolbar

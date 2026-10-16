@@ -39,6 +39,7 @@ Future<void> showPanel(
   WidgetTester tester,
   ClipBench bench, {
   VoidCallback? onNew,
+  VoidCallback? onRetarget,
   ValueNotifier<SkeletonSettings>? skeleton,
 }) async {
   await tester.pumpWidget(
@@ -50,6 +51,7 @@ Future<void> showPanel(
           skeleton: skeleton,
           onProblem: (_) {},
           onNew: onNew ?? () {},
+          onRetarget: onRetarget,
         ),
       ),
     ),
@@ -118,6 +120,34 @@ void main() {
 
       expect(channelAt(bench.clip!, lampPower), isNull);
       expect(history.labels.last, 'Delete key');
+    });
+  });
+
+  group('clip menu', () {
+    testWidgets('offers a retarget when the shell can make one', (
+      tester,
+    ) async {
+      var asked = 0;
+      await showPanel(tester, rig().bench, onRetarget: () => asked++);
+
+      await tester.tap(find.text('wave'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Retarget to another model…'));
+      await tester.pumpAndSettle();
+
+      expect(asked, 1);
+    });
+
+    testWidgets('leaves it out for a clip that has no model to move', (
+      tester,
+    ) async {
+      await showPanel(tester, rig().bench);
+
+      await tester.tap(find.text('wave'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Make a clip'), findsOneWidget);
+      expect(find.text('Retarget to another model…'), findsNothing);
     });
   });
 
