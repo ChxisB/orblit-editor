@@ -75,6 +75,25 @@ void main() {
       expect(jointOf(back['hinge']!)!.toJson(), hinge.toJson());
       expect(jointOf(back['door']!), isNull);
     });
+
+    test('keeps its springs, goal, ratio, points and path', () {
+      final machine = doc.JointComponent(
+        kind: doc.JointKind.path,
+        springs: const {doc.JointAxis.alongX: doc.JointGive(4, rest: 0.25)},
+        softHertz: 6,
+        goal: 0.5,
+        goalHertz: 2,
+        ratio: -2,
+        axisB: Vector3(0, 1, 0),
+        over: [Vector3(0, 2, 0), Vector3(1, 2, 0)],
+        path: [Vector3.zero(), Vector3(1, 0, 0), Vector3(1, 1, 0)],
+        follow: true,
+      );
+
+      final back = reopened(scene(hinge: machine));
+
+      expect(jointOf(back['hinge']!)!.toJson(), machine.toJson());
+    });
   });
 
   group('what a joint holds', () {
@@ -265,6 +284,55 @@ void main() {
 
       expect(long.width, greaterThan(short.width));
       expect(long.inflate(1).contains(end), isTrue);
+    });
+
+    testWidgets('a path is drawn where its points are', (tester) async {
+      final bounds = await drawn(
+        tester,
+        scene(
+          hinge: doc.JointComponent(
+            kind: doc.JointKind.path,
+            path: [Vector3.zero(), Vector3(0, 3, 0), Vector3(0, 3, 4)],
+          ),
+        ),
+      );
+      final end = projection.project(Vector3(-0.5, 4, 4))!;
+
+      expect(bounds.inflate(1).contains(end), isTrue);
+    });
+
+    testWidgets('a pulley is drawn over its two points', (tester) async {
+      final bounds = await drawn(
+        tester,
+        scene(
+          hinge: doc.JointComponent(
+            kind: doc.JointKind.pulley,
+            over: [Vector3(0, 5, 0), Vector3(0, 5, 3)],
+          ),
+        ),
+      );
+      final high = projection.project(Vector3(-0.5, 6, 3))!;
+
+      expect(bounds.inflate(1).contains(high), isTrue);
+    });
+
+    testWidgets('a pulley with the wrong number of points draws no rope', (
+      tester,
+    ) async {
+      Future<Rect> pulleyOf(List<Vector3> over) => drawn(
+        tester,
+        scene(
+          hinge: doc.JointComponent(kind: doc.JointKind.pulley, over: over),
+        ),
+      );
+      final two = await pulleyOf([Vector3(0, 5, 0), Vector3(0, 5, 3)]);
+      final three = await pulleyOf([
+        Vector3(0, 5, 0),
+        Vector3(0, 5, 3),
+        Vector3(0, 5, 6),
+      ]);
+
+      expect(three.height, lessThan(two.height));
     });
   });
 }
