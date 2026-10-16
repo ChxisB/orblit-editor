@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.16.0+17
+
+- Add Scene > Export. It cooks the project for each target chosen and packs
+  the result into `exports/` beside the project. A whole pack is
+  `game.<target>.opack`, which is the file an app ships.
+- Build a patch against an export that is already there. It holds only what
+  changed, is named by its hash, and is for the target of the pack it stands
+  on. A patch with nothing in it is reported as unchanged and not written.
+- Replace a whole pack without losing the old one. It is kept under its
+  hash, so patches built on it still find their base.
+- Report each target as it lands. A target that fails to cook names the
+  assets and the reasons and leaves the last good pack as it was.
+- List what an export serves, which pack each asset comes from, and what a
+  patch takes away. It reads each pack's directory and no blobs.
+- Add Export to the command palette.
+
 ## 1.15.0+16
 
 - Pose a limb by dragging its hand or foot. With **Bones** on, a selected
