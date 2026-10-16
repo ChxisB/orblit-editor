@@ -354,7 +354,7 @@ packages:
       path: "../orblit/packages/orblit_filament"
       relative: true
     source: path
-    version: "0.36.0"
+    version: "0.37.0"
   orblit_light:
     dependency: "direct main"
     description:
@@ -403,7 +403,7 @@ packages:
       path: "../orblit/packages/orblit_scene"
       relative: true
     source: path
-    version: "0.17.0"
+    version: "0.19.0"
   orblit_sequence:
     dependency: transitive
     description:
@@ -424,7 +424,7 @@ packages:
       path: "../orblit/packages/orblit_stage"
       relative: true
     source: path
-    version: "0.7.0"
+    version: "0.8.0"
   orblit_terrain:
     dependency: "direct main"
     description:
