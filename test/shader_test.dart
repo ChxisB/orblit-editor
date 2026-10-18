@@ -148,14 +148,22 @@ void main() {
       },
     );
 
-    test('a cook that cannot start is told, and the editor goes on', () async {
+    test('a cook that cannot start is told once, and tried again', () async {
+      var tries = 0;
       surfaces = SurfaceCooks(
         projectDirectory: project.path,
         onProblem: told.add,
-        cook: (_) async => throw const FileSystemException('no matc'),
+        cook: (_) async {
+          if (++tries < 3) throw const FileSystemException('no matc');
+          return next;
+        },
       );
       await surfaces.refresh();
+      await surfaces.refresh();
       expect(told.single, startsWith('Could not cook the shaders'));
+
+      await surfaces.refresh();
+      expect(surfaces.surfaceFor(wearing('a')), isNotNull);
     });
   });
 
@@ -219,6 +227,36 @@ void main() {
       },
     );
 
+    test(
+      'a shared scene object with the same id has a surface of its own',
+      () async {
+        await surfaces.refresh();
+        final drawn =
+            EditorScene([
+              wearing('a', {'speed': 5}),
+            ]).toRenderScene(
+              OrblitCamera(position: Vector3(0, 2, 6), target: Vector3.zero()),
+              projectRoot: project.path,
+              shared: EditorScene([
+                wearing('a', {'speed': 6}),
+              ]),
+              surfaceOf: surfaces.surfaceFor,
+            );
+
+        final speeds = [
+          for (final material in drawn.materials)
+            if (material.surface case final surface?) surface.values['speed']!,
+        ];
+        expect(
+          speeds,
+          unorderedEquals([
+            [5],
+            [6],
+          ]),
+        );
+      },
+    );
+
     test('keeps the mesh it came with until the shader is cooked', () {
       final drawn = EditorScene([wearing('a')]).toRenderScene(
         OrblitCamera(position: Vector3(0, 2, 6), target: Vector3.zero()),
@@ -266,6 +304,36 @@ void main() {
           real.surfaceFor(wearing('a')..materialAsset = 'assets/unlit.oshader'),
           isNotNull,
         );
+      },
+      skip: matc == null ? 'ORBLIT_MATC is not set' : false,
+    );
+
+    test(
+      'a save that fails leaves the last package, and a save leaves the rest',
+      () async {
+        File('${project.path}/$shader').deleteSync();
+        for (final name in ['lit', 'unlit']) {
+          File('${project.path}/assets/$name.oshader').writeAsStringSync(
+            (name == 'lit' ? NewAsset.shader : NewAsset.unlitShader).starter!,
+          );
+        }
+        final real = SurfaceCooks(
+          projectDirectory: project.path,
+          onProblem: told.add,
+        );
+        await real.refresh();
+        final lit = real.cookedOf('assets/lit.oshader')!.package;
+        final unlit = File(real.cookedOf('assets/unlit.oshader')!.package);
+        final before = unlit.lastModifiedSync();
+        final bytes = File(lit).lengthSync();
+
+        File('${project.path}/assets/lit.oshader')
+            .writeAsStringSync('this is not a shader');
+        await real.refresh();
+
+        expect(real.problemWith('assets/lit.oshader'), isNotNull);
+        expect(File(lit).lengthSync(), bytes);
+        expect(unlit.lastModifiedSync(), before);
       },
       skip: matc == null ? 'ORBLIT_MATC is not set' : false,
     );

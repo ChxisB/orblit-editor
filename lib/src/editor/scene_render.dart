@@ -32,12 +32,13 @@ int _materialKeyOf(String texture, double sway) =>
 /// Objects that state nothing share one, so the renderer keeps one instance
 /// for them. An object that states values gets a key of its own, which stays
 /// the same while the values change, so the renderer updates that instance
-/// rather than building another.
+/// rather than building another. It is made from the render key and not the
+/// id, because the scene and the shared scene may both hold an id.
 int _surfaceKeyOf(SceneObject object) =>
     Object.hash(
       'surface',
       object.materialAsset,
-      object.materialValues.isEmpty ? null : object.id,
+      object.materialValues.isEmpty ? null : object.renderKey,
     ) &
     0x3fffffff;
 

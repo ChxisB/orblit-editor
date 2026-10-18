@@ -57,6 +57,7 @@ class SurfaceCooks extends ChangeNotifier {
   final Map<String, CookedSurface> _good = {};
   final Map<String, String> _problems = {};
   String _stamp = '';
+  String? _lastFailure;
   bool _running = false;
   bool _again = false;
   bool _disposed = false;
@@ -101,8 +102,13 @@ class SurfaceCooks extends ChangeNotifier {
         try {
           _take(await cook(projectDirectory));
         } on Object catch (error) {
-          // The editor outlives a cook that could not even start.
-          onProblem?.call('Could not cook the shaders: $error');
+          // The editor outlives a cook that could not even start. The stamp
+          // is forgotten so the next change to the folder tries again, and
+          // the same complaint is told once.
+          _stamp = '';
+          final problem = 'Could not cook the shaders: $error';
+          if (problem != _lastFailure) onProblem?.call(problem);
+          _lastFailure = problem;
         }
       } while (_again);
     } finally {
@@ -119,6 +125,7 @@ class SurfaceCooks extends ChangeNotifier {
   void _take(List<ShaderCooked> results) {
     // A cook can land after the editor that asked for it has closed.
     if (_disposed) return;
+    _lastFailure = null;
     for (final result in results) {
       final key = result.path;
       final package = result.package;
@@ -206,16 +213,45 @@ Future<List<ShaderCooked>> _cookShaders(String project) async {
       },
   };
 
+  final packages = p.join(work, 'packages');
   return [
     for (final id in ids)
-      if (failed[id] case final problem?)
-        ShaderCooked(p.posix.join('assets', id), problem: problem)
-      else
-        ShaderCooked(
-          p.posix.join('assets', id),
-          package: p.join(cooking.bundlePath, '$id.material.filamat'),
-          params: File(p.join(cooking.bundlePath, '$id.params.json'))
-              .readAsStringSync(),
-        ),
+      _resultOf(id, failed[id], cooking.bundlePath, packages),
   ];
+}
+
+/// What the cook made of the shader at [id].
+///
+/// The cook empties its bundle on every run, and the renderer reads a package
+/// again whenever its file changes. So a good package is copied out to a
+/// folder of its own, and only when the bytes differ. A save of one shader
+/// then leaves the others as they were, and a save that fails leaves the last
+/// good package on disk for objects that are added after it.
+///
+/// shortcut: the package of a deleted shader stays in `packages` until the
+/// `.orblit` folder is cleared; it is a few hundred kilobytes.
+ShaderCooked _resultOf(
+  String id,
+  String? problem,
+  String bundle,
+  String packages,
+) {
+  final path = p.posix.join('assets', id);
+  if (problem != null) return ShaderCooked(path, problem: problem);
+  try {
+    final built = File(p.join(bundle, '$id.material.filamat'));
+    final kept = File(p.joinAll([packages, ...p.posix.split('$id.filamat')]));
+    final bytes = built.readAsBytesSync();
+    if (!kept.existsSync() || !listEquals(kept.readAsBytesSync(), bytes)) {
+      kept.parent.createSync(recursive: true);
+      kept.writeAsBytesSync(bytes);
+    }
+    return ShaderCooked(
+      path,
+      package: kept.path,
+      params: File(p.join(bundle, '$id.params.json')).readAsStringSync(),
+    );
+  } on FileSystemException catch (error) {
+    return ShaderCooked(path, problem: '$path did not cook: ${error.message}');
+  }
 }

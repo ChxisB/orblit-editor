@@ -48,6 +48,13 @@ extension _Documents on _EditorShellState {
   /// material named on an object overrides whatever its mesh brought — so
   /// this only has to say which texture.
   void _applyMaterial(String path) {
+    if (p.extension(path) == '.oshaderinc') {
+      _say(
+        '${p.basename(path)} is an include. A shader pastes it in with '
+        '#include, and it goes on nothing by itself.',
+      );
+      return;
+    }
     final open = _current;
     final scene = open?.scene;
     if (open == null || scene == null) {

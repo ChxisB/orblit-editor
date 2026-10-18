@@ -752,8 +752,8 @@ struct Drift {
 // A surface the scene lights.
 //
 // A uniform marked `instance` is set for each object that wears this shader,
-// in the inspector. `source_color` gives a colour a picker and `hint_range`
-// gives a number a slider.
+// in the inspector. `source_color` gives a colour a row of swatches and
+// `hint_range` gives a number a slider.
 shader_type spatial;
 
 instance uniform vec4 tint : source_color = vec4(0.85, 0.39, 0.31, 1.0);

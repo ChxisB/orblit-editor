@@ -6,8 +6,8 @@
   the selected object, or press it in the project browser to edit it. The
   editor cooks every shader in the project when one is saved.
 - Add a Shader section to an object wearing one. It shows the uniforms
-  marked `instance`: a colour picker for `source_color`, a slider for
-  `hint_range`, a field for the rest. Each object keeps its own values in
+  marked `instance`: a row of colour swatches for `source_color`, a slider
+  for `hint_range`, a field for the rest. Each object keeps its own values in
   the scene file, and two objects on one shader can differ.
 - Keep drawing the last shader that compiled when a save does not. The
   console names the file and line of the error once.
