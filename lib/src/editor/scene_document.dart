@@ -207,6 +207,9 @@ abstract final class SceneDocument {
     if (object.materialAsset != null) {
       components[doc.SceneComponents.material] = doc.MaterialComponent(
         asset: object.materialAsset,
+        // Read only when the asset is a shader, so a texture put on after one
+        // does not carry the shader's values into the file.
+        values: object.wearsSurface ? object.materialValues : const {},
       );
     }
     if (object.kind == ObjectKind.canvas || object.interfaceAsset != null) {
@@ -330,6 +333,9 @@ abstract final class SceneDocument {
       visible: entity.visible,
       meshAsset: mesh is doc.MeshComponent ? mesh.asset : null,
       materialAsset: material is doc.MaterialComponent ? material.asset : null,
+      materialValues: material is doc.MaterialComponent
+          ? {...material.values}
+          : null,
       interfaceAsset: canvas is doc.CanvasComponent ? canvas.asset : null,
       shape: mesh is doc.MeshComponent ? mesh.shape : null,
       geometry: mesh is doc.MeshComponent ? mesh.geometry : null,

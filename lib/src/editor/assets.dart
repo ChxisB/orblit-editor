@@ -21,6 +21,7 @@ enum AssetKind {
   mesh('Mesh', Icons.view_in_ar_outlined),
   texture('Texture', Icons.image_outlined),
   material('Material', Icons.grain),
+  surface('Surface', Icons.auto_fix_high),
   script('Script', Icons.code),
   style('Stylesheet', Icons.style_outlined),
   native('C++', Icons.memory),
@@ -46,6 +47,7 @@ enum AssetKind {
     '.png': texture, '.jpg': texture, '.jpeg': texture,
     '.ktx2': texture, '.hdr': texture, '.exr': texture,
     '.fmat': material, '.mat': material,
+    '.oshader': surface, '.oshaderinc': surface,
     '.ts': script, '.tsx': script, '.js': script, '.jsx': script,
     '.dart': script,
     '.css': style,
@@ -739,6 +741,55 @@ struct Drift {
     suggested: 'cutscene',
     // Written by CutsceneDocument, for the same reason as a clip.
     starter: null,
+  ),
+
+  shader(
+    label: 'Lit shader',
+    icon: Icons.auto_fix_high,
+    extension: '.oshader',
+    suggested: 'surface',
+    starter: '''
+// A surface the scene lights.
+//
+// A uniform marked `instance` is set for each object that wears this shader,
+// in the inspector. `source_color` gives a colour a picker and `hint_range`
+// gives a number a slider.
+shader_type spatial;
+
+instance uniform vec4 tint : source_color = vec4(0.85, 0.39, 0.31, 1.0);
+instance uniform float rough : hint_range(0.0, 1.0, 0.01) = 0.5;
+instance uniform float metal : hint_range(0.0, 1.0, 0.01) = 0.0;
+
+void fragment() {
+  ALBEDO = tint.rgb;
+  ALPHA = tint.a;
+  ROUGHNESS = rough;
+  METALLIC = metal;
+}
+''',
+  ),
+
+  unlitShader(
+    label: 'Unlit shader',
+    icon: Icons.auto_fix_normal,
+    extension: '.oshader',
+    suggested: 'glow',
+    starter: '''
+// A surface that ignores light, for anything that carries its own brightness.
+//
+// `TIME` is seconds since the renderer started.
+shader_type spatial;
+render_mode unshaded;
+
+instance uniform vec4 tint : source_color = vec4(0.85, 0.39, 0.31, 1.0);
+instance uniform float speed : hint_range(0.0, 10.0, 0.1) = 2.0;
+
+void fragment() {
+  float pulse = 0.6 + 0.4 * sin(TIME * speed);
+  ALBEDO = tint.rgb * pulse;
+  ALPHA = tint.a;
+}
+''',
   );
 
   const NewAsset({
@@ -797,6 +848,11 @@ enum NewAssetGroup {
   data('Data', Icons.dataset_outlined, [
     NewAsset.dataObject,
     NewAsset.json,
+  ]),
+
+  shader('Shader', Icons.auto_fix_high, [
+    NewAsset.shader,
+    NewAsset.unlitShader,
   ]);
 
   const NewAssetGroup(this.label, this.icon, this.members);

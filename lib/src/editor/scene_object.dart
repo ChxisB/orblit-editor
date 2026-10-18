@@ -34,6 +34,7 @@ class SceneObject {
     this.visible = true,
     this.meshAsset,
     this.materialAsset,
+    Map<String, Object>? materialValues,
     this.shape,
     this.geometry,
     List<Surface>? surfaces,
@@ -46,6 +47,7 @@ class SceneObject {
   }) : renderKey = renderKey ?? _nextRenderKey++,
        data = data ?? [],
        components = components ?? {},
+       materialValues = materialValues ?? {},
        boundary = boundary ?? Boundary(),
        surfaces = surfaces ?? [],
        weather = weather ?? WeatherState.of(condition),
@@ -200,6 +202,17 @@ class SceneObject {
   /// materials its file brought, on every primitive — so this records which
   /// texture, and the scene builds the material from it.
   String? materialAsset;
+
+  /// What this object states for the uniforms of [materialAsset] when that is
+  /// an author-written shader, by name. Whatever is left out keeps the
+  /// shader's own default. Replaced whole rather than edited in place, so an
+  /// undo step can hold the map it came from.
+  Map<String, Object> materialValues;
+
+  /// Whether [materialAsset] is a shader somebody wrote, which is cooked and
+  /// drawn as a surface rather than loaded as a picture.
+  bool get wearsSurface =>
+      materialAsset?.endsWith(doc.shaderExtension) ?? false;
 
   /// What this object is, while it is still a shape.
   ///
@@ -440,6 +453,7 @@ class SceneObject {
     visible: visible,
     meshAsset: meshAsset,
     materialAsset: materialAsset,
+    materialValues: {...materialValues},
     shape: shape,
     geometry: geometry?.copy(),
     outline: outline?.copy(),

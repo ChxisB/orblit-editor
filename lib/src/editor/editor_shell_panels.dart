@@ -119,6 +119,7 @@ extension _Panels on _EditorShellState {
           camera: _playback?.camera,
           terrainOf: _terrains.renderFor,
           scatterOf: _terrains.scatterFor,
+          surfaceOf: _surfaces.surfaceFor,
         ),
       ),
     )
@@ -268,7 +269,8 @@ extension _Panels on _EditorShellState {
       ..register(jointSection(), before: 'interface')
       ..register(vehicleSection(), before: 'interface')
       ..register(wheelSection(), before: 'interface')
-      ..register(terrainSection(bench: _terrains), before: 'interface');
+      ..register(terrainSection(bench: _terrains), before: 'interface')
+      ..register(shaderSection(cooks: _surfaces), before: 'interface');
     sections.register(
       motionSection(
         bench: _bench,
@@ -525,12 +527,14 @@ extension _Panels on _EditorShellState {
       plain: true,
       terrainOf: _terrains.renderFor,
       scatterOf: _terrains.scatterFor,
+      surfaceOf: _surfaces.surfaceFor,
     ),
     onSceneNotes: _reportSceneNotes,
     modeInput: _mode.input,
     modeOverlay: _mode.overlay,
     terrainOf: _terrains.renderFor,
     scatterOf: _terrains.scatterFor,
+    surfaceOf: _surfaces.surfaceFor,
     gizmos: _registry.gizmos.all,
     // The viewport owns the clock; this is how
     // the tree and the inspector hear about it.
@@ -554,7 +558,7 @@ extension _Panels on _EditorShellState {
         return;
       }
       if (asset.kind == AssetKind.texture) {
-        _applyTexture(asset.path);
+        _applyMaterial(asset.path);
         return;
       }
       if (asset.kind == AssetKind.clip) {
@@ -575,6 +579,7 @@ extension _Panels on _EditorShellState {
         AssetKind.native,
         AssetKind.data,
         AssetKind.material,
+        AssetKind.surface,
       };
       if (editable.contains(asset.kind)) {
         _openInCode(asset.path);

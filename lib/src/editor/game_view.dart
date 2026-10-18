@@ -34,6 +34,7 @@ class GameView extends StatelessWidget {
     this.plain = false,
     this.terrainOf,
     this.scatterOf,
+    this.surfaceOf,
     this.onAddCamera,
   });
 
@@ -71,6 +72,9 @@ class GameView extends StatelessWidget {
   /// What is scattered over that ground. Null draws none.
   final List<OrblitPopulation> Function(Iterable<SceneObject> objects)?
   scatterOf;
+
+  /// The surface an object wearing a shader draws. Null draws none.
+  final OrblitSurface? Function(SceneObject object)? surfaceOf;
 
   static bool get _rendererAvailable => rendererAvailable;
 
@@ -131,6 +135,7 @@ class GameView extends StatelessWidget {
                     geometryOf: geometryOf,
                     terrainOf: terrainOf,
                     scatterOf: scatterOf,
+                    surfaceOf: surfaceOf,
                   ),
                 ),
         ),

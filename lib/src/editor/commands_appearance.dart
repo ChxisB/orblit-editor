@@ -61,6 +61,54 @@ class SetMaterialAsset extends EditorCommand {
       host.sceneFor(sceneId)?[id]?.materialAsset = from;
 }
 
+/// Changes what an object states for one uniform of its shader.
+///
+/// Holds the whole map on each side rather than the one entry, so undo puts
+/// back exactly what was there, including the absence of a value.
+class SetMaterialValue extends EditorCommand {
+  SetMaterialValue({
+    required this.sceneId,
+    required this.id,
+    required this.name,
+    required this.uniform,
+    required this.from,
+    required this.to,
+  });
+
+  @override
+  final String sceneId;
+
+  final String id;
+  final String name;
+
+  /// The uniform being changed, for the label and so that a drag on one is a
+  /// step of its own.
+  final String uniform;
+  final Map<String, Object> from;
+
+  /// Not final: a merged run of drags rewrites where it ends up.
+  Map<String, Object> to;
+
+  @override
+  String get label => 'Set $name $uniform';
+
+  @override
+  Object? get mergeKey => (id, 'materialValue', uniform);
+
+  @override
+  void absorb(EditorCommand later) {
+    if (later is SetMaterialValue) to = later.to;
+  }
+
+  @override
+  void apply(SceneHost host) =>
+      host.sceneFor(sceneId)?[id]?.materialValues = to;
+
+  @override
+  void revert(SceneHost host) =>
+      host.sceneFor(sceneId)?[id]?.materialValues = from;
+}
+
 /// Changes how much an object answers the wind.
 class SetSway extends EditorCommand {
   SetSway({

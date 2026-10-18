@@ -39,7 +39,7 @@ extension _Documents on _EditorShellState {
     );
   }
 
-  /// Puts a texture on the selected object.
+  /// Puts a texture, or a shader somebody wrote, on the selected object.
   ///
   /// The case this is for is an asset pack that ships a model and its colour
   /// map as separate files: the model loads grey, because its file names no
@@ -47,7 +47,7 @@ extension _Documents on _EditorShellState {
   /// to bind the two and export again. The renderer binds them itself — a
   /// material named on an object overrides whatever its mesh brought — so
   /// this only has to say which texture.
-  void _applyTexture(String path) {
+  void _applyMaterial(String path) {
     final open = _current;
     final scene = open?.scene;
     if (open == null || scene == null) {
@@ -57,13 +57,16 @@ extension _Documents on _EditorShellState {
     final id = _primary;
     final object = id == null ? null : scene[id];
     if (object == null) {
-      _say('Select an object first; a texture goes on whatever is selected.');
+      _say(
+        'Select an object first; a texture or shader goes on whatever is '
+        'selected.',
+      );
       return;
     }
     if (!object.isDrawable) {
       _say(
         '${object.name} is a ${object.kind.name}, and has nothing to '
-        'draw a texture on.',
+        'draw a texture or shader on.',
       );
       return;
     }
@@ -97,15 +100,15 @@ extension _Documents on _EditorShellState {
       _putInterfaceOnScene(path);
       return;
     }
-    if (kind == AssetKind.texture) {
-      _applyTexture(path);
+    if (kind == AssetKind.texture || kind == AssetKind.surface) {
+      _applyMaterial(path);
       return;
     }
     if (kind != AssetKind.mesh) {
       _say(
         '${p.basename(path)} is a ${kind.label.toLowerCase()}. '
         'Meshes, prefabs and scenes are what a scene takes; a texture '
-        'goes on whatever is selected.',
+        'or shader goes on whatever is selected.',
       );
       return;
     }

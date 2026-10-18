@@ -74,6 +74,7 @@ import 'skeleton_gizmo.dart';
 import 'skeleton_view.dart';
 import 'snapping.dart';
 import 'surface.dart';
+import 'surface_cook.dart';
 import 'terrain_bench.dart';
 import 'terrain_brush_panel.dart';
 import 'terrain_mode.dart';
@@ -83,6 +84,7 @@ import 'uv_panel.dart';
 import 'vehicle_section.dart';
 import 'zone_section.dart';
 import 'scene_document.dart';
+import 'shader_section.dart';
 import 'scene_playback.dart';
 
 import 'package:orblit_mesh/orblit_mesh.dart';
@@ -361,6 +363,15 @@ class _EditorShellState extends State<EditorShell> {
     }),
   );
 
+  /// The project's shaders, cooked, with the last version of each that
+  /// compiled. A cook that fails is told to the console, at the author's line.
+  late final SurfaceCooks _surfaces = SurfaceCooks(
+    projectDirectory: widget.project.directory,
+    onProblem: (message) => _log.error(message, source: 'shader'),
+  );
+
+  StreamSubscription<void>? _shaderChanges;
+
   /// What the top bar and the views were last built knowing about the
   /// terrains: whether one has changes, and which pictures had arrived.
   bool _terrainsUnsaved = false;
@@ -386,6 +397,10 @@ class _EditorShellState extends State<EditorShell> {
     _cuts.addListener(_onBenchChanged);
     _blends.addListener(_onBenchChanged);
     _terrains.addListener(_onTerrainsChanged);
+    // The views draw a surface again when its cook lands.
+    _surfaces.addListener(_rebuildForMove);
+    _shaderChanges = _assets.changes.listen((_) => _surfaces.refresh());
+    _surfaces.refresh();
     _frames
       ..start()
       ..addListener(_onChanged);
@@ -467,6 +482,10 @@ class _EditorShellState extends State<EditorShell> {
       ..dispose();
     _terrains
       ..removeListener(_onTerrainsChanged)
+      ..dispose();
+    _shaderChanges?.cancel();
+    _surfaces
+      ..removeListener(_rebuildForMove)
       ..dispose();
     _interfaceBench.dispose();
     _skeletonView.dispose();

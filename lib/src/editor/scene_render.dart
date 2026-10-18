@@ -27,6 +27,20 @@ Tint _greyed(Tint colour, double amount) =>
 int _materialKeyOf(String texture, double sway) =>
     Object.hash(texture, sway) & 0x3fffffff;
 
+/// The key an author-written surface is kept under.
+///
+/// Objects that state nothing share one, so the renderer keeps one instance
+/// for them. An object that states values gets a key of its own, which stays
+/// the same while the values change, so the renderer updates that instance
+/// rather than building another.
+int _surfaceKeyOf(SceneObject object) =>
+    Object.hash(
+      'surface',
+      object.materialAsset,
+      object.materialValues.isEmpty ? null : object.id,
+    ) &
+    0x3fffffff;
+
 /// The wind a surface of this compliance feels, from whatever the air is
 /// doing. Still air and a rigid surface both come out as [OrblitWind.none],
 /// which is the early return in the vertex stage.
@@ -65,6 +79,9 @@ extension SceneRendering on EditorScene {
   /// file of its own that whoever calls this has open, and reading it again
   /// every frame would be reading megabytes to draw what has not changed.
   /// [scatterOf] is the same for what is scattered over that ground.
+  ///
+  /// [surfaceOf] gives the surface an object wearing a shader draws, or null
+  /// while that shader has not cooked, when the object keeps its mesh's own.
   OrblitScene toRenderScene(
     OrblitCamera camera, {
     String? projectRoot,
@@ -73,6 +90,7 @@ extension SceneRendering on EditorScene {
     GridPlan? grid,
     List<OrblitTerrain> Function(Iterable<SceneObject> objects)? terrainOf,
     List<OrblitPopulation> Function(Iterable<SceneObject> objects)? scatterOf,
+    OrblitSurface? Function(SceneObject object)? surfaceOf,
   }) {
     final sky = skyState;
     final driven = dayCycle;
@@ -112,9 +130,24 @@ extension SceneRendering on EditorScene {
         (air?.scattered ?? 1) *
         (1 + flash * 40);
 
+    final surfaceKeys = Map<SceneObject, int>.identity();
+    final surfaces = <int, OrblitSurface>{};
+    for (final scene in [this, ?shared]) {
+      for (final object in scene._objects) {
+        if (!object.isDrawable || !object.wearsSurface) continue;
+        final surface = surfaceOf?.call(object);
+        if (surface == null) continue;
+        final key = _surfaceKeyOf(object);
+        surfaceKeys[object] = key;
+        surfaces[key] = surface;
+      }
+    }
+
     return OrblitScene(
       materials: [
         if (grid != null) grid.material,
+        for (final MapEntry(:key, :value) in surfaces.entries)
+          OrblitMaterial(key: key, surface: value),
         // One material per distinct texture rather than one per object, keyed
         // by the texture so two objects sharing a colour map share the
         // instance — and so the key is stable from frame to frame, which is
@@ -127,7 +160,9 @@ extension SceneRendering on EditorScene {
         for (final surface in {
           for (final scene in [this, ?shared])
             for (final object in scene._objects)
-              if (object.isDrawable && object.materialAsset != null)
+              if (object.isDrawable &&
+                  object.materialAsset != null &&
+                  !object.wearsSurface)
                 (
                   texture: _resolveMesh(object.materialAsset, projectRoot)!,
                   sway: object.sway,
@@ -162,12 +197,14 @@ extension SceneRendering on EditorScene {
                       object.meshAsset,
                   projectRoot,
                 ),
-                material: object.materialAsset == null
-                    ? null
-                    : _materialKeyOf(
-                        _resolveMesh(object.materialAsset, projectRoot)!,
-                        object.sway,
-                      ),
+                material:
+                    surfaceKeys[object] ??
+                    (object.materialAsset == null || object.wearsSurface
+                        ? null
+                        : _materialKeyOf(
+                            _resolveMesh(object.materialAsset, projectRoot)!,
+                            object.sway,
+                          )),
                 castShadows: object.castShadows,
                 receiveShadows: object.receiveShadows,
                 visible: scene.isShown(object.id),
