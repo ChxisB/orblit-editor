@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.18.0+19
+
+- Add a Sound section to every object. It adds and removes a sound source
+  and sets its clip, bus, loop, volume, near and far distance and fade. It
+  also marks the object as the listener and names the surface it is made of.
+  The near end cannot pass the far end.
+- Draw the range of a selected sound source as two rings, one where it is at
+  full volume and one where it falls silent.
+- Share the rows that read and write one component between the Vehicle and
+  Sound sections.
+
 ## 1.17.0+18
 
 - Add a Vehicle section to a body the solver moves. It sets the steer lock,
