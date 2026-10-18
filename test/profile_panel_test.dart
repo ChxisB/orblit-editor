@@ -83,6 +83,19 @@ void main() {
     await show(tester, const Profiler.off());
   });
 
+  testWidgets('shows a different profiler without waiting for the timer', (
+    tester,
+  ) async {
+    profiler.frame();
+    drawFrame();
+    await show(tester, profiler);
+    expect(find.textContaining('50 fps'), findsOneWidget);
+
+    await show(tester, const Profiler.off());
+
+    expect(find.text('Profiling is off.'), findsOneWidget);
+  });
+
   testWidgets('says so when profiling is off', (tester) async {
     await show(tester, const Profiler.off());
 

@@ -40,6 +40,12 @@ class _ProfilePanelState extends State<ProfilePanel> {
   }
 
   @override
+  void didUpdateWidget(ProfilePanel old) {
+    super.didUpdateWidget(old);
+    if (old.profiler != widget.profiler) _shot = widget.profiler.snapshot();
+  }
+
+  @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
