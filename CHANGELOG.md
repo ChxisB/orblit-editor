@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.18.0+19
+
+- Add a Profile panel to the View menu. It shows the gaps between drawn
+  frames, the time the scene view and the game view spend handing the
+  scene to the renderer, and the editor's resident memory with its trend
+  in megabytes a minute. A still editor draws no frames, so a long gap is
+  rest.
+
 ## 1.17.0+18
 
 - Add a Vehicle section to a body the solver moves. It sets the steer lock,

@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.17.0+18
+version: 1.18.0+19
 
 environment:
   sdk: ^3.13.0
@@ -99,6 +99,11 @@ dependencies:
   # Two copies would be two answers to what the game shows.
   orblit_stage:
     path: ../orblit/packages/orblit_stage
+
+  # The Profile panel reads the engine's profiler, and the views are handed
+  # the same one to time their work.
+  orblit_profile:
+    path: ../orblit/packages/orblit_profile
 
   # The worked examples, shown in the launcher beside the projects. The same
   # package the gallery app uses, so an example only has to be written once

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart' hide Clipboard;
 import 'package:flutter/services.dart' as services;
+import 'package:orblit_profile/orblit_profile.dart';
 import 'package:path/path.dart' as p;
 import 'package:vector_math/vector_math_64.dart' show Matrix4, Vector3;
 
@@ -66,6 +67,7 @@ import 'mesh_tools.dart';
 import 'outliner.dart';
 import 'panel_registry.dart';
 import 'prefab.dart';
+import 'profile_panel.dart';
 import 'registry.dart';
 import 'retarget_dialog.dart';
 import 'retarget_files.dart';
@@ -226,6 +228,10 @@ class _EditorShellState extends State<EditorShell> {
   /// of times a second — a status bar rebuilt sixty times a second to say how
   /// fast things are would be its own answer to the question.
   final FrameRate _frames = FrameRate();
+
+  /// Where the engine's time went, for the Profile panel. The heap line is
+  /// the editor's resident size.
+  final Profiler _profiler = Profiler(heap: () => ProcessInfo.currentRss);
 
   /// The grid, made once and then only placed.
   late final GridStore _grid = GridStore(widget.project.directory);
@@ -389,6 +395,7 @@ class _EditorShellState extends State<EditorShell> {
     _frames
       ..start()
       ..addListener(_onChanged);
+    SchedulerBinding.instance.addPostFrameCallback(_profileFrame);
 
     // The grid's quad and lines, written once. Nothing waits for it: until it
     // is there `planFor` says there is no grid, and a frame or two without
@@ -486,6 +493,14 @@ class _EditorShellState extends State<EditorShell> {
     _stopCatching();
     _log.dispose();
     super.dispose();
+  }
+
+  // Asks for the next one only once this one is drawn, so a still editor
+  // schedules nothing, and stops when the shell goes.
+  void _profileFrame(Duration _) {
+    if (!mounted) return;
+    _profiler.frame();
+    SchedulerBinding.instance.addPostFrameCallback(_profileFrame);
   }
 
   void _onChanged() {

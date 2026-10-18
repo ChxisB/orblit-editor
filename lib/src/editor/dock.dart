@@ -55,6 +55,7 @@ class PanelKind {
     Icons.handyman_outlined,
   );
   static const timeline = PanelKind('timeline', 'Timeline', Icons.animation);
+  static const profile = PanelKind('profile', 'Profile', Icons.speed);
 
   /// The kinds the editor has always had, which a layout can be read against
   /// before anything else has registered.
@@ -68,6 +69,7 @@ class PanelKind {
     uvs,
     modelling,
     timeline,
+    profile,
   ];
 
   /// The one of [kinds] called [name], or null.

@@ -119,6 +119,7 @@ extension _Panels on _EditorShellState {
           camera: _playback?.camera,
           terrainOf: _terrains.renderFor,
           scatterOf: _terrains.scatterFor,
+          profiler: _profiler,
         ),
       ),
     )
@@ -127,6 +128,12 @@ extension _Panels on _EditorShellState {
       PanelType(
         kind: PanelKind.console,
         build: (_, _) => ConsolePanel(log: _log),
+      ),
+    )
+    ..register(
+      PanelType(
+        kind: PanelKind.profile,
+        build: (_, _) => ProfilePanel(profiler: _profiler),
       ),
     )
     // Not one that shows movement either: it listens to the bench itself,
@@ -462,6 +469,7 @@ extension _Panels on _EditorShellState {
 
   Widget _viewport(DockPanel panel) => SceneViewport(
     showStats: _showStats,
+    profiler: _profiler,
     frameRate: _frameRate,
     workspace: _workspace,
     camera: _cameraFor(panel.id),
