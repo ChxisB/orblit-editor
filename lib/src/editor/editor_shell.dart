@@ -65,6 +65,7 @@ import 'modelling_panel.dart';
 import 'mesh_tools.dart';
 import 'outliner.dart';
 import 'panel_registry.dart';
+import 'particles_section.dart';
 import 'prefab.dart';
 import 'registry.dart';
 import 'retarget_dialog.dart';

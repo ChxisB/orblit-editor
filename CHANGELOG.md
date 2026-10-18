@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.18.0+19
+
+- Add a Particles section to an object. It adds or removes an emitter and
+  sets its shape, rate, life, speed, gravity, drag, noise, space and
+  the most it may hold alive. A life or speed range dragged past its other
+  end takes that end along. The colour and size ramps, bursts, spin and
+  duration stay in the scene file.
+
 ## 1.17.0+18
 
 - Add a Vehicle section to a body the solver moves. It sets the steer lock,

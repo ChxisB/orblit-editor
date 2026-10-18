@@ -268,6 +268,7 @@ extension _Panels on _EditorShellState {
       ..register(jointSection(), before: 'interface')
       ..register(vehicleSection(), before: 'interface')
       ..register(wheelSection(), before: 'interface')
+      ..register(particlesSection(), before: 'interface')
       ..register(terrainSection(bench: _terrains), before: 'interface');
     sections.register(
       motionSection(
