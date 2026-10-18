@@ -29,11 +29,14 @@ doc.SoundSurfaceComponent? _surfaceOf(SceneObject object) =>
 /// past the other leaves a range and not an error in the player.
 const double _gap = 0.1;
 
-/// [source] with its near end at [near], held below the far end.
+/// [source] with its near end at [near], held below the far end. A range
+/// narrower than twice the gap keeps the near end above zero.
 doc.SoundSourceComponent withNear(
   doc.SoundSourceComponent source,
   double near,
-) => source.copyWith(near: math.min(near, source.far - _gap));
+) => source.copyWith(
+  near: math.min(near, source.far - math.min(_gap, source.far / 2)),
+);
 
 /// [source] with its far end at [far], held above the near end.
 doc.SoundSourceComponent withFar(doc.SoundSourceComponent source, double far) =>
@@ -101,11 +104,16 @@ class _SoundSection extends StatelessWidget {
             label: 'Listener',
             options: const ['No', 'Yes'],
             selected: _listenerOf(target.object) == null ? 'No' : 'Yes',
-            onSelect: (choice) => listener.put(
-              choice == 'Yes' ? const doc.SoundListenerComponent() : null,
-              label: 'Set $name listener',
-              alone: true,
-            ),
+            onSelect: (choice) {
+              if ((choice == 'Yes') == (_listenerOf(target.object) != null)) {
+                return;
+              }
+              listener.put(
+                choice == 'Yes' ? const doc.SoundListenerComponent() : null,
+                label: 'Set $name listener',
+                alone: true,
+              );
+            },
           ),
           FieldRow(
             label: 'Surface',

@@ -91,6 +91,12 @@ void main() {
       expect(withNear(source, 3).near, 3);
     });
 
+    test('a range narrower than the gap still leaves the near end below', () {
+      final narrow = doc.SoundSourceComponent(near: 0.01, far: 0.05);
+
+      expect(withNear(narrow, 1).near, closeTo(0.025, 1e-9));
+    });
+
     test('keeps the far end above the near end', () {
       expect(withFar(source, 0.5).far, closeTo(2.1, 1e-9));
       expect(withFar(source, 40).far, 40);
@@ -194,6 +200,20 @@ void main() {
         world['rock']!.components[doc.SceneComponents.soundSurface],
         isNull,
       );
+    });
+
+    testWidgets('choosing what is already chosen leaves nothing to undo', (
+      tester,
+    ) async {
+      final world = scene(source: doc.SoundSourceComponent());
+      final history = historyOf(world);
+      await show(tester, targetOf(world, 'fire', history: history));
+
+      await tester.tap(choiceOf('Loop', 'Yes'));
+      await tester.tap(choiceOf('Listener', 'No'));
+      await tester.pump();
+
+      expect(history.canUndo, isFalse);
     });
 
     testWidgets('the listener is switched on and off', (tester) async {

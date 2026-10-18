@@ -53,10 +53,10 @@ final class ComponentRows<T extends doc.SceneComponent> {
       label: label,
       options: const ['No', 'Yes'],
       selected: on ? 'Yes' : 'No',
-      onSelect: (choice) => _change(
-        (component) => change(component, choice == 'Yes'),
-        alone: true,
-      ),
+      onSelect: (choice) {
+        if ((choice == 'Yes') == on) return;
+        _change((component) => change(component, choice == 'Yes'), alone: true);
+      },
     );
   }
 
@@ -88,12 +88,15 @@ final class ComponentRows<T extends doc.SceneComponent> {
     T Function(T component, String option) change,
   ) {
     final component = of(_object);
+    final selected = component == null ? options.first : read(component);
     return ChoiceRow(
       label: label,
       options: options,
-      selected: component == null ? options.first : read(component),
-      onSelect: (option) =>
-          _change((component) => change(component, option), alone: true),
+      selected: selected,
+      onSelect: (option) {
+        if (option == selected) return;
+        _change((component) => change(component, option), alone: true);
+      },
     );
   }
 
@@ -105,6 +108,9 @@ final class ComponentRows<T extends doc.SceneComponent> {
   /// Replaces the component with [next], or takes it off for null. [alone]
   /// for a click, sealed at once; a drag is sealed when the pointer lifts.
   void put(T? next, {String? label, bool alone = false}) {
+    // Taking off what is not there would leave a step in the undo list that
+    // does nothing.
+    if (next == null && of(_object) == null) return;
     target.history.run(
       SetObjectComponent(
         sceneId: target.sceneId,
