@@ -9,6 +9,7 @@ import 'package:orblit_editor/src/editor/game_view.dart';
 import 'package:orblit_editor/src/editor/inspector.dart';
 import 'package:orblit_editor/src/editor/modelling_panel.dart';
 import 'package:orblit_editor/src/editor/outliner.dart';
+import 'package:orblit_editor/src/editor/profile_panel.dart';
 import 'package:orblit_editor/src/editor/uv_panel.dart';
 import 'package:orblit_editor/src/editor/viewport.dart';
 import 'package:path/path.dart' as p;
@@ -71,6 +72,16 @@ void main() {
       // Closing the console leaves the project browser where it was.
       await viewMenu(tester, 'Project');
       expect(find.byType(AssetBrowser), findsOneWidget);
+    });
+
+    testWidgets('the Profile panel opens from View and is recording', (
+      tester,
+    ) async {
+      await open(tester);
+      await viewMenu(tester, 'Profile');
+
+      expect(find.byType(ProfilePanel), findsOneWidget);
+      expect(find.text('Profiling is off.'), findsNothing);
     });
 
     testWidgets('the arrangement is remembered', (tester) async {

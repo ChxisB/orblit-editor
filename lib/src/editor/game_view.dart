@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:orblit_filament/orblit_filament.dart';
 import 'package:orblit_motion/orblit_motion.dart' show CutsceneDocument;
+import 'package:orblit_profile/orblit_profile.dart';
 import 'package:orblit_stage/orblit_stage.dart' show blendCameras;
 import 'package:orblit_ui/orblit_ui.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
@@ -36,10 +37,14 @@ class GameView extends StatelessWidget {
     this.scatterOf,
     this.surfaceOf,
     this.onAddCamera,
+    this.profiler = const Profiler.off(),
   });
 
   final Workspace workspace;
   final VoidCallback? onAddCamera;
+
+  /// Times what it takes to hand the scene to the renderer.
+  final Profiler profiler;
   final String? projectRoot;
 
   /// Where an object's built geometry was written, if anywhere.
@@ -137,6 +142,7 @@ class GameView extends StatelessWidget {
                     scatterOf: scatterOf,
                     surfaceOf: surfaceOf,
                   ),
+                  profiler: profiler,
                 ),
         ),
         // Drawn and live. The preview over the scene view ignores the pointer

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.24.0+25
+
+- Add a Profile panel to the View menu. It shows the gaps between drawn
+  frames, the time the scene view and the game view spend handing the
+  scene to the renderer, and the editor's resident memory with its trend
+  in megabytes a minute. A still editor draws no frames, so a long gap is
+  rest.
+
 ## 1.23.0+24
 
 - Draw an object with a shader somebody wrote. Drop a `.oshader` file on

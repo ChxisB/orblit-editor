@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:orblit_filament/orblit_filament.dart';
 import 'package:orblit_mesh/orblit_mesh.dart';
+import 'package:orblit_profile/orblit_profile.dart';
 import 'package:orblit_ui/orblit_ui.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
@@ -81,6 +82,7 @@ class SceneViewport extends StatefulWidget {
     this.onDropAsset,
     this.projectRoot,
     this.onSceneNotes,
+    this.profiler = const Profiler.off(),
     this.onClock,
     this.primary,
     this.history,
@@ -124,6 +126,9 @@ class SceneViewport extends StatefulWidget {
   /// Called with anything the scene asked for that the renderer could not
   /// give: a mesh that would not load, a light it has no room to shade.
   final ValueChanged<Map<String, String>>? onSceneNotes;
+
+  /// Times what it takes to hand the scene to the renderer.
+  final Profiler profiler;
 
   /// The object whose parts are being edited, with its geometry and where it
   /// stands, or null when the whole object is what is selected.

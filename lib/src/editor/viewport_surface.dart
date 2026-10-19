@@ -76,6 +76,7 @@ extension _Surface on _SceneViewportState {
                               : OrblitOutline.none,
                         ),
                     onSceneNotes: widget.onSceneNotes,
+                    profiler: widget.profiler,
                   ),
           ),
         ),
