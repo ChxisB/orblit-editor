@@ -98,7 +98,7 @@ class _Body extends StatelessWidget {
                 _Facts(session: session, row: row),
                 if (chosen != null)
                   _ReleaseChoice(session: session, chosen: chosen),
-                _FilesHeader(files: files),
+                _FilesHeader(session: session),
               ],
             ],
           ),
@@ -252,7 +252,7 @@ class _ReleaseChoice extends StatelessWidget {
                 ),
             ],
             onChanged: (item) {
-              if (item != null) unawaited(session.chooseRelease(item));
+              if (item != null) session.chooseRelease(item);
             },
           ),
           Text(
@@ -271,22 +271,42 @@ class _ReleaseChoice extends StatelessWidget {
 }
 
 class _FilesHeader extends StatelessWidget {
-  const _FilesHeader({required this.files});
+  const _FilesHeader({required this.session});
 
-  final List<MapEntry<AssetId, int>>? files;
+  final StoreSession session;
 
   @override
   Widget build(BuildContext context) {
-    final list = files;
     return Padding(
       padding: const EdgeInsets.only(bottom: Space.xs),
-      child: list == null
-          ? const Text(
-              'The file list is not available from this store. You will see '
-              'the files before anything is installed.',
-              style: OrblitText.caption,
-            )
-          : SectionLabel('Files (${list.length})'),
+      child: switch (session.filesState) {
+        FileListState.unread => Row(
+          children: [
+            OrblitButton(
+              label: 'Show files',
+              tone: ButtonTone.flat,
+              onPressed: () => unawaited(session.loadFiles()),
+            ),
+            const SizedBox(width: Space.sm),
+            const Expanded(
+              child: Text(
+                'Asks the host of the kit file for its list of files.',
+                style: OrblitText.caption,
+              ),
+            ),
+          ],
+        ),
+        FileListState.reading => const Text(
+          'Reading the file list…',
+          style: OrblitText.caption,
+        ),
+        FileListState.read => SectionLabel('Files (${session.files!.length})'),
+        FileListState.unavailable => const Text(
+          'The file list is not available from this store. You will see the '
+          'files before anything is installed.',
+          style: OrblitText.caption,
+        ),
+      },
     );
   }
 }

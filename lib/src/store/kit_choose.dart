@@ -12,7 +12,8 @@ import 'install_session.dart';
 /// for each file.
 ///
 /// A file the project already has with other bytes is unticked and marked,
-/// and is replaced only when the person ticks it.
+/// and is replaced only when the person ticks it. The choices stay on screen
+/// while the files are written, so a failure leaves them as they were.
 class KitChoose extends StatefulWidget {
   const KitChoose({super.key, required this.session});
 
@@ -21,6 +22,8 @@ class KitChoose extends StatefulWidget {
   @override
   State<KitChoose> createState() => _KitChooseState();
 }
+
+const Duration _pause = Duration(milliseconds: 300);
 
 class _KitChooseState extends State<KitChoose> {
   late final TextEditingController _folder = TextEditingController(
@@ -42,6 +45,8 @@ class _KitChooseState extends State<KitChoose> {
   late final Map<AssetId, int> _files = widget.session.kit!.files;
   late final List<AssetId> _scripts = widget.session.kit!.scripts;
 
+  Timer? _typing;
+
   String get _into => _folder.text.trim();
 
   @override
@@ -52,6 +57,7 @@ class _KitChooseState extends State<KitChoose> {
 
   @override
   void dispose() {
+    _typing?.cancel();
     _folder.dispose();
     super.dispose();
   }
@@ -92,7 +98,10 @@ class _KitChooseState extends State<KitChoose> {
       _conflicts = null;
       _readProblem = null;
     });
-    unawaited(_readConflicts());
+    // A read looks at every file of the kit in the project, so it waits for a
+    // pause in the typing.
+    _typing?.cancel();
+    _typing = Timer(_pause, () => unawaited(_readConflicts()));
   }
 
   void _install(Set<AssetId> picks) => unawaited(
@@ -108,17 +117,24 @@ class _KitChooseState extends State<KitChoose> {
     };
     final folderProblem = kitPlaceProblem(_into, picks);
     final problem = folderProblem ?? _readProblem ?? widget.session.problem;
+    final writing = widget.session.stage == InstallStage.installing;
     final ready =
-        folderProblem == null && picks.isNotEmpty && _conflicts != null;
+        folderProblem == null &&
+        picks.isNotEmpty &&
+        _conflicts != null &&
+        !writing;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (_scripts.isNotEmpty) _ScriptWarning(scripts: _scripts),
         const SectionLabel('Folder in the project'),
-        OrblitField(
-          controller: _folder,
-          mono: true,
-          onChanged: (_) => _folderChanged(),
+        IgnorePointer(
+          ignoring: writing,
+          child: OrblitField(
+            controller: _folder,
+            mono: true,
+            onChanged: (_) => _folderChanged(),
+          ),
         ),
         if (problem != null)
           Padding(
@@ -131,14 +147,17 @@ class _KitChooseState extends State<KitChoose> {
         const SizedBox(height: Space.md),
         SectionLabel('Files (${picks.length} of ${ids.length})'),
         Expanded(
-          child: ListView.builder(
-            itemCount: ids.length,
-            itemBuilder: (context, index) => _FileTick(
-              id: ids[index],
-              size: _files[ids[index]]!,
-              picked: _picked(ids[index]),
-              replaces: _isConflict(ids[index]),
-              onToggle: () => _toggle(ids[index]),
+          child: IgnorePointer(
+            ignoring: writing,
+            child: ListView.builder(
+              itemCount: ids.length,
+              itemBuilder: (context, index) => _FileTick(
+                id: ids[index],
+                size: _files[ids[index]]!,
+                picked: _picked(ids[index]),
+                replaces: _isConflict(ids[index]),
+                onToggle: () => _toggle(ids[index]),
+              ),
             ),
           ),
         ),
@@ -146,7 +165,7 @@ class _KitChooseState extends State<KitChoose> {
         Align(
           alignment: Alignment.centerRight,
           child: OrblitButton(
-            label: 'Install',
+            label: writing ? 'Writing files…' : 'Install',
             tone: ButtonTone.primary,
             onPressed: ready ? () => _install(picks) : null,
           ),

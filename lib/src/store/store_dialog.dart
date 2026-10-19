@@ -24,7 +24,7 @@ Future<void> showStoreDialog(
   builder: (context) => StoreDialog(session: session, installFor: installFor),
 );
 
-/// File › Kit store: find a kit in a store, read about it and install it.
+/// Scene › Kit store: find a kit in a store, read about it and install it.
 class StoreDialog extends StatefulWidget {
   const StoreDialog({
     super.key,
@@ -105,8 +105,9 @@ class _Offline extends StatelessWidget {
           children: [
             Text(
               'The store is at $address. Nothing has been sent to it. Going '
-              'online reads its list of kits and their pictures. A kit is '
-              'downloaded only when you install it.',
+              'online reads its list of kits and their pictures. The files of '
+              'a kit are listed only when you ask, and a kit is downloaded '
+              'only when you install it.',
               style: OrblitText.body,
               textAlign: TextAlign.center,
             ),

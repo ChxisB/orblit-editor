@@ -71,13 +71,18 @@ void main() {
     expect(store.shown, isEmpty);
   });
 
-  test('reads the releases and the file list of a chosen kit', () async {
+  test('reads the file list of a chosen kit only when asked', () async {
     final store = session();
     addTearDown(store.dispose);
     await store.goOnline();
     await store.select(store.rows.single);
     expect(store.releases!.releases.single.release.version, '1.0.0');
     expect(store.chosen, same(store.releases!.releases.single));
+    expect(store.filesState, FileListState.unread);
+    expect(made.single.sent.where((r) => r.url == crateUrl), isEmpty);
+
+    await store.loadFiles();
+    expect(store.filesState, FileListState.read);
     expect(store.files!.map((file) => '${file.key}'), [
       'models/crate.obj',
       'scripts/spin.js',
@@ -91,7 +96,9 @@ void main() {
     addTearDown(store.dispose);
     await store.goOnline();
     await store.select(store.rows.single);
+    await store.loadFiles();
     expect(store.chosen, isNotNull);
+    expect(store.filesState, FileListState.unavailable);
     expect(store.files, isNull);
     expect(store.problem, isNull);
   });
@@ -117,6 +124,21 @@ void main() {
     await store.select(row);
     expect(await store.preview('preview-0.png'), pngBytes);
     expect(await store.preview('preview-1.png'), isNull);
+  });
+
+  test('reads a failed picture again when the person moves on', () async {
+    final store = session();
+    addTearDown(store.dispose);
+    await store.goOnline();
+    final row = store.rows.single;
+    final picture = storeBase.resolve(row.thumbnail!);
+    final held = fixture.pages.remove(picture)!;
+    expect(await store.thumbnail(row), isNull);
+    fixture.pages[picture] = held;
+    expect(await store.thumbnail(row), isNull);
+
+    await store.select(row);
+    expect(await store.thumbnail(row), pngBytes);
   });
 
   test('says what went wrong with a store that cannot be read', () async {

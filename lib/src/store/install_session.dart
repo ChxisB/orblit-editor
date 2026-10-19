@@ -104,22 +104,19 @@ final class InstallSession extends ChangeNotifier {
       );
 
   /// Writes the kit. A failure leaves the person where they were, with
-  /// [problem] saying why and nothing written.
+  /// [problem] saying why.
   Future<void> install({
     String into = '',
     Set<AssetId>? only,
     Set<AssetId> replacing = const {},
   }) async {
-    final kit = _opened;
-    final misplaced = kitPlaceProblem(into, kit.chosen(only));
-    _problem = misplaced;
-    if (misplaced != null) {
-      notifyListeners();
-      return;
-    }
+    _problem = null;
     _stage = InstallStage.installing;
     notifyListeners();
     try {
+      final kit = _opened;
+      final misplaced = kitPlaceProblem(into, kit.chosen(only));
+      if (misplaced != null) throw FormatException(misplaced);
       _locked = await installKit(
         kit,
         projectDirectory: projectDirectory,
@@ -128,7 +125,9 @@ final class InstallSession extends ChangeNotifier {
         replacing: replacing,
       );
       _stage = InstallStage.done;
-    } on Exception catch (error) {
+    } on Object catch (error) {
+      // Any failure, an Error too, must give the dialog back: it cannot be
+      // closed while the stage is installing.
       _problem = _describe(error);
       _stage = InstallStage.choosing;
     }
@@ -162,7 +161,7 @@ final class InstallSession extends ChangeNotifier {
   }
 }
 
-String _describe(Exception error) => switch (error) {
+String _describe(Object error) => switch (error) {
   FormatException(:final message) => message,
   FileSystemException(:final message, :final path) =>
     '$message${path == null || path.isEmpty ? '' : ' ($path)'}',

@@ -126,6 +126,59 @@ void main() {
     expect(held(), ['$into/models/crate.obj', kitLockName]);
   });
 
+  test('gives the dialog back when the install throws an error', () async {
+    final session = await started();
+    await session.install(into: into, only: {id('nope.txt')});
+    expect(session.stage, InstallStage.choosing);
+    expect(session.problem, contains('nope.txt'));
+    expect(held(), ['$into/models/crate.obj']);
+  });
+
+  test('writes no file when the lock has no room for the kit', () async {
+    final full = KitLock([
+      for (var i = 0; i < 500; i++)
+        LockedKit(
+          publisher: 'filler',
+          slug: 'k$i',
+          version: '1.0.0',
+          hash: fixture.hash,
+          files: const {},
+        ),
+    ]);
+    File(inProject(kitLockName)).writeAsBytesSync(full.encode());
+    final session = await started();
+    await session.install(into: into, replacing: {id('models/crate.obj')});
+    expect(session.stage, InstallStage.choosing);
+    expect(session.problem, contains('500 kits'));
+    expect(held(), ['$into/models/crate.obj', kitLockName]);
+    expect(
+      File(inProject('$into/models/crate.obj')).readAsStringSync(),
+      'my own crate',
+    );
+  });
+
+  test(
+    'adds to the files listed when it installs into a folder again',
+    () async {
+      final session = await started();
+      await session.install(into: into, only: {id('scripts/spin.js')});
+      await session.install(into: into, only: {id('shots/a.png')});
+      List<String> listed() => [
+        for (final file in KitLock.parse(
+          File(inProject(kitLockName)).readAsBytesSync(),
+        ).find('brass-lamp', 'crates')!.files.keys)
+          '$file',
+      ];
+      expect(
+        listed(),
+        unorderedEquals(['$into/scripts/spin.js', '$into/shots/a.png']),
+      );
+
+      await session.install(into: 'assets/other', only: {id('shots/a.png')});
+      expect(listed(), ['assets/other/shots/a.png']);
+    },
+  );
+
   test('takes up a cut download where it stopped', () async {
     fixture.pages[crateUrl] = TransportPage(
       fixture.pack,

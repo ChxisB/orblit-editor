@@ -4,11 +4,16 @@ import 'package:orblit_asset/orblit_asset.dart';
 import 'store_query.dart';
 import 'store_settings.dart';
 
+/// Where the file list of the chosen release stands. It is read only when the
+/// person asks, because the kit file may sit on another host than the store.
+enum FileListState { unread, reading, read, unavailable }
+
 /// What the store dialog shows and asks for: the kits of one store, the one
 /// a person is looking at and the words and picks that narrow the list.
 ///
 /// Nothing is fetched until [goOnline], so opening the dialog sends nothing.
-/// A reply that arrives after the person moved on is dropped.
+/// A kit file is not touched until [loadFiles]. A reply that arrives after the
+/// person moved on is dropped.
 final class StoreSession extends ChangeNotifier {
   StoreSession({
     required this.settings,
@@ -34,9 +39,11 @@ final class StoreSession extends ChangeNotifier {
   KitRow? _selected;
   KitReleases? _releases;
   PublishedRelease? _chosen;
+  FileListState _filesState = FileListState.unread;
   List<MapEntry<AssetId, int>>? _files;
   String? _problem;
   final Map<String, Future<Uint8List?>> _images = {};
+  final Set<String> _failedImages = {};
 
   Uri get repository => _repository;
   bool get online => _client != null;
@@ -46,8 +53,9 @@ final class StoreSession extends ChangeNotifier {
   KitReleases? get releases => _releases;
   PublishedRelease? get chosen => _chosen;
 
-  /// The files of the chosen release, or null while they are being read or
-  /// when the server cannot say.
+  FileListState get filesState => _filesState;
+
+  /// The files of the chosen release once [filesState] is read, or null.
   List<MapEntry<AssetId, int>>? get files => _files;
 
   /// What went wrong with the last thing asked of the store, or null.
@@ -89,6 +97,7 @@ final class StoreSession extends ChangeNotifier {
     _rows = const [];
     _forgetKit();
     _images.clear();
+    _failedImages.clear();
     _problem = null;
     _loading = true;
     notifyListeners();
@@ -128,6 +137,7 @@ final class StoreSession extends ChangeNotifier {
 
   Future<void> select(KitRow? row) async {
     _forgetKit();
+    _retryFailedImages();
     _selected = row;
     _problem = null;
     notifyListeners();
@@ -137,8 +147,7 @@ final class StoreSession extends ChangeNotifier {
       final releases = await client.releases(row);
       if (_stale(client) || _selected != row) return;
       _releases = releases;
-      notifyListeners();
-      await chooseRelease(releases.releases.first);
+      chooseRelease(releases.releases.first);
     } on Exception catch (error) {
       if (_stale(client) || _selected != row) return;
       _problem = _describe(error);
@@ -146,15 +155,27 @@ final class StoreSession extends ChangeNotifier {
     }
   }
 
-  /// Makes [release] the one shown and reads its file list.
-  ///
-  /// A server that does not answer a range leaves the list empty and the
-  /// install still works, because the whole file is then downloaded.
-  Future<void> chooseRelease(PublishedRelease release) async {
-    final client = _client;
-    if (client == null) return;
+  /// Makes [release] the one shown. Its file list stays unread.
+  void chooseRelease(PublishedRelease release) {
     _chosen = release;
     _files = null;
+    _filesState = FileListState.unread;
+    notifyListeners();
+  }
+
+  /// Reads the file list of the chosen release from the host of its kit file.
+  ///
+  /// A server that does not answer a range leaves the list unavailable and
+  /// the install still works, because the whole file is then downloaded.
+  Future<void> loadFiles() async {
+    final client = _client;
+    final release = _chosen;
+    if (client == null ||
+        release == null ||
+        _filesState == FileListState.reading) {
+      return;
+    }
+    _filesState = FileListState.reading;
     notifyListeners();
     List<MapEntry<AssetId, int>>? files;
     try {
@@ -164,6 +185,9 @@ final class StoreSession extends ChangeNotifier {
     }
     if (_stale(client) || _chosen != release) return;
     _files = files;
+    _filesState = files == null
+        ? FileListState.unavailable
+        : FileListState.read;
     notifyListeners();
   }
 
@@ -172,7 +196,7 @@ final class StoreSession extends ChangeNotifier {
     final path = row.thumbnail;
     final client = _client;
     if (path == null || client == null) return Future.value();
-    return _images.putIfAbsent(path, () => _image(client.thumbnail(row)));
+    return _images.putIfAbsent(path, () => _image(path, client.thumbnail(row)));
   }
 
   /// The preview image [name] of [selected], or null when it cannot be read.
@@ -182,15 +206,26 @@ final class StoreSession extends ChangeNotifier {
     if (row == null || client == null) return Future.value();
     // The same key as a thumbnail has, so an image is read once.
     final key = 'kits/${row.manifest.publisher}/${row.manifest.slug}/$name';
-    return _images.putIfAbsent(key, () => _image(client.preview(row, name)));
+    return _images.putIfAbsent(
+      key,
+      () => _image(key, client.preview(row, name)),
+    );
   }
 
-  Future<Uint8List?> _image(Future<Uint8List?> read) async {
+  Future<Uint8List?> _image(String key, Future<Uint8List?> read) async {
     try {
       return await read;
     } on Exception {
+      _failedImages.add(key);
       return null;
     }
+  }
+
+  // A picture that failed is read again when the person moves between the
+  // list and a kit, not on every rebuild of the grid.
+  void _retryFailedImages() {
+    _images.removeWhere((key, _) => _failedImages.contains(key));
+    _failedImages.clear();
   }
 
   void _forgetKit() {
@@ -198,6 +233,7 @@ final class StoreSession extends ChangeNotifier {
     _releases = null;
     _chosen = null;
     _files = null;
+    _filesState = FileListState.unread;
   }
 
   bool _stale(KitStoreClient client) => _disposed || _client != client;

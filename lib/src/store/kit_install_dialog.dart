@@ -61,8 +61,8 @@ class _InstallDialogState extends State<InstallDialog> {
                 ? _Failed(session: session)
                 : switch (session.stage) {
                     InstallStage.downloading => _Downloading(session: session),
-                    InstallStage.choosing => KitChoose(session: session),
-                    InstallStage.installing => const _Writing(),
+                    InstallStage.choosing ||
+                    InstallStage.installing => KitChoose(session: session),
                     InstallStage.done => _Done(session: session),
                   },
           ),
@@ -138,15 +138,6 @@ class _Failed extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-class _Writing extends StatelessWidget {
-  const _Writing();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(child: Text('Writing files…', style: OrblitText.body));
   }
 }
 

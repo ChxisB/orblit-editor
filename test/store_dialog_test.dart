@@ -109,6 +109,19 @@ Future<void> until(WidgetTester tester, Finder finder) async {
 
 Finder installButton() => find.widgetWithText(OrblitButton, 'Install');
 
+bool installable(WidgetTester tester) =>
+    tester.widget<OrblitButton>(installButton()).onPressed != null;
+
+Future<void> untilInstallable(WidgetTester tester) async {
+  for (var i = 0; i < 300 && !installable(tester); i++) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 10)),
+    );
+    await tester.pump();
+  }
+  expect(installable(tester), isTrue);
+}
+
 List<bool?> ticks(WidgetTester tester) => [
   for (final box in tester.widgetList<Checkbox>(find.byType(Checkbox)))
     box.value,
@@ -171,7 +184,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('The first release.'), findsOneWidget);
     expect(find.textContaining('Contains scripts'), findsOneWidget);
-    expect(find.text('Files (3)'.toUpperCase()), findsOneWidget);
+    // The kit file is not touched until the person asks for its files.
+    expect(find.text('models/crate.obj'), findsNothing);
+    expect(made.single.sent.where((r) => r.url == crateUrl), isEmpty);
+
+    await tester.tap(find.text('Show files'));
+    await until(tester, find.text('Files (3)'.toUpperCase()));
+    expect(made.single.sent.where((r) => r.url == crateUrl), isNotEmpty);
     expect(find.text('models/crate.obj'), findsOneWidget);
     // The list is lazy, so the last of it comes into view by scrolling.
     await tester.drag(find.byType(CustomScrollView), const Offset(0, -400));
@@ -259,6 +278,44 @@ void main() {
     expect(find.textContaining('starts with a dot'), findsOneWidget);
     expect(tester.widget<OrblitButton>(installButton()).onPressed, isNull);
     expect(Directory(inProject('.git')).existsSync(), isFalse);
+  });
+
+  testWidgets('keeps the choices when the write fails', (tester) async {
+    await prepare(tester);
+    File(inProject(kitLockName)).writeAsStringSync('{not json');
+    await openInstall(tester);
+    await until(tester, find.text('replaces your file'));
+    await tester.tap(find.byType(Checkbox).at(1));
+    await tester.pump();
+    expect(ticks(tester), [false, false, true]);
+
+    await tester.tap(installButton());
+    await until(tester, find.textContaining('kits.lock'));
+    await untilInstallable(tester);
+    expect(ticks(tester), [false, false, true]);
+    expect(Directory(inProject('$into/scripts')).existsSync(), isFalse);
+  });
+
+  testWidgets('reads a new folder only after a pause in the typing', (
+    tester,
+  ) async {
+    await prepare(tester);
+    await openInstall(tester);
+    await until(tester, find.text('replaces your file'));
+    await tester.enterText(find.byType(TextField), 'assets/other');
+    // 200 ms of the app's time, with the disk given time to answer, so a read
+    // that had started would have finished.
+    for (var i = 0; i < 20; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+      await tester.pump(const Duration(milliseconds: 10));
+    }
+    expect(installable(tester), isFalse);
+
+    await tester.pump(const Duration(milliseconds: 150));
+    await untilInstallable(tester);
+    expect(find.text('replaces your file'), findsNothing);
   });
 
   testWidgets('does not install when every file is unticked', (tester) async {
