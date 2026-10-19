@@ -1,5 +1,39 @@
 # Changelog
 
+## 1.20.0+21
+
+- Add Scene > Publish kit. Name a folder of the project that holds a
+  `kit.json`, the address the kit file will be hosted at and a note. The
+  editor packs the folder, checks the file as CI will, and shows the entry
+  that lists the kit, with its hash and size filled in. Copy puts the entry
+  on the clipboard.
+- Write the kit file to `exports/kits/` of the project, named after the end
+  of the address. Nothing is uploaded and no entry is written for you.
+- Add Publish kit to the command palette.
+
+## 1.19.0+20
+
+- Add Scene > Kit store. It reads a store of kits, shows each as a card with
+  a picture, and opens one to show its notes, its releases, its licence and
+  the engine it is for. Press Show files to list the files in it. Nothing is
+  sent to the store until you press Go online.
+- Search the kits, sort them, and narrow them by licence or tag. Hide the
+  ones that hold scripts. A kit made for another engine version is hidden
+  until you ask for it.
+- Install a kit into a folder of the project, `assets/kits/<kit>` unless you
+  choose another. Pick the files you want. A file the project already has
+  with other bytes is left alone unless you tick it. If the write fails, the
+  dialog keeps your folder and your ticks.
+- Show the scripts of a kit before anything is written. Installing never
+  runs one.
+- Keep a download that was cut and take it up where it stopped. A file that
+  does not match its hash is refused and nothing reaches the project.
+- Write `kits.lock` at the project root. It lists each kit installed and the
+  hash of every file it wrote.
+- Add another store by address, and forget it again. The editor reads
+  `https://orblitengine.com/store/` until you do.
+- Add Kit store to the command palette.
+
 ## 1.17.0+18
 
 - Add a Vehicle section to a body the solver moves. It sets the steer lock,
