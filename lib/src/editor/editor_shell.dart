@@ -368,7 +368,10 @@ class _EditorShellState extends State<EditorShell> {
   int _terrainPictures = 0;
 
   /// The interfaces open for laying out, and how the one shown is looked at.
-  late final InterfaceBench _interfaceBench = InterfaceBench(history: _history);
+  late final InterfaceBench _interfaceBench = InterfaceBench(
+    history: _history,
+    stringsFolder: p.join(widget.project.directory, 'strings'),
+  );
 
   @override
   void initState() {
@@ -386,6 +389,9 @@ class _EditorShellState extends State<EditorShell> {
     _cuts.addListener(_onBenchChanged);
     _blends.addListener(_onBenchChanged);
     _terrains.addListener(_onTerrainsChanged);
+    // Before any interface is drawn, so the scene view shows words rather
+    // than keys even when the Interface workspace was never opened.
+    _interfaceBench.loadStrings();
     _frames
       ..start()
       ..addListener(_onChanged);

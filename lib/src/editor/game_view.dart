@@ -29,6 +29,7 @@ class GameView extends StatelessWidget {
     this.projectRoot,
     this.geometryOf,
     this.interface,
+    this.interfaceStrings,
     this.through,
     this.camera,
     this.plain = false,
@@ -46,6 +47,10 @@ class GameView extends StatelessWidget {
 
   /// The interface the scene puts on screen, already read.
   final UiDocument? interface;
+
+  /// The words its keyed text shows, in the language the Interface workspace
+  /// is looking at.
+  final UiStrings? interfaceStrings;
 
   /// A particular camera to look through, rather than the scene's first.
   ///
@@ -139,7 +144,11 @@ class GameView extends StatelessWidget {
         // and pressing a button is meant to press it.
         if (interface != null)
           Positioned.fill(
-            child: UiCanvasView(document: interface!, designing: false),
+            child: UiCanvasView(
+              document: interface!,
+              strings: interfaceStrings,
+              designing: false,
+            ),
           ),
       ],
     );

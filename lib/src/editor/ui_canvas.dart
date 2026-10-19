@@ -24,6 +24,7 @@ class UiCanvasView extends StatelessWidget {
     this.previewSize,
     this.selected,
     this.hovered,
+    this.strings,
     this.designing = true,
     this.showOutlines = true,
     this.showGuides = true,
@@ -36,6 +37,10 @@ class UiCanvasView extends StatelessWidget {
   });
 
   final UiDocument document;
+
+  /// The words a keyed text or button shows, in the language in use. Null
+  /// shows every key as it is written.
+  final UiStrings? strings;
 
   /// The screen to show this on, when it is not the one it was drawn against.
   ///
@@ -217,6 +222,7 @@ class UiCanvasView extends StatelessWidget {
     final interface = UiSurface(
       description: document.root,
       canvas: canvas,
+      strings: strings,
       // The width the layout answers to is the one being drawn, not the one
       // the editor's panel happens to be. A phone previewed inside a wide
       // window has to be a phone the whole way down.

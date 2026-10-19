@@ -94,6 +94,7 @@ final class InterfaceCanvas extends StatelessWidget {
       return UiCanvasView(
         document: document,
         previewSize: bench.preview,
+        strings: bench.strings,
         selected: previewing ? null : bench.selected,
         hovered: previewing ? null : bench.hovered,
         designing: !previewing,

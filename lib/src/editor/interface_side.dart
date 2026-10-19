@@ -62,15 +62,16 @@ class _Side extends StatelessWidget {
     '1024 × 768': (1024, 768),
   };
 
-  /// [props] with `onPressed` naming [handler], or without it when [handler]
-  /// is empty.
-  static Map<String, Object?> _withHandler(
+  /// [props] with [name] set to [value], or without it when [value] is
+  /// empty.
+  static Map<String, Object?> _withProp(
     Map<String, Object?> props,
-    String handler,
+    String name,
+    String value,
   ) => {
     for (final entry in props.entries)
-      if (entry.key != 'onPressed') entry.key: entry.value,
-    if (handler.isNotEmpty) 'onPressed': handler,
+      if (entry.key != name) entry.key: entry.value,
+    if (value.isNotEmpty) name: value,
   };
 
   @override
@@ -81,11 +82,22 @@ class _Side extends StatelessWidget {
       children: [
         _add(),
         if (selected != null) _properties(selected),
+        if (_speaksMore) _languages(),
         _canvas(),
         _grid(),
       ],
     );
   }
+
+  /// Whether there is anything to say about languages: the interface asks
+  /// for words by key, or the project has language files, good or bad.
+  ///
+  /// Hidden otherwise. A project that is in one language has no use for the
+  /// section, and it would crowd out the panel that every project uses.
+  bool get _speaksMore =>
+      bench.strings.locales.isNotEmpty ||
+      bench.stringProblems.isNotEmpty ||
+      document.root.textKeys.isNotEmpty;
 
   Widget _add() {
     return OrblitSection(
@@ -124,6 +136,16 @@ class _Side extends StatelessWidget {
               mono: false,
               change: (node, value) => node.copyWith(text: value),
             ),
+          if (selected.type == 'text' || selected.type == 'button')
+            _typed(
+              label: 'Key',
+              step: 'Edit key',
+              value: selected.textKey ?? '',
+              hint: 'play.label',
+              change: (node, value) => node.copyWith(
+                props: _withProp(node.props, 'textKey', value.trim()),
+              ),
+            ),
           _typed(
             label: 'Classes',
             step: 'Edit classes',
@@ -146,7 +168,7 @@ class _Side extends StatelessWidget {
             value: '${selected.props['onPressed'] ?? ''}',
             hint: 'what script calls',
             change: (node, value) => node.copyWith(
-              props: _withHandler(node.props, value.trim()),
+              props: _withProp(node.props, 'onPressed', value.trim()),
             ),
           ),
         ],
@@ -244,6 +266,64 @@ class _Side extends StatelessWidget {
       onSettled: bench.settle,
     );
   }
+
+  // The language the canvas speaks, for checking a layout against the
+  // longest words. A view like the device, so none of it is a step to undo.
+  Widget _languages() {
+    final strings = bench.strings;
+    final gaps = bench.missing;
+    final lacking = gaps[strings.locale] ?? const <String>[];
+    return OrblitSection(
+      title: 'Languages',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: Space.xs,
+            runSpacing: Space.xs,
+            children: [
+              for (final locale in strings.locales)
+                _Chip(
+                  label: locale,
+                  tooltip: '${gaps[locale]?.length ?? 0} keys missing',
+                  selected: strings.locale == locale,
+                  onTap: () => strings.use(locale),
+                ),
+              _Chip(
+                label: 'Reload',
+                tooltip: 'Read the files in strings/ again.',
+                icon: Icons.refresh,
+                onTap: bench.loadStrings,
+              ),
+            ],
+          ),
+          if (strings.locales.isEmpty)
+            _note('One file in strings/ for each language, such as fr.json.'),
+          for (final problem in bench.stringProblems) _note(problem),
+          if (lacking.isNotEmpty) ...[
+            const SizedBox(height: Space.sm),
+            Text(
+              'MISSING IN ${strings.locale.toUpperCase()}',
+              style: OrblitText.section,
+            ),
+            const SizedBox(height: Space.xs),
+            for (final key in lacking) _note(key, mono: true),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _note(String words, {bool mono = false}) => Padding(
+    padding: const EdgeInsets.only(top: Space.xs),
+    child: Text(
+      words,
+      style: (mono ? OrblitText.mono : OrblitText.label).copyWith(
+        fontSize: 10.5,
+        color: OrblitColors.inkDim,
+      ),
+    ),
+  );
 
   Widget _canvas() {
     final canvas = document.canvas;
