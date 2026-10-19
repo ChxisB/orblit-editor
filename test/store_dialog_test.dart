@@ -97,12 +97,15 @@ Future<void> openInstall(WidgetTester tester) async {
 }
 
 /// Waits in real time for work on the disk, which a pump does not wait for.
+///
+/// The pump moves the app's clock too, because a ranged read of a kit file
+/// waits a few milliseconds of it to join its requests.
 Future<void> until(WidgetTester tester, Finder finder) async {
   for (var i = 0; i < 300 && finder.evaluate().isEmpty; i++) {
     await tester.runAsync(
       () => Future<void>.delayed(const Duration(milliseconds: 10)),
     );
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 10));
   }
   expect(finder, findsWidgets);
 }
