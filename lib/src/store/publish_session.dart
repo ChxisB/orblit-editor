@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/foundation.dart';
 import 'package:orblit_asset/orblit_asset.dart';
@@ -64,12 +65,17 @@ final class PublishSession extends ChangeNotifier {
       final file = _fileFor(address);
       final source = _folderIn(folder.trim());
       Directory(p.dirname(file)).createSync(recursive: true);
-      _published = await publishKit(
-        folder: source,
-        url: address,
-        outPath: file,
-        released: clock().toUtc(),
-        notes: notes.trim(),
+      final released = clock().toUtc();
+      final note = notes.trim();
+      // Packing hashes every file of the kit, so it runs off the UI isolate.
+      _published = await Isolate.run(
+        () => publishKit(
+          folder: source,
+          url: address,
+          outPath: file,
+          released: released,
+          notes: note,
+        ),
       );
       _kitFile = file;
       _stage = PublishStage.done;

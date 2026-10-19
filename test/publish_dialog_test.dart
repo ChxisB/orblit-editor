@@ -145,4 +145,20 @@ void main() {
     await until(tester, find.textContaining('Packed crates-1.0.0.opack'));
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('keeps the button in view when a kit has many problems', (
+    tester,
+  ) async {
+    await prepare(tester, size: const Size(960, 620));
+    for (var i = 0; i < 12; i++) {
+      File(p.join(project.path, 'assets/kits/crates', 'd$i', '.DS_Store'))
+        ..parent.createSync(recursive: true)
+        ..writeAsStringSync('x');
+    }
+    await fillIn(tester);
+    await tester.tap(publishButton());
+    await until(tester, find.textContaining('.DS_Store'));
+    expect(tester.takeException(), isNull);
+    expect(tester.getRect(publishButton()).bottom, lessThanOrEqualTo(620));
+  });
 }

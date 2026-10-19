@@ -114,46 +114,60 @@ class _Form extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'Packs a folder of this project as a kit and shows the entry that '
-          'lists it in a store. The folder holds a kit.json and the files to '
-          'give a project. Nothing is uploaded.',
-          style: OrblitText.caption,
-        ),
-        const SizedBox(height: Space.md),
-        IgnorePointer(
-          ignoring: working,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SectionLabel('Folder in the project'),
-              OrblitField(
-                controller: folder,
-                hint: 'assets/kits/crates',
-                mono: true,
-              ),
-              const SizedBox(height: Space.md),
-              const SectionLabel('Address the file will be hosted at'),
-              OrblitField(
-                controller: url,
-                hint: 'https://example.com/crates-1.0.0.opack',
-                mono: true,
-              ),
-              const SizedBox(height: Space.md),
-              const SectionLabel('Notes for this release'),
-              OrblitField(controller: notes, hint: 'What changed.'),
-            ],
-          ),
-        ),
-        if (problem != null)
-          Padding(
-            padding: const EdgeInsets.only(top: Space.sm),
-            child: Text(
-              problem,
-              style: OrblitText.caption.copyWith(color: OrblitColors.bad),
+        // A kit with many problems gives a long message, so the form scrolls
+        // and the button stays in view.
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Packs a folder of this project as a kit and shows the '
+                  'entry that lists it in a store. The folder holds a '
+                  'kit.json and the files to give a project. Nothing is '
+                  'uploaded.',
+                  style: OrblitText.caption,
+                ),
+                const SizedBox(height: Space.md),
+                IgnorePointer(
+                  ignoring: working,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SectionLabel('Folder in the project'),
+                      OrblitField(
+                        controller: folder,
+                        hint: 'assets/kits/crates',
+                        mono: true,
+                      ),
+                      const SizedBox(height: Space.md),
+                      const SectionLabel('Address the file will be hosted at'),
+                      OrblitField(
+                        controller: url,
+                        hint: 'https://example.com/crates-1.0.0.opack',
+                        mono: true,
+                      ),
+                      const SizedBox(height: Space.md),
+                      const SectionLabel('Notes for this release'),
+                      OrblitField(controller: notes, hint: 'What changed.'),
+                    ],
+                  ),
+                ),
+                if (problem != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: Space.sm),
+                    child: Text(
+                      problem,
+                      style: OrblitText.caption.copyWith(
+                        color: OrblitColors.bad,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
-        const Spacer(),
+        ),
+        const SizedBox(height: Space.sm),
         Align(
           alignment: Alignment.centerRight,
           child: OrblitButton(
@@ -195,8 +209,9 @@ class _Done extends StatelessWidget {
           Text(
             'Upload the file so that it is served at ${published.release.url}. '
             'Then save the entry as kits/${entry.publisher}/${entry.slug}.json '
-            'in a clone of the orblit-kits repository, check it with '
-            'kit index, and open a pull request.',
+            'in a clone of the orblit-kits repository, or add the release to '
+            'that file when it lists releases already. Check it with kit '
+            'index, and open a pull request.',
             style: OrblitText.caption,
           ),
         ],
@@ -218,9 +233,13 @@ class _EntryBox extends StatefulWidget {
 class _EntryBoxState extends State<_EntryBox> {
   bool _copied = false;
 
-  void _copy() {
-    unawaited(Clipboard.setData(ClipboardData(text: widget.text)));
-    setState(() => _copied = true);
+  Future<void> _copy() async {
+    try {
+      await Clipboard.setData(ClipboardData(text: widget.text));
+    } on PlatformException {
+      return; // The label stays Copy, so nobody pastes what was not copied.
+    }
+    if (mounted) setState(() => _copied = true);
   }
 
   @override
@@ -242,7 +261,7 @@ class _EntryBoxState extends State<_EntryBox> {
             child: OrblitButton(
               label: _copied ? 'Copied' : 'Copy',
               icon: Icons.copy,
-              onPressed: _copy,
+              onPressed: () => unawaited(_copy()),
             ),
           ),
         ],

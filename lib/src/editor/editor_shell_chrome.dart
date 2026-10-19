@@ -444,7 +444,9 @@ final class _PlayPill extends StatelessWidget {
       children: [
         _PillButton(
           icon: playing ? Icons.pause : Icons.play_arrow,
-          tooltip: playing ? 'Pause scene animation.' : 'Play scene animation.',
+          tooltip: playing
+              ? 'Pause scene animation.'
+              : 'Play scene animation.',
           // Ember while it is the thing to press, so a paused scene reads as
           // waiting for somebody.
           filled: !playing,
