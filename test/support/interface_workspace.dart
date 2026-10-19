@@ -13,22 +13,35 @@ import 'package:path/path.dart' as p;
 /// Where [openInterface] writes the interface it lays out.
 String interfacePath(Directory folder) => p.join(folder.path, 'menu.oui');
 
+/// Where [openInterface] looks for language files.
+String stringsPath(Directory folder) => p.join(folder.path, 'strings');
+
 /// The Interface workspace's panels where the dock puts them, laying out
 /// [document].
 ///
 /// Without the rest of the editor, so a test of laying out drives only what
 /// lays out. Undo and save are the editor's, so a test calls them on the
-/// bench's history and the bench.
+/// bench's history and the bench. [languages] is the text of each language
+/// file, by locale, written to the project's strings folder first.
 Future<InterfaceBench> openInterface(
   WidgetTester tester, {
   required Directory folder,
   required UiDocument document,
+  Map<String, String> languages = const {},
   Size window = const Size(1600, 950),
 }) async {
   final path = interfacePath(folder);
   File(path).writeAsStringSync(document.toText());
+  for (final entry in languages.entries) {
+    File(p.join(stringsPath(folder), '${entry.key}.json'))
+      ..createSync(recursive: true)
+      ..writeAsStringSync(entry.value);
+  }
   final history = History(Workspace(folder.path));
-  final bench = InterfaceBench(history: history);
+  final bench = InterfaceBench(
+    history: history,
+    stringsFolder: stringsPath(folder),
+  );
   addTearDown(() {
     bench.dispose();
     history.dispose();

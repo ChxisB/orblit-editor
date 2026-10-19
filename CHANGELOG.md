@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.25.0+26
+
+- Add a Key field to a text or a button. The canvas shows the words of that
+  key in the language chosen, and the tree and Undo name the element by it.
+- Read `strings/<locale>.json` from the project, one file for each language.
+  Reopening an interface reads them again, and so does Reload.
+- Add a Languages section to the Interface design panel. It has a chip for
+  each language, lists the keys the chosen language has no text for, and
+  says which files could not be read. It shows only when the interface has a
+  key or the project has a language file.
+- Show the chosen language in the scene view and the game view as well.
+- Start in the first language the project has when it has no `en`.
+- Report a `strings/` folder that cannot be listed, where it stopped the
+  editor from opening an interface.
+- The language shown is a view. It is not saved in the interface file.
+
 ## 1.24.0+25
 
 - Add a Profile panel to the View menu. It shows the gaps between drawn

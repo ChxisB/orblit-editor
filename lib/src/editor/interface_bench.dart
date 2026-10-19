@@ -59,11 +59,13 @@ enum UiElement {
 
 /// What an element is called in the tree and next to Undo.
 ///
-/// The words when it has any, since "Start game" says more about which
-/// button this is than "button" does.
+/// The key of its words when it has one, since the canvas shows whichever
+/// language is in use and the key is the same in all of them. Otherwise the
+/// words, since "Start game" says more about which button this is than
+/// "button" does.
 String uiNodeName(UiNode node) {
-  final words = node.text?.trim() ?? '';
-  return words.isEmpty ? node.type : words;
+  final name = node.textKey ?? node.text?.trim() ?? '';
+  return name.isEmpty ? node.type : name;
 }
 
 /// A class list with any direction it named taken out.
@@ -109,9 +111,92 @@ final class OpenInterface {
 /// without losing the selection, and each edit is a step on the one undo
 /// stack the rest of the editor uses.
 final class InterfaceBench extends ChangeNotifier {
-  InterfaceBench({required this.history});
+  InterfaceBench({required this.history, this.stringsFolder}) {
+    _strings.addListener(notifyListeners);
+  }
 
   final History history;
+
+  /// Where the project keeps its language files, one `<locale>.json` each, or
+  /// null when there is no project to read them from.
+  final String? stringsFolder;
+
+  final UiStrings _strings = UiStrings();
+
+  /// The words of every language the project has, and the one shown. A view
+  /// like the device: the language being looked at is not saved in the file.
+  UiStrings get strings => _strings;
+
+  List<String> _stringProblems = const [];
+
+  /// The language files that could not be read, and why.
+  List<String> get stringProblems => _stringProblems;
+
+  /// The keys each language has no text for, counting those the shown
+  /// interface asks for.
+  Map<String, List<String>> get missing =>
+      _strings.gaps(document?.root.textKeys ?? const {});
+
+  /// Reads the language files again, in place of the tables held.
+  ///
+  /// The tables are emptied first, so a key somebody took out of a file is
+  /// gone from the canvas too. The one object stays, because the scene view
+  /// and the game view hold it. The language being shown carries over, or
+  /// is the first one the project has when it has none of that name.
+  void loadStrings() {
+    final read = _readLanguages(stringsFolder);
+    final problems = [...read.problems];
+    _strings.clear();
+    for (final MapEntry(key: locale, value: source) in read.sources.entries) {
+      try {
+        _strings.addJson(locale, source);
+      } on FormatException {
+        problems.add('$locale.json is not one object of key to text.');
+      }
+    }
+    _stringProblems = problems;
+    final has = _strings.locales;
+    if (has.isNotEmpty && !has.contains(_strings.locale)) _strings.use(has[0]);
+    notifyListeners();
+  }
+
+  /// The text of each `.json` file in [folder], by the language it is named
+  /// for, and which ones could not be read.
+  static ({Map<String, String> sources, List<String> problems}) _readLanguages(
+    String? folder,
+  ) {
+    final sources = <String, String>{};
+    final problems = <String>[];
+    try {
+      for (final file in _languageFiles(folder)) {
+        try {
+          sources[p.basenameWithoutExtension(file.path)] = file
+              .readAsStringSync();
+        } on FileSystemException catch (error) {
+          problems.add(
+            '${p.basename(file.path)} could not be read: ${error.message}',
+          );
+        }
+      }
+    } on FileSystemException catch (error) {
+      problems.add('strings/ could not be listed: ${error.message}');
+    }
+    return (sources: sources, problems: problems);
+  }
+
+  static List<File> _languageFiles(String? folder) {
+    if (folder == null || !Directory(folder).existsSync()) return const [];
+    return [
+      for (final entry in Directory(folder).listSync())
+        if (entry is File && p.extension(entry.path) == '.json') entry,
+    ]..sort((a, b) => a.path.compareTo(b.path));
+  }
+
+  @override
+  void dispose() {
+    _strings.dispose();
+    super.dispose();
+  }
 
   final List<OpenInterface> _open = [];
 
@@ -242,6 +327,7 @@ final class InterfaceBench extends ChangeNotifier {
   /// Shows the interface at [path], reading it first if it is not open, and
   /// says why it could not be.
   String? openFile(String path) {
+    loadStrings();
     if (this[path] != null) {
       show(path);
       return null;

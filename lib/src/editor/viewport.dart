@@ -73,6 +73,7 @@ class SceneViewport extends StatefulWidget {
     this.onDrawFinish,
     this.geometryOf,
     this.interface,
+    this.interfaceStrings,
     this.showInterface = true,
     this.onToggleInterface,
     this.outlineSelection = true,
@@ -215,6 +216,10 @@ class SceneViewport extends StatefulWidget {
   /// and does not open files, which is what keeps it testable without a
   /// project on disk.
   final UiDocument? interface;
+
+  /// The words its keyed text shows, in the language the Interface workspace
+  /// is looking at.
+  final UiStrings? interfaceStrings;
 
   /// Whether to draw the interface at all. Off while somebody is arranging
   /// the scene behind it and does not want a full-screen heads-up display
@@ -606,6 +611,7 @@ class _SceneViewportState extends State<SceneViewport>
     child: IgnorePointer(
       child: UiCanvasView(
         document: widget.interface!,
+        strings: widget.interfaceStrings,
         designing: false,
       ),
     ),
