@@ -37,4 +37,23 @@ void main() {
       root.deleteSync(recursive: true);
     }
   });
+
+  test('the editor reads the triangles of an obj in the project', () async {
+    final root = Directory.systemTemp.createTempSync('orblit_collision_obj');
+    try {
+      final cube = const Shape(kind: ShapeKind.cube).build();
+      File('${root.path}/crate.obj').writeAsBytesSync(cube.toObj().first.bytes);
+      final collider = await ModelCollision(root.path).read(
+        SceneObject(
+          id: 'crate',
+          name: 'Crate',
+          kind: ObjectKind.mesh,
+          meshAsset: 'crate.obj',
+        ),
+      );
+      expect(collider.indices.length, cube.triangulate().indices.length);
+    } finally {
+      root.deleteSync(recursive: true);
+    }
+  });
 }

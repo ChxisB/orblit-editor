@@ -46,10 +46,12 @@ class ModelBounds {
         // maximum are in the document itself. A `.gltf` beside its textures
         // is how most model libraries publish, so leaving it out meant the
         // commonest kind of imported model was the one that could not say
-        // how big it was.
+        // how big it was. An `.obj` carries no such figure, so its points
+        // are read.
         found = switch (p.extension(path).toLowerCase()) {
           '.glb' => boundsOfGlb(file.readAsBytesSync()),
           '.gltf' => boundsOfGltf(file.readAsStringSync()),
+          '.obj' => boundsOfObj(file.readAsBytesSync()),
           _ => null,
         };
       }

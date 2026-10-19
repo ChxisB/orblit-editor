@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.26.0+27
+
+- Size an `.obj` from its points. The asset preview frames it, and a model
+  dropped into the scene is picked and outlined at its real size, where
+  before it was a two-metre cube.
+- Build a collision shape from an `.obj` in the project. An `.fbx` still has
+  no size or collision shape here, because the editor does not cook it.
+
 ## 1.25.0+26
 
 - Add a Key field to a text or a button. The canvas shows the words of that

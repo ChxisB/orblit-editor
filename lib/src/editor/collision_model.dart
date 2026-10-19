@@ -23,6 +23,10 @@ final class ModelCollision {
       throw const FormatException('This object has no model geometry.');
     }
     final id = AssetId.parse(path);
-    return CollisionMesh.fromGltf(id, await source.read(id), source);
+    final bytes = await source.read(id);
+    if (id.extension == 'obj') {
+      return CollisionMesh.fromObj(bytes);
+    }
+    return CollisionMesh.fromGltf(id, bytes, source);
   }
 }
