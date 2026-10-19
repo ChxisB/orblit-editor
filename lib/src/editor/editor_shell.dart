@@ -10,6 +10,7 @@ import 'package:vector_math/vector_math_64.dart' show Matrix4, Vector3;
 
 import '../launcher/project.dart';
 import '../platform/command_shortcuts.dart';
+import '../store/open_publish.dart';
 import '../store/open_store.dart';
 import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
@@ -788,6 +789,7 @@ class _EditorShellState extends State<EditorShell> {
               viewMenu: _viewMenu(),
               onExport: _openExport,
               onStore: _openStore,
+              onPublish: _openPublish,
               onOpenInCode: _openInCode,
               onReveal: () => _reveal(widget.project.directory),
               onUndo: _undo,

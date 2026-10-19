@@ -22,6 +22,7 @@ final class _AppHeader extends StatelessWidget {
     required this.onNewScene,
     required this.onExport,
     required this.onStore,
+    required this.onPublish,
     required this.onOpenInCode,
     required this.onReveal,
     required this.viewMenu,
@@ -53,6 +54,7 @@ final class _AppHeader extends StatelessWidget {
   final VoidCallback onNewScene;
   final VoidCallback onExport;
   final VoidCallback onStore;
+  final VoidCallback onPublish;
   final VoidCallback onOpenInCode;
   final VoidCallback onReveal;
 
@@ -82,6 +84,7 @@ final class _AppHeader extends StatelessWidget {
           onNewScene: onNewScene,
           onExport: onExport,
           onStore: onStore,
+          onPublish: onPublish,
           onOpenInCode: onOpenInCode,
           onReveal: onReveal,
         ),
@@ -441,9 +444,7 @@ final class _PlayPill extends StatelessWidget {
       children: [
         _PillButton(
           icon: playing ? Icons.pause : Icons.play_arrow,
-          tooltip: playing
-              ? 'Pause scene animation.'
-              : 'Play scene animation.',
+          tooltip: playing ? 'Pause scene animation.' : 'Play scene animation.',
           // Ember while it is the thing to press, so a paused scene reads as
           // waiting for somebody.
           filled: !playing,

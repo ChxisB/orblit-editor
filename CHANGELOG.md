@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.20.0+21
+
+- Add Scene > Publish kit. Name a folder of the project that holds a
+  `kit.json`, the address the kit file will be hosted at and a note. The
+  editor packs the folder, checks the file as CI will, and shows the entry
+  that lists the kit, with its hash and size filled in. Copy puts the entry
+  on the clipboard.
+- Write the kit file to `exports/kits/` of the project, named after the end
+  of the address. Nothing is uploaded and no entry is written for you.
+- Add Publish kit to the command palette.
+
 ## 1.19.0+20
 
 - Add Scene > Kit store. It reads a store of kits, shows each as a card with

@@ -39,6 +39,14 @@ extension _Documents on _EditorShellState {
     );
   }
 
+  /// Opens the publish dialog, where a folder of the project is packed as a
+  /// kit and the entry that lists it is shown.
+  void _openPublish() {
+    unawaited(
+      openKitPublish(context, projectDirectory: widget.project.directory),
+    );
+  }
+
   /// Opens the export dialog, which cooks the project and packs it.
   void _openExport() {
     unawaited(
