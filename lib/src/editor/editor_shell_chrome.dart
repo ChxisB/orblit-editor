@@ -21,6 +21,7 @@ final class _AppHeader extends StatelessWidget {
     required this.onSaveAs,
     required this.onNewScene,
     required this.onExport,
+    required this.onStore,
     required this.onOpenInCode,
     required this.onReveal,
     required this.viewMenu,
@@ -51,6 +52,7 @@ final class _AppHeader extends StatelessWidget {
 
   final VoidCallback onNewScene;
   final VoidCallback onExport;
+  final VoidCallback onStore;
   final VoidCallback onOpenInCode;
   final VoidCallback onReveal;
 
@@ -79,6 +81,7 @@ final class _AppHeader extends StatelessWidget {
           onSaveAs: onSaveAs,
           onNewScene: onNewScene,
           onExport: onExport,
+          onStore: onStore,
           onOpenInCode: onOpenInCode,
           onReveal: onReveal,
         ),

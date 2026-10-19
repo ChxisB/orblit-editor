@@ -28,6 +28,17 @@ extension _Documents on _EditorShellState {
     if (problem != null) _say(problem);
   }
 
+  /// Opens the kit store, where a kit is found and put into the project.
+  void _openStore() {
+    unawaited(
+      openKitStore(
+        context,
+        projectDirectory: widget.project.directory,
+        engineVersion: widget.project.engineVersion,
+      ),
+    );
+  }
+
   /// Opens the export dialog, which cooks the project and packs it.
   void _openExport() {
     unawaited(

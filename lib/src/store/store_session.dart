@@ -62,6 +62,13 @@ final class StoreSession extends ChangeNotifier {
     showIncompatible: settings.showIncompatible,
   );
 
+  /// Whether [engine] is a version, so that [fits] is an answer and not a
+  /// guess.
+  // shortcut: the engine's own rule also bounds each number to six digits and
+  // refuses a leading zero, so such a text reads as known here. Export that
+  // check when it matters.
+  bool get engineKnown => RegExp(r'^\d+\.\d+\.\d+$').hasMatch(engine);
+
   bool fits(KitRow row) => kitFitsEngine(row.manifest.engine, engine);
 
   void setQuery(StoreQuery query) {

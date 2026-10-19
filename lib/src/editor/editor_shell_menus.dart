@@ -88,6 +88,7 @@ class _SceneMenu extends StatelessWidget {
     required this.onSaveAs,
     required this.onNewScene,
     required this.onExport,
+    required this.onStore,
     required this.onOpenInCode,
     required this.onReveal,
   });
@@ -100,6 +101,9 @@ class _SceneMenu extends StatelessWidget {
 
   /// Opens the export dialog, which packs the project for an app.
   final VoidCallback onExport;
+
+  /// Opens the kit store, which puts a kit's files into the project.
+  final VoidCallback onStore;
 
   /// Opens the project folder in whatever code editor is installed.
   final VoidCallback onOpenInCode;
@@ -148,6 +152,15 @@ class _SceneMenu extends StatelessWidget {
             color: OrblitColors.inkMid,
           ),
           child: const Text('Export…', style: OrblitText.label),
+        ),
+        MenuItemButton(
+          onPressed: onStore,
+          leadingIcon: const Icon(
+            Icons.storefront_outlined,
+            size: 14,
+            color: OrblitColors.inkMid,
+          ),
+          child: const Text('Kit store…', style: OrblitText.label),
         ),
         MenuItemButton(
           onPressed: onOpenInCode,
