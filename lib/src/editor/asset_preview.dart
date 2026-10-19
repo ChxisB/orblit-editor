@@ -5,7 +5,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:orblit_filament/orblit_filament.dart';
-import 'package:orblit_mesh/orblit_mesh.dart' show boundsOfGlb, boundsOfGltf;
+import 'package:orblit_mesh/orblit_mesh.dart'
+    show boundsOfGlb, boundsOfGltf, boundsOfObj;
 import 'package:path/path.dart' as p;
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
@@ -82,10 +83,11 @@ class _AssetPreviewState extends State<AssetPreview>
 
   /// How big the file says it is, read once per file.
   ///
-  /// Only the two glTF containers declare it. An `.obj` or an `.fbx` says
-  /// nothing about its own extent without being decoded, so those open at a
-  /// distance that suits a human-sized object and are moved by hand — which
-  /// is honest, and better than framing them confidently and wrongly.
+  /// The two glTF containers declare it, and an `.obj` is read for its
+  /// points. An `.fbx` says nothing about its own extent without being
+  /// decoded, so it opens at a distance that suits a human-sized object and
+  /// is moved by hand — which is honest, and better than framing it
+  /// confidently and wrongly.
   ({Vector3 min, Vector3 max})? _boundsOf(Asset asset) {
     if (_measured == asset.path) return _bounds;
     _measured = asset.path;
@@ -96,6 +98,7 @@ class _AssetPreviewState extends State<AssetPreview>
         _bounds = switch (p.extension(asset.path).toLowerCase()) {
           '.glb' => boundsOfGlb(file.readAsBytesSync()),
           '.gltf' => boundsOfGltf(file.readAsStringSync()),
+          '.obj' => boundsOfObj(file.readAsBytesSync()),
           _ => null,
         };
       }

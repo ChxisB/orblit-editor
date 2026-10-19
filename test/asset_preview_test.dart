@@ -145,16 +145,35 @@ void main() {
       );
     });
 
+    testWidgetsWithRenderer('frames an obj by the points it holds',
+        (tester) async {
+      String obj(double half) =>
+          'v -$half -$half -$half\nv $half -$half -$half\nv 0 $half $half\n'
+          'f 1 2 3\n';
+      File(p.join(root.path, 'small.obj')).writeAsStringSync(obj(0.25));
+      File(p.join(root.path, 'large.obj')).writeAsStringSync(obj(2.5));
+
+      await show(tester);
+
+      await select(tester, 'small.obj');
+      final near = distance(tester);
+
+      await select(tester, 'large.obj');
+      final far = distance(tester);
+
+      expect(far / near, closeTo(10, 0.01));
+    });
+
     testWidgetsWithRenderer(
         'a model that will not say how big it is still opens',
         (tester) async {
-      // An .obj declares nothing about its extent without being decoded. It
+      // An .fbx declares nothing about its extent without being decoded. It
       // gets a sensible distance and a camera somebody can move, which is
       // honest — a confident guess at the wrong scale is worse.
-      File(p.join(root.path, 'crate.obj')).writeAsStringSync('v 0 0 0\n');
+      File(p.join(root.path, 'crate.fbx')).writeAsBytesSync([1, 2, 3]);
 
       await show(tester);
-      await select(tester, 'crate.obj');
+      await select(tester, 'crate.fbx');
 
       expect(distance(tester), greaterThan(0));
       expect(find.byType(OrblitView), findsOneWidget);

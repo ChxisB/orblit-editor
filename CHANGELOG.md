@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.18.0+19
+
+- Size an `.obj` from its points. The asset preview frames it, and a model
+  dropped into the scene is picked and outlined at its real size, where
+  before it was a two-metre cube.
+- Build a collision shape from an `.obj` in the project. An `.fbx` still has
+  no size or collision shape here, because the editor does not cook it.
+
 ## 1.17.0+18
 
 - Add a Vehicle section to a body the solver moves. It sets the steer lock,
