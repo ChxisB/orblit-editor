@@ -3,15 +3,16 @@
 ## 1.19.0+20
 
 - Add Scene > Kit store. It reads a store of kits, shows each as a card with
-  a picture, and opens one to show its notes, its releases, its licence, the
-  engine it is for and the files in it. Nothing is sent to the store until
-  you press Go online.
+  a picture, and opens one to show its notes, its releases, its licence and
+  the engine it is for. Press Show files to list the files in it. Nothing is
+  sent to the store until you press Go online.
 - Search the kits, sort them, and narrow them by licence or tag. Hide the
   ones that hold scripts. A kit made for another engine version is hidden
   until you ask for it.
 - Install a kit into a folder of the project, `assets/kits/<kit>` unless you
   choose another. Pick the files you want. A file the project already has
-  with other bytes is left alone unless you tick it.
+  with other bytes is left alone unless you tick it. If the write fails, the
+  dialog keeps your folder and your ticks.
 - Show the scripts of a kit before anything is written. Installing never
   runs one.
 - Keep a download that was cut and take it up where it stopped. A file that
