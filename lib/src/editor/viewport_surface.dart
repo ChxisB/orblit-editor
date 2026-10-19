@@ -53,6 +53,7 @@ extension _Surface on _SceneViewportState {
                           geometryOf: widget.geometryOf,
                           terrainOf: widget.terrainOf,
                           scatterOf: widget.scatterOf,
+                          surfaceOf: widget.surfaceOf,
                           // Centred on what this view is looking at, so four views
                           // each get a grid under their own camera rather than one
                           // grid the others have run off the edge of.

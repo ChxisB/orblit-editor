@@ -170,6 +170,7 @@ extension _Cinematics on _EditorShellState {
         geometryOf: _geometry.pathFor,
         terrainOf: _terrains.renderFor,
         scatterOf: _terrains.scatterFor,
+        surfaceOf: _surfaces.surfaceFor,
       );
     },
   );

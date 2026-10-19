@@ -90,6 +90,7 @@ class SceneViewport extends StatefulWidget {
     this.modeOverlay,
     this.terrainOf,
     this.scatterOf,
+    this.surfaceOf,
     this.showStats = false,
     this.frameRate,
   });
@@ -283,6 +284,9 @@ class SceneViewport extends StatefulWidget {
   /// draws none.
   final List<OrblitPopulation> Function(Iterable<SceneObject> objects)?
   scatterOf;
+
+  /// The surface an object wearing a shader draws. Null draws none.
+  final OrblitSurface? Function(SceneObject object)? surfaceOf;
 
   @override
   State<SceneViewport> createState() => _SceneViewportState();

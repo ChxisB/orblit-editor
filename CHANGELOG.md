@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.23.0+24
+
+- Draw an object with a shader somebody wrote. Drop a `.oshader` file on
+  the selected object, or press it in the project browser to edit it. The
+  editor cooks every shader in the project when one is saved.
+- Add a Shader section to an object wearing one. It shows the uniforms
+  marked `instance`: a row of colour swatches for `source_color`, a slider
+  for `hint_range`, a field for the rest. Each object keeps its own values in
+  the scene file, and two objects on one shader can differ.
+- Keep drawing the last shader that compiled when a save does not. The
+  console names the file and line of the error once.
+- Add Lit shader and Unlit shader to the New menu.
+- Pictures a shader reads are named in the scene file. There is no picker
+  for one yet.
+
 ## 1.22.0+23
 
 - Add a Particles section to an object. It adds or removes an emitter and
