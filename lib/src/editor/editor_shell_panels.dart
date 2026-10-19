@@ -12,6 +12,7 @@ extension _Panels on _EditorShellState {
     _registerSections(registry.sections);
     registry.gizmos
       ..register(bodyGizmo())
+      ..register(soundGizmo())
       ..register(jointGizmo())
       ..register(
         skeletonGizmo(
@@ -268,6 +269,7 @@ extension _Panels on _EditorShellState {
       ..register(jointSection(), before: 'interface')
       ..register(vehicleSection(), before: 'interface')
       ..register(wheelSection(), before: 'interface')
+      ..register(soundSection(), before: 'interface')
       ..register(terrainSection(bench: _terrains), before: 'interface');
     sections.register(
       motionSection(
