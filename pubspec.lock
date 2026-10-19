@@ -326,7 +326,14 @@ packages:
       path: "../orblit/packages/orblit_asset"
       relative: true
     source: path
-    version: "0.15.0"
+    version: "0.25.0"
+  orblit_audio:
+    dependency: transitive
+    description:
+      path: "../orblit/packages/orblit_audio"
+      relative: true
+    source: path
+    version: "0.2.0"
   orblit_camera:
     dependency: transitive
     description:
@@ -334,6 +341,13 @@ packages:
       relative: true
     source: path
     version: "0.2.0"
+  orblit_cells:
+    dependency: transitive
+    description:
+      path: "../orblit/packages/orblit_cells"
+      relative: true
+    source: path
+    version: "0.1.0"
   orblit_core:
     dependency: transitive
     description:
@@ -347,14 +361,14 @@ packages:
       path: "../orblit/packages/orblit_examples"
       relative: true
     source: path
-    version: "0.34.0"
+    version: "0.35.0"
   orblit_filament:
     dependency: "direct main"
     description:
       path: "../orblit/packages/orblit_filament"
       relative: true
     source: path
-    version: "0.37.0"
+    version: "0.41.0"
   orblit_light:
     dependency: "direct main"
     description:
@@ -368,7 +382,7 @@ packages:
       path: "../orblit/packages/orblit_mesh"
       relative: true
     source: path
-    version: "0.5.0"
+    version: "0.6.0"
   orblit_motion:
     dependency: "direct main"
     description:
@@ -390,6 +404,20 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  orblit_particles:
+    dependency: transitive
+    description:
+      path: "../orblit/packages/orblit_particles"
+      relative: true
+    source: path
+    version: "0.2.0"
+  orblit_profile:
+    dependency: "direct main"
+    description:
+      path: "../orblit/packages/orblit_profile"
+      relative: true
+    source: path
+    version: "0.1.0"
   orblit_rig:
     dependency: transitive
     description:
@@ -403,7 +431,7 @@ packages:
       path: "../orblit/packages/orblit_scene"
       relative: true
     source: path
-    version: "0.19.0"
+    version: "0.24.0"
   orblit_sequence:
     dependency: transitive
     description:
@@ -417,28 +445,28 @@ packages:
       path: "../orblit/packages/orblit_sprite"
       relative: true
     source: path
-    version: "0.3.0"
+    version: "0.4.0"
   orblit_stage:
     dependency: "direct main"
     description:
       path: "../orblit/packages/orblit_stage"
       relative: true
     source: path
-    version: "0.8.0"
+    version: "0.18.0"
   orblit_terrain:
     dependency: "direct main"
     description:
       path: "../orblit/packages/orblit_terrain"
       relative: true
     source: path
-    version: "0.4.0"
+    version: "0.5.0"
   orblit_ui:
     dependency: "direct main"
     description:
       path: "../orblit/packages/orblit_ui"
       relative: true
     source: path
-    version: "0.1.0"
+    version: "0.4.0"
   orblit_weather:
     dependency: "direct main"
     description:
