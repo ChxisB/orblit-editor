@@ -175,6 +175,48 @@ void main() {
       expect(loaded.strings.locale, 'fr');
     });
 
+    test('the one table is kept, so a view that holds it stays live', () {
+      write('fr.json', '{"play": "Jouer"}');
+      final loaded = bench()..loadStrings();
+      final held = loaded.strings;
+      var heard = 0;
+      held.addListener(() => heard++);
+
+      loaded.loadStrings();
+      loaded.strings.use('fr');
+
+      expect(identical(loaded.strings, held), isTrue);
+      expect(heard, greaterThan(0));
+    });
+
+    test('opens in a language the project has when it has no en', () {
+      write('fr.json', '{"play": "Jouer"}');
+      write('de.json', '{"play": "Spielen"}');
+      final loaded = bench()..loadStrings();
+      expect(loaded.strings.locale, 'de');
+      expect(loaded.strings.text('play'), 'Spielen');
+    });
+
+    test('a folder that cannot be listed is reported, not thrown', () {
+      write('fr.json', '{"play": "Jouer"}');
+      final folder = Directory(stringsPath(root));
+      Process.runSync('chmod', ['000', folder.path]);
+      addTearDown(() => Process.runSync('chmod', ['755', folder.path]));
+      // A user that may list it anyway, such as root, proves nothing here.
+      var listable = true;
+      try {
+        folder.listSync();
+      } on FileSystemException {
+        listable = false;
+      }
+      if (listable) return;
+
+      final loaded = bench()..loadStrings();
+
+      expect(loaded.strings.locales, isEmpty);
+      expect(loaded.stringProblems.single, startsWith('strings/'));
+    });
+
     test('a project with no strings folder has no languages', () {
       final loaded = bench()..loadStrings();
       expect(loaded.strings.locales, isEmpty);

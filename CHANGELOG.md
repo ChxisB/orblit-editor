@@ -11,6 +11,9 @@
   says which files could not be read. It shows only when the interface has a
   key or the project has a language file.
 - Show the chosen language in the scene view and the game view as well.
+- Start in the first language the project has when it has no `en`.
+- Report a `strings/` folder that cannot be listed, where it stopped the
+  editor from opening an interface.
 - The language shown is a view. It is not saved in the interface file.
 
 ## 1.17.0+18

@@ -82,7 +82,7 @@ class _Side extends StatelessWidget {
       children: [
         _add(),
         if (selected != null) _properties(selected),
-        if (_speaksMore) _languages(),
+        if (_speaksMore) _Languages(bench: bench),
         _canvas(),
         _grid(),
       ],
@@ -267,64 +267,6 @@ class _Side extends StatelessWidget {
     );
   }
 
-  // The language the canvas speaks, for checking a layout against the
-  // longest words. A view like the device, so none of it is a step to undo.
-  Widget _languages() {
-    final strings = bench.strings;
-    final gaps = bench.missing;
-    final lacking = gaps[strings.locale] ?? const <String>[];
-    return OrblitSection(
-      title: 'Languages',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Wrap(
-            spacing: Space.xs,
-            runSpacing: Space.xs,
-            children: [
-              for (final locale in strings.locales)
-                _Chip(
-                  label: locale,
-                  tooltip: '${gaps[locale]?.length ?? 0} keys missing',
-                  selected: strings.locale == locale,
-                  onTap: () => strings.use(locale),
-                ),
-              _Chip(
-                label: 'Reload',
-                tooltip: 'Read the files in strings/ again.',
-                icon: Icons.refresh,
-                onTap: bench.loadStrings,
-              ),
-            ],
-          ),
-          if (strings.locales.isEmpty)
-            _note('One file in strings/ for each language, such as fr.json.'),
-          for (final problem in bench.stringProblems) _note(problem),
-          if (lacking.isNotEmpty) ...[
-            const SizedBox(height: Space.sm),
-            Text(
-              'MISSING IN ${strings.locale.toUpperCase()}',
-              style: OrblitText.section,
-            ),
-            const SizedBox(height: Space.xs),
-            for (final key in lacking) _note(key, mono: true),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _note(String words, {bool mono = false}) => Padding(
-    padding: const EdgeInsets.only(top: Space.xs),
-    child: Text(
-      words,
-      style: (mono ? OrblitText.mono : OrblitText.label).copyWith(
-        fontSize: 10.5,
-        color: OrblitColors.inkDim,
-      ),
-    ),
-  );
-
   Widget _canvas() {
     final canvas = document.canvas;
     return OrblitSection(
@@ -487,4 +429,79 @@ class _Side extends StatelessWidget {
       ),
     );
   }
+}
+
+// The language the canvas speaks, for checking a layout against the longest
+// words. A view like the device, so none of it is a step to undo.
+final class _Languages extends StatelessWidget {
+  const _Languages({required this.bench});
+
+  final InterfaceBench bench;
+
+  @override
+  Widget build(BuildContext context) {
+    final strings = bench.strings;
+    final gaps = bench.missing;
+    final lacking = gaps[strings.locale] ?? const <String>[];
+    return OrblitSection(
+      title: 'Languages',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            spacing: Space.xs,
+            runSpacing: Space.xs,
+            children: [
+              for (final locale in strings.locales)
+                _Chip(
+                  label: locale,
+                  tooltip: '${gaps[locale]?.length ?? 0} keys missing',
+                  selected: strings.locale == locale,
+                  onTap: () => strings.use(locale),
+                ),
+              _Chip(
+                label: 'Reload',
+                tooltip: 'Read the files in strings/ again.',
+                icon: Icons.refresh,
+                onTap: bench.loadStrings,
+              ),
+            ],
+          ),
+          if (strings.locales.isEmpty)
+            const _Note(
+              'One file in strings/ for each language, such as fr.json.',
+            ),
+          for (final problem in bench.stringProblems) _Note(problem),
+          if (lacking.isNotEmpty) ...[
+            const SizedBox(height: Space.sm),
+            Text(
+              'MISSING IN ${strings.locale.toUpperCase()}',
+              style: OrblitText.section,
+            ),
+            const SizedBox(height: Space.xs),
+            for (final key in lacking) _Note(key, mono: true),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+final class _Note extends StatelessWidget {
+  const _Note(this.words, {this.mono = false});
+
+  final String words;
+  final bool mono;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: Space.xs),
+    child: Text(
+      words,
+      style: (mono ? OrblitText.mono : OrblitText.label).copyWith(
+        fontSize: 10.5,
+        color: OrblitColors.inkDim,
+      ),
+    ),
+  );
 }

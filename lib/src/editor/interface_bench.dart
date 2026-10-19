@@ -121,7 +121,7 @@ final class InterfaceBench extends ChangeNotifier {
   /// null when there is no project to read them from.
   final String? stringsFolder;
 
-  UiStrings _strings = UiStrings();
+  final UiStrings _strings = UiStrings();
 
   /// The words of every language the project has, and the one shown. A view
   /// like the device: the language being looked at is not saved in the file.
@@ -139,43 +139,57 @@ final class InterfaceBench extends ChangeNotifier {
 
   /// Reads the language files again, in place of the tables held.
   ///
-  /// A new table rather than more keys added to the old one, so a key
-  /// somebody took out of a file is gone from the canvas too. The language
-  /// being shown carries over.
+  /// The tables are emptied first, so a key somebody took out of a file is
+  /// gone from the canvas too. The one object stays, because the scene view
+  /// and the game view hold it. The language being shown carries over, or
+  /// is the first one the project has when it has none of that name.
   void loadStrings() {
-    final fresh = UiStrings(locale: _strings.locale);
-    final folder = stringsFolder;
-    _stringProblems = folder == null ? const [] : _readLanguages(folder, fresh);
-    _strings
-      ..removeListener(notifyListeners)
-      ..dispose();
-    _strings = fresh..addListener(notifyListeners);
+    final read = _readLanguages(stringsFolder);
+    final problems = [...read.problems];
+    _strings.clear();
+    for (final MapEntry(key: locale, value: source) in read.sources.entries) {
+      try {
+        _strings.addJson(locale, source);
+      } on FormatException {
+        problems.add('$locale.json is not one object of key to text.');
+      }
+    }
+    _stringProblems = problems;
+    final has = _strings.locales;
+    if (has.isNotEmpty && !has.contains(_strings.locale)) _strings.use(has[0]);
     notifyListeners();
   }
 
-  /// Adds each `.json` file in [folder] to [into] as the language it is
-  /// named for, and says which ones could not be added.
-  static List<String> _readLanguages(String folder, UiStrings into) {
-    if (!Directory(folder).existsSync()) return const [];
-    final files = [
+  /// The text of each `.json` file in [folder], by the language it is named
+  /// for, and which ones could not be read.
+  static ({Map<String, String> sources, List<String> problems}) _readLanguages(
+    String? folder,
+  ) {
+    final sources = <String, String>{};
+    final problems = <String>[];
+    try {
+      for (final file in _languageFiles(folder)) {
+        try {
+          sources[p.basenameWithoutExtension(file.path)] = file
+              .readAsStringSync();
+        } on FileSystemException catch (error) {
+          problems.add(
+            '${p.basename(file.path)} could not be read: ${error.message}',
+          );
+        }
+      }
+    } on FileSystemException catch (error) {
+      problems.add('strings/ could not be listed: ${error.message}');
+    }
+    return (sources: sources, problems: problems);
+  }
+
+  static List<File> _languageFiles(String? folder) {
+    if (folder == null || !Directory(folder).existsSync()) return const [];
+    return [
       for (final entry in Directory(folder).listSync())
         if (entry is File && p.extension(entry.path) == '.json') entry,
     ]..sort((a, b) => a.path.compareTo(b.path));
-    final problems = <String>[];
-    for (final file in files) {
-      final name = p.basename(file.path);
-      try {
-        into.addJson(
-          p.basenameWithoutExtension(file.path),
-          file.readAsStringSync(),
-        );
-      } on FormatException {
-        problems.add('$name is not one object of key to text.');
-      } on FileSystemException catch (error) {
-        problems.add('$name could not be read: ${error.message}');
-      }
-    }
-    return problems;
   }
 
   @override
