@@ -5,8 +5,6 @@ using Orblit.Json;
 using Orblit.VectorMath;
 using Doc = Orblit.Scene;
 
-// The three tests that copy an instance and the one that moves an instance between scenes go
-// through the clipboard and the commands, and follow with them.
 public sealed class PrefabTests : IDisposable
 {
     private const string LampAsset = "prefabs/Lamp post" + PrefabFiles.Extension;
@@ -64,6 +62,13 @@ public sealed class PrefabTests : IDisposable
         return ((IReadOnlyList<object?>)json["entities"]!)
             .Cast<IReadOnlyDictionary<string, object?>>()
             .ToDictionary(entry => (string)entry["id"]!);
+    }
+
+    // Ids that do not collide with the ones already in a scene.
+    private static Func<string> Counter()
+    {
+        var next = 0;
+        return () => $"new{next++}";
     }
 
     private static void Overwrite(PrefabFiles files, string asset, Doc.PrefabDocument prefab) =>
@@ -200,5 +205,88 @@ public sealed class PrefabTests : IDisposable
         Assert.Contains("could not be read", Assert.Single(load.Problems));
         Assert.Equal(["lamp1"], load.Scene.Objects.Select(o => o.Id));
         Assert.Equal(["lamp1"], SavedObjects(SceneDocument.Encode(load.Scene, prefabs: files.Find)).Keys);
+    }
+
+    [Fact]
+    public void CopyingAnInstancePastesAnotherInstanceItsPartsUnderItsNewId()
+    {
+        var scene = SceneDocument.Decode(SceneWith(["lamp1"]), Project().Find).Scene;
+        scene["lamp1/bulb"]!.Colour = new Colour(0xFF3366FF);
+
+        var clipboard = new SceneClipboard();
+        clipboard.Take(scene, ["lamp1"]);
+        var pasted = clipboard.Contents(Counter());
+        var byId = pasted.Objects.ToDictionary(one => one.Id);
+
+        Assert.Equal(["new0", "new0/bulb", "new0/post"], byId.Keys.Order());
+        Assert.Equal(LampAsset, byId["new0"].Prefab?.Asset);
+        Assert.Equal("new0", byId["new0/bulb"].ParentId);
+        Assert.Equal(0xFF3366FFu, byId["new0/bulb"].Colour.Argb);
+        Assert.Equal(["new0"], pasted.Roots);
+    }
+
+    [Fact]
+    public void CopyingAnInstanceAPartCopiedOnItsOwnPastesAsAnOrdinaryObject()
+    {
+        var scene = SceneDocument.Decode(SceneWith(["lamp1"]), Project().Find).Scene;
+
+        var clipboard = new SceneClipboard();
+        clipboard.Take(scene, ["lamp1/bulb"]);
+        var pasted = clipboard.Contents(Counter()).Objects.Single();
+
+        Assert.Equal("new0", pasted.Id);
+        Assert.Null(pasted.Prefab);
+    }
+
+    [Fact]
+    public void CopyingAnInstanceTextFromAnOlderEditorIsReadAtTheVersionItWasWritten()
+    {
+        var text = JsonText.Encode(
+            new Dictionary<string, object?>
+            {
+                ["kind"] = "orblit.objects",
+                ["formatVersion"] = 4L,
+                ["roots"] = new List<object?> { "a" },
+                ["objects"] = new List<object?>
+                {
+                    new Dictionary<string, object?>
+                    {
+                        ["id"] = "a",
+                        ["name"] = "Old lamp",
+                        ["components"] = new Dictionary<string, object?>
+                        {
+                            ["prefab"] = new Dictionary<string, object?> { ["asset"] = LampAsset },
+                        },
+                    },
+                },
+            });
+
+        var clipboard = new SceneClipboard();
+        Assert.True(clipboard.TakeText(text));
+        var pasted = clipboard.Contents(Counter()).Objects.Single();
+
+        Assert.Equal(Doc.PrefabState.Stamped, pasted.Prefab?.State);
+    }
+
+    [Fact]
+    public void MovingAnInstanceToAnotherSceneAnInstanceWhoseIdIsTakenThereBringsItsPartsAlong()
+    {
+        var from = SceneDocument.Decode(SceneWith(["lamp"]), Project().Find).Scene;
+        var to = new EditorScene([new SceneObject("lamp", "Their lamp", ObjectKind.Group)]);
+        var workspace = new Workspace("/project");
+        workspace.Add(new SceneEntry("a", "A", scene: from));
+        workspace.Add(new SceneEntry("b", "B", scene: to));
+        var history = new History(workspace);
+
+        history.Run(new MoveBetweenScenes("a", "b", "lamp", "Lamp post", null, 1));
+
+        Assert.Equal(LampAsset, to["lamp~1"]!.Prefab?.Asset);
+        Assert.Equal("lamp~1", to["lamp~1/bulb"]!.ParentId);
+        Assert.Equal("lamp~1", to["lamp~1/post"]!.ParentId);
+        Assert.Equal(0, from.Length);
+
+        history.Undo();
+        Assert.Equal("lamp", from["lamp/bulb"]!.ParentId);
+        Assert.Equal(1, to.Length);
     }
 }
