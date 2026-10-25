@@ -1,0 +1,131 @@
+{
+  "formatVersion": 5,
+  "name": "Scene",
+  "sky": "#1A2029",
+  "ambient": 28000.0,
+  "time": {
+    "hour": 10.0,
+    "cycle": false,
+    "hoursPerSecond": 0.5
+  },
+  "entities": [
+    {
+      "id": "sun",
+      "name": "Sun",
+      "components": {
+        "transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            -55.0,
+            35.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "light": {
+          "kind": "sun",
+          "power": 1400.0,
+          "colour": "#FFF3E0",
+          "spotSize": 45.0,
+          "spotBlend": 0.15,
+          "sourceRadius": 0.1,
+          "sunAngle": 0.526,
+          "body": "sun",
+          "castShadows": true
+        }
+      }
+    },
+    {
+      "id": "ground",
+      "name": "Ground",
+      "components": {
+        "transform": {
+          "position": [
+            0.0,
+            -1.05,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            8.0,
+            0.05,
+            8.0
+          ]
+        },
+        "mesh": {
+          "colour": "#3B424C",
+          "castShadows": true,
+          "receiveShadows": true
+        }
+      }
+    },
+    {
+      "id": "character",
+      "name": "Character",
+      "components": {
+        "transform": {
+          "position": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rotation": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            0.5,
+            0.9,
+            0.5
+          ]
+        },
+        "mesh": {
+          "colour": "#E5B84F",
+          "castShadows": true,
+          "receiveShadows": true
+        }
+      }
+    },
+    {
+      "id": "camera",
+      "name": "Follow Camera",
+      "components": {
+        "transform": {
+          "position": [
+            0.0,
+            3.0,
+            7.0
+          ],
+          "rotation": [
+            -15.0,
+            0.0,
+            0.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "camera": {
+          "fieldOfView": 50.0,
+          "near": 0.1,
+          "far": 1000.0
+        }
+      }
+    }
+  ]
+}

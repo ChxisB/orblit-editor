@@ -55,7 +55,7 @@ them, into `~/.orblit/feed` unless `ORBLIT_FEED` names another.
 | --- | --- | --- | --- | --- | --- | --- |
 | `host_paths_test.dart` | `HostPathsTests` | 8 | 8 | 8 | 0 | done |
 | `store_settings_test.dart` | `StoreSettingsTests` | 6 | 6 | 6 | 3: no temporary file left, a file in the shape Dart writes, and the text written byte for byte | done. The address rules come from `KitStoreClient.AddressProblem`, so the Core now reads the Asset package |
-| `launcher_test.dart` | `ProjectTests` | 16 | 16 | 4 | 0 | partial. The four in "a project on disk" are here. The other twelve are widget tests of the projects list and the create dialog, and wait for the launcher in row 7 |
+| `launcher_test.dart` | `ProjectTests`, `LauncherWindowTests` | 16 | 16 | 16 | 0 | done. The four in "a project on disk" are in `ProjectTests`. The twelve widget tests of the projects list and the create form are in `LauncherWindowTests`, row 7 |
 | none, the Dart has no test | `ProjectTests` | 0 | 0 | 0 | 14: create, refuse, folder names, the recents list, a Dart-shaped time and file | added |
 
 `ProjectStore` takes the path of the recents file, where Dart asked the platform
@@ -69,8 +69,9 @@ nothing in it waits any more.
 | Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | `command_shortcuts_test.dart` | `CommandShortcutsTests` | 12 | 16 | 16 | 1: Command is still seen with Shift held | done. The two widget tests hold a key in a live keyboard, so they pass the held modifiers in |
-| `command_palette_test.dart` | `CommandPaletteTests` | 13 | 13 | 6 | 2: a group's title, and the entry handed back unrun | partial. The six search tests are here. The seven dialog tests are widget tests and wait for the shell in row 6 |
-| `editor_shell_palette_test.dart` | none | 5 | 5 | 0 | 0 | waits for the shell in row 6 |
+| `command_palette_test.dart` | `CommandPaletteTests`, `PaletteDialogTests` | 13 | 13 | 13 | 5: a group's title, the entry handed back unrun, the lit span of a label, one heading for each group, and the keys and meta beside a row | done. The six search tests are in `CommandPaletteTests` and the seven dialog tests in `PaletteDialogTests` |
+| `editor_shell_palette_test.dart` | `EditorWindowTests` | 5 | 5 | 4 | 0 | partial, counted in row 6 |
+| none, the Dart builds the entries inside the shell widget | `PaletteEntriesTests` | 0 | 0 | 0 | 6: every mode by name, undo and redo with their labels, the keys the host uses, an object selected, an object's parent, the focus entry | added |
 | none, the Dart has no test | `ShortcutMapTests` | 0 | 0 | 0 | 12: the map of keystrokes to verbs | added |
 
 The key map moved out of `editor_shell_intents.dart` and the `_nudges` table in
@@ -84,3 +85,66 @@ platform, and `HostPlatforms.Current` reads the operating system once, where the
 shell is wired (F10). The palette search lower-cases one character at a time, so
 a label with a capital dotted I lights up a different span from Dart.
 `PaletteEntry.Icon` is a name where Dart held an `IconData`.
+
+The dialog gives back the entry it was asked for and the window runs it once the
+dialog has closed, as Dart does. A row is chosen by a tap, which is a press and
+a release on the same row. `PaletteEntries.For` lists the commands the session
+can do so far. Add, delete, copy and frame join them with their panels in task
+16 and the viewport in task 15.
+
+## Row 6, the editor shell
+
+| Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| `editor_shell_palette_test.dart` | `EditorWindowTests` | 5 | 5 | 4 | 0 | partial. "Go to terrain" became "go to modelling", because terrain joins the modes in task 16. "A command that changes the scene can be undone" waits for the add commands in task 16 |
+| `editor_shell_layouts_test.dart` | `EditorSessionTests` | 3 | 3 | 2 | 0 | partial. Per-mode arrangements and focus are here. "Performance numbers are behind Stats" is tested only as the toggle, because the numbers are drawn by the viewport in task 15 |
+| `editor_shell_workspaces_test.dart` | `EditorSessionTests` | 16 | 16 | 4 | 0 | partial. The order of the rail, the panels for each job, reset and each remembering its arrangement are here. The rest need icons, terrain, cinematics, interface or the modelling panel |
+| `editor_shell_panels_test.dart` | `EditorSessionTests`, `EditorWindowTests` | 11 | 11 | 5 | 0 | partial. Closing and opening a panel, remembering, locking, a damaged layout and a layout from before workspaces are here. The rest need the viewport, the game view or the profile panel |
+| none, the Dart has no test | `EditorSessionTests`, `EditorWindowTests` | 0 | 0 | 0 | 38: the session without a window, and the window reading and writing it | added |
+
+`editor_shell_test.dart` (15) is not counted. Most of it reads the outliner, the
+inspector and the project browser, which are task 16. Its save, unsaved marker
+and refused-newer-file tests have behaviour twins in `EditorSessionTests` and
+`ProjectWorkspaceTests`, and are left out of the count until the panels join
+them.
+
+`EditorSession` holds what the Dart `EditorShell` kept in widget state, so a
+test can drive the editor with no window. `EditorWindow` draws it. The dock is a
+small host of our own, which reads and writes the same layout JSON as Dart.
+The window acts only on Undo, Redo, Save and Palette, and lets every other key
+pass. Panels show their name until they are ported. The rail and the tabs are
+words, because no icon set is bundled yet (decision 84).
+
+## Row 7, the launcher
+
+| Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| `launcher_test.dart` | `LauncherWindowTests`, `ProjectTests` | 16 | 16 | 16 | 0 | done. Four are in `ProjectTests`, counted in row 4 |
+| `launcher_view_test.dart` | `LauncherWindowTests` | 4 | 4 | 4 | 0 | done |
+| none, the Dart has no test | `LauncherWindowTests` | 0 | 0 | 0 | 29: the splash, the complaint, the grid, keyboard reach for the forget button, defaults, and the create and browse flow | added |
+| none, the Dart kept this in widgets | `LauncherSessionTests` | 0 | 0 | 0 | 25: the view, the template, the search, open, forget and create, with no control | added |
+
+The launcher session holds the view, the template, the search and the rules for
+opening and creating, so a test reaches them with no widget. The splash is drawn
+in code and covers the launcher only. The 622 KB logo picture is not bundled,
+because a binary asset is Chris's call. There is no Examples page until task 17.
+
+## Files the Dart editor wrote
+
+| Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| `tool/parity/dart_files_test.dart` (an exporter, not a test) | `DartFilesTests` | 0 | 0 | 0 | 10: a project file, three template scenes, four layouts, the layouts the code builds, and a layout library | added |
+
+The exporter writes the files the Dart editor saves into
+`dotnet/Orblit.Editor.Tests/Fixtures/dart`. Each C# test reads one and writes
+it again, and the two texts must be equal byte for byte. That proves a Dart
+project opens in the C# editor and, because the C# text is the Dart text, the
+reverse. The reverse was not run in the Dart editor.
+
+To rebuild the fixtures, run this from the Dart `orblit-editor` package, where
+the packages are resolved:
+
+```
+ORBLIT_PARITY_OUT=<worktree>/dotnet/Orblit.Editor.Tests/Fixtures/dart \
+  flutter test <worktree>/tool/parity/dart_files_test.dart
+```

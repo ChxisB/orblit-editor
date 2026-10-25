@@ -403,6 +403,29 @@ public sealed class LauncherWindowTests : IDisposable
     });
 
     [Fact]
+    public Task TheLauncherOpensOnTheProjectListAndNotTheForm() => Headless.Run(() =>
+    {
+        var (_, window) = Open();
+
+        // Somebody opening the editor is usually coming back to something rather than starting from nothing.
+        Assert.True(Has(window, "search"));
+        Assert.False(Has(window, "create"));
+        window.Close();
+    });
+
+    [Fact]
+    public Task ATemplateCardOpensTheFormWithThatTemplateChosen() => Headless.Run(() =>
+    {
+        var (_, window) = Open();
+
+        Tap(window, Find<Card>(window, $"template_{ProjectTemplate.ThirdPerson}"));
+
+        Assert.True(Has(window, "create"));
+        Assert.Equal([ProjectTemplate.ThirdPerson], ChosenTemplates(window));
+        window.Close();
+    });
+
+    [Fact]
     public Task TheProjectsItemInTheRailLeavesTheForm() => Headless.Run(() =>
     {
         var (session, window) = Open();
