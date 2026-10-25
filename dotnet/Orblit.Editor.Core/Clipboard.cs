@@ -192,11 +192,21 @@ public sealed class SceneClipboard
             return false;
         }
 
+        // Read before anything is cleared, so a world that cannot be read never costs the copy that
+        // is already held.
+        Adopt(objects, kept, ReadWorlds(parsed.GetValueOrDefault("worlds"), objects));
+        return true;
+    }
+
+    private void Adopt(List<SceneObject> objects, List<string> roots, Dictionary<string, Matrix4> worlds)
+    {
         Clear();
         _objects.AddRange(objects);
-        _roots.AddRange(kept);
-        ReadWorlds(parsed.GetValueOrDefault("worlds"));
-        return true;
+        _roots.AddRange(roots);
+        foreach (var (id, world) in worlds)
+        {
+            _worlds[id] = world;
+        }
     }
 
     private static IReadOnlyDictionary<string, object?>? Parse(string text)
@@ -211,19 +221,26 @@ public sealed class SceneClipboard
         }
     }
 
-    private void ReadWorlds(object? worlds)
+    // The system clipboard is anybody's to write, so a world is kept only when it is sixteen numbers
+    // for an object that came with it. Dart takes the others and throws on the paste.
+    private static Dictionary<string, Matrix4> ReadWorlds(object? worlds, List<SceneObject> objects)
     {
+        var read = new Dictionary<string, Matrix4>();
         if (worlds is not IReadOnlyDictionary<string, object?> map)
         {
-            return;
+            return read;
         }
 
         foreach (var (id, values) in map)
         {
-            if (values is IReadOnlyList<object?> { Count: 16 } list)
+            if (values is IReadOnlyList<object?> { Count: 16 } list
+                && list.All(value => value is long or double)
+                && objects.Any(one => one.Id == id))
             {
-                _worlds[id] = Matrix4.FromList([.. list.Select(value => Convert.ToDouble(value, CultureInfo.InvariantCulture))]);
+                read[id] = Matrix4.FromList([.. list.Select(value => Convert.ToDouble(value, CultureInfo.InvariantCulture))]);
             }
         }
+
+        return read;
     }
 }

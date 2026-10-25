@@ -284,6 +284,25 @@ public sealed class ClipboardTests
         Assert.Equal("Cube", loaded.Description);
     }
 
+    // The system clipboard is anybody's to write, so a world is kept only when it is sixteen numbers
+    // for an object that came with it.
+    [Theory]
+    [InlineData("[1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]")]
+    [InlineData("[\"x\",0,0,0,0,1,0,0,0,0,1,0,0,0,0,1]")]
+    public void ThroughTextAWorldThatCannotBeUsedIsLeftOutAndPastingStillWorks(string ghost)
+    {
+        var text = Taken(EditorScene.Starter(), "cube").ToText()
+            .Replace("\"worlds\": {", $"\"worlds\": {{\"ghost\": {ghost},", StringComparison.Ordinal);
+        var to = Taken(EditorScene.Starter(), "props");
+
+        Assert.True(to.TakeText(text));
+
+        Assert.Equal("Cube", to.Description);
+        var contents = to.Contents(Counter());
+        Assert.Single(contents.Objects);
+        Assert.Single(contents.Worlds);
+    }
+
     [Fact]
     public void ThroughTextIsReadableRatherThanAnOpaqueBlob()
     {

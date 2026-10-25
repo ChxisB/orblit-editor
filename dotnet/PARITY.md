@@ -35,7 +35,7 @@ them, into `~/.orblit/feed` unless `ORBLIT_FEED` names another.
 | Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | `history_test.dart` | `HistoryTests` | 33 | 33 | 33 | 0 | done. The workspace tests of row 3 that this file holds came with it |
-| `clipboard_test.dart` | `ClipboardTests` | 26 | 26 | 26 | 0 | done. The five odd texts stay in one test, as in Dart |
+| `clipboard_test.dart` | `ClipboardTests` | 26 | 26 | 26 | 2: a world that is not numbers, and a world for an object that is not there | done. The five odd texts stay in one test, as in Dart. Both added tests are faults Dart has, fixed in C# only because the system clipboard is anybody's to write |
 | `scene_diff_command_test.dart` | `SceneDiffCommandTests` | 7 | 7 | 7 | 0 | done |
 | none, Dart tests these through widgets | `ObjectCommandTests` | 0 | 0 | 0 | 23: appearance, light, link, geometry, component, time and weather commands, each applied, undone and merged where a drag merges | done |
 

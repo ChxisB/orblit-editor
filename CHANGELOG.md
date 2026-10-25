@@ -30,6 +30,9 @@
   - .NET reads a few loose dates that Dart refuses.
   - `PanelKind.Icon` and `PaletteEntry.Icon` are names, where Dart held an
     `IconData`.
+  - Text on the system clipboard keeps the held copy when a world in it is
+    not sixteen numbers or names no copied object. Dart clears the copy
+    first and throws on the next paste.
 - Faults the C# port copied from the Dart editor, for decision 80:
   - `displayPath` shortens a folder that only shares a prefix with the home
     folder, so `/Users/chrisfoo` shows as `~foo` for the home `/Users/chris`.
