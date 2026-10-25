@@ -388,18 +388,30 @@ public sealed class LauncherWindowTests : IDisposable
     });
 
     [Fact]
-    public Task CancelAndTheRailBothGoBackToTheProjects() => Headless.Run(() =>
+    public Task TheNewProjectButtonOpensTheFormAndCancelLeavesIt() => Headless.Run(() =>
     {
         var (session, window) = Open();
 
-        session.Show(LauncherView.Create);
+        Click(Find<Button>(window, "new_project"));
+        Assert.Equal(LauncherView.Create, session.View);
+        Assert.True(Has(window, "create"));
+
         Click(Find<Button>(window, "cancel"));
         Assert.Equal(LauncherView.Projects, session.View);
         Assert.True(Has(window, "search"));
+        window.Close();
+    });
 
+    [Fact]
+    public Task TheProjectsItemInTheRailLeavesTheForm() => Headless.Run(() =>
+    {
+        var (session, window) = Open();
         session.Show(LauncherView.Create);
+
         Click(Find<Button>(window, "rail_projects"));
+
         Assert.Equal(LauncherView.Projects, session.View);
+        Assert.True(Has(window, "search"));
         window.Close();
     });
 

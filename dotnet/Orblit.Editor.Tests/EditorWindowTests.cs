@@ -285,4 +285,75 @@ public sealed class EditorWindowTests : IDisposable
         Assert.Null(await nothing);
         window.Close();
     });
+
+    private static PaletteDialog Palette(Window window) => Assert.IsType<PaletteDialog>(Assert.Single(window.OwnedWindows));
+
+    // What is chosen runs once the dialog has gone, on a later turn of the dispatcher.
+    private static void TypeAndRun(PaletteDialog palette, string text)
+    {
+        Find<TextBox>(palette, "field").Text = text;
+        Headless.Render();
+        palette.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+        Headless.Render();
+        Headless.Render();
+    }
+
+    [Fact]
+    public Task TheCommandKeyAndKOpenThePaletteAndEscapeClosesIt() => Headless.Run(() =>
+    {
+        var (_, window) = Open();
+        Assert.Empty(window.OwnedWindows);
+
+        window.KeyPressQwerty(PhysicalKey.K, RawInputModifiers.Meta);
+        Headless.Render();
+        var palette = Palette(window);
+
+        palette.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+        Headless.Render();
+        Assert.Empty(window.OwnedWindows);
+        window.Close();
+    });
+
+    [Fact]
+    public Task TheSearchButtonInTheTopBarOpensThePalette() => Headless.Run(() =>
+    {
+        var (_, window) = Open();
+
+        Click(Find<Button>(window, "search_button"));
+        Headless.Render();
+
+        Assert.NotNull(Find<TextBox>(Palette(window), "field"));
+        window.OwnedWindows[0].Close();
+        window.Close();
+    });
+
+    [Fact]
+    public Task AWorkspaceCanBeReachedByNameFromThePalette() => Headless.Run(() =>
+    {
+        var (session, window) = Open();
+        Assert.NotEqual("modelling", session.Mode.Name);
+
+        window.KeyPressQwerty(PhysicalKey.K, RawInputModifiers.Meta);
+        Headless.Render();
+        TypeAndRun(Palette(window), "go to modelling");
+
+        Assert.Empty(window.OwnedWindows);
+        Assert.Equal("modelling", session.Mode.Name);
+        window.Close();
+    });
+
+    [Fact]
+    public Task AnObjectInTheSceneCanBeFoundAndSelectedFromThePalette() => Headless.Run(() =>
+    {
+        var (session, window) = Open();
+        session.History.Run(Add());
+        Assert.Empty(session.Selected);
+
+        window.KeyPressQwerty(PhysicalKey.K, RawInputModifiers.Meta);
+        Headless.Render();
+        TypeAndRun(Palette(window), "extra");
+
+        Assert.Equal(["extra"], session.Selected);
+        window.Close();
+    });
 }

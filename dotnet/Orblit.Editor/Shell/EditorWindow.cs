@@ -99,6 +99,16 @@ public sealed class EditorWindow : Window
         top.Children.Add(_menu);
         _title[Grid.ColumnProperty] = 1;
         top.Children.Add(_title);
+        var search = new Button
+        {
+            Name = "search_button",
+            Content = $"Search commands and objects  {_platform.CommandShortcutLabel("K")}",
+            FontSize = OrblitText.Caption,
+            Margin = new Thickness(Space.Xs),
+        };
+        search.Click += (_, _) => OpenPalette();
+        search[Grid.ColumnProperty] = 2;
+        top.Children.Add(search);
 
         var rail = new StackPanel { Name = "rail", Margin = new Thickness(Space.Sm), Spacing = Space.Xs };
         foreach (var mode in _session.Modes.All)
@@ -176,6 +186,16 @@ public sealed class EditorWindow : Window
         }
     }
 
+    // The dialog is modal, so a second key press cannot open a second palette. What was chosen runs
+    // once the dialog is gone, so a command that opens its own dialog is not stacked under this one.
+    private async void OpenPalette()
+    {
+        if (await PaletteDialog.Choose(this, PaletteEntries.For(_session, _platform)) is { } chosen)
+        {
+            chosen.OnRun();
+        }
+    }
+
     private void ToggleLock() => _session.Relayout(_session.Layout.CopyWith(locked: !_session.Layout.Locked));
 
     private void OnKeyDown(object? sender, KeyEventArgs press)
@@ -202,6 +222,9 @@ public sealed class EditorWindow : Window
                 return true;
             case EditorVerb.Save:
                 _session.Save();
+                return true;
+            case EditorVerb.Palette:
+                OpenPalette();
                 return true;
             default:
                 return false;
