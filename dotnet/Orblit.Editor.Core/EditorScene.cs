@@ -465,7 +465,8 @@ public sealed class EditorScene
         }
 
         // Highest index first, so each removal leaves the earlier indices valid.
-        foreach (var entry in removed.OrderByDescending(one => one.Index))
+        removed.Sort((a, b) => b.Index.CompareTo(a.Index));
+        foreach (var entry in removed)
         {
             _objects.RemoveAt(entry.Index);
             _byId.Remove(entry.Object.Id);

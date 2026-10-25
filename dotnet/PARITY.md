@@ -29,3 +29,9 @@ them, into `~/.orblit/feed` unless `ORBLIT_FEED` names another.
 
 `grid_test.dart` (9) and `selection_outline_test.dart` (7) also belong to task
 15, with `scene_render.dart`.
+
+## Row 2, commands and history
+
+| Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| `history_test.dart` | `HistoryTests` | 33 | 33 | 33 | 0 | done. The workspace tests of row 3 that this file holds came with it |
