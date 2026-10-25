@@ -6,6 +6,11 @@
   <!-- The Orblit packages are the versions the engine had on 2026-10-25. -->
   <ItemGroup>
     <PackageVersion Include="xunit.v3" Version="4.0.2" />
+    <PackageVersion Include="Avalonia" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Headless" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Skia" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.4" />
     <PackageVersion Include="Orblit.Asset" Version="0.25.0" />
     <PackageVersion Include="Orblit.Core" Version="0.1.0" />
     <PackageVersion Include="Orblit.Filament" Version="0.42.0" />

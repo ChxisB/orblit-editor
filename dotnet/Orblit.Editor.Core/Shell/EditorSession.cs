@@ -43,6 +43,9 @@ public sealed class EditorSession
     /// <summary>Raised when the mode, the arrangement, the focus or the selection changes.</summary>
     public event Action? Changed;
 
+    /// <summary>What was said last, for a window that opens after something was already said.</summary>
+    public (string Text, SayLevel Level)? Last { get; private set; }
+
     public Workspace Workspace { get; }
 
     public History History { get; }
@@ -134,7 +137,7 @@ public sealed class EditorSession
     {
         if (problems.Count > 0)
         {
-            Said?.Invoke(
+            Say(
                 problems.Count == 1
                     ? problems[0]
                     : $"{problems.Count} things in that scene could not be read. First: {problems[0]}",
@@ -186,7 +189,7 @@ public sealed class EditorSession
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
-            Said?.Invoke($"Could not save the layout: {error.Message}", SayLevel.Error);
+            Say($"Could not save the layout: {error.Message}", SayLevel.Error);
             return;
         }
 
@@ -197,7 +200,7 @@ public sealed class EditorSession
     {
         if (_library.Find(Mode.Name, name) is not { } saved)
         {
-            Said?.Invoke("That layout could not be read.", SayLevel.Error);
+            Say("That layout could not be read.", SayLevel.Error);
             return;
         }
 
@@ -212,7 +215,7 @@ public sealed class EditorSession
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
-            Said?.Invoke($"Could not delete the layout: {error.Message}", SayLevel.Error);
+            Say($"Could not delete the layout: {error.Message}", SayLevel.Error);
             return;
         }
 
@@ -260,7 +263,7 @@ public sealed class EditorSession
 
         if (entry.Path is null)
         {
-            Said?.Invoke($"{entry.Title} has no file yet. Choose one with Save as.", SayLevel.Error);
+            Say($"{entry.Title} has no file yet. Choose one with Save as.", SayLevel.Error);
             return;
         }
 
@@ -279,6 +282,12 @@ public sealed class EditorSession
 
         entry.Path = path;
         Save();
+    }
+
+    private void Say(string text, SayLevel level)
+    {
+        Last = (text, level);
+        Said?.Invoke(text, level);
     }
 
     private void SaveShared()
@@ -307,14 +316,14 @@ public sealed class EditorSession
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
-            Said?.Invoke($"Could not save {entry.Title}: {error.Message}", SayLevel.Error);
+            Say($"Could not save {entry.Title}: {error.Message}", SayLevel.Error);
             return false;
         }
 
         entry.NeverWritten = false;
         entry.SavedStamp = History.StampFor(entry.Id);
         Workspace.Touched();
-        Said?.Invoke($"Saved {Path.GetRelativePath(Workspace.ProjectDirectory, entry.Path!)}", SayLevel.Info);
+        Say($"Saved {Path.GetRelativePath(Workspace.ProjectDirectory, entry.Path!)}", SayLevel.Info);
         return true;
     }
 

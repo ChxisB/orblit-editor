@@ -5,7 +5,11 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Avalonia.Headless" />
+    <PackageReference Include="Avalonia.Skia" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Orblit.Parity" />
+    <ProjectReference Include="..\Orblit.Editor\Orblit.Editor.csproj" />
     <ProjectReference Include="..\Orblit.Editor.Core\Orblit.Editor.Core.csproj" />
   </ItemGroup>
 </Project>

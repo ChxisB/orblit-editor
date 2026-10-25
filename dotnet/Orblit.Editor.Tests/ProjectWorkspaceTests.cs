@@ -130,6 +130,7 @@ public sealed class ProjectWorkspaceTests : IDisposable
         session.Report(["first", "second"]);
 
         Assert.Equal(2, said.Count);
+        Assert.Equal(said[1], session.Last);
         Assert.Equal(("one", SayLevel.Error), said[0]);
         Assert.Equal(SayLevel.Error, said[1].Level);
         Assert.Contains("2 things", said[1].Text);
