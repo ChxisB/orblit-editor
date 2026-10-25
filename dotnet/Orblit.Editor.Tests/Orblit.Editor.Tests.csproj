@@ -11,6 +11,7 @@
     <PackageReference Include="Orblit.Parity" />
     <ProjectReference Include="..\Orblit.Editor\Orblit.Editor.csproj" />
     <ProjectReference Include="..\Orblit.Editor.Core\Orblit.Editor.Core.csproj" />
+    <ProjectReference Include="..\Orblit.Editor.Panels\Orblit.Editor.Panels.csproj" />
     <ProjectReference Include="..\Orblit.Editor.Viewport\Orblit.Editor.Viewport.csproj" />
   </ItemGroup>
   <ItemGroup>

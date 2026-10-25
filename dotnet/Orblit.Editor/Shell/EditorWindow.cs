@@ -16,29 +16,25 @@ using Orblit.Editor.Core;
 /// does not.
 /// </summary>
 /// <remarks>
-/// shortcut: a panel other than the viewport shows its name until it is ported (task 16), and the
-/// rail and tabs are words because no icon set is bundled yet (decision 84).
+/// shortcut: a panel other than the viewport and the hierarchy shows its name until it is ported
+/// (task 16), and the rail and tabs are words because no icon set is bundled yet (decision 84).
 /// </remarks>
 public sealed class EditorWindow : Window
 {
     private readonly EditorSession _session;
     private readonly bool _renderer;
-    private readonly Dictionary<string, SceneViewport> _viewports = [];
+    private readonly Dictionary<string, Control> _panels = [];
     private readonly HostPlatform _platform;
     private readonly IReadOnlyDictionary<KeyChord, ShortcutAction> _shortcuts;
+    private readonly Dictionary<EditorVerb, Action> _verbs;
     private readonly DockHost _dock;
     private readonly TextBlock _title = new() { Name = "title", HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
     private readonly TextBlock _status = new() { Name = "status", FontSize = OrblitText.Caption };
     private readonly Dictionary<string, Button> _rail = [];
-    private readonly Menu _menu = new() { Name = "menu" };
-    private readonly MenuItem _save;
-    private readonly MenuItem _undo;
-    private readonly MenuItem _redo;
-    private readonly MenuItem _stats;
-    private readonly MenuItem _focus;
-    private readonly MenuItem _loadLayout;
-    private readonly MenuItem _deleteLayout;
-    private readonly MenuItem _lock;
+    private readonly EditorMenu _menu;
+
+    // Keys that mean something else while a text box has the keyboard: delete a letter, copy some words.
+    private static readonly HashSet<EditorVerb> ObjectVerbs = [EditorVerb.Delete, EditorVerb.Copy, EditorVerb.Cut, EditorVerb.Paste, EditorVerb.Duplicate];
 
     /// <param name="session">What the window shows and changes.</param>
     /// <param name="platform">The host's keys, or the one this process runs on.</param>
@@ -56,20 +52,20 @@ public sealed class EditorWindow : Window
         Height = 900;
         Background = OrblitColors.Ground;
 
-        _save = Item("menu_save", "Save", _session.Save, _platform.CommandShortcut(EditorKey.KeyS));
-        var saveAs = Item("menu_save_as", "Save as…", _session.AskForName, _platform.CommandShortcut(EditorKey.KeyS, shift: true));
-        _undo = Item("menu_undo", "Undo", _session.Undo, _platform.CommandShortcut(EditorKey.KeyZ));
-        _redo = Item("menu_redo", "Redo", _session.Redo, _platform.CommandShortcut(EditorKey.KeyZ, shift: true));
-        _stats = Item("menu_stats", "Performance stats", _session.ToggleStats);
-        _stats.ToggleType = MenuItemToggleType.CheckBox;
-        _focus = Item("menu_focus", "Focus view", _session.ToggleFocus);
-        _loadLayout = new MenuItem { Name = "menu_load_layout", Header = "Load layout" };
-        _deleteLayout = new MenuItem { Name = "menu_delete_layout", Header = "Delete layout" };
-        _lock = Item("menu_lock", "Lock layout", ToggleLock);
-
-        _menu.Items.Add(Menu("File", _save, saveAs));
-        _menu.Items.Add(Menu("Edit", _undo, _redo));
-        _menu.Items.Add(Menu("View", _stats, _focus, Item("menu_save_layout", "Save layout…", AskLayoutName), _loadLayout, _deleteLayout, _lock, Item("menu_reset", "Reset panels", _session.ResetPanels), PanelsMenu()));
+        _menu = new EditorMenu(_session, _platform, AskLayoutName);
+        _verbs = new Dictionary<EditorVerb, Action>
+        {
+            [EditorVerb.Undo] = _session.Undo,
+            [EditorVerb.Redo] = _session.Redo,
+            [EditorVerb.Save] = _session.Save,
+            [EditorVerb.SaveAs] = _session.AskForName,
+            [EditorVerb.Palette] = () => OpenPalette(),
+            [EditorVerb.Delete] = _session.DeleteSelection,
+            [EditorVerb.Copy] = _session.Copy,
+            [EditorVerb.Cut] = _session.Cut,
+            [EditorVerb.Paste] = _session.Paste,
+            [EditorVerb.Duplicate] = _session.Duplicate,
+        };
 
         _dock = new DockHost(_session.VisibleLayout, PanelFor);
         _dock.LayoutChanged += layout =>
@@ -148,57 +144,28 @@ public sealed class EditorWindow : Window
         return frame;
     }
 
-    private static MenuItem Menu(string header, params MenuItem[] items)
-    {
-        var menu = new MenuItem { Header = header, Name = $"menu_{header.ToLowerInvariant()}" };
-        foreach (var item in items)
-        {
-            menu.Items.Add(item);
-        }
-
-        return menu;
-    }
-
-    private static MenuItem Item(string name, string header, Action run, KeyChord? chord = null)
-    {
-        var item = new MenuItem { Name = name, Header = header };
-        if (chord is { } shortcut)
-        {
-            item.InputGesture = KeyMapping.GestureOf(shortcut);
-        }
-
-        item.Click += (_, _) => run();
-        return item;
-    }
-
-    private MenuItem PanelsMenu()
-    {
-        var panels = new MenuItem { Name = "menu_panels", Header = "Panels" };
-        foreach (var type in _session.Panels.All)
-        {
-            panels.Items.Add(Item($"panel_{type.Name}", type.Kind.Label, () => _session.OpenPanel(type.Kind)));
-        }
-
-        return panels;
-    }
-
-    // A viewport is kept for each panel and handed to whichever group shows it next. Building a new
-    // one on a change of layout would free its renderer and lose its camera.
+    // A panel is kept for each id and handed to whichever group shows it next. Building a new one on a
+    // change of layout would free a viewport's renderer and lose its camera, or an outliner's filter.
     private Control PanelFor(DockedPanel panel)
     {
-        if (panel.Kind != PanelKind.Viewport)
+        if (!_panels.TryGetValue(panel.Id, out var built))
         {
-            return Placeholder(panel);
+            built = Build(panel);
+            _panels[panel.Id] = built;
         }
 
-        if (!_viewports.TryGetValue(panel.Id, out var viewport))
+        (built.Parent as Panel)?.Children.Remove(built);
+        return built;
+    }
+
+    private Control Build(DockedPanel panel)
+    {
+        if (panel.Kind == PanelKind.Viewport)
         {
-            viewport = new SceneViewport(_session, _renderer);
-            _viewports[panel.Id] = viewport;
+            return new SceneViewport(_session, _renderer);
         }
 
-        (viewport.Parent as Panel)?.Children.Remove(viewport);
-        return viewport;
+        return panel.Kind == PanelKind.Outliner ? new OutlinerPanel(_session, _platform, () => OpenPalette("Add ")) : Placeholder(panel);
     }
 
     private static TextBlock Placeholder(DockedPanel panel) => new TextBlock
@@ -228,15 +195,13 @@ public sealed class EditorWindow : Window
 
     // The dialog is modal, so a second key press cannot open a second palette. What was chosen runs
     // once the dialog is gone, so a command that opens its own dialog is not stacked under this one.
-    private async void OpenPalette()
+    private async void OpenPalette(string query = "")
     {
-        if (await PaletteDialog.Choose(this, PaletteEntries.For(_session, _platform)) is { } chosen)
+        if (await PaletteDialog.Choose(this, PaletteEntries.For(_session, _platform), query) is { } chosen)
         {
             chosen.OnRun();
         }
     }
-
-    private void ToggleLock() => _session.Relayout(_session.Layout.CopyWith(locked: !_session.Layout.Locked));
 
     private void OnKeyDown(object? sender, KeyEventArgs press)
     {
@@ -252,32 +217,26 @@ public sealed class EditorWindow : Window
     // something that does nothing with it.
     private bool RunVerb(EditorVerb verb)
     {
-        switch (verb)
+        if (!_verbs.TryGetValue(verb, out var run) || (ObjectVerbs.Contains(verb) && IsTyping()))
         {
-            case EditorVerb.Undo:
-                _session.Undo();
-                return true;
-            case EditorVerb.Redo:
-                _session.Redo();
-                return true;
-            case EditorVerb.Save:
-                _session.Save();
-                return true;
-            case EditorVerb.SaveAs:
-                _session.AskForName();
-                return true;
-            case EditorVerb.Palette:
-                OpenPalette();
-                return true;
-            default:
-                return false;
+            return false;
         }
+
+        run();
+        return true;
     }
+
+    private bool IsTyping() => GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox;
 
     private void Say(string text, SayLevel level)
     {
         _status.Text = text;
-        _status.Foreground = level == SayLevel.Error ? OrblitColors.Bad : OrblitColors.InkMid;
+        _status.Foreground = level switch
+        {
+            SayLevel.Error => OrblitColors.Bad,
+            SayLevel.Warning => OrblitColors.Warn,
+            _ => OrblitColors.InkMid,
+        };
     }
 
     private void Refresh()
@@ -290,38 +249,12 @@ public sealed class EditorWindow : Window
             button.Foreground = active ? OrblitColors.Ember : OrblitColors.InkMid;
         }
 
-        RefreshMenu();
+        _menu.Refresh();
         var scene = _session.Workspace.Loaded;
         var unsaved = scene is not null && _session.IsUnsaved(scene) ? " •" : "";
         var heading = scene?.Title ?? "No scene";
         _title.Text = $"{heading}{unsaved}";
         _title.Foreground = OrblitColors.InkMid;
         Title = $"Orblit Editor: {heading}{unsaved}";
-    }
-
-    private void RefreshMenu()
-    {
-        var history = _session.History;
-        _save.IsEnabled = _session.Workspace.Loaded is not null;
-        _undo.Header = history.UndoLabel is { } undo ? $"Undo {undo}" : "Undo";
-        _undo.IsEnabled = history.CanUndo;
-        _redo.Header = history.RedoLabel is { } redo ? $"Redo {redo}" : "Redo";
-        _redo.IsEnabled = history.CanRedo;
-        _stats.IsChecked = _session.ShowStats;
-        _focus.Header = _session.IsFocused ? "Show panels" : "Focus view";
-        _lock.Header = _session.Layout.Locked ? "Unlock layout" : "Lock layout";
-        Fill(_loadLayout, "load", _session.LoadLayout);
-        Fill(_deleteLayout, "delete", _session.DeleteLayout);
-    }
-
-    private void Fill(MenuItem menu, string verb, Action<string> run)
-    {
-        menu.Items.Clear();
-        foreach (var name in _session.SavedLayouts)
-        {
-            menu.Items.Add(Item($"{verb}_layout_{name}", name, () => run(name)));
-        }
-
-        menu.IsEnabled = menu.Items.Count > 0;
     }
 }

@@ -74,6 +74,25 @@
     hold, so undoing a step in one scene clears a selection made in another.
   - A main scene that cannot be read opens as an empty starter with no path.
     The same file is also listed as an unloaded sibling.
+- Add `Orblit.Editor.Panels` 0.1.0, the state of the panels with no widget.
+  It holds the hierarchy first: the rows of every open scene, the filter,
+  the folds and where a drop lands.
+- The C# editor has a hierarchy panel. A click selects, command-click adds
+  to the selection and shift-click takes everything between. Filter by
+  name, fold a parent, remove an object from its row, and drag a row to
+  move it. The plus button opens the palette on the add commands. A scene
+  row cannot be loaded or closed yet.
+- Cut, copy, paste, duplicate and delete are in the Edit menu and on keys.
+  A copy leaves text on the system clipboard, so another window or editor
+  can paste it. A copy that cannot reach the clipboard says so in the status
+  line. The Add menu makes an object of each kind and each shape.
+- The edit keys are left to a text box while one has the keyboard. A click on
+  a row takes the keyboard back from it.
+- A message can be a warning, drawn in the warning colour. Adding with no
+  scene loaded says so as a warning.
+- A new object's id is `o`, the time in microseconds, an underscore and a
+  counter. The C# `OutlinerRow` calls the object it holds `Item`, because
+  the analyser rejects `Object` as a name.
 
 ## 1.26.0+27
 

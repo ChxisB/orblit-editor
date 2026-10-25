@@ -1,12 +1,14 @@
 namespace Orblit.Editor.Core;
 
+using Orblit.Mesh;
+
 /// <summary>
 /// What the command palette can find: the commands the menus and the keyboard already have, and the
 /// objects in the scene.
 /// </summary>
 /// <remarks>
-/// shortcut: only the commands the session can do so far. The add, delete, copy and frame commands
-/// join them with the panels that need them (task 16) and the viewport (task 15).
+/// shortcut: only the commands the session can do so far. Frame, play, export and the kit store join
+/// them with the panels that need them (task 16).
 /// </remarks>
 public static class PaletteEntries
 {
@@ -14,6 +16,7 @@ public static class PaletteEntries
     [
         .. Files(session, platform),
         .. Edits(session, platform),
+        .. Adds(session),
         .. Views(session),
         .. Objects(session),
     ];
@@ -38,6 +41,17 @@ public static class PaletteEntries
     [
         Command("Undo", "undo", session.Undo, platform.CommandShortcutLabel("Z"), session.History.UndoLabel ?? ""),
         Command("Redo", "redo", session.Redo, platform.CommandShortcutLabel("Z", shift: true), session.History.RedoLabel ?? ""),
+        Command("Copy", "copy", session.Copy, platform.CommandShortcutLabel("C")),
+        Command("Cut", "content_cut", session.Cut, platform.CommandShortcutLabel("X")),
+        Command("Paste", "content_paste", session.Paste, platform.CommandShortcutLabel("V")),
+        Command("Duplicate", "control_point_duplicate", session.Duplicate, platform.CommandShortcutLabel("D")),
+        Command("Delete", "delete_outline", session.DeleteSelection, "⌫"),
+    ];
+
+    private static PaletteEntry[] Adds(EditorSession session) =>
+    [
+        .. Enum.GetValues<ShapeKind>().Select(shape => Command($"Add {shape.Label}", "category_outlined", () => session.AddShape(shape), meta: "Shape")),
+        .. AddMenu.Items.Select(item => Command($"Add {item.Label}", item.Icon, () => session.Add(item.Kind))),
     ];
 
     private static PaletteEntry[] Views(EditorSession session) =>

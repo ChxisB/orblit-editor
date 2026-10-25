@@ -40,11 +40,15 @@ internal static class Program
     {
         var prefabs = new PrefabFiles(directory);
         var opened = ProjectWorkspace.Open(directory, prefabs.Find);
+        var clipboard = new WindowTextClipboard();
         var session = new EditorSession(opened.Workspace, new History(opened.Workspace), EditorModes.Standard(), PanelTypes.BuiltIn())
         {
             Prefabs = prefabs.Find,
+            TextClipboard = clipboard,
         };
         session.Report(opened.Problems);
-        return new EditorWindow(session, renderer: true);
+        var window = new EditorWindow(session, renderer: true);
+        clipboard.Attach(window);
+        return window;
     }
 }

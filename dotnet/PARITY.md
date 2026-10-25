@@ -154,6 +154,22 @@ The air and the sky in `SceneAir` use FNV-1a keys for materials and surfaces,
 where the Dart uses `Object.hash`. The key values are not part of the parity.
 The rain and snow colour is a double-precision lerp of the two sRGB tints.
 
+## Task 16, the panels
+
+| Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| `editor_shell_hierarchy_test.dart` | `OutlinerModelTests`, `OutlinerPanelTests` | 8 | 8 | 8 | 0 | done. The six filter tests are on the model. The two on the plus button are on the window |
+| `editor_shell_clipboard_test.dart` | `EditorSessionObjectsTests`, `OutlinerPanelTests` | 15 | 15 | 11 | 0 | partial. The four that load, close or unload a scene wait for row 1b: copy between scenes, the clipboard surviving an unload, several into another scene, and a paste landing where it was in the world |
+| none | `OutlinerModelTests` | 0 | 0 | 0 | 15: the rows and their depth, the folds, a scene row with a filter, an unloaded scene, where a drop lands and what a drop refuses | added |
+| none | `EditorSessionObjectsTests` | 0 | 0 | 0 | 26: selecting, adding and naming, ids, deleting, moving, duplicating, the clipboard labels and a clipboard that cannot be reached | added |
+| none | `OutlinerPanelTests` | 0 | 0 | 0 | 10: the rows and the count, the selection drawn, a scene row, the filter message, a fold, the remove button, the edit keys with and without a text box, the Add menu, the Edit menu waiting for a selection and a drop | added |
+| none | `PaletteEntriesTests` | 0 | 0 | 0 | 4: the Edit and Add entries | added |
+
+The Dart outliner test file is `editor_shell_hierarchy_test.dart`. There is no
+`outliner_test.dart`. The drag itself is not driven headless. The tests call
+`Release`, which the drop handler calls, so the drop logic is covered and the
+pointer gesture is not.
+
 ## Files the Dart editor wrote
 
 | Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |

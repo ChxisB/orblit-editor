@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <Description>What the editor's panels hold and decide, without a window: the hierarchy's rows, its filter and where a drop lands.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Orblit.Editor.Core\Orblit.Editor.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Orblit.Editor.Tests" />
+  </ItemGroup>
+</Project>

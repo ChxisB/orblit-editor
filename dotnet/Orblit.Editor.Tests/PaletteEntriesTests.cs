@@ -2,6 +2,7 @@ namespace Orblit.Editor.Tests;
 
 using Doc = Orblit.Scene;
 using Orblit.Editor.Core;
+using Orblit.Mesh;
 
 public sealed class PaletteEntriesTests : IDisposable
 {
@@ -102,5 +103,56 @@ public sealed class PaletteEntriesTests : IDisposable
 
         Assert.True(session.IsFocused);
         Assert.Equal("Show panels", Entry(session, "Show panels").Label);
+    }
+
+    [Fact]
+    public void EveryShapeAndKindCanBeAddedByName()
+    {
+        var session = Session();
+
+        var adds = PaletteEntries.For(session, HostPlatform.MacOS).Where(one => one.Label.StartsWith("Add ")).ToList();
+
+        Assert.Equal(Enum.GetValues<ShapeKind>().Length + AddMenu.Items.Count, adds.Count);
+        Assert.All(adds.Where(one => one.Meta == "Shape"), one => Assert.Contains(one.Label[4..], Enum.GetNames<ShapeKind>()));
+    }
+
+    [Fact]
+    public void AnAddCommandPutsThatThingInTheScene()
+    {
+        var session = Session();
+
+        Entry(session, "Add Sphere").OnRun();
+        Entry(session, "Add Light").OnRun();
+
+        var names = session.Workspace.Loaded!.Scene!.Objects.Select(one => one.Name).ToList();
+        Assert.Contains("Sphere", names);
+        Assert.Contains("Light", names);
+    }
+
+    [Fact]
+    public void DuplicateAndDeleteWorkOnTheSelection()
+    {
+        var session = Session();
+        Entry(session, "Add Group").OnRun();
+        var added = session.Primary!;
+
+        Entry(session, "Duplicate").OnRun();
+        Assert.Equal(2, session.Workspace.Loaded!.Scene!.Objects.Count(one => one.Name == "Group"));
+
+        Entry(session, "Delete").OnRun();
+        Assert.Equal(1, session.Workspace.Loaded!.Scene!.Objects.Count(one => one.Name == "Group"));
+        Assert.True(session.Workspace.Loaded.Scene!.Contains(added));
+    }
+
+    [Fact]
+    public void CopyAndPasteGoThroughTheClipboard()
+    {
+        var session = Session();
+        Entry(session, "Add Group").OnRun();
+
+        Entry(session, "Copy").OnRun();
+        Entry(session, "Paste").OnRun();
+
+        Assert.Equal(2, session.Workspace.Loaded!.Scene!.Objects.Count(one => one.Name == "Group"));
     }
 }

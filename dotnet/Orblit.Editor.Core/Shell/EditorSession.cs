@@ -6,6 +6,7 @@ using Orblit.Scene;
 public enum SayLevel
 {
     Info,
+    Warning,
     Error,
 }
 
@@ -21,7 +22,7 @@ public enum SayLevel
 /// project opens in either editor with its panels where they were left.
 /// </para>
 /// </remarks>
-public sealed class EditorSession
+public sealed partial class EditorSession
 {
     private readonly HashSet<string> _focused = [];
     private readonly LayoutLibrary _library;
@@ -227,8 +228,14 @@ public sealed class EditorSession
 
     public void Select(IReadOnlyList<string> ids)
     {
-        Selected = [.. ids.Distinct()];
-        Primary = Selected.Count == 0 ? null : Selected[^1];
+        var distinct = ids.Distinct().ToList();
+        Choose(distinct, distinct.Count == 0 ? null : distinct[^1]);
+    }
+
+    private void Choose(IReadOnlyList<string> ids, string? primary)
+    {
+        Selected = [.. ids];
+        Primary = primary;
         Changed?.Invoke();
     }
 
