@@ -17,6 +17,13 @@ them, into `~/.orblit/feed` unless `ORBLIT_FEED` names another.
 
 | Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| `boundary_test.dart` | `BoundaryTests` | 15 | 15 | 8 | 1: a kind and an offset read back what was written | partial. The seven tests that go through `SceneObject`, `EditorScene` and `SceneDocument` follow with those |
-| `surface_test.dart` | `SurfaceTests` | 10 | 10 | 6 | 0 | partial. The four tests that go through the scene follow with it |
+| `boundary_test.dart` | `BoundaryTests` | 15 | 15 | 14 | 1: a kind and an offset read back what was written | partial. "it goes with the object" goes through `SceneDocument` and follows with it |
+| `surface_test.dart` | `SurfaceTests` | 10 | 10 | 8 | 0 | partial. The two scene file tests go through `SceneDocument` and follow with it |
 | none, the Dart has no test | `ColourTests` | 0 | 0 | 0 | 10: hex in and out, the fallback, the tint round trip and the clamp | done |
+| `picking_test.dart` | `PickingTests` | 9 | 9 | 9 | 0 | done |
+| `euler_test.dart` | `EulerTests` | 1 | 1 | 1 | 0 | done. The loop of 200 stays inside the one test |
+| `scene_test.dart` | `SceneTests` | 20 | 20 | 2 | 0 | partial. The other 18 read `toRenderScene`, which belongs to the viewport task 15 |
+| `scene_weather_test.dart` | `SceneWeatherTests` | 34 | 34 | 11 | 0 | partial. The other 23 read `toRenderScene`, which belongs to the viewport task 15 |
+
+`grid_test.dart` (9) and `selection_outline_test.dart` (7) also belong to task
+15, with `scene_render.dart`.

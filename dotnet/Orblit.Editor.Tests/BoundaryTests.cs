@@ -75,4 +75,89 @@ public sealed class BoundaryTests
         Assert.Equal(0.15, back.Padding);
         Assert.Equal(0.5, back.Offset.Y);
     }
+
+    private static SceneObject ShapeWith(Boundary boundary, Mesh? mesh = null) =>
+        new(
+            "a",
+            "A",
+            ObjectKind.Shape,
+            shape: mesh is null ? Shape.Of(ShapeKind.Cube) : null,
+            geometry: mesh,
+            boundary: boundary);
+
+    private static (Vector3 Origin, Vector3 Direction) FromAbove(double x, double z) =>
+        (new Vector3(x, 50, z), new Vector3(0, -1, 0));
+
+    private static Mesh Ell() =>
+        new PolyShape(
+            [
+                new Vector3(-1, 0, -1),
+                new Vector3(-1, 0, 1),
+                new Vector3(0, 0, 1),
+                new Vector3(0, 0, 0),
+                new Vector3(1, 0, 0),
+                new Vector3(1, 0, -1),
+            ],
+            height: 1).Build();
+
+    [Fact]
+    public void AShapeGetsTheMeshByDefaultBecauseABoxIsRightByLuck() =>
+        Assert.Equal(BoundaryKind.Mesh, new SceneObject("a", "A", ObjectKind.Shape).Boundary.Kind);
+
+    [Fact]
+    public void PaddingMakesAShapeEasierToHit()
+    {
+        var tight = new EditorScene([ShapeWith(new Boundary())]);
+        var loose = new EditorScene([ShapeWith(new Boundary(padding: 0.3))]);
+        // Just outside the cube, and inside the padded one.
+        var ray = FromAbove(0.65, 0);
+
+        Assert.Null(tight.ObjectAlong(ray.Origin, ray.Direction));
+        Assert.Equal("a", loose.ObjectAlong(ray.Origin, ray.Direction));
+    }
+
+    [Fact]
+    public void ABoxBoundaryFillsTheNotchAMeshOneLeavesOpen()
+    {
+        var ray = FromAbove(0.5, 0.5);
+
+        // The notch is a hole, and a mesh boundary knows it.
+        Assert.Null(new EditorScene([ShapeWith(new Boundary(), Ell())]).ObjectAlong(ray.Origin, ray.Direction));
+
+        // A box does not, and sometimes that is what somebody wants.
+        var boxed = new EditorScene([ShapeWith(new Boundary(BoundaryKind.Box), Ell())]);
+        Assert.Equal("a", boxed.ObjectAlong(ray.Origin, ray.Direction));
+    }
+
+    [Fact]
+    public void NoneMeansNone()
+    {
+        // Decoration to walk through is decoration not to click.
+        var scene = new EditorScene([ShapeWith(new Boundary(BoundaryKind.None))]);
+        var ray = FromAbove(0, 0);
+        Assert.Null(scene.ObjectAlong(ray.Origin, ray.Direction));
+    }
+
+    [Fact]
+    public void AnOffsetBoundaryIsHitWhereItIsNotWhereTheShapeIs()
+    {
+        var shape = ShapeWith(new Boundary(BoundaryKind.Box));
+        shape.Boundary = new Boundary(BoundaryKind.Box, offset: new Vector3(3, 0, 0));
+        var scene = new EditorScene([shape]);
+
+        var there = FromAbove(3, 0);
+        Assert.Equal("a", scene.ObjectAlong(there.Origin, there.Direction));
+
+        var here = FromAbove(0, 0);
+        Assert.Null(scene.ObjectAlong(here.Origin, here.Direction));
+    }
+
+    [Fact]
+    public void ACopyOfAnObjectGetsItsOwnOffset()
+    {
+        var shape = ShapeWith(new Boundary(offset: new Vector3(1, 0, 0)));
+        var copy = shape.Copy();
+        copy.Boundary.Offset.X = 9;
+        Assert.Equal(1, shape.Boundary.Offset.X);
+    }
 }

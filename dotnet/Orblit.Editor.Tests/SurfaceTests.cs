@@ -1,6 +1,8 @@
 namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
+using Orblit.Mesh;
+using Orblit.VectorMath;
 
 public sealed class SurfaceTests
 {
@@ -66,5 +68,37 @@ public sealed class SurfaceTests
         Assert.Null(Surface.FromJson(null));
         Assert.Null(Surface.FromJson("brass"));
         Assert.NotNull(Surface.FromJson(new Dictionary<string, object?>()));
+    }
+
+    [Fact]
+    public void AnOutlineAndAMeshCanBothBeThereAndTheMeshWins()
+    {
+        var shape = new SceneObject(
+            "a",
+            "Room",
+            ObjectKind.Shape,
+            outline: new PolyShape([new Vector3(0, 0, 0), new Vector3(0, 0, 2), new Vector3(2, 0, 2)], height: 1),
+            geometry: Shape.Of(ShapeKind.Cube).Build());
+
+        // Because an outline cannot describe a face that has been extruded, and the corners are
+        // kept only so undoing back to them is possible.
+        Assert.Equal(6, shape.CurrentMesh!.FaceCount);
+        Assert.NotNull(shape.Outline);
+    }
+
+    [Fact]
+    public void ACopyOfAnObjectGetsItsOwnListOfSlots()
+    {
+        var shape = new SceneObject(
+            "a",
+            "Steps",
+            ObjectKind.Shape,
+            surfaces: [new Surface { Name = "Stone" }]);
+        var copy = shape.Copy();
+        copy.Surfaces.Add(new Surface { Name = "Added" });
+
+        // A shared list would grow both.
+        Assert.Single(shape.Surfaces);
+        Assert.Equal(2, copy.Surfaces.Count);
     }
 }
