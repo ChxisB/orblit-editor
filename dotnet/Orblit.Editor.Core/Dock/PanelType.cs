@@ -31,3 +31,21 @@ public static class PanelKinds
 
     public static PanelType? TypeOf(this Registry<PanelType> registry, PanelKind kind) => registry[kind.Name];
 }
+
+public static class PanelTypes
+{
+    /// <summary>
+    /// The panels the editor has always had, in the order the View menu lists them. The first scene
+    /// view opens as <c>scene</c>, which is what every layout written before this called it.
+    /// </summary>
+    public static Registry<PanelType> BuiltIn()
+    {
+        var panels = new Registry<PanelType>();
+        foreach (var kind in PanelKind.BuiltIn)
+        {
+            panels.Register(new PanelType(kind, kind == PanelKind.Viewport ? "scene" : null));
+        }
+
+        return panels;
+    }
+}
