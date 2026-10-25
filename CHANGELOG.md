@@ -1,5 +1,45 @@
 # Changelog
 
+## Unreleased
+
+- Add a C# port of the editor shell in `dotnet/`. `Orblit.Editor.Core` 0.1.0
+  holds the scene document, commands and history, the dock layout, projects,
+  the key map and the palette, with no widget. `Orblit.Editor` 0.1.0 is the
+  Avalonia app: a window, a dock host of our own, the command palette and
+  the launcher. The Dart editor is unchanged and stays until the migration
+  ends.
+- A project, scene, layout and layout library written by the Dart editor
+  read back in C# and write the same bytes. `tool/parity/dart_files_test.dart`
+  writes the fixtures.
+- What is not ported yet: the viewport and gizmos, every panel body, the
+  terrain, cinematics and interface modes, the examples page, panel drag,
+  and closing a project back to the launcher. Panels show their name.
+- No icon set or font is bundled, because that is a decision for Chris. The
+  mode rail, the tabs and the palette rows are words. The 622 KB logo
+  picture is not bundled, so the splash is drawn in code.
+- The C# editor keeps its recent projects in `Orblit/recent.json` under the
+  application data folder. The Dart editor keeps `recent_projects.json` in
+  its own support folder, so the two lists are separate.
+- Differences from the Dart editor:
+  - A folder argument that holds no `orblit.project.json` shows the launcher
+    in both editors. Dart also prints a line saying so, and C# does not.
+  - The palette search lower-cases one character at a time. A label with a
+    capital dotted I lights a different span from Dart.
+  - Sibling scenes in a project are sorted by name. Dart used folder order.
+  - `ProjectStore.Forget` works with no recents folder. Dart threw.
+  - .NET reads a few loose dates that Dart refuses.
+  - `PanelKind.Icon` and `PaletteEntry.Icon` are names, where Dart held an
+    `IconData`.
+- Faults the C# port copied from the Dart editor, for decision 80:
+  - `displayPath` shortens a folder that only shares a prefix with the home
+    folder, so `/Users/chrisfoo` shows as `~foo` for the home `/Users/chris`.
+  - Opening a closed panel is not saved with the layout until the layout
+    next changes.
+  - Undo and redo drop every selected id that the changed scene does not
+    hold, so undoing a step in one scene clears a selection made in another.
+  - A main scene that cannot be read opens as an empty starter with no path.
+    The same file is also listed as an unloaded sibling.
+
 ## 1.26.0+27
 
 - Size an `.obj` from its points. The asset preview frames it, and a model
