@@ -31,6 +31,7 @@ internal sealed class EditorMenu : Menu
         _session = session;
         Name = "menu";
 
+        var newScene = Item("menu_new_scene", "New scene", session.NewScene, platform.CommandShortcut(EditorKey.KeyN));
         _save = Item("menu_save", "Save", session.Save, platform.CommandShortcut(EditorKey.KeyS));
         var saveAs = Item("menu_save_as", "Save as…", session.AskForName, platform.CommandShortcut(EditorKey.KeyS, shift: true));
         _undo = Item("menu_undo", "Undo", session.Undo, platform.CommandShortcut(EditorKey.KeyZ));
@@ -47,7 +48,7 @@ internal sealed class EditorMenu : Menu
         _deleteLayout = new MenuItem { Name = "menu_delete_layout", Header = "Delete layout" };
         _lock = Item("menu_lock", "Lock layout", ToggleLock);
 
-        Items.Add(Menu("File", _save, saveAs));
+        Items.Add(Menu("File", newScene, _save, saveAs));
         Items.Add(Menu("Edit", _undo, _redo, new Separator(), _cut, _copy, _paste, _duplicate, _delete));
         Items.Add(AddItems());
         Items.Add(Menu("View", _stats, _focus, Item("menu_save_layout", "Save layout…", askLayoutName), _loadLayout, _deleteLayout, _lock, Item("menu_reset", "Reset panels", session.ResetPanels), PanelsMenu()));

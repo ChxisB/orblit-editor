@@ -159,11 +159,13 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | `editor_shell_hierarchy_test.dart` | `OutlinerModelTests`, `OutlinerPanelTests` | 8 | 8 | 8 | 0 | done. The six filter tests are on the model. The two on the plus button are on the window |
-| `editor_shell_clipboard_test.dart` | `EditorSessionObjectsTests`, `OutlinerPanelTests` | 15 | 15 | 11 | 0 | partial. The four that load, close or unload a scene wait for row 1b: copy between scenes, the clipboard surviving an unload, several into another scene, and a paste landing where it was in the world |
+| `editor_shell_clipboard_test.dart` | `EditorSessionObjectsTests`, `OutlinerPanelTests`, `EditorSessionScenesTests` | 15 | 15 | 15 | 0 | done. The four that load a scene are session tests: copy between scenes, the clipboard surviving an unload, several into another scene, and a paste landing where it was |
+| `editor_shell_scenes_test.dart` | `EditorSessionScenesTests`, `OutlinerPanelTests` | 17 | 17 | 11 | 0 | partial. Waiting: the two save as tests, which have twins in `EditorSessionTests` under other names (row 13), the dropped mesh (row 3), and selecting the scene, its saved settings and an unloaded scene offering to load (row 2). The three drag tests call `Release`, as the hierarchy ones do |
 | none | `OutlinerModelTests` | 0 | 0 | 0 | 15: the rows and their depth, the folds, a scene row with a filter, an unloaded scene, where a drop lands and what a drop refuses | added |
 | none | `EditorSessionObjectsTests` | 0 | 0 | 0 | 26: selecting, adding and naming, ids, deleting, moving, duplicating, the clipboard labels and a clipboard that cannot be reached | added |
-| none | `OutlinerPanelTests` | 0 | 0 | 0 | 10: the rows and the count, the selection drawn, a scene row, the filter message, a fold, the remove button, the edit keys with and without a text box, the Add menu, the Edit menu waiting for a selection and a drop | added |
-| none | `PaletteEntriesTests` | 0 | 0 | 0 | 4: the Edit and Add entries | added |
+| none | `OutlinerPanelTests` | 0 | 0 | 0 | 18: the rows and the count, the selection drawn, a scene row, the filter message, a fold, the remove button, the edit keys with and without a text box, the Add menu, the Edit menu waiting for a selection and a drop, how an unloaded scene says to load it, the mark on a scene never written, a click that only selects, discarding in the leave dialog, the hover close button, no close on the shared row, and New scene from the menu and from the key | added |
+| none | `EditorSessionScenesTests` | 0 | 0 | 0 | 17: loading, what a load clears, a scene with no file, a file that is gone or unreadable, prefabs named before a read, the default answer, Stop, Save and Discard, saving with no file, new scenes and their names, closing, and the selected scene row | added |
+| none | `PaletteEntriesTests` | 0 | 0 | 0 | 5: the Edit and Add entries and New scene | added |
 
 The Dart outliner test file is `editor_shell_hierarchy_test.dart`. There is no
 `outliner_test.dart`. The drag itself is not driven headless. The tests call

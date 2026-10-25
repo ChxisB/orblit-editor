@@ -71,6 +71,21 @@ public sealed class PaletteEntriesTests : IDisposable
     }
 
     [Fact]
+    public async Task NewSceneStartsAnUntitledSceneAndReadsTheKeyForTheHost()
+    {
+        var session = Session();
+        // The starter scene has never been written, so leaving it is asked about.
+        session.ConfirmLeaving = _ => Task.FromResult(Leaving.Discard);
+        var entry = Entry(session, "New scene");
+
+        entry.OnRun();
+        await Task.Yield();
+
+        Assert.Equal("Untitled", session.Workspace.Loaded!.Title);
+        Assert.Equal("⌘N", entry.Keys);
+    }
+
+    [Fact]
     public void ChoosingAnObjectSelectsIt()
     {
         var session = Session();

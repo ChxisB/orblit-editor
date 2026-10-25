@@ -137,6 +137,7 @@ public sealed class SceneViewport : Border
         _state.Changed += MarkDirty;
         _state.Clocked += MarkDirty;
         _session.Changed += OnSessionChanged;
+        _session.SceneReplaced += OnSceneReplaced;
         _session.History.Changed += MarkDirty;
         _session.Workspace.Changed += MarkDirty;
         OnSessionChanged();
@@ -153,6 +154,7 @@ public sealed class SceneViewport : Border
         _state.Changed -= MarkDirty;
         _state.Clocked -= MarkDirty;
         _session.Changed -= OnSessionChanged;
+        _session.SceneReplaced -= OnSceneReplaced;
         _session.History.Changed -= MarkDirty;
         _session.Workspace.Changed -= MarkDirty;
         // A frame already asked for belongs to the loop that ended here. Moving to a new group attaches
@@ -378,6 +380,9 @@ public sealed class SceneViewport : Border
         _state.Camera = camera;
         MarkDirty();
     }
+
+    // A camera left where another scene's work was would show this one from the wrong place.
+    private void OnSceneReplaced() => OnCameraChanged(new OrbitCamera());
 
     // A tap on empty space clears the selection, a plain tap on a thing selects it, and a tap with a
     // modifier held adds the thing or takes it away.

@@ -29,7 +29,11 @@ public static class ProjectWorkspace
         return new OpenedProject(workspace, problems);
     }
 
-    private static (EditorScene Scene, string? Path, bool IsNew) ReadScene(
+    /// <summary>
+    /// Reads a scene file and touches nothing else. A missing file is the starter scene at that path,
+    /// marked new. A file that cannot be read is the starter scene with no path.
+    /// </summary>
+    internal static (EditorScene Scene, string? Path, bool IsNew) ReadScene(
         string path,
         Doc.PrefabSource? prefabs,
         List<string> problems)

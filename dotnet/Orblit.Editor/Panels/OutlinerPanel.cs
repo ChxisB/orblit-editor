@@ -15,8 +15,7 @@ using Orblit.Editor.Panels;
 /// <see cref="OutlinerModel"/> lists and calls the session for every change.
 /// </summary>
 /// <remarks>
-/// shortcut: rows show words and no kind icon (decision 84), and a scene row cannot be loaded or
-/// closed from here yet (task 16 row 1b).
+/// shortcut: rows show words and no kind icon (decision 84), so a scene row has no globe either.
 /// </remarks>
 internal sealed class OutlinerPanel : UserControl
 {
@@ -50,7 +49,6 @@ internal sealed class OutlinerPanel : UserControl
     // A press waits here until the pointer has moved far enough to be a drag. Selecting on the press
     // rebuilds the rows, so the row that was pressed is gone by then and cannot carry the drag.
     private (string Id, PointerPressedEventArgs Press, Point At)? _pending;
-    private string? _selectedScene;
 
     /// <param name="session">What is selected and changed.</param>
     /// <param name="platform">The host's keys, for which modifier adds to a selection.</param>
@@ -137,13 +135,13 @@ internal sealed class OutlinerPanel : UserControl
 
     private Border RowView(OutlinerRow row)
     {
-        var scene = row.Entry.Scene;
+        var name = NameOf(row);
         var label = new TextBlock
         {
-            Text = row.Item is { } one ? scene!.DisplayNameOf(one) : row.Entry.Title,
+            Text = name,
             FontSize = OrblitText.Label,
             FontWeight = row.Item is null ? FontWeight.SemiBold : FontWeight.Normal,
-            Foreground = scene is null ? OrblitColors.InkDim : OrblitColors.Ink,
+            Foreground = row.Entry.Scene is null ? OrblitColors.InkDim : OrblitColors.Ink,
             VerticalAlignment = VerticalAlignment.Center,
             TextTrimming = TextTrimming.CharacterEllipsis,
         };
@@ -160,9 +158,11 @@ internal sealed class OutlinerPanel : UserControl
             Background = IsSelected(row) ? OrblitColors.EmberWash : Brushes.Transparent,
             Child = line,
         };
-        if (row.Item is { } item)
+        line.Children.Add(Tail(row, name, view));
+        if (row.Item is null)
         {
-            line.Children.Add(Remove(item.Id, view));
+            ToolTip.SetTip(view, row.Entry.IsLoaded ? name : $"Double-click to load {name}");
+            ToolTip.SetShowDelay(view, 700);
         }
 
         view.PointerPressed += (_, press) => OnPressed(row, press);
@@ -194,26 +194,101 @@ internal sealed class OutlinerPanel : UserControl
         return fold;
     }
 
-    // Shown only while the pointer is over the row, as in the Dart editor.
-    private Button Remove(string id, Border view)
+    // Through the scene rather than off the object, so a light that follows the sky says Moon here
+    // at the same moment the viewport goes dark.
+    private static string NameOf(OutlinerRow row)
     {
-        var remove = new Button
+        if (row.Item is { } item)
         {
-            Name = $"delete_{id}",
+            return row.Entry.Scene!.DisplayNameOf(item);
+        }
+
+        return row.Entry.Id == Workspace.SharedSceneId ? "In every scene" : row.Entry.Title;
+    }
+
+    // What follows a name: that a scene is not loaded, that it was never written, and the button that
+    // removes the row while the pointer is over it. The note gives way to the button.
+    private StackPanel Tail(OutlinerRow row, string name, Border view)
+    {
+        var tail = new StackPanel { Orientation = Orientation.Horizontal };
+        tail[Grid.ColumnProperty] = 2;
+        var isScene = row.Item is null;
+        var note = isScene && !row.Entry.IsLoaded ? Note("not loaded", OrblitText.Mono) : null;
+        if (note is not null)
+        {
+            tail.Children.Add(note);
+        }
+
+        if (isScene && row.Entry.IsLoaded && row.Entry.NeverWritten)
+        {
+            tail.Children.Add(Note("•", OrblitText.Mono, OrblitColors.Ember));
+        }
+
+        var remove = RemoveButton(row, name);
+        if (remove is not null)
+        {
+            tail.Children.Add(remove);
+        }
+
+        view.PointerEntered += (_, _) => Hover(note, remove, true);
+        view.PointerExited += (_, _) => Hover(note, remove, false);
+        return tail;
+    }
+
+    private static void Hover(TextBlock? note, Button? remove, bool over)
+    {
+        if (note is not null)
+        {
+            note.IsVisible = !over;
+        }
+
+        if (remove is not null)
+        {
+            remove.IsVisible = over;
+        }
+    }
+
+    private static TextBlock Note(string text, FontFamily font, IBrush? colour = null) => new()
+    {
+        Text = text,
+        FontSize = 10,
+        FontFamily = font,
+        Foreground = colour ?? OrblitColors.InkDim,
+        VerticalAlignment = VerticalAlignment.Center,
+        Margin = new Thickness(0, 0, Space.Xs, 0),
+    };
+
+    // The shared set is never closed, so its row has none. The Dart editor offers one there that
+    // forgets the set's undo steps and does nothing else.
+    private Button? RemoveButton(OutlinerRow row, string name)
+    {
+        if (row.Item is { } item)
+        {
+            return HoverButton($"delete_{item.Id}", $"Delete {name}", () => _session.Delete(item.Id));
+        }
+
+        return row.Entry.Id == Workspace.SharedSceneId
+            ? null
+            : HoverButton($"scene_close_{row.Entry.Id}", $"Close {name}", () => _session.CloseScene(row.Entry));
+    }
+
+    private static Button HoverButton(string name, string tip, Action run)
+    {
+        var button = new Button
+        {
+            Name = name,
             Content = "×",
             Padding = new Thickness(Space.Xs, 0),
             IsVisible = false,
         };
-        remove[Grid.ColumnProperty] = 2;
-        remove.Click += (_, _) => _session.Delete(id);
-        view.PointerEntered += (_, _) => remove.IsVisible = true;
-        view.PointerExited += (_, _) => remove.IsVisible = false;
-        return remove;
+        ToolTip.SetTip(button, tip);
+        button.Click += (_, _) => run();
+        return button;
     }
 
     private bool IsSelected(OutlinerRow row) => row.Item is { } one
         ? _session.Selected.Contains(one.Id)
-        : _session.Selected.Count == 0 && _selectedScene == row.Entry.Id;
+        : _session.SelectedScene == row.Entry.Id;
 
     private void OnPressed(OutlinerRow row, PointerPressedEventArgs press)
     {
@@ -226,9 +301,12 @@ internal sealed class OutlinerPanel : UserControl
         Focus();
         if (row.Item is not { } one)
         {
-            _selectedScene = row.Entry.Id;
-            _session.ClearSelection();
-            Rebuild();
+            _session.SelectScene(row.Entry.Id);
+            if (press.ClickCount == 2)
+            {
+                _session.LoadScene(row.Entry);
+            }
+
             return;
         }
 

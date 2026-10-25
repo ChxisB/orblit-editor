@@ -44,6 +44,7 @@ internal static class Program
         var session = new EditorSession(opened.Workspace, new History(opened.Workspace), EditorModes.Standard(), PanelTypes.BuiltIn())
         {
             Prefabs = prefabs.Find,
+            KeepPrefabs = prefabs.KeepOnly,
             TextClipboard = clipboard,
         };
         session.Report(opened.Problems);

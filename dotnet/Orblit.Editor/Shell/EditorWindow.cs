@@ -57,6 +57,7 @@ public sealed class EditorWindow : Window
         {
             [EditorVerb.Undo] = _session.Undo,
             [EditorVerb.Redo] = _session.Redo,
+            [EditorVerb.NewScene] = _session.NewScene,
             [EditorVerb.Save] = _session.Save,
             [EditorVerb.SaveAs] = _session.AskForName,
             [EditorVerb.Palette] = () => OpenPalette(),
@@ -84,6 +85,7 @@ public sealed class EditorWindow : Window
         _session.Workspace.Changed += Refresh;
         _session.Said += Say;
         _session.NameWanted += AskSceneName;
+        _session.ConfirmLeaving = entry => LeaveDialog.Ask(this, entry);
         Closed += (_, _) =>
         {
             _session.Changed -= Refresh;

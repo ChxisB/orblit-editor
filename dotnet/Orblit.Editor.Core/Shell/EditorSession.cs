@@ -33,6 +33,7 @@ public sealed partial class EditorSession
         History = history;
         Modes = modes;
         Panels = panels;
+        _nextSceneId = workspace.Entries.Count;
         _library = new LayoutLibrary(Path.Combine(workspace.ProjectDirectory, ".orblit", "layouts.json"), panels.Kinds());
         Mode = modes.All[0];
         Layout = LayoutOf(Mode);
@@ -236,6 +237,7 @@ public sealed partial class EditorSession
     {
         Selected = [.. ids];
         Primary = primary;
+        SelectedScene = null;
         Changed?.Invoke();
     }
 

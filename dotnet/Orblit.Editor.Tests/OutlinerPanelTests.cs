@@ -17,8 +17,17 @@ public sealed class OutlinerPanelTests : IDisposable
 
     public void Dispose() => _temp.Delete(recursive: true);
 
-    private (EditorSession Session, EditorWindow Window) Open()
+    // With props, a second scene is listed beside the loaded one and is not loaded.
+    private (EditorSession Session, EditorWindow Window) Open(bool props = false)
     {
+        if (props)
+        {
+            Directory.CreateDirectory(Path.Combine(_temp.FullName, "scenes"));
+            File.WriteAllText(
+                Path.Combine(_temp.FullName, "scenes", "props" + Orblit.Scene.SceneDocument.SceneExtension),
+                SceneDocument.Encode(new EditorScene([new SceneObject(id: "barrel", name: "Barrel", kind: ObjectKind.Mesh)], name: "Props")));
+        }
+
         var opened = ProjectWorkspace.Open(_temp.FullName);
         var session = new EditorSession(opened.Workspace, new History(opened.Workspace), EditorModes.Standard(), PanelTypes.BuiltIn());
         var window = new EditorWindow(session, HostPlatform.MacOS) { Width = 1440, Height = 900 };
@@ -47,6 +56,25 @@ public sealed class OutlinerPanelTests : IDisposable
         window.MouseUp(at, MouseButton.Left, held);
         Headless.Render();
     }
+
+    private static void DoubleClick(Window window, string name)
+    {
+        var at = Centre(window, name);
+        window.MouseDown(at, MouseButton.Left);
+        window.MouseUp(at, MouseButton.Left);
+        window.MouseDown(at, MouseButton.Left);
+        window.MouseUp(at, MouseButton.Left);
+        Headless.Render();
+    }
+
+    private static void Click(Button button) => button.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+
+    // Where a row's name is drawn, since the indent is inside the row.
+    private static Point NameAt(Window window, string row, string name) =>
+        All<TextBlock>(Find<Control>(window, row)).First(one => one.Text == name).TranslatePoint(default, window)!.Value;
+
+    private static IEnumerable<string> Notes(Window window, string row) =>
+        All<TextBlock>(Find<Control>(window, row)).Select(one => one.Text ?? "");
 
     private static string Header(Window window, string name) =>
         (string)Items(Find<Menu>(window, "menu")).First(one => one.Name == name).Header!;
@@ -273,6 +301,240 @@ public sealed class OutlinerPanelTests : IDisposable
         Assert.False(panel.Release("cube", "props", 0.5));
         Assert.False(panel.Release("missing", "sun", 0.5));
         Assert.Null(scene["props"]!.ParentId);
+        window.Close();
+    });
+
+    [Fact]
+    public Task AnUnloadedSceneRowSaysHowToLoadIt() => Headless.Run(() =>
+    {
+        var (_, window) = Open(props: true);
+
+        Assert.Equal("Double-click to load props", ToolTip.GetTip(Find<Control>(window, "row_scene1")));
+        Assert.DoesNotContain("not loaded", Notes(window, "row_scene0"));
+        window.Close();
+    });
+
+    [Fact]
+    public Task OnlyTheLoadedSceneHasObjectsInTheTree() => Headless.Run(() =>
+    {
+        var (_, window) = Open(props: true);
+
+        Assert.True(Has(window, "row_scene1"));
+        Assert.Single(All<TextBlock>(window), one => one.Text == "not loaded");
+        Assert.False(Has(window, "row_barrel"));
+        window.Close();
+    });
+
+    [Fact]
+    public Task TheSceneIsTheRootWithItsObjectsUnderIt() => Headless.Run(() =>
+    {
+        var (_, window) = Open();
+        var sceneAt = NameAt(window, "row_scene0", "main");
+
+        foreach (var (row, name) in new[] { ("row_sun", "Sun"), ("row_ground", "Ground"), ("row_props", "Props") })
+        {
+            var at = NameAt(window, row, name);
+            Assert.True(at.Y > sceneAt.Y);
+            Assert.True(at.X > sceneAt.X);
+        }
+
+        window.Close();
+    });
+
+    [Fact]
+    public Task DraggingARowOntoAnotherMakesItAChild() => Headless.Run(() =>
+    {
+        var (session, window) = Open();
+
+        Assert.True(All<OutlinerPanel>(window).Single().Release("props", "ground", 0.5));
+
+        Assert.Equal("Move Ground", session.History.UndoLabel);
+        window.Close();
+    });
+
+    [Fact]
+    public Task DraggingToTheEdgeOfARowReordersInstead() => Headless.Run(() =>
+    {
+        var (session, window) = Open();
+
+        Assert.True(All<OutlinerPanel>(window).Single().Release("sun", "ground", 0.05));
+
+        Assert.Equal("Reorder Ground", session.History.UndoLabel);
+        window.Close();
+    });
+
+    [Fact]
+    public Task AThingCannotBeDroppedIntoItsOwnChild() => Headless.Run(() =>
+    {
+        var (session, window) = Open();
+
+        Assert.False(All<OutlinerPanel>(window).Single().Release("cube", "props", 0.5));
+
+        Assert.Null(session.History.UndoLabel);
+        Assert.True(Has(window, "row_props"));
+        window.Close();
+    });
+
+    [Fact]
+    public Task DoubleClickingASceneLoadsIt() => Headless.Run(() =>
+    {
+        var (session, window) = Open(props: true);
+        session.Save();
+        Headless.Render();
+
+        DoubleClick(window, "row_scene1");
+        Headless.Render();
+
+        Assert.True(Has(window, "row_barrel"));
+        Assert.False(Has(window, "row_props"));
+        Assert.Equal("props", session.Workspace.Loaded!.Title);
+        window.Close();
+    });
+
+    // The change is made after a save, so what the dialog is asked about is only the Group.
+    private static (string Added, LeaveDialog Dialog) LeaveMainByDoubleClicking(EditorSession session, EditorWindow window)
+    {
+        session.Save();
+        session.Add(ObjectKind.Group);
+        var added = session.Selected.Single();
+        Headless.Render();
+
+        DoubleClick(window, "row_scene1");
+        Headless.Render();
+        return (added, Assert.IsType<LeaveDialog>(Assert.Single(window.OwnedWindows)));
+    }
+
+    private static void Answer(LeaveDialog dialog, string button)
+    {
+        Click(Find<Button>(dialog, button));
+        Headless.Render();
+        Headless.Render();
+    }
+
+    [Fact]
+    public Task LeavingASceneWithChangesAsksBeforeDroppingThem() => Headless.Run(() =>
+    {
+        var (session, window) = Open(props: true);
+
+        var (_, dialog) = LeaveMainByDoubleClicking(session, window);
+
+        Assert.Equal("Save main first?", dialog.Title);
+        Answer(dialog, "cancel");
+        window.Close();
+    });
+
+    [Fact]
+    public Task CancellingThePromptKeepsYouWhereYouWere() => Headless.Run(() =>
+    {
+        var (session, window) = Open(props: true);
+        var (added, dialog) = LeaveMainByDoubleClicking(session, window);
+
+        Answer(dialog, "cancel");
+
+        Assert.True(Has(window, "row_props"));
+        Assert.True(Has(window, $"row_{added}"));
+        Assert.True(session.IsUnsaved(session.Workspace.Loaded!));
+        window.Close();
+    });
+
+    [Fact]
+    public Task ChoosingSaveWritesTheChangeAndThenMovesOn() => Headless.Run(() =>
+    {
+        var (session, window) = Open(props: true);
+        var (_, dialog) = LeaveMainByDoubleClicking(session, window);
+
+        Answer(dialog, "save");
+
+        Assert.Contains("\"Group\"", File.ReadAllText(Path.Combine(_temp.FullName, "scenes", "main.oscene")));
+        Assert.True(Has(window, "row_barrel"));
+        window.Close();
+    });
+
+    [Fact]
+    public Task DiscardingTheChangeMovesOnAndWritesNothing() => Headless.Run(() =>
+    {
+        var (session, window) = Open(props: true);
+        var (_, dialog) = LeaveMainByDoubleClicking(session, window);
+
+        Answer(dialog, "discard");
+
+        Assert.DoesNotContain("\"Group\"", File.ReadAllText(Path.Combine(_temp.FullName, "scenes", "main.oscene")));
+        Assert.True(Has(window, "row_barrel"));
+        window.Close();
+    });
+
+    [Fact]
+    public Task ALoadedSceneThatWasNeverWrittenIsMarkedAndTheSharedRowIsNamedForWhatItIs() => Headless.Run(() =>
+    {
+        var (_, window) = Open();
+
+        Assert.Contains("•", Notes(window, "row_scene0"));
+        Assert.Contains("In every scene", Notes(window, "row_shared"));
+        window.Close();
+    });
+
+    [Fact]
+    public Task ClickingASceneRowSelectsItAndLoadsNothing() => Headless.Run(() =>
+    {
+        var (session, window) = Open(props: true);
+
+        Click(window, "row_scene1");
+
+        Assert.Equal("scene1", session.SelectedScene);
+        Assert.False(session.Workspace.Entries.Single(one => one.Id == "scene1").IsLoaded);
+        window.Close();
+    });
+
+    [Fact]
+    public Task TheCloseButtonShowsOnHoverAndTakesTheSceneOffTheList() => Headless.Run(() =>
+    {
+        var (session, window) = Open(props: true);
+        var button = Find<Button>(window, "scene_close_scene1");
+        Assert.False(button.IsVisible);
+
+        window.MouseMove(Centre(window, "row_scene1"));
+        Assert.True(button.IsVisible);
+        Click(button);
+        Headless.Render();
+
+        Assert.False(Has(window, "row_scene1"));
+        Assert.DoesNotContain(session.Workspace.Entries, one => one.Id == "scene1");
+        window.Close();
+    });
+
+    [Fact]
+    public Task TheSharedRowCannotBeClosed() => Headless.Run(() =>
+    {
+        var (_, window) = Open();
+
+        Assert.False(Has(window, "scene_close_shared"));
+        window.Close();
+    });
+
+    [Fact]
+    public Task NewSceneFromTheFileMenuStartsAnUntitledSceneWithItsOwnRow() => Headless.Run(() =>
+    {
+        var (session, window) = Open();
+        session.ConfirmLeaving = _ => Task.FromResult(Leaving.Discard);
+
+        Items(Find<Menu>(window, "menu")).First(one => one.Name == "menu_new_scene").RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+        Headless.Render();
+
+        Assert.Equal("Untitled", session.Workspace.Loaded!.Title);
+        Assert.True(Has(window, $"row_{session.Workspace.Loaded.Id}"));
+        window.Close();
+    });
+
+    [Fact]
+    public Task CommandNStartsANewScene() => Headless.Run(() =>
+    {
+        var (session, window) = Open();
+        session.ConfirmLeaving = _ => Task.FromResult(Leaving.Discard);
+
+        window.KeyPressQwerty(PhysicalKey.N, RawInputModifiers.Meta);
+        Headless.Render();
+
+        Assert.Equal("Untitled", session.Workspace.Loaded!.Title);
         window.Close();
     });
 }

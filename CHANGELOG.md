@@ -80,8 +80,7 @@
 - The C# editor has a hierarchy panel. A click selects, command-click adds
   to the selection and shift-click takes everything between. Filter by
   name, fold a parent, remove an object from its row, and drag a row to
-  move it. The plus button opens the palette on the add commands. A scene
-  row cannot be loaded or closed yet.
+  move it. The plus button opens the palette on the add commands.
 - Cut, copy, paste, duplicate and delete are in the Edit menu and on keys.
   A copy leaves text on the system clipboard, so another window or editor
   can paste it. A copy that cannot reach the clipboard says so in the status
@@ -93,6 +92,22 @@
 - A new object's id is `o`, the time in microseconds, an underscore and a
   counter. The C# `OutlinerRow` calls the object it holds `Item`, because
   the analyser rejects `Object` as a name.
+- Double-click a scene row to load it, and close it from the button that
+  shows when the pointer is over the row. A scene with changes asks first:
+  Save, Discard or Cancel. A scene that has no file yet asks for a name
+  before it is saved. File, New scene and the command and N key start an
+  empty scene named Untitled. The view's camera starts again when a
+  different scene takes the place of the loaded one.
+- Differences from the Dart editor:
+  - The shared row has no close button. Dart draws one that only forgets
+    the shared set's undo steps.
+  - Closing any scene clears the selection, as Dart does, and loading one
+    clears the selected scene row.
+- Faults copied from the Dart editor, for decision 80: a scene file that is
+  gone loads as the starter scene at that path and is marked as written.
+- Not ported yet with the scene row: `_preview.forget()`, the cleared
+  report notes and the bench change, which belong to rows 4 and later. The
+  window does not ask about unsaved scenes when it closes.
 
 ## 1.26.0+27
 
