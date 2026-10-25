@@ -8,6 +8,15 @@
   Avalonia app: a window, a dock host of our own, the command palette and
   the launcher. The Dart editor is unchanged and stays until the migration
   ends.
+- Add `Orblit.Editor.Viewport` 0.1.0, the viewport's arithmetic with no
+  widget: the orbit and fly cameras, the view ray and projection, the gizmo
+  maths, the input order, the selection outline, snapping, the grid, and the
+  scene as the renderer takes it, with its sky, fog, rain and cloud.
+- The C# scene gets its material and surface keys from FNV-1a. Dart used
+  `Object.hash`, which promises no value, so the keys differ and nothing
+  reads them. The rain and snow colour is a double lerp of the two tints.
+- The grid tile is encoded by `Orblit.Sprite`, so its bytes differ from
+  Flutter's. The lines it draws read back the same.
 - A project, scene, layout and layout library written by the Dart editor
   read back in C# and write the same bytes. `tool/parity/dart_files_test.dart`
   writes the fixtures.

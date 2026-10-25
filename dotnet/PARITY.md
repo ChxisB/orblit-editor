@@ -24,11 +24,8 @@ them, into `~/.orblit/feed` unless `ORBLIT_FEED` names another.
 | `prefab_test.dart` | `PrefabTests` | 12 | 12 | 12 | 0 | done. The three that copy an instance and the one that moves it came with the clipboard and the commands in row 2 |
 | `picking_test.dart` | `PickingTests` | 9 | 9 | 9 | 0 | done |
 | `euler_test.dart` | `EulerTests` | 1 | 1 | 1 | 0 | done. The loop of 200 stays inside the one test |
-| `scene_test.dart` | `SceneTests` | 20 | 20 | 2 | 0 | partial. The other 18 read `toRenderScene`, which belongs to the viewport task 15 |
-| `scene_weather_test.dart` | `SceneWeatherTests` | 34 | 34 | 11 | 0 | partial. The other 23 read `toRenderScene`, which belongs to the viewport task 15 |
-
-`grid_test.dart` (9) and `selection_outline_test.dart` (7) also belong to task
-15, with `scene_render.dart`.
+| `scene_test.dart` | `SceneTests` | 20 | 20 | 20 | 0 | done. The 18 that read `toRenderScene` came with the viewport task 15 |
+| `scene_weather_test.dart` | `SceneWeatherTests` | 34 | 34 | 34 | 0 | done. The 23 that read `toRenderScene` came with the viewport task 15 |
 
 ## Row 2, commands and history
 
@@ -128,6 +125,22 @@ The launcher session holds the view, the template, the search and the rules for
 opening and creating, so a test reaches them with no widget. The splash is drawn
 in code and covers the launcher only. The 622 KB logo picture is not bundled,
 because a binary asset is Chris's call. There is no Examples page until task 17.
+
+## Row 8, the viewport
+
+| Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| `orbit_camera_test.dart` | `OrbitCameraTests` | 8 | 8 | 8 | 0 | done |
+| `fly_camera_test.dart` | `FlyCameraTests` | 10 | 10 | 10 | 0 | done |
+| `gizmo_test.dart` | `GizmoTests` | 19 | 19 | 19 | 0 | done |
+| `viewport_input_test.dart` | `ViewportInputTests` | 16 | 16 | 8 | 0 | partial. The eight in the order group are ported. The eight widget tests wait for the viewport control |
+| `selection_outline_test.dart` | `SelectionOutlineTests` | 7 | 7 | 7 | 0 | done. The engine keeps the packed keys internal, so the Dart check of them became a check of `Primary` |
+| `snapping_test.dart` | `SnappingTests` | 15 | 15 | 15 | 0 | done |
+| `grid_test.dart` | `GridTests` | 9 | 9 | 9 | 1: the tile reads back as the lines the grid draws | done. The tile is encoded by `Orblit.Sprite`, so its bytes differ from Flutter's |
+
+The air and the sky in `SceneAir` use FNV-1a keys for materials and surfaces,
+where the Dart uses `Object.hash`. The key values are not part of the parity.
+The rain and snow colour is a double-precision lerp of the two sRGB tints.
 
 ## Files the Dart editor wrote
 

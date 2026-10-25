@@ -68,4 +68,15 @@ public sealed class SelectionOutlineTests
         var outline = SelectionOutline.Of(scene: Scene, selected: ["gone"], primary: "gone");
         Assert.True(outline.IsEmpty);
     }
+
+    [Fact]
+    public void NamesKeysTheRenderedSceneActuallyContains()
+    {
+        // The outline is only any use if its keys are the objects' keys in the scene the viewport
+        // sends, otherwise it outlines nothing, silently.
+        var rendered = Scene.ToRenderScene(new OrbitCamera().ToRenderCamera());
+        var outline = SelectionOutline.Of(scene: Scene, selected: ["crate", "barrel"]);
+        var sent = rendered.Objects.Select(o => o.Key).ToHashSet();
+        Assert.True(sent.IsSupersetOf(outline.Keys));
+    }
 }
