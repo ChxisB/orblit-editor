@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Version>0.1.0</Version>
+    <Description>The editor's 3D view without a window: the orbit camera, the pointer's order of stages, the projection and the rays through it, and the gizmo arithmetic.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Orblit.Filament" />
+    <PackageReference Include="Orblit.VectorMath" />
+    <ProjectReference Include="..\Orblit.Editor.Core\Orblit.Editor.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Orblit.Editor.Tests" />
+  </ItemGroup>
+</Project>
