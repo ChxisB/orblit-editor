@@ -63,3 +63,24 @@ for the application support folder. `DisplayPath` takes the home folder and
 `ProjectStore` takes a `TimeProvider`, because the environment and the clock are
 IO (F10). `Touched` is a `with` expression. The store is synchronous, because
 nothing in it waits any more.
+
+## Row 5, shortcuts, the palette and the key map
+
+| Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| `command_shortcuts_test.dart` | `CommandShortcutsTests` | 12 | 16 | 16 | 1: Command is still seen with Shift held | done. The two widget tests hold a key in a live keyboard, so they pass the held modifiers in |
+| `command_palette_test.dart` | `CommandPaletteTests` | 13 | 13 | 6 | 2: a group's title, and the entry handed back unrun | partial. The six search tests are here. The seven dialog tests are widget tests and wait for the shell in row 6 |
+| `editor_shell_palette_test.dart` | none | 5 | 5 | 0 | 0 | waits for the shell in row 6 |
+| none, the Dart has no test | `ShortcutMapTests` | 0 | 0 | 0 | 12: the map of keystrokes to verbs | added |
+
+The key map moved out of `editor_shell_intents.dart` and the `_nudges` table in
+`editor_shell_modelling.dart` into `ShortcutMap.For(platform)`, so it is data in
+the core and a test can read it. A keystroke is a `KeyChord`, a verb is an
+`EditorVerb`, and a nudge carries its signed squares. What each verb does stays
+in the shell, because it changes shell state.
+
+`HostPlatform` replaces `defaultTargetPlatform`. Every key function takes the
+platform, and `HostPlatforms.Current` reads the operating system once, where the
+shell is wired (F10). The palette search lower-cases one character at a time, so
+a label with a capital dotted I lights up a different span from Dart.
+`PaletteEntry.Icon` is a name where Dart held an `IconData`.
