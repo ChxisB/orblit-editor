@@ -38,3 +38,9 @@ them, into `~/.orblit/feed` unless `ORBLIT_FEED` names another.
 | `clipboard_test.dart` | `ClipboardTests` | 26 | 26 | 26 | 0 | done. The five odd texts stay in one test, as in Dart |
 | `scene_diff_command_test.dart` | `SceneDiffCommandTests` | 7 | 7 | 7 | 0 | done |
 | none, Dart tests these through widgets | `ObjectCommandTests` | 0 | 0 | 0 | 23: appearance, light, link, geometry, component, time and weather commands, each applied, undone and merged where a drag merges | done |
+
+## Row 3, the workspace
+
+| Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| `scene_playback_test.dart` | `ScenePlaybackTests` | 5 | 5 | 5 | 0 | done. `ClipPreview` and `SceneCameras` came with it, and the Core now reads the Motion, Stage and Filament packages for the cutscene camera |

@@ -4,10 +4,14 @@
     <Description>The editor's model without a window: the scene it edits, the commands and history that change it, the dock layout, the settings and the shortcuts.</Description>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Orblit.Filament" />
     <PackageReference Include="Orblit.Json" />
     <PackageReference Include="Orblit.Light" />
     <PackageReference Include="Orblit.Mesh" />
+    <PackageReference Include="Orblit.Motion" />
     <PackageReference Include="Orblit.Scene" />
+    <PackageReference Include="Orblit.Sequence" />
+    <PackageReference Include="Orblit.Stage" />
     <PackageReference Include="Orblit.VectorMath" />
     <PackageReference Include="Orblit.Weather" />
   </ItemGroup>
