@@ -4,6 +4,7 @@
     <Description>The editor's model without a window: the scene it edits, the commands and history that change it, the dock layout, the settings and the shortcuts.</Description>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Orblit.Asset" />
     <PackageReference Include="Orblit.Filament" />
     <PackageReference Include="Orblit.Json" />
     <PackageReference Include="Orblit.Light" />

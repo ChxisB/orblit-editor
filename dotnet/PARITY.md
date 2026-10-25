@@ -20,7 +20,7 @@ them, into `~/.orblit/feed` unless `ORBLIT_FEED` names another.
 | `boundary_test.dart` | `BoundaryTests` | 15 | 15 | 15 | 1: a kind and an offset read back what was written | done |
 | `surface_test.dart` | `SurfaceTests` | 10 | 10 | 10 | 0 | done |
 | none, the Dart has no test | `ColourTests` | 0 | 0 | 0 | 10: hex in and out, the fallback, the tint round trip and the clamp | done |
-| `scene_document_test.dart` | `SceneDocumentTests` | 33 | 33 | 30 | 0 | partial. Three tests open a project template and wait for the launcher project in row 4 |
+| `scene_document_test.dart` | `SceneDocumentTests`, `ProjectTests` | 33 | 35 | 35 | 0 | done. The template loop runs three times, so Dart run is 35. The five tests that read a project template came with the launcher project in row 4 and live in `ProjectTests` |
 | `prefab_test.dart` | `PrefabTests` | 12 | 12 | 12 | 0 | done. The three that copy an instance and the one that moves it came with the clipboard and the commands in row 2 |
 | `picking_test.dart` | `PickingTests` | 9 | 9 | 9 | 0 | done |
 | `euler_test.dart` | `EulerTests` | 1 | 1 | 1 | 0 | done. The loop of 200 stays inside the one test |
@@ -48,3 +48,18 @@ them, into `~/.orblit/feed` unless `ORBLIT_FEED` names another.
 | `registry_test.dart` | `RegistryTests` | 6 | 6 | 6 | 0 | done. `Throws StateError` became `InvalidOperationException`, and the unmodifiable list became a read-only collection |
 | `layout_library.dart` (no Dart test) | `LayoutLibraryTests` | 0 | 0 | 0 | 7 | added. Covers save, find, remove, reopen, a damaged file and a file in the shape Dart writes |
 | `panel_registry.dart` (no Dart test) | none | 0 | 0 | 0 | 0 | done. `PanelType` is data only, so `build` and `UnregisteredPanel` wait for the shell, and `showsMovement` is not ported because it only exists to skip a Flutter rebuild |
+
+## Row 4, settings, projects and paths
+
+| Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
+| --- | --- | --- | --- | --- | --- | --- |
+| `host_paths_test.dart` | `HostPathsTests` | 8 | 8 | 8 | 0 | done |
+| `store_settings_test.dart` | `StoreSettingsTests` | 6 | 6 | 6 | 3: no temporary file left, a file in the shape Dart writes, and the text written byte for byte | done. The address rules come from `KitStoreClient.AddressProblem`, so the Core now reads the Asset package |
+| `launcher_test.dart` | `ProjectTests` | 16 | 16 | 4 | 0 | partial. The four in "a project on disk" are here. The other twelve are widget tests of the projects list and the create dialog, and wait for the launcher in row 7 |
+| none, the Dart has no test | `ProjectTests` | 0 | 0 | 0 | 14: create, refuse, folder names, the recents list, a Dart-shaped time and file | added |
+
+`ProjectStore` takes the path of the recents file, where Dart asked the platform
+for the application support folder. `DisplayPath` takes the home folder and
+`ProjectStore` takes a `TimeProvider`, because the environment and the clock are
+IO (F10). `Touched` is a `with` expression. The store is synchronous, because
+nothing in it waits any more.
