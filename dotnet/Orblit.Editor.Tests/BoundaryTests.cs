@@ -76,6 +76,17 @@ public sealed class BoundaryTests
         Assert.Equal(0.5, back.Offset.Y);
     }
 
+    [Fact]
+    public void ItGoesWithTheObject()
+    {
+        var shape = ShapeWith(new Boundary(BoundaryKind.Box, padding: 0.15, offset: new Vector3(0, 0.5, 0)));
+        var back = SceneDocument.Decode(SceneDocument.Encode(new EditorScene([shape]), "A")).Scene.Objects.Single();
+
+        Assert.Equal(BoundaryKind.Box, back.Boundary.Kind);
+        Assert.Equal(0.15, back.Boundary.Padding);
+        Assert.Equal(0.5, back.Boundary.Offset.Y);
+    }
+
     private static SceneObject ShapeWith(Boundary boundary, Mesh? mesh = null) =>
         new(
             "a",

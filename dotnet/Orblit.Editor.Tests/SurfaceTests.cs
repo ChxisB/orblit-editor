@@ -101,4 +101,43 @@ public sealed class SurfaceTests
         Assert.Single(shape.Surfaces);
         Assert.Equal(2, copy.Surfaces.Count);
     }
+
+    [Fact]
+    public void SlotsGoWithTheObjectThroughTheSceneFile()
+    {
+        var steps = new SceneObject(
+            "a",
+            "Steps",
+            ObjectKind.Shape,
+            shape: Shape.Of(ShapeKind.Stairs),
+            surfaces: [new Surface { Name = "Stone" }, new Surface { Name = "Brass", Metallic = 1 }]);
+
+        var read = SceneDocument.Decode(SceneDocument.Encode(new EditorScene([steps]), "A")).Scene.Objects.Single();
+
+        Assert.Equal(2, read.Surfaces.Count);
+        Assert.Equal("Brass", read.Surfaces[1].Name);
+        Assert.Equal(1, read.Surfaces[1].Metallic);
+    }
+
+    [Fact]
+    public void ADrawnOutlineGoesWithTheObjectThroughTheSceneFile()
+    {
+        var room = new SceneObject(
+            "a",
+            "Room",
+            ObjectKind.Shape,
+            outline: new PolyShape(
+                [new Vector3(0, 0, 0), new Vector3(0, 0, 2), new Vector3(2, 0, 2)],
+                height: 1.5,
+                flipped: true));
+
+        var read = SceneDocument.Decode(SceneDocument.Encode(new EditorScene([room]), "A")).Scene.Objects.Single();
+
+        Assert.NotNull(read.Outline);
+        Assert.Equal(3, read.Outline.Points.Count);
+        Assert.Equal(1.5, read.Outline.Height);
+        Assert.True(read.Outline.Flipped);
+        // And it is still the shape, not just a note about how it was made.
+        Assert.Equal(5, read.CurrentMesh!.FaceCount);
+    }
 }
