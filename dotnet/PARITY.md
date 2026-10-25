@@ -45,3 +45,6 @@ them, into `~/.orblit/feed` unless `ORBLIT_FEED` names another.
 | --- | --- | --- | --- | --- | --- | --- |
 | `scene_playback_test.dart` | `ScenePlaybackTests` | 5 | 5 | 5 | 0 | done. `ClipPreview` and `SceneCameras` came with it, and the Core now reads the Motion, Stage and Filament packages for the cutscene camera |
 | `dock_test.dart` | `DockTests` | 40 | 40 | 40 | 0 | done. `PanelKind`, `DockPanel`, the dock nodes and `DockLayout` came with it. `PanelKind.Icon` is a name string where Dart held `IconData` |
+| `registry_test.dart` | `RegistryTests` | 6 | 6 | 6 | 0 | done. `Throws StateError` became `InvalidOperationException`, and the unmodifiable list became a read-only collection |
+| `layout_library.dart` (no Dart test) | `LayoutLibraryTests` | 0 | 0 | 0 | 7 | added. Covers save, find, remove, reopen, a damaged file and a file in the shape Dart writes |
+| `panel_registry.dart` (no Dart test) | none | 0 | 0 | 0 | 0 | done. `PanelType` is data only, so `build` and `UnregisteredPanel` wait for the shell, and `showsMovement` is not ported because it only exists to skip a Flutter rebuild |
