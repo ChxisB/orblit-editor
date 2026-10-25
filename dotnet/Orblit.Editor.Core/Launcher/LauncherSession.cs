@@ -120,18 +120,25 @@ public sealed class LauncherSession
             return;
         }
 
+        Project made;
         try
         {
-            Opened?.Invoke(_store.Create(name.Trim(), location, Template));
+            made = _store.Create(name.Trim(), location, Template);
         }
         catch (InvalidOperationException error)
         {
             Complained?.Invoke("Could not create it", error.Message);
+            return;
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
             Complained?.Invoke("Could not write there", error.Message);
+            return;
         }
+
+        // Outside the try, so a fault in whoever opens the project is not told to the person as a
+        // folder that could not be written.
+        Opened?.Invoke(made);
     }
 
     private void Enter(Project project)

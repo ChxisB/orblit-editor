@@ -202,6 +202,19 @@ public sealed class LauncherSessionTests : IDisposable
     }
 
     [Fact]
+    public void AFaultInWhoeverOpensTheProjectIsNotToldAsAFolderThatCouldNotBeWritten()
+    {
+        var launcher = Launcher();
+        launcher.Opened += _ => throw new IOException("the window failed");
+
+        var thrown = Assert.Throws<IOException>(() => launcher.Create("My Game", _temp.FullName));
+
+        Assert.Equal("the window failed", thrown.Message);
+        Assert.Empty(_complaints);
+        Assert.True(File.Exists(Path.Combine(ProjectStore.DestinationFor("My Game", _temp.FullName), Project.FileName)));
+    }
+
+    [Fact]
     public void ANewProjectDefaultsToOrblitInDocumentsUnderHome()
     {
         Assert.Equal(Path.Combine("home", "Documents", "Orblit"), Launcher(home: "home").DefaultLocation);

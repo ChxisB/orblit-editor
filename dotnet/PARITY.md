@@ -122,7 +122,7 @@ words, because no icon set is bundled yet (decision 84).
 | `launcher_test.dart` | `LauncherWindowTests`, `ProjectTests` | 16 | 16 | 16 | 0 | done. Four are in `ProjectTests`, counted in row 4 |
 | `launcher_view_test.dart` | `LauncherWindowTests` | 4 | 4 | 4 | 0 | done |
 | none, the Dart has no test | `LauncherWindowTests` | 0 | 0 | 0 | 29: the splash, the complaint, the grid, keyboard reach for the forget button, defaults, and the create and browse flow | added |
-| none, the Dart kept this in widgets | `LauncherSessionTests` | 0 | 0 | 0 | 25: the view, the template, the search, open, forget and create, with no control | added |
+| none, the Dart kept this in widgets | `LauncherSessionTests` | 0 | 0 | 0 | 26: the view, the template, the search, open, forget and create, with no control, and a fault in the opener not told as a folder that could not be written | added |
 
 The launcher session holds the view, the template, the search and the rules for
 opening and creating, so a test reaches them with no widget. The splash is drawn
