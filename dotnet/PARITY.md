@@ -21,6 +21,7 @@ them, into `~/.orblit/feed` unless `ORBLIT_FEED` names another.
 | `surface_test.dart` | `SurfaceTests` | 10 | 10 | 10 | 0 | done |
 | none, the Dart has no test | `ColourTests` | 0 | 0 | 0 | 10: hex in and out, the fallback, the tint round trip and the clamp | done |
 | `scene_document_test.dart` | `SceneDocumentTests` | 33 | 33 | 30 | 0 | partial. Three tests open a project template and wait for the launcher project in row 4 |
+| `prefab_test.dart` | `PrefabTests` | 12 | 12 | 8 | 0 | partial. Three copy an instance and one moves it between scenes. They follow the clipboard and `MoveBetweenScenes` in row 2 |
 | `picking_test.dart` | `PickingTests` | 9 | 9 | 9 | 0 | done |
 | `euler_test.dart` | `EulerTests` | 1 | 1 | 1 | 0 | done. The loop of 200 stays inside the one test |
 | `scene_test.dart` | `SceneTests` | 20 | 20 | 2 | 0 | partial. The other 18 read `toRenderScene`, which belongs to the viewport task 15 |
