@@ -6,7 +6,8 @@ using Orblit.Json;
 public sealed class ProjectTests : IDisposable
 {
     private readonly DirectoryInfo _temp = Directory.CreateTempSubdirectory("orblit_test");
-    private readonly Clock _clock = new();
+    private static readonly DateTime Day = new(2026, 10, 25, 9, 0, 0);
+    private readonly FixedClock _clock = new(Day);
     private readonly ProjectStore _store;
 
     public ProjectTests() => _store = new ProjectStore(Path.Combine(_temp.FullName, "support", "recent.json"), _clock);
@@ -114,11 +115,11 @@ public sealed class ProjectTests : IDisposable
     [Fact]
     public void RememberingPutsTheNewestFirstAndKeepsEachFolderOnce()
     {
-        _clock.Set(1);
+        _clock.At = Day.AddSeconds(1);
         _store.Remember(Made("A", "/a"));
-        _clock.Set(2);
+        _clock.At = Day.AddSeconds(2);
         _store.Remember(Made("B", "/b"));
-        _clock.Set(3);
+        _clock.At = Day.AddSeconds(3);
         _store.Remember(Made("A", "/a"));
 
         Assert.Equal(new[] { "/a", "/b" }, _store.Recents().Select(one => one.Directory));
@@ -129,7 +130,7 @@ public sealed class ProjectTests : IDisposable
     {
         for (var at = 0; at < 22; at++)
         {
-            _clock.Set(at);
+            _clock.At = Day.AddSeconds(at);
             _store.Remember(Made($"P{at}", $"/p{at}"));
         }
 
@@ -216,17 +217,5 @@ public sealed class ProjectTests : IDisposable
     {
         Assert.Equal(Folder("my-game"), ProjectStore.DestinationFor("My Game!", _temp.FullName));
         Assert.Equal(Folder("orblit-project"), ProjectStore.DestinationFor("***", _temp.FullName));
-    }
-
-    // A clock a test sets, in whole seconds from a fixed day.
-    private sealed class Clock : TimeProvider
-    {
-        private DateTimeOffset _now = new(2026, 10, 25, 9, 0, 0, TimeSpan.Zero);
-
-        public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
-
-        public void Set(int seconds) => _now = new DateTimeOffset(2026, 10, 25, 9, 0, 0, TimeSpan.Zero).AddSeconds(seconds);
-
-        public override DateTimeOffset GetUtcNow() => _now;
     }
 }

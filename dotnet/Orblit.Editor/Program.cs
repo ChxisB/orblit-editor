@@ -9,17 +9,31 @@ internal static class Program
     [STAThread]
     public static int Main(string[] args)
     {
-        // The launcher takes the place of this when there is no folder to open (task 14, row 7).
-        if (args.Length == 0 || !Directory.Exists(args[0]))
-        {
-            Console.Error.WriteLine("Usage: Orblit.Editor <project folder>");
-            return 2;
-        }
-
-        var directory = Path.GetFullPath(args[0]);
-        return AppBuilder.Configure(() => new EditorApp(() => OpenWindow(directory)))
+        // A folder with a project in it opens straight into the editor. Anything else shows the launcher.
+        var project = LaunchArguments.ProjectPath(args) is { } path ? ProjectStore.Open(Path.GetFullPath(path)) : null;
+        return AppBuilder.Configure(() => new EditorApp(() => project is null ? Launch() : OpenWindow(project.Directory)))
             .UsePlatformDetect()
             .StartWithClassicDesktopLifetime(args);
+    }
+
+    // shortcut: the recents list is kept under the user's config folder, not where the Dart editor keeps
+    // its own, so the two editors do not share it. Share it when a project is opened in both.
+    private static string RecentsFile() => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "Orblit",
+        "recent.json");
+
+    private static LauncherWindow Launch()
+    {
+        var session = new LauncherSession(new ProjectStore(RecentsFile()), HostPaths.HomeDirectory());
+        var launcher = new LauncherWindow(session, splash: TimeSpan.FromMilliseconds(1100));
+        session.Opened += project =>
+        {
+            // The editor opens before the launcher closes, so the last window is never gone in between.
+            OpenWindow(project.Directory).Show();
+            launcher.Close();
+        };
+        return launcher;
     }
 
     private static EditorWindow OpenWindow(string directory)

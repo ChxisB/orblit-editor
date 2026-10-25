@@ -8,7 +8,7 @@ public sealed class LauncherSessionTests : IDisposable
 
     private readonly DirectoryInfo _temp = Directory.CreateTempSubdirectory("orblit_test");
     private readonly ProjectStore _store;
-    private readonly Clock _clock = new(Now);
+    private readonly FixedClock _clock = new(Now);
     private readonly List<Project> _opened = [];
     private readonly List<(string Title, string Detail)> _complaints = [];
 
@@ -224,13 +224,4 @@ public sealed class LauncherSessionTests : IDisposable
     [InlineData(-3600, "just now")]
     public void AgeIsTheShortestFormThatIsStillTrue(int seconds, string text) =>
         Assert.Equal(text, Elapsed.Ago(Now.AddSeconds(-seconds), Now));
-
-    private sealed class Clock(DateTime at) : TimeProvider
-    {
-        public DateTime At { get; set; } = at;
-
-        public override TimeZoneInfo LocalTimeZone => TimeZoneInfo.Utc;
-
-        public override DateTimeOffset GetUtcNow() => new(DateTime.SpecifyKind(At, DateTimeKind.Utc));
-    }
 }

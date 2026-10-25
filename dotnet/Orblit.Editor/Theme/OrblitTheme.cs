@@ -13,12 +13,14 @@ public static class OrblitColors
     public static readonly IBrush Surface = Brush(0xFF161A21);
     public static readonly IBrush Raised = Brush(0xFF1D222B);
     public static readonly IBrush Line = Brush(0xFF2A313C);
+    public static readonly IBrush LineSoft = Brush(0xFF212733);
     public static readonly IBrush Ink = Brush(0xFFE4E9F0);
     public static readonly IBrush InkMid = Brush(0xFFA6B0BF);
     public static readonly IBrush InkDim = Brush(0xFF8791A1);
     public static readonly IBrush Ember = new ImmutableSolidColorBrush(EmberColor);
     public static readonly IBrush EmberWash = Brush(0x24E5893F);
     public static readonly IBrush Bad = Brush(0xFFD9634F);
+    public static readonly IBrush Warn = Brush(0xFFE0B252);
 
     // Immutable, so a brush made while the type loads is safe to hand to a control on any thread.
     private static ImmutableSolidColorBrush Brush(uint argb) => new(Color.FromUInt32(argb));
@@ -31,15 +33,25 @@ public static class Space
     public const double Sm = 8;
     public const double Md = 12;
     public const double Lg = 16;
+    public const double Xl = 24;
+    public const double Xxl = 36;
 }
 
 public static class Radii
 {
+    public static readonly CornerRadius Control = new(6);
+    public static readonly CornerRadius Card = new(8);
     public static readonly CornerRadius Panel = new(10);
+    public static readonly CornerRadius Window = new(12);
 }
 
 public static class OrblitText
 {
     public const double Label = 12;
     public const double Caption = 11.5;
+    public const double Body = 13;
+    public const double Display = 26;
+
+    /// <summary>Paths, identifiers and numbers, where an even width helps reading.</summary>
+    public static readonly FontFamily Mono = new("Menlo, SF Mono, Consolas, monospace");
 }
