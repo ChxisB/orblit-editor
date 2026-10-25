@@ -1,5 +1,7 @@
 namespace Orblit.Editor.Core;
 
+using Doc = Orblit.Scene;
+
 // Settings that belong to the scene rather than to anything in it.
 
 /// <summary>Changes the sky colour and the ambient light together.</summary>
@@ -105,4 +107,47 @@ public sealed class SetLayerNames(string sceneId, IReadOnlyList<string> from, IR
     public override void Apply(ISceneHost host) => host.SceneFor(SceneId)?.LayerNames = To;
 
     public override void Revert(ISceneHost host) => host.SceneFor(SceneId)?.LayerNames = From;
+}
+
+/// <summary>
+/// A change stated as the difference between two documents.
+/// </summary>
+/// <remarks>
+/// Every other command here names the field it touches. That fits an edit somebody makes with a
+/// mouse, and not one that arrives whole: a scene pasted in, a file reloaded from under somebody, a
+/// generated layout, an import. For those the change is "this document became that one", and a diff
+/// says so exactly. It is also the shape an edit has to be in to leave this machine, because a diff
+/// is a list of operations that serialise.
+/// <para>
+/// The blunt instrument, on purpose. It rebuilds the objects rather than mutating the ones there.
+/// What the renderer knows each by is carried across, so that costs no frame, but the outliner is
+/// rebuilt and a drag should not go through here.
+/// </para>
+/// </remarks>
+public sealed class ApplySceneDiff(string sceneId, string label, Doc.SceneDiff diff) : EditorCommand
+{
+    /// <summary>
+    /// The change from what is there now to what should be. Both directions are in it: undo applies
+    /// the inverse, so there is no second description of the change to fall out of step with the
+    /// first.
+    /// </summary>
+    public Doc.SceneDiff Diff { get; } = diff;
+
+    public override string SceneId { get; } = sceneId;
+
+    public override string Label { get; } = label;
+
+    public override void Apply(ISceneHost host) => Move(host, Diff);
+
+    public override void Revert(ISceneHost host) => Move(host, Diff.Inverse);
+
+    private void Move(ISceneHost host, Doc.SceneDiff by)
+    {
+        if (host.SceneFor(SceneId) is not { } scene)
+        {
+            return;
+        }
+
+        SceneDocument.Reconcile(scene, by.ApplyTo(SceneDocument.DocumentOf(scene)));
+    }
 }
