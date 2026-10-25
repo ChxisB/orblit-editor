@@ -31,6 +31,7 @@ public static class PaletteEntries
     private static PaletteEntry[] Files(EditorSession session, HostPlatform platform) =>
     [
         Command("Save", "save_outlined", session.Save, platform.CommandShortcutLabel("S")),
+        Command("Save as", "save_as_outlined", session.AskForName, platform.CommandShortcutLabel("S", shift: true)),
     ];
 
     private static PaletteEntry[] Edits(EditorSession session, HostPlatform platform) =>

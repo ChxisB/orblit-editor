@@ -71,7 +71,7 @@ nothing in it waits any more.
 | `command_shortcuts_test.dart` | `CommandShortcutsTests` | 12 | 16 | 16 | 1: Command is still seen with Shift held | done. The two widget tests hold a key in a live keyboard, so they pass the held modifiers in |
 | `command_palette_test.dart` | `CommandPaletteTests`, `PaletteDialogTests` | 13 | 13 | 13 | 5: a group's title, the entry handed back unrun, the lit span of a label, one heading for each group, and the keys and meta beside a row | done. The six search tests are in `CommandPaletteTests` and the seven dialog tests in `PaletteDialogTests` |
 | `editor_shell_palette_test.dart` | `EditorWindowTests` | 5 | 5 | 4 | 0 | partial, counted in row 6 |
-| none, the Dart builds the entries inside the shell widget | `PaletteEntriesTests` | 0 | 0 | 0 | 6: every mode by name, undo and redo with their labels, the keys the host uses, an object selected, an object's parent, the focus entry | added |
+| none, the Dart builds the entries inside the shell widget | `PaletteEntriesTests` | 0 | 0 | 0 | 7: every mode by name, undo and redo with their labels, the keys the host uses and Save as, an object selected, an object's parent, the focus entry | added |
 | none, the Dart has no test | `ShortcutMapTests` | 0 | 0 | 0 | 12: the map of keystrokes to verbs | added |
 
 The key map moved out of `editor_shell_intents.dart` and the `_nudges` table in
@@ -100,7 +100,7 @@ can do so far. Add, delete, copy and frame join them with their panels in task
 | `editor_shell_layouts_test.dart` | `EditorSessionTests` | 3 | 3 | 2 | 0 | partial. Per-mode arrangements and focus are here. "Performance numbers are behind Stats" is tested only as the toggle, because the numbers are drawn by the viewport in task 15 |
 | `editor_shell_workspaces_test.dart` | `EditorSessionTests` | 16 | 16 | 4 | 0 | partial. The order of the rail, the panels for each job, reset and each remembering its arrangement are here. The rest need icons, terrain, cinematics, interface or the modelling panel |
 | `editor_shell_panels_test.dart` | `EditorSessionTests`, `EditorWindowTests` | 11 | 11 | 5 | 0 | partial. Closing and opening a panel, remembering, locking, a damaged layout and a layout from before workspaces are here. The rest need the viewport, the game view or the profile panel |
-| none, the Dart has no test | `EditorSessionTests`, `EditorWindowTests` | 0 | 0 | 0 | 38: the session without a window, and the window reading and writing it | added |
+| none, the Dart has no test | `EditorSessionTests`, `EditorWindowTests` | 0 | 0 | 0 | 51: the session without a window, and the window reading and writing it. Save as, its prompt and the quiet shared save are 13 of them | added |
 
 `editor_shell_test.dart` (15) is not counted. Most of it reads the outliner, the
 inspector and the project browser, which are task 16. Its save, unsaved marker
@@ -111,7 +111,7 @@ them.
 `EditorSession` holds what the Dart `EditorShell` kept in widget state, so a
 test can drive the editor with no window. `EditorWindow` draws it. The dock is a
 small host of our own, which reads and writes the same layout JSON as Dart.
-The window acts only on Undo, Redo, Save and Palette, and lets every other key
+The window acts only on Undo, Redo, Save, Save as and Palette, and lets every other key
 pass. Panels show their name until they are ported. The rail and the tabs are
 words, because no icon set is bundled yet (decision 84).
 

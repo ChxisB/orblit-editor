@@ -365,28 +365,107 @@ public sealed class EditorSessionTests : IDisposable
     }
 
     [Fact]
-    public void SavingASceneWithNoFileAsksForSaveAs()
+    public void SavingASceneWithNoFileAsksForAName()
     {
         var session = Open();
         session.Workspace.Loaded!.Path = null;
-        var said = new List<(string Text, SayLevel Level)>();
-        session.Said += (text, level) => said.Add((text, level));
+        var asked = 0;
+        var said = new List<string>();
+        session.NameWanted += () => asked++;
+        session.Said += (text, _) => said.Add(text);
 
         session.Save();
 
-        Assert.Equal(SayLevel.Error, Assert.Single(said).Level);
+        Assert.Equal(1, asked);
+        Assert.Empty(said);
         Assert.False(Directory.Exists(Scenes("")));
     }
 
     [Fact]
-    public void SaveAsGivesTheSceneAFileAndWritesIt()
+    public void SaveAsAsksForANameOnlyWhenASceneIsOpen()
+    {
+        var asked = 0;
+        var session = Open();
+        session.NameWanted += () => asked++;
+        session.AskForName();
+        Assert.Equal(1, asked);
+
+        var workspace = new Workspace(_project.FullName);
+        var empty = new EditorSession(workspace, new History(workspace), EditorModes.Standard(), PanelTypes.BuiltIn());
+        empty.NameWanted += () => asked++;
+        empty.AskForName();
+        Assert.Equal(1, asked);
+    }
+
+    [Theory]
+    [InlineData("other")]
+    [InlineData("other.oscene")]
+    public void SaveAsGivesTheSceneAFileInScenesAndWritesIt(string name)
     {
         var session = Open();
 
-        session.SaveAs(Scenes("other.oscene"));
+        session.SaveAs(name);
 
         Assert.True(File.Exists(Scenes("other.oscene")));
         Assert.Equal(Scenes("other.oscene"), session.Workspace.Loaded!.Path);
+    }
+
+    [Fact]
+    public void SaveAsOneOwnNameWritesTheSceneAgain()
+    {
+        var session = Open();
+        session.Save();
+
+        session.SaveAs("main");
+
+        Assert.Equal(Scenes("main.oscene"), session.Workspace.Loaded!.Path);
+        Assert.False(session.AnyUnsaved);
+    }
+
+    [Fact]
+    public void SaveAsRefusesANameWithAPathInIt()
+    {
+        var session = Open();
+        var said = new List<(string Text, SayLevel Level)>();
+        session.Said += (text, level) => said.Add((text, level));
+
+        session.SaveAs(Path.Combine("sub", "other"));
+
+        Assert.Equal(("A scene name cannot contain a path.", SayLevel.Error), Assert.Single(said));
+        Assert.Equal(Scenes("main.oscene"), session.Workspace.Loaded!.Path);
+        Assert.False(Directory.Exists(Scenes("sub")));
+    }
+
+    [Fact]
+    public void SaveAsRefusesTheNameOfAFileThatIsAlreadyThere()
+    {
+        Directory.CreateDirectory(Scenes(""));
+        File.WriteAllText(Scenes("other.oscene"), "keep me");
+        var session = Open();
+        var said = new List<(string Text, SayLevel Level)>();
+        session.Said += (text, level) => said.Add((text, level));
+
+        session.SaveAs("other");
+
+        Assert.Equal(("There is already a scene called other.", SayLevel.Error), Assert.Single(said));
+        Assert.Equal("keep me", File.ReadAllText(Scenes("other.oscene")));
+        Assert.Equal(Scenes("main.oscene"), session.Workspace.Loaded!.Path);
+    }
+
+    [Fact]
+    public void SaveAsThatCannotWriteLeavesTheSceneWhereItWas()
+    {
+        // A folder where the new file belongs.
+        Directory.CreateDirectory(Scenes("other.oscene"));
+        var session = Open();
+        session.Workspace.Loaded!.Path = null;
+        var said = new List<string>();
+        session.Said += (text, _) => said.Add(text);
+
+        session.SaveAs("other");
+
+        Assert.StartsWith("Could not save", Assert.Single(said));
+        Assert.Null(session.Workspace.Loaded!.Path);
     }
 
     [Fact]
@@ -418,6 +497,42 @@ public sealed class EditorSessionTests : IDisposable
 
         Assert.True(File.Exists(Path.Combine(_project.FullName, Workspace.SharedFileName)));
         Assert.False(session.IsUnsaved(session.Workspace.SharedEntry));
+    }
+
+    [Fact]
+    public void SavingTheSharedObjectsAlongsideSaysOnlyWhichSceneWasWritten()
+    {
+        var session = Open();
+        session.History.Run(new AddObject(
+            new SceneObject(id: "manager", name: "Manager", kind: ObjectKind.Group),
+            Workspace.SharedSceneId));
+        var said = new List<string>();
+        session.Said += (text, _) => said.Add(text);
+
+        session.Save();
+
+        Assert.True(File.Exists(Path.Combine(_project.FullName, Workspace.SharedFileName)));
+        Assert.Equal([$"Saved {Path.Combine("scenes", "main.oscene")}"], said);
+    }
+
+    [Fact]
+    public void SharedObjectsThatCannotBeWrittenSayWhatFailed()
+    {
+        // A folder where the shared file belongs.
+        Directory.CreateDirectory(Path.Combine(_project.FullName, Workspace.SharedFileName));
+        var session = Open();
+        session.History.Run(new AddObject(
+            new SceneObject(id: "manager", name: "Manager", kind: ObjectKind.Group),
+            Workspace.SharedSceneId));
+        var said = new List<(string Text, SayLevel Level)>();
+        session.Said += (text, level) => said.Add((text, level));
+
+        session.Save();
+
+        Assert.Equal(SayLevel.Info, said[0].Level);
+        Assert.StartsWith("Could not save the shared objects:", said[^1].Text);
+        Assert.Equal(SayLevel.Error, said[^1].Level);
+        Assert.True(session.IsUnsaved(session.Workspace.SharedEntry));
     }
 
     [Fact]

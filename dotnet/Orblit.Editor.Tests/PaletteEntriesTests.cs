@@ -54,6 +54,19 @@ public sealed class PaletteEntriesTests : IDisposable
 
         Assert.Equal("⌘S", PaletteEntries.For(session, HostPlatform.MacOS).First(one => one.Label == "Save").Keys);
         Assert.Equal("Ctrl+S", PaletteEntries.For(session, HostPlatform.Windows).First(one => one.Label == "Save").Keys);
+        Assert.Equal("⇧⌘S", PaletteEntries.For(session, HostPlatform.MacOS).First(one => one.Label == "Save as").Keys);
+    }
+
+    [Fact]
+    public void SaveAsAsksForAName()
+    {
+        var session = Session();
+        var asked = 0;
+        session.NameWanted += () => asked++;
+
+        Entry(session, "Save as").OnRun();
+
+        Assert.Equal(1, asked);
     }
 
     [Fact]

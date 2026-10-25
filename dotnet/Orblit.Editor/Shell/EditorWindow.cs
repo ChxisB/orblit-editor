@@ -48,6 +48,7 @@ public sealed class EditorWindow : Window
         Background = OrblitColors.Ground;
 
         _save = Item("menu_save", "Save", _session.Save, _platform.CommandShortcut(EditorKey.KeyS));
+        var saveAs = Item("menu_save_as", "Save as…", _session.AskForName, _platform.CommandShortcut(EditorKey.KeyS, shift: true));
         _undo = Item("menu_undo", "Undo", _session.Undo, _platform.CommandShortcut(EditorKey.KeyZ));
         _redo = Item("menu_redo", "Redo", _session.Redo, _platform.CommandShortcut(EditorKey.KeyZ, shift: true));
         _stats = Item("menu_stats", "Performance stats", _session.ToggleStats);
@@ -57,7 +58,7 @@ public sealed class EditorWindow : Window
         _deleteLayout = new MenuItem { Name = "menu_delete_layout", Header = "Delete layout" };
         _lock = Item("menu_lock", "Lock layout", ToggleLock);
 
-        _menu.Items.Add(Menu("File", _save));
+        _menu.Items.Add(Menu("File", _save, saveAs));
         _menu.Items.Add(Menu("Edit", _undo, _redo));
         _menu.Items.Add(Menu("View", _stats, _focus, Item("menu_save_layout", "Save layout…", AskLayoutName), _loadLayout, _deleteLayout, _lock, Item("menu_reset", "Reset panels", _session.ResetPanels), PanelsMenu()));
 
@@ -77,12 +78,14 @@ public sealed class EditorWindow : Window
         _session.History.Changed += Refresh;
         _session.Workspace.Changed += Refresh;
         _session.Said += Say;
+        _session.NameWanted += AskSceneName;
         Closed += (_, _) =>
         {
             _session.Changed -= Refresh;
             _session.History.Changed -= Refresh;
             _session.Workspace.Changed -= Refresh;
             _session.Said -= Say;
+            _session.NameWanted -= AskSceneName;
         };
 
         if (_session.Last is { } last)
@@ -178,6 +181,15 @@ public sealed class EditorWindow : Window
         VerticalAlignment = VerticalAlignment.Center,
     };
 
+    private async void AskSceneName()
+    {
+        var initial = _session.Workspace.Loaded?.Title ?? "";
+        if (await NamePrompt.Ask(this, "Save scene as", "Goes in scenes/, as .oscene", initial) is { } name)
+        {
+            _session.SaveAs(name);
+        }
+    }
+
     private async void AskLayoutName()
     {
         if (await NamePrompt.Ask(this, "Save layout", "Name this layout") is { } name)
@@ -222,6 +234,9 @@ public sealed class EditorWindow : Window
                 return true;
             case EditorVerb.Save:
                 _session.Save();
+                return true;
+            case EditorVerb.SaveAs:
+                _session.AskForName();
                 return true;
             case EditorVerb.Palette:
                 OpenPalette();

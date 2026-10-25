@@ -40,6 +40,9 @@ public sealed class EditorSession
     /// <summary>Something said to the person at the keyboard, such as a file that could not be written.</summary>
     public event Action<string, SayLevel>? Said;
 
+    /// <summary>Raised when a scene is to be saved and needs a name first, for a window to ask for one.</summary>
+    public event Action? NameWanted;
+
     /// <summary>Raised when the mode, the arrangement, the focus or the selection changes.</summary>
     public event Action? Changed;
 
@@ -263,25 +266,70 @@ public sealed class EditorSession
 
         if (entry.Path is null)
         {
-            Say($"{entry.Title} has no file yet. Choose one with Save as.", SayLevel.Error);
+            NameWanted?.Invoke();
             return;
         }
 
-        if (Write(entry) && entry.Id != Workspace.SharedSceneId)
+        SaveEntry(entry);
+    }
+
+    /// <summary>Asks for a name to save the open scene under, as saving a scene with no file does.</summary>
+    public void AskForName()
+    {
+        if (Workspace.Loaded is { Scene: not null })
         {
-            SaveShared();
+            NameWanted?.Invoke();
         }
     }
 
-    public void SaveAs(string path)
+    /// <summary>
+    /// Gives the open scene a file in the project's scenes folder and writes it.
+    /// <para>
+    /// The scene keeps the file it had when the write fails. Dart keeps the new path, so a later save
+    /// quietly tries the same failing file.
+    /// </para>
+    /// </summary>
+    public void SaveAs(string name)
     {
-        if (Workspace.Loaded is not { Scene: not null } entry)
+        if (Workspace.Loaded is not { Scene: not null } entry || string.IsNullOrWhiteSpace(name))
         {
             return;
         }
 
+        if (name.Contains(Path.DirectorySeparatorChar))
+        {
+            Say("A scene name cannot contain a path.", SayLevel.Error);
+            return;
+        }
+
+        var path = Workspace.PathFor(name);
+        if (IoFile.Exists(path) && (entry.Path is null || !Workspace.SamePath(path, entry.Path)))
+        {
+            Say($"There is already a scene called {name}.", SayLevel.Error);
+            return;
+        }
+
+        var before = entry.Path;
         entry.Path = path;
-        Save();
+        if (!SaveEntry(entry))
+        {
+            entry.Path = before;
+        }
+    }
+
+    private bool SaveEntry(SceneEntry entry)
+    {
+        if (!Write(entry))
+        {
+            return false;
+        }
+
+        if (entry.Id != Workspace.SharedSceneId)
+        {
+            SaveShared();
+        }
+
+        return true;
     }
 
     private void Say(string text, SayLevel level)
@@ -304,10 +352,27 @@ public sealed class EditorSession
             return;
         }
 
-        Write(entry);
+        // Said only when it fails, because the scene's own line is what somebody is waiting to read.
+        if (TryWrite(entry) is { } failure)
+        {
+            Say($"Could not save the shared objects: {failure}", SayLevel.Error);
+        }
     }
 
     private bool Write(SceneEntry entry)
+    {
+        if (TryWrite(entry) is { } failure)
+        {
+            Say($"Could not save {entry.Title}: {failure}", SayLevel.Error);
+            return false;
+        }
+
+        Say($"Saved {Path.GetRelativePath(Workspace.ProjectDirectory, entry.Path!)}", SayLevel.Info);
+        return true;
+    }
+
+    // Returns why it could not, or null once it is written and marked saved.
+    private string? TryWrite(SceneEntry entry)
     {
         try
         {
@@ -316,15 +381,13 @@ public sealed class EditorSession
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
-            Say($"Could not save {entry.Title}: {error.Message}", SayLevel.Error);
-            return false;
+            return error.Message;
         }
 
         entry.NeverWritten = false;
         entry.SavedStamp = History.StampFor(entry.Id);
         Workspace.Touched();
-        Say($"Saved {Path.GetRelativePath(Workspace.ProjectDirectory, entry.Path!)}", SayLevel.Info);
-        return true;
+        return null;
     }
 
     private void Reveal(string? sceneId)

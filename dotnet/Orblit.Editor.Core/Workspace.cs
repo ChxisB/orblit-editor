@@ -215,6 +215,6 @@ public sealed class Workspace(string projectDirectory) : ISceneHost
     /// <summary>Tells whoever is listening that something about a scene changed.</summary>
     public void Touched() => Changed?.Invoke();
 
-    private static bool SamePath(string a, string b) =>
+    internal static bool SamePath(string a, string b) =>
         string.Equals(Path.GetFullPath(a), Path.GetFullPath(b), StringComparison.Ordinal);
 }

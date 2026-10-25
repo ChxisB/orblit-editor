@@ -28,6 +28,8 @@
   - Sibling scenes in a project are sorted by name. Dart used folder order.
   - `ProjectStore.Forget` works with no recents folder. Dart threw.
   - .NET reads a few loose dates that Dart refuses.
+  - A Save as that cannot write leaves the scene on the file it had. Dart
+    keeps the new path.
   - `PanelKind.Icon` and `PaletteEntry.Icon` are names, where Dart held an
     `IconData`.
   - Text on the system clipboard keeps the held copy when a world in it is

@@ -10,8 +10,9 @@ public sealed class NamePrompt : Window
 {
     private readonly TextBox _name = new() { Name = "name", MinWidth = 240 };
 
-    public NamePrompt(string title, string label)
+    public NamePrompt(string title, string label, string initial = "")
     {
+        _name.Text = initial;
         Title = title;
         SizeToContent = SizeToContent.WidthAndHeight;
         CanResize = false;
@@ -19,7 +20,7 @@ public sealed class NamePrompt : Window
         Background = OrblitColors.Surface;
 
         var ok = new Button { Name = "ok", Content = "OK", IsDefault = true };
-        ok.Click += (_, _) => Close(_name.Text);
+        ok.Click += (_, _) => Close(_name.Text?.Trim());
         var cancel = new Button { Name = "cancel", Content = "Cancel", IsCancel = true };
         cancel.Click += (_, _) => Close(null);
 
@@ -35,6 +36,6 @@ public sealed class NamePrompt : Window
     }
 
     /// <summary>Asks, and returns what was typed, or null when it was cancelled.</summary>
-    public static Task<string?> Ask(Window owner, string title, string label) =>
-        new NamePrompt(title, label).ShowDialog<string?>(owner);
+    public static Task<string?> Ask(Window owner, string title, string label, string initial = "") =>
+        new NamePrompt(title, label, initial).ShowDialog<string?>(owner);
 }

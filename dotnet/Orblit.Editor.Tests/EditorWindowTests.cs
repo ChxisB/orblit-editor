@@ -286,6 +286,79 @@ public sealed class EditorWindowTests : IDisposable
         window.Close();
     });
 
+    [Fact]
+    public Task APromptStartsWithTheTextItWasGivenAndDropsTheSpacesAroundWhatIsTyped() => Headless.Run(async () =>
+    {
+        var (_, window) = Open();
+        var prompt = new NamePrompt("Save scene as", "Goes in scenes/", "main");
+        var typed = prompt.ShowDialog<string?>(window);
+        var field = Find<TextBox>(prompt, "name");
+        Assert.Equal("main", field.Text);
+
+        field.Text = "  other ";
+        Click(Find<Button>(prompt, "ok"));
+
+        Assert.Equal("other", await typed);
+        window.Close();
+    });
+
+    private static NamePrompt Prompt(Window window) => Assert.IsType<NamePrompt>(Assert.Single(window.OwnedWindows));
+
+    [Theory]
+    [InlineData(false, RawInputModifiers.Meta | RawInputModifiers.Shift)]
+    [InlineData(true, RawInputModifiers.Meta)]
+    public Task SaveAsAndSavingASceneWithNoFileBothAskForAName(bool noFile, RawInputModifiers held) => Headless.Run(() =>
+    {
+        var (session, window) = Open();
+        if (noFile)
+        {
+            session.Workspace.Loaded!.Path = null;
+        }
+
+        window.KeyPressQwerty(PhysicalKey.S, held);
+        Headless.Render();
+
+        Assert.Equal(session.Workspace.Loaded!.Title, Find<TextBox>(Prompt(window), "name").Text);
+        Assert.Empty(Directory.GetFiles(_temp.FullName, "*.oscene", SearchOption.AllDirectories));
+        window.OwnedWindows[0].Close();
+        window.Close();
+    });
+
+    [Fact]
+    public Task TheNameChosenInThePromptIsWhereTheSceneIsSaved() => Headless.Run(() =>
+    {
+        var (session, window) = Open();
+
+        window.KeyPressQwerty(PhysicalKey.S, RawInputModifiers.Meta | RawInputModifiers.Shift);
+        Headless.Render();
+        var prompt = Prompt(window);
+        Find<TextBox>(prompt, "name").Text = "copy";
+        Click(Find<Button>(prompt, "ok"));
+        Headless.Render();
+        Headless.Render();
+
+        Assert.True(File.Exists(Path.Combine(_temp.FullName, "scenes", "copy.oscene")));
+        Assert.Equal("Saved scenes/copy.oscene", Find<TextBlock>(window, "status").Text);
+        Assert.Equal("copy", session.Workspace.Loaded!.Title);
+        window.Close();
+    });
+
+    [Fact]
+    public Task CancellingThePromptWritesNothing() => Headless.Run(() =>
+    {
+        var (_, window) = Open();
+
+        window.KeyPressQwerty(PhysicalKey.S, RawInputModifiers.Meta | RawInputModifiers.Shift);
+        Headless.Render();
+        Click(Find<Button>(Prompt(window), "cancel"));
+        Headless.Render();
+        Headless.Render();
+
+        Assert.Empty(window.OwnedWindows);
+        Assert.False(File.Exists(Path.Combine(_temp.FullName, "scenes", "copy.oscene")));
+        window.Close();
+    });
+
     private static PaletteDialog Palette(Window window) => Assert.IsType<PaletteDialog>(Assert.Single(window.OwnedWindows));
 
     // What is chosen runs once the dialog has gone, on a later turn of the dispatcher.
