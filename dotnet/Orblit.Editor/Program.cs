@@ -45,6 +45,6 @@ internal static class Program
             Prefabs = prefabs.Find,
         };
         session.Report(opened.Problems);
-        return new EditorWindow(session);
+        return new EditorWindow(session, renderer: true);
     }
 }

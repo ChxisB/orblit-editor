@@ -18,6 +18,18 @@
   a name for a theme colour. The window will paint them, so the line maths
   can be tested without a control. The skeleton and limb gizmos are not in
   this package, because they need the animation panel.
+- The C# editor draws the scene view. A `SceneViewport` holds the renderer
+  surface from `Orblit.Filament.Avalonia`, the gizmo overlay, the tool strip
+  and the chips. It orbits, flies, picks, drags the handles and snaps, as the
+  Dart view does. The window keeps one view for each panel across a layout
+  change, and the dock host skips a layout whose text has not changed.
+- A pick made by the Dart editor and the C# one match. The exporter
+  `tool/parity/pick_test.dart` writes the ray, the object and the handle for a
+  grid of pixels from three cameras, and `DartPickTests` reads them back.
+- Two finger scroll on a trackpad only zooms in C#. Avalonia gives no scroll
+  phases, so the view cannot orbit or pan from it as Flutter's pan and zoom
+  does. The state class has both, so they need only the event. The hint chip
+  in the view says what works. A pinch zooms.
 - The C# scene gets its material and surface keys from FNV-1a. Dart used
   `Object.hash`, which promises no value, so the keys differ and nothing
   reads them. The rain and snow colour is a double lerp of the two tints.
@@ -26,9 +38,10 @@
 - A project, scene, layout and layout library written by the Dart editor
   read back in C# and write the same bytes. `tool/parity/dart_files_test.dart`
   writes the fixtures.
-- What is not ported yet: the viewport and gizmos, every panel body, the
-  terrain, cinematics and interface modes, the examples page, panel drag,
-  and closing a project back to the launcher. Panels show their name.
+- What is not ported yet: the skeleton and limb gizmos, mesh editing, every
+  panel body, the terrain, cinematics and interface modes, the camera preview
+  window, the examples page, panel drag, and closing a project back to the
+  launcher. Panels other than the scene view show their name.
 - No icon set or font is bundled, because that is a decision for Chris. The
   mode rail, the tabs and the palette rows are words. The 622 KB logo
   picture is not bundled, so the splash is drawn in code.

@@ -9,7 +9,9 @@
     <PackageReference Include="Avalonia" />
     <PackageReference Include="Avalonia.Desktop" />
     <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Orblit.Filament.Avalonia" />
     <ProjectReference Include="..\Orblit.Editor.Core\Orblit.Editor.Core.csproj" />
+    <ProjectReference Include="..\Orblit.Editor.Viewport\Orblit.Editor.Viewport.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="Orblit.Editor.Tests" />

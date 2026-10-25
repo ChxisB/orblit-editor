@@ -16,8 +16,10 @@ using Orblit.Editor.Core;
 /// <see cref="LayoutChanged"/> with the new arrangement and waits to be given it back.
 /// </summary>
 /// <remarks>
-/// shortcut: the panel in each group is built again on every change. A panel that keeps state of its
-/// own needs the controls kept between layouts, which waits for the panels themselves (task 16).
+/// A layout that says the same as the one drawn is not drawn again, because the window offers its
+/// layout on every change to the scene and a panel that is rebuilt loses its pointer mid-drag.
+/// shortcut: when the arrangement does change, the panel in each group is built again, so a panel
+/// that keeps state must be given back by the content function (the viewport is, the rest in task 16).
 /// </remarks>
 public sealed class DockHost : ContentControl
 {
@@ -25,10 +27,12 @@ public sealed class DockHost : ContentControl
 
     private readonly Func<DockedPanel, Control> _content;
     private DockLayout _layout;
+    private string _drawn;
 
     public DockHost(DockLayout layout, Func<DockedPanel, Control> content)
     {
         _layout = layout;
+        _drawn = layout.ToText();
         _content = content;
         Rebuild();
     }
@@ -42,7 +46,12 @@ public sealed class DockHost : ContentControl
         set
         {
             _layout = value;
-            Rebuild();
+            var text = value.ToText();
+            if (text != _drawn)
+            {
+                _drawn = text;
+                Rebuild();
+            }
         }
     }
 

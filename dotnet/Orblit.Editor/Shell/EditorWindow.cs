@@ -16,12 +16,14 @@ using Orblit.Editor.Core;
 /// does not.
 /// </summary>
 /// <remarks>
-/// shortcut: a panel shows its name until it is ported (the viewport in task 15, the rest in task 16),
-/// and the rail and tabs are words because no icon set is bundled yet (decision 84).
+/// shortcut: a panel other than the viewport shows its name until it is ported (task 16), and the
+/// rail and tabs are words because no icon set is bundled yet (decision 84).
 /// </remarks>
 public sealed class EditorWindow : Window
 {
     private readonly EditorSession _session;
+    private readonly bool _renderer;
+    private readonly Dictionary<string, SceneViewport> _viewports = [];
     private readonly HostPlatform _platform;
     private readonly IReadOnlyDictionary<KeyChord, ShortcutAction> _shortcuts;
     private readonly DockHost _dock;
@@ -38,9 +40,16 @@ public sealed class EditorWindow : Window
     private readonly MenuItem _deleteLayout;
     private readonly MenuItem _lock;
 
-    public EditorWindow(EditorSession session, HostPlatform? platform = null)
+    /// <param name="session">What the window shows and changes.</param>
+    /// <param name="platform">The host's keys, or the one this process runs on.</param>
+    /// <param name="renderer">
+    /// Whether a viewport draws the scene with the renderer. Off, it keeps a plain grid, which is what
+    /// a test without a native library wants.
+    /// </param>
+    public EditorWindow(EditorSession session, HostPlatform? platform = null, bool renderer = false)
     {
         _session = session;
+        _renderer = renderer;
         _platform = platform ?? HostPlatforms.Current;
         _shortcuts = ShortcutMap.For(_platform);
         Width = 1440;
@@ -62,7 +71,7 @@ public sealed class EditorWindow : Window
         _menu.Items.Add(Menu("Edit", _undo, _redo));
         _menu.Items.Add(Menu("View", _stats, _focus, Item("menu_save_layout", "Save layout…", AskLayoutName), _loadLayout, _deleteLayout, _lock, Item("menu_reset", "Reset panels", _session.ResetPanels), PanelsMenu()));
 
-        _dock = new DockHost(_session.VisibleLayout, Placeholder);
+        _dock = new DockHost(_session.VisibleLayout, PanelFor);
         _dock.LayoutChanged += layout =>
         {
             // A focused view is only a hiding of the arrangement. Taking a change to it would save the hiding.
@@ -171,6 +180,25 @@ public sealed class EditorWindow : Window
         }
 
         return panels;
+    }
+
+    // A viewport is kept for each panel and handed to whichever group shows it next. Building a new
+    // one on a change of layout would free its renderer and lose its camera.
+    private Control PanelFor(DockedPanel panel)
+    {
+        if (panel.Kind != PanelKind.Viewport)
+        {
+            return Placeholder(panel);
+        }
+
+        if (!_viewports.TryGetValue(panel.Id, out var viewport))
+        {
+            viewport = new SceneViewport(_session, _renderer);
+            _viewports[panel.Id] = viewport;
+        }
+
+        (viewport.Parent as Panel)?.Children.Remove(viewport);
+        return viewport;
     }
 
     private static TextBlock Placeholder(DockedPanel panel) => new TextBlock

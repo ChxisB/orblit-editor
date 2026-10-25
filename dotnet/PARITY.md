@@ -133,7 +133,7 @@ because a binary asset is Chris's call. There is no Examples page until task 17.
 | `orbit_camera_test.dart` | `OrbitCameraTests` | 8 | 8 | 8 | 0 | done |
 | `fly_camera_test.dart` | `FlyCameraTests` | 10 | 10 | 10 | 0 | done |
 | `gizmo_test.dart` | `GizmoTests` | 19 | 19 | 19 | 0 | done |
-| `viewport_input_test.dart` | `ViewportInputTests` | 16 | 16 | 8 | 0 | partial. The eight in the order group are ported. The eight widget tests wait for the viewport control |
+| `viewport_input_test.dart` | `ViewportInputTests` | 16 | 16 | 16 | 0 | done. The eight widget tests drive the stages and the gizmo types directly, with no control |
 | `selection_outline_test.dart` | `SelectionOutlineTests` | 7 | 7 | 7 | 0 | done. The engine keeps the packed keys internal, so the Dart check of them became a check of `Primary` |
 | `snapping_test.dart` | `SnappingTests` | 15 | 15 | 15 | 0 | done |
 | `grid_test.dart` | `GridTests` | 9 | 9 | 9 | 1: the tile reads back as the lines the grid draws | done. The tile is encoded by `Orblit.Sprite`, so its bytes differ from Flutter's |
@@ -141,6 +141,14 @@ because a binary asset is Chris's call. There is no Examples page until task 17.
 | `joint_test.dart` | `JointTests` | 18 | 18 | 13 | 0 | partial. The four on what a joint holds and the nine of the gizmo are ported. The scene file, section and edit groups wait for the panels |
 | `body_test.dart` | `BodyTests` | 19 | 19 | 11 | 0 | partial. The gizmo group is ported. The scene file and edit groups wait for the panels |
 | `sound_test.dart` | `SoundTests` | 13 | 13 | 2 | 0 | partial. The gizmo group is ported. The scene file, range, section and row groups wait for the panels |
+| `editor_shell_viewport_test.dart` | `EditorShellViewportTests` | 17 | 17 | 14 | 0 | partial. Flying, the wheel speed and the two finger gestures are ported. The three camera preview tests need the outliner, the inspector and the preview window, so they wait for task 16. Avalonia has no scroll phases, so the control does not turn a two finger scroll into an orbit or a pan. The four two finger tests send the gesture to the state |
+| `viewport_tools_test.dart` | `ViewportToolsTests` | 6 | 6 | 6 | 0 | done. Five Dart cases come from a `drawing` helper and one is a plain test |
+| none, the Dart view is one widget | `SceneViewportStateTests` | 0 | 0 | 0 | 14: flight, the wheel, looking, trackpad gestures, a drag on a ring and the clock, on the state that the control holds | added |
+| none | `SceneViewportTests` | 0 | 0 | 0 | 6: a drag orbits, a tap does not, a resize, the snap chip and the same view across a change, headless | added |
+| none | `ViewportChipsTests` | 0 | 0 | 0 | 14 cases in 3 tests: the chips the control shows and the grid label | added |
+| none | `DockHostTests` | 0 | 0 | 0 | 2: a layout with the same text is not drawn again, and one with other text is | added |
+| none | `GeometryStoreTests` | 0 | 0 | 0 | 8: a shape is written inside the project for the renderer, when it is stale and when it is forgotten | added |
+| `tool/parity/pick_test.dart` (an exporter, not a test) | `DartPickTests` | 0 | 0 | 0 | 4: three cameras and a grid of pixels each, the same ray, the same object and the same handle as Dart, and a check that the grid is not empty | added |
 
 The air and the sky in `SceneAir` use FNV-1a keys for materials and surfaces,
 where the Dart uses `Object.hash`. The key values are not part of the parity.

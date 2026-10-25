@@ -21,6 +21,8 @@ public static class OrblitColors
     public static readonly IBrush EmberWash = Brush(0x24E5893F);
     public static readonly IBrush Bad = Brush(0xFFD9634F);
     public static readonly IBrush Warn = Brush(0xFFE0B252);
+    public static readonly IBrush Good = Brush(0xFF5FB483);
+    public static readonly IBrush AxisZ = Brush(0xFF62A0E8);
 
     // Immutable, so a brush made while the type loads is safe to hand to a control on any thread.
     private static ImmutableSolidColorBrush Brush(uint argb) => new(Color.FromUInt32(argb));
