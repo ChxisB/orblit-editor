@@ -137,6 +137,10 @@ because a binary asset is Chris's call. There is no Examples page until task 17.
 | `selection_outline_test.dart` | `SelectionOutlineTests` | 7 | 7 | 7 | 0 | done. The engine keeps the packed keys internal, so the Dart check of them became a check of `Primary` |
 | `snapping_test.dart` | `SnappingTests` | 15 | 15 | 15 | 0 | done |
 | `grid_test.dart` | `GridTests` | 9 | 9 | 9 | 1: the tile reads back as the lines the grid draws | done. The tile is encoded by `Orblit.Sprite`, so its bytes differ from Flutter's |
+| `convex_outline_test.dart` | `ConvexOutlineTests` | 9 | 9 | 9 | 0 | done |
+| `joint_test.dart` | `JointTests` | 18 | 18 | 13 | 0 | partial. The four on what a joint holds and the nine of the gizmo are ported. The scene file, section and edit groups wait for the panels |
+| `body_test.dart` | `BodyTests` | 19 | 19 | 11 | 0 | partial. The gizmo group is ported. The scene file and edit groups wait for the panels |
+| `sound_test.dart` | `SoundTests` | 13 | 13 | 2 | 0 | partial. The gizmo group is ported. The scene file, range, section and row groups wait for the panels |
 
 The air and the sky in `SceneAir` use FNV-1a keys for materials and surfaces,
 where the Dart uses `Object.hash`. The key values are not part of the parity.

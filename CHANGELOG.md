@@ -11,7 +11,13 @@
 - Add `Orblit.Editor.Viewport` 0.1.0, the viewport's arithmetic with no
   widget: the orbit and fly cameras, the view ray and projection, the gizmo
   maths, the input order, the selection outline, snapping, the grid, and the
-  scene as the renderer takes it, with its sky, fog, rain and cloud.
+  scene as the renderer takes it, with its sky, fog, rain and cloud, and the
+  joint, body and sound gizmos as lines in the view.
+- In the C# library a `GizmoType` returns strokes and a tone, where the Dart
+  one returns a widget. A stroke is a set of lines in the view and a tone is
+  a name for a theme colour. The window will paint them, so the line maths
+  can be tested without a control. The skeleton and limb gizmos are not in
+  this package, because they need the animation panel.
 - The C# scene gets its material and surface keys from FNV-1a. Dart used
   `Object.hash`, which promises no value, so the keys differ and nothing
   reads them. The rain and snow colour is a double lerp of the two tints.
