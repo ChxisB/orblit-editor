@@ -4,6 +4,7 @@ using Avalonia.Controls.Documents;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 
 namespace Orblit.Editor;
 
@@ -69,6 +70,10 @@ public sealed class PaletteDialog : Window
         {
             _index = (_index + by) % _results.Count;
             Draw();
+
+            // The rows were built a moment ago and have no place yet, so wait for the layout.
+            var chosen = _rows.Children.OfType<Border>().First(row => row.Name == $"row_{_index}");
+            Dispatcher.UIThread.Post(chosen.BringIntoView, DispatcherPriority.Loaded);
         }
     }
 

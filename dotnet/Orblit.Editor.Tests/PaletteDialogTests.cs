@@ -195,4 +195,25 @@ public sealed class PaletteDialogTests
         dialog.Close(null);
         owner.Close();
     });
+
+    [Fact]
+    public Task TheChosenRowIsScrolledIntoViewWhenTheArrowsRunPastTheList() => Headless.Run(() =>
+    {
+        // A group shows at most twelve rows once something is typed, so two groups give 24 rows to run down.
+        var entries = Enumerable.Range(0, 12).SelectMany(i => new[] { Command($"Command {i}"), Object($"Object {i}") });
+        var (_, dialog, owner) = Open([.. entries], "o");
+        var scroll = All<ScrollViewer>(dialog).First();
+
+        for (var i = 0; i < 20; i++)
+        {
+            Press(dialog, PhysicalKey.ArrowDown);
+        }
+
+        Headless.Render();
+        var row = Find<Border>(dialog, "row_20");
+        var top = row.TranslatePoint(new Point(0, 0), scroll)!.Value.Y;
+        Assert.InRange(top, 0, scroll.Viewport.Height - row.Bounds.Height);
+        dialog.Close(null);
+        owner.Close();
+    });
 }

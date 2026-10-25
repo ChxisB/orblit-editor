@@ -69,7 +69,7 @@ nothing in it waits any more.
 | Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | `command_shortcuts_test.dart` | `CommandShortcutsTests` | 12 | 16 | 16 | 1: Command is still seen with Shift held | done. The two widget tests hold a key in a live keyboard, so they pass the held modifiers in |
-| `command_palette_test.dart` | `CommandPaletteTests`, `PaletteDialogTests` | 13 | 13 | 13 | 5: a group's title, the entry handed back unrun, the lit span of a label, one heading for each group, and the keys and meta beside a row | done. The six search tests are in `CommandPaletteTests` and the seven dialog tests in `PaletteDialogTests` |
+| `command_palette_test.dart` | `CommandPaletteTests`, `PaletteDialogTests` | 13 | 13 | 13 | 6: a group's title, the entry handed back unrun, the lit span of a label, one heading for each group, the keys and meta beside a row, and the chosen row scrolled into view | done. The six search tests are in `CommandPaletteTests` and the seven dialog tests in `PaletteDialogTests` |
 | `editor_shell_palette_test.dart` | `EditorWindowTests` | 5 | 5 | 4 | 0 | partial, counted in row 6 |
 | none, the Dart builds the entries inside the shell widget | `PaletteEntriesTests` | 0 | 0 | 0 | 7: every mode by name, undo and redo with their labels, the keys the host uses and Save as, an object selected, an object's parent, the focus entry | added |
 | none, the Dart has no test | `ShortcutMapTests` | 0 | 0 | 0 | 12: the map of keystrokes to verbs | added |
