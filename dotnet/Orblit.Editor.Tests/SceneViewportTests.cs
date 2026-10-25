@@ -76,6 +76,37 @@ public sealed class SceneViewportTests
     });
 
     [Fact]
+    public Task ALetterLetGoOfUnderACommandKeyStopsFlyingForward() => Headless.Run(() =>
+    {
+        using var rig = new ViewportRig();
+        rig.Click(rig.Centre);
+        rig.Tap(PhysicalKey.Backquote);
+        rig.Press(PhysicalKey.W);
+
+        rig.Window.KeyReleaseQwerty(PhysicalKey.W, RawInputModifiers.Meta);
+        var was = rig.Eye.Clone();
+        rig.View.State.Tick(TimeSpan.FromMilliseconds(100));
+        rig.View.State.Tick(TimeSpan.FromMilliseconds(200));
+
+        Assert.Equal(0, (rig.Eye - was).Length);
+    });
+
+    [Fact]
+    public Task AKeyHeldPartWayThroughADragSuspendsTheSnap() => Headless.Run(() =>
+    {
+        using var rig = new ViewportRig();
+        var from = rig.Centre;
+        rig.Window.MouseDown(from, MouseButton.Left);
+        Assert.False(rig.View.State.SuspendSnapping);
+
+        rig.Window.MouseMove(from + new Avalonia.Vector(60, 0), RawInputModifiers.LeftMouseButton | RawInputModifiers.Control);
+        Assert.True(rig.View.State.SuspendSnapping);
+
+        rig.Window.MouseUp(from + new Avalonia.Vector(60, 0), MouseButton.Left);
+        Assert.False(rig.View.State.SuspendSnapping);
+    });
+
+    [Fact]
     public Task AChangeThatLeavesTheLayoutAloneKeepsTheSameView() => Headless.Run(() =>
     {
         using var rig = new ViewportRig();

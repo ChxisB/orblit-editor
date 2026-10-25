@@ -29,6 +29,9 @@ using ViewSize = Orblit.Editor.Viewport.Size;
 ///
 /// shortcut: a two finger scroll on a trackpad arrives as a wheel and only zooms. Orbit and pan by
 /// trackpad need the scroll phases, which Avalonia has no event for yet.
+///
+/// shortcut: every frame builds the whole render scene, even when only the camera moved. Cache what
+/// comes from the scene when a large one drops frames during an orbit.
 /// </remarks>
 public sealed class SceneViewport : Border
 {
@@ -57,6 +60,7 @@ public sealed class SceneViewport : Border
     private bool _dragging;
     private bool _dirty = true;
     private bool _requested;
+    private int _loop;
     private bool _outlineSelection = true;
     private bool _pinching;
     private string _chipKey = "";
@@ -151,7 +155,17 @@ public sealed class SceneViewport : Border
         _session.Changed -= OnSessionChanged;
         _session.History.Changed -= MarkDirty;
         _session.Workspace.Changed -= MarkDirty;
+        // A frame already asked for belongs to the loop that ended here. Moving to a new group attaches
+        // again at once, and the old callback would run beside the new one.
+        _loop++;
         _requested = false;
+        Abandon();
+        if (_pinching)
+        {
+            _pinching = false;
+            _state.PanZoomEnd();
+        }
+
         base.OnDetachedFromVisualTree(e);
     }
 
@@ -235,7 +249,6 @@ public sealed class SceneViewport : Border
         else if (point.Properties.IsLeftButtonPressed)
         {
             _downAt = point.Position;
-            _state.SuspendSnapping = Held(e.KeyModifiers, KeyModifiers.Control | KeyModifiers.Alt);
         }
         else
         {
@@ -257,6 +270,8 @@ public sealed class SceneViewport : Border
         }
         else if (_downAt is { } from)
         {
+            // Read on every move, so a key pressed part way through a drag suspends the grid as well.
+            _state.SuspendSnapping = Held(e.KeyModifiers, KeyModifiers.Control | KeyModifiers.Alt);
             Drag(from, at, add);
         }
         else
@@ -301,7 +316,11 @@ public sealed class SceneViewport : Border
         e.Handled = true;
     }
 
-    private void OnCaptureLost(object? sender, PointerCaptureLostEventArgs e)
+    private void OnCaptureLost(object? sender, PointerCaptureLostEventArgs e) => Abandon();
+
+    // A gesture that ends without finishing: the pointer was taken away or the view left the window.
+    // A release of any button ends a flight, whichever way it began, as the Dart view does.
+    private void Abandon()
     {
         if (_dragging)
         {
@@ -341,7 +360,9 @@ public sealed class SceneViewport : Border
 
     private void OnKey(KeyEventArgs e, bool down)
     {
-        if (Held(e.KeyModifiers, KeyModifiers.Control | KeyModifiers.Meta | KeyModifiers.Alt))
+        // Only a key going down is left to a shortcut. A key coming up always reaches the state, or a
+        // letter let go of under a command key would stay held and keep the camera flying.
+        if (down && Held(e.KeyModifiers, KeyModifiers.Control | KeyModifiers.Meta | KeyModifiers.Alt))
         {
             return;
         }
@@ -423,7 +444,14 @@ public sealed class SceneViewport : Border
         }
 
         _requested = true;
-        top.RequestAnimationFrame(OnFrame);
+        var loop = _loop;
+        top.RequestAnimationFrame(now =>
+        {
+            if (loop == _loop)
+            {
+                OnFrame(now);
+            }
+        });
     }
 
     private void OnFrame(TimeSpan now)
@@ -459,6 +487,8 @@ public sealed class SceneViewport : Border
         }
 
         // The renderer picks how it will show frames after it is attached. Until it has, ask again.
+        // shortcut: this asks every frame, so a renderer that never chooses keeps the loop running.
+        // Wait on an event from the renderer once it raises one.
         if (_renderer.Path == ViewportPath.Pending)
         {
             MarkDirty();
@@ -542,11 +572,7 @@ public sealed class SceneViewport : Border
         _state.Snapping.On ? $"Snap: {ViewportChips.GridLabel(_state.Snapping.Step)}" : "Snap off",
         _state.Snapping.On,
         SnapTip,
-        () =>
-        {
-            _state.Snapping.On = !_state.Snapping.On;
-            MarkDirty();
-        });
+        _state.ToggleSnapping);
 
     private ChipSpec? FlyChip() => _state.Flying
         ? new ChipSpec($"Flying · {_state.FlySpeed:0.0} m/s", true, FlyTip, _state.ToggleFlying)

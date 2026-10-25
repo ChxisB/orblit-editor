@@ -30,6 +30,8 @@
   phases, so the view cannot orbit or pan from it as Flutter's pan and zoom
   does. The state class has both, so they need only the event. The hint chip
   in the view says what works. A pinch zooms.
+- A click in the view ends a flight begun with the backtick, because any
+  pointer going up ends flying in the Dart view and the state class keeps that.
 - The C# scene gets its material and surface keys from FNV-1a. Dart used
   `Object.hash`, which promises no value, so the keys differ and nothing
   reads them. The rain and snow colour is a double lerp of the two tints.

@@ -143,8 +143,8 @@ because a binary asset is Chris's call. There is no Examples page until task 17.
 | `sound_test.dart` | `SoundTests` | 13 | 13 | 2 | 0 | partial. The gizmo group is ported. The scene file, range, section and row groups wait for the panels |
 | `editor_shell_viewport_test.dart` | `EditorShellViewportTests` | 17 | 17 | 14 | 0 | partial. Flying, the wheel speed and the two finger gestures are ported. The three camera preview tests need the outliner, the inspector and the preview window, so they wait for task 16. Avalonia has no scroll phases, so the control does not turn a two finger scroll into an orbit or a pan. The four two finger tests send the gesture to the state |
 | `viewport_tools_test.dart` | `ViewportToolsTests` | 6 | 6 | 6 | 0 | done. Five Dart cases come from a `drawing` helper and one is a plain test |
-| none, the Dart view is one widget | `SceneViewportStateTests` | 0 | 0 | 0 | 14: flight, the wheel, looking, trackpad gestures, a drag on a ring and the clock, on the state that the control holds | added |
-| none | `SceneViewportTests` | 0 | 0 | 0 | 6: a drag orbits, a tap does not, a resize, the snap chip and the same view across a change, headless | added |
+| none, the Dart view is one widget | `SceneViewportStateTests` | 0 | 0 | 0 | 15: flight, the wheel, looking, trackpad gestures, a drag on a ring, the grid switch and the clock, on the state that the control holds | added |
+| none | `SceneViewportTests` | 0 | 0 | 0 | 8: a drag orbits, a tap does not, a resize, the snap chip, a key let go under a command key, a key held part way through a drag and the same view across a change, headless | added |
 | none | `ViewportChipsTests` | 0 | 0 | 0 | 14 cases in 3 tests: the chips the control shows and the grid label | added |
 | none | `DockHostTests` | 0 | 0 | 0 | 2: a layout with the same text is not drawn again, and one with other text is | added |
 | none | `GeometryStoreTests` | 0 | 0 | 0 | 8: a shape is written inside the project for the renderer, when it is stale and when it is forgotten | added |

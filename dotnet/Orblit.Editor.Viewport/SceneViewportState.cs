@@ -311,6 +311,13 @@ public sealed class SceneViewportState
         Changed?.Invoke();
     }
 
+    /// <summary>Switches the grid on or off. The lines and the chip follow it, so the view is told.</summary>
+    public void ToggleSnapping()
+    {
+        Snapping.On = !Snapping.On;
+        Changed?.Invoke();
+    }
+
     /// <summary>The right button went down at <paramref name="at"/>.</summary>
     public void BeginLooking(Offset at)
     {

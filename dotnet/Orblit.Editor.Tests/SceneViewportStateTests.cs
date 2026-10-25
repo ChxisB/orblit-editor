@@ -51,6 +51,20 @@ public sealed class SceneViewportStateTests
     }
 
     [Fact]
+    public void SwitchingTheGridOnAndOffTellsTheView()
+    {
+        var view = View();
+        var told = 0;
+        view.Changed += () => told++;
+
+        view.ToggleSnapping();
+        view.ToggleSnapping();
+
+        Assert.False(view.Snapping.On);
+        Assert.Equal(2, told);
+    }
+
+    [Fact]
     public void AMovementKeyIsLeftAloneUnlessFlying()
     {
         var view = View();
