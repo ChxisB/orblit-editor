@@ -211,6 +211,13 @@ public sealed class ProjectTests : IDisposable
         Assert.Equal(DateTime.UnixEpoch, project.LastOpened);
     }
 
+    [Fact]
+    public void TheDestinationIsTheFolderTheNameBecomes()
+    {
+        Assert.Equal(Folder("my-game"), ProjectStore.DestinationFor("My Game!", _temp.FullName));
+        Assert.Equal(Folder("orblit-project"), ProjectStore.DestinationFor("***", _temp.FullName));
+    }
+
     // A clock a test sets, in whole seconds from a fixed day.
     private sealed class Clock : TimeProvider
     {

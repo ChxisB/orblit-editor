@@ -238,7 +238,7 @@ public sealed class ProjectStore(string recentsFile, TimeProvider? time = null)
     /// </summary>
     public Project Create(string name, string parentDirectory, ProjectTemplate template)
     {
-        var directory = Path.Combine(parentDirectory, FolderName(name));
+        var directory = DestinationFor(name, parentDirectory);
         if (IoFile.Exists(Path.Combine(directory, Project.FileName)))
         {
             throw new InvalidOperationException($"There is already a project in {directory}.");
@@ -261,11 +261,14 @@ public sealed class ProjectStore(string recentsFile, TimeProvider? time = null)
         return project;
     }
 
-    // A name is for people and a path is for filesystems.
-    private static string FolderName(string name)
+    /// <summary>
+    /// Where the folder for a project lands. A name is for people and a path is for filesystems, so the
+    /// launcher shows this before anything is made.
+    /// </summary>
+    public static string DestinationFor(string name, string parentDirectory)
     {
         var slug = Regex.Replace(name.ToLowerInvariant(), "[^a-z0-9]+", "-").Trim('-');
-        return slug.Length == 0 ? "orblit-project" : slug;
+        return Path.Combine(parentDirectory, slug.Length == 0 ? "orblit-project" : slug);
     }
 
     private DateTime Now() => _time.GetLocalNow().DateTime;
