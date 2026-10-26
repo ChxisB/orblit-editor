@@ -73,6 +73,30 @@ public sealed class InspectorJointTests
     }
 
     [Fact]
+    public void TheSectionIsStillOfferedForAJointAFileGaveToSomethingThatHoldsNothing()
+    {
+        var scene = JointTests.Scene();
+        scene["lamp"]!.Components[Doc.SceneComponents.Joint] = new Doc.JointComponent();
+
+        Assert.True(JointSection.AppliesTo(InspectorModelTests.TargetFor(scene, "lamp")));
+    }
+
+    [Fact]
+    public void AddingAJointIsUndoneByTakingItOffAgain()
+    {
+        var scene = JointTests.Scene();
+        var workspace = new Workspace("/project");
+        workspace.Add(new SceneEntry("a", "A", scene: scene));
+        var history = new History(workspace);
+
+        history.Run(new SetObjectComponent("a", "hinge", "Add joint", Doc.SceneComponents.Joint, null, new Doc.JointComponent()));
+        Assert.NotNull(PhysicsComponents.JointOf(scene["hinge"]!));
+
+        history.Undo();
+        Assert.Null(PhysicsComponents.JointOf(scene["hinge"]!));
+    }
+
+    [Fact]
     public Task TheKindIsChosenFromAMenuAndNamesWhatItsLimitsRead() => Headless.Run(() =>
     {
         var (session, window) = JointedCrate();

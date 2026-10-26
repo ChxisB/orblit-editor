@@ -323,6 +323,21 @@ public sealed class InspectorComponentTests : IDisposable
         Assert.Null(PhysicsComponents.ZoneOf(In(session, "slab")));
     });
 
+    [Fact]
+    public Task AZoneIsTakenOffAgainByUndoAndByItsOwnButton() => Headless.Run(() =>
+    {
+        var (session, window) = Selecting("slab", World());
+
+        Press(window, "button_add_zone");
+        session.History.Undo();
+        Headless.Render();
+        Assert.False(Has(window, "button_remove_zone"));
+
+        Press(window, "button_add_zone");
+        Press(window, "button_remove_zone");
+        Assert.Null(PhysicsComponents.ZoneOf(In(session, "slab")));
+    });
+
     // A project with the world saved as its main scene, so a save has somewhere to go.
     private (EditorSession Session, Window Window) Project()
     {

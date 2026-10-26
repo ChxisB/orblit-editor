@@ -51,4 +51,19 @@ public sealed class SoundTests
         Assert.True(far.Width > near.Width * 2);
         Assert.True(far.Contains(new Offset(near.Left, near.Top)) && far.Contains(new Offset(near.Right, near.Bottom)));
     }
+
+    [Fact]
+    public void SoundComesBackFromTheSceneFileAsItWasSaved()
+    {
+        var source = new Doc.SoundSourceComponent(clip: "sounds/fire.ogg", bus: "sfx", loop: false, volume: 0.5, near: 2, far: 30, curve: Doc.SoundCurve.Linear);
+        var world = Scene(source);
+        world["fire"]!.Components[Doc.SceneComponents.SoundListener] = new Doc.SoundListenerComponent();
+        world["fire"]!.Components[Doc.SceneComponents.SoundSurface] = new Doc.SoundSurfaceComponent(name: "wood");
+
+        var back = SceneDocument.Decode(SceneDocument.Encode(world)).Scene["fire"]!;
+
+        Assert.Equal(source.ToJson(), PhysicsComponents.SoundSourceOf(back)!.ToJson());
+        Assert.True(back.Components.ContainsKey(Doc.SceneComponents.SoundListener));
+        Assert.Equal("wood", ((Doc.SoundSurfaceComponent)back.Components[Doc.SceneComponents.SoundSurface]).Name);
+    }
 }

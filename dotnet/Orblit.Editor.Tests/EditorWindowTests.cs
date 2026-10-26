@@ -429,4 +429,18 @@ public sealed class EditorWindowTests : IDisposable
         Assert.Equal(["extra"], session.Selected);
         window.Close();
     });
+
+    [Fact]
+    public Task TheInspectorSitsInTheWindowAndShowsWhatIsSelected() => Headless.Run(() =>
+    {
+        var (session, window) = Open();
+        Assert.Single(All<InspectorPanel>(window));
+        Assert.False(Has(window, "section_transform"));
+
+        session.Select(["cube"]);
+        Headless.Render();
+
+        Assert.True(Has(window, "section_transform"));
+        window.Close();
+    });
 }

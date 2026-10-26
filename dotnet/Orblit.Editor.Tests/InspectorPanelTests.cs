@@ -368,4 +368,52 @@ public sealed class InspectorPanelTests
 
         Assert.False(Headless.Find<Control>(window, "drag_position_0").IsEffectivelyVisible);
     });
+
+    [Fact]
+    public Task TheHeaderSaysWhatKindOfThingIsSelected() => Headless.Run(() =>
+    {
+        var (session, window) = Selecting("crate");
+        Assert.Contains(Headless.All<TextBlock>(window), one => one.Text == "Mesh object");
+
+        session.Select(["sun"]);
+        Headless.Render();
+        Assert.Contains(Headless.All<TextBlock>(window), one => one.Text == "Light");
+
+        session.Select(["camera"]);
+        Headless.Render();
+        Assert.Contains(Headless.All<TextBlock>(window), one => one.Text == "Camera");
+    });
+
+    [Fact]
+    public Task TheSceneItselfHasNoVisibleSwitch() => Headless.Run(() =>
+    {
+        var (session, window) = Selecting("crate");
+        Assert.True(Has(window, "inspector_visible"));
+
+        session.SelectScene("main");
+        Headless.Render();
+
+        Assert.False(Has(window, "inspector_visible"));
+    });
+
+    [Fact]
+    public Task ASectionFoldsWhenItsHeadingIsClickedAndOpensAgain() => Headless.Run(() =>
+    {
+        var (_, window) = Selecting("crate");
+
+        Headless.Click(window, "section_transform");
+        Assert.False(Headless.Find<Control>(window, "drag_position_0").IsEffectivelyVisible);
+
+        Headless.Click(window, "section_transform");
+        Assert.True(Headless.Find<Control>(window, "drag_position_0").IsEffectivelyVisible);
+    });
+
+    [Fact]
+    public Task EachAxisOfAVectorWearsItsOwnLetter() => Headless.Run(() =>
+    {
+        var (_, window) = Selecting("crate");
+
+        // Position, rotation and scale have one letter each per row.
+        Assert.All(new[] { "X", "Y", "Z" }, axis => Assert.Equal(3, Headless.All<TextBlock>(window).Count(one => one.Text == axis)));
+    });
 }

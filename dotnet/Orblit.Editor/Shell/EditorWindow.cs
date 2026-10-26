@@ -167,7 +167,12 @@ public sealed class EditorWindow : Window
             return new SceneViewport(_session, _renderer);
         }
 
-        return panel.Kind == PanelKind.Outliner ? new OutlinerPanel(_session, _platform, () => OpenPalette("Add ")) : Placeholder(panel);
+        if (panel.Kind == PanelKind.Outliner)
+        {
+            return new OutlinerPanel(_session, _platform, () => OpenPalette("Add "));
+        }
+
+        return panel.Kind == PanelKind.Inspector ? new InspectorPanel(_session) : Placeholder(panel);
     }
 
     private static TextBlock Placeholder(DockedPanel panel) => new TextBlock
