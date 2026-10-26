@@ -9,49 +9,12 @@ using Orblit.Editor.Core;
 using Orblit.Light;
 using Orblit.Scene;
 using Orblit.Weather;
+using static Orblit.Editor.Tests.InspectorRig;
 
 /// <summary>The inspector as a window shows it: what it offers for each kind of object, and what its fields change.</summary>
 public sealed class InspectorPanelTests
 {
     private const string PrefabPath = "prefabs/Lamp.oprefab";
-
-    private static (EditorSession Session, Window Window) Open(EditorScene? scene = null, InspectorLinks? links = null)
-    {
-        var workspace = new Workspace("/project");
-        if (scene is not null || !workspace.IsEmpty)
-        {
-            workspace.Add(new SceneEntry("main", "Main", scene: scene));
-        }
-
-        return Show(workspace, links);
-    }
-
-    private static (EditorSession Session, Window Window) Show(Workspace workspace, InspectorLinks? links)
-    {
-        var session = new EditorSession(workspace, new History(workspace), EditorModes.Standard(), PanelTypes.BuiltIn());
-        var panel = new InspectorPanel(session, links);
-        var frame = new Grid { RowDefinitions = new RowDefinitions("*,Auto") };
-        frame.Children.Add(panel);
-        var elsewhere = new Button { Name = "elsewhere", Content = "elsewhere" };
-        elsewhere[Grid.RowProperty] = 1;
-        frame.Children.Add(elsewhere);
-        var window = new Window { Width = 360, Height = 900, Content = frame };
-        window.Show();
-        Headless.Render();
-        return (session, window);
-    }
-
-    private static (EditorSession Session, Window Window) Selecting(string id, EditorScene? scene = null, InspectorLinks? links = null)
-    {
-        var (session, window) = Open(scene ?? EditorScene.Starter(), links);
-        session.Select([id]);
-        Headless.Render();
-        return (session, window);
-    }
-
-    private static bool Has(Control root, string name) => Headless.All<Control>(root).Any(one => one.Name == name);
-
-    private static string TextOf(Control root, string name) => Headless.Find<TextBlock>(root, name).Text ?? "";
 
     private static EditorScene Prefabbed(PrefabState state) => new(
     [
@@ -67,15 +30,6 @@ public sealed class InspectorPanelTests
 
         Assert.Equal("Open or create a scene to edit its objects.", TextOf(window, "inspector_empty"));
         Assert.True(Has(window, "button_new_scene"));
-    });
-
-    [Fact]
-    public Task WithASceneAndNothingSelectedItAsksForAnObject() => Headless.Run(() =>
-    {
-        var (_, window) = Open(EditorScene.Starter());
-
-        Assert.Equal("Select an object to edit it.", TextOf(window, "inspector_pick"));
-        Assert.False(Has(window, "section_transform"));
     });
 
     [Fact]

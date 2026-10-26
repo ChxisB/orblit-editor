@@ -23,6 +23,7 @@ internal sealed class InspectorPanel : UserControl
     private readonly InspectorLinks _links;
     private readonly FieldHost _host;
     private readonly Fields _fields;
+    private readonly SceneFields _sceneFields;
     private readonly IReadOnlyList<InspectorSection<Control>> _sections;
 
     // Kept between rebuilds, and filled again, so that a scroll position survives one.
@@ -39,6 +40,7 @@ internal sealed class InspectorPanel : UserControl
         _links = links ?? new InspectorLinks();
         _host = new FieldHost(session.History, Rebuild);
         _fields = new Fields(_host);
+        _sceneFields = new SceneFields(_fields);
         _sections = InspectorSections.BuiltIn(_fields);
 
         _scroll = new ScrollViewer { Name = "inspector_scroll", Content = _stack };
@@ -82,17 +84,13 @@ internal sealed class InspectorPanel : UserControl
 
         if (entry.Scene is not { } scene || _session.InspectedItem is not { } item)
         {
-            _stack.Children.Add(Note("inspector_pick", "Select an object to edit it."));
+            // Nothing selected in it, or not open: what is left to edit is the scene itself.
+            ScrollToTopFor($"scene/{entry.Id}");
+            _stack.Children.Add(_sceneFields.Build(_host, entry, _session.LoadScene));
             return;
         }
 
-        // A different object starts at the top, as a new panel would. The same one stays where it was.
-        if (_shown != item.Id)
-        {
-            _shown = item.Id;
-            _scroll.Offset = default;
-        }
-
+        ScrollToTopFor(item.Id);
         var target = new InspectorTarget
         {
             SceneId = entry.Id,
@@ -105,6 +103,18 @@ internal sealed class InspectorPanel : UserControl
         };
         Bands(scene, item);
         Body(target);
+    }
+
+    // A different thing starts at the top, as a new panel would. The same one stays where it was.
+    private void ScrollToTopFor(string key)
+    {
+        if (_shown == key)
+        {
+            return;
+        }
+
+        _shown = key;
+        _scroll.Offset = default;
     }
 
     private void Bands(EditorScene scene, SceneObject item)

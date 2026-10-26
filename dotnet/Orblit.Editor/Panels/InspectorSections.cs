@@ -23,6 +23,8 @@ internal static class InspectorSections
         new("transform", target => target.Item.Kind is not (ObjectKind.Scene or ObjectKind.Weather), target => Transform(fields, target)),
         new("light", target => target.Item.Kind == ObjectKind.Light, target => LightSection.Build(fields, target)),
         new("mesh", target => target.Item.Kind == ObjectKind.Mesh, target => Mesh(fields, target)),
+        new("weather", target => target.Item.Kind == ObjectKind.Weather, target => WeatherSection.Weather(fields, target)),
+        new("air", target => target.Item.Kind == ObjectKind.Weather, target => WeatherSection.Air(fields, target)),
         new("interface", target => target.Item.Kind == ObjectKind.Canvas, target => Interface(fields, target)),
         new("data", target => target.Item.Data.Count > 0, target => Data(fields, target)),
     ];

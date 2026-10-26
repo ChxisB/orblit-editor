@@ -1,6 +1,5 @@
 namespace Orblit.Editor.Viewport;
 
-using System.Diagnostics;
 using Orblit.Editor.Core;
 using Orblit.Filament;
 using Orblit.Light;
@@ -184,7 +183,7 @@ internal static class SceneAir
         // the wind down.
         var heading = WeatherState.WindFrom(weather.WindDirection);
         var wind = new Vector2(heading.X * now.WindSpeed * 2.5, heading.Z * now.WindSpeed * 2.5);
-        var clouds = ShapeOf(kind) with { Cover = now.CloudCover, Wind = wind };
+        var clouds = CloudShapes.Of(kind) with { Cover = now.CloudCover, Wind = wind };
 
         // The kind is the shape; the height is a setting on top of it, and the scene always has
         // one. The colour is what the sky puts back into the shadowed side, warmed by whatever is
@@ -196,17 +195,6 @@ internal static class SceneAir
         WeatherConditionKind(condition) is var chosen && chosen == CloudKind.None ? CloudKind.Cumulus : chosen;
 
     private static CloudKind WeatherConditionKind(WeatherCondition condition) => CloudKindExtensions.ForCondition(condition);
-
-    private static Clouds ShapeOf(CloudKind kind) => kind switch
-    {
-        CloudKind.None => Clouds.None,
-        CloudKind.Cumulus => Clouds.Cumulus,
-        CloudKind.Stratocumulus => Clouds.Stratocumulus,
-        CloudKind.Stratus => Clouds.Stratus,
-        CloudKind.Cirrus => Clouds.Cirrus,
-        CloudKind.Cumulonimbus => Clouds.Cumulonimbus,
-        _ => throw new UnreachableException(),
-    };
 
     /// <summary>
     /// Component-wise interpolation, which the vector type does not offer for colours and which

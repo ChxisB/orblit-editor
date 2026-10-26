@@ -90,18 +90,73 @@ internal static class InspectorBands
     /// The object's name, which is editable in place, with what kind of thing it is under it and the
     /// switch that shows or hides it.
     /// </summary>
+    public static Control Header(FieldHost host, InspectorTarget target)
+    {
+        var item = target.Item;
+        Control? visible = null;
+        if (item.Kind != ObjectKind.Scene)
+        {
+            visible = new OrblitSwitch(
+                "Visible",
+                item.Visible,
+                wanted => host.Apply(() => host.History.Run(new SetVisible(target.SceneId, item.Id, item.Name, wanted))))
+            {
+                Name = "inspector_visible",
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+        }
+
+        return Header(host, new HeaderOptions
+        {
+            Name = target.Scene.DisplayNameOf(item),
+            Caption = item.KindLabel,
+            Rename = now => now == item.Name ? null : new Rename(target.SceneId, item.Id, item.Name, now),
+            Trailing = visible,
+        });
+    }
+
+    /// <summary>A name, and under it what it names, with room on the right for a control.</summary>
     /// <remarks>
     /// Renaming merges into one undo step while the box has focus and seals when it lets go, so undo
     /// returns to the old name and not to a prefix of the new one.
     /// </remarks>
-    public static Control Header(FieldHost host, InspectorTarget target)
+    public static Control Header(FieldHost host, HeaderOptions options)
     {
-        var item = target.Item;
-        var shown = target.Scene.DisplayNameOf(item);
+        var head = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(Space.Lg, Space.Xs, Space.Lg, Space.Lg) };
+        var names = new StackPanel { Children = { NameBox(host, options) }, VerticalAlignment = VerticalAlignment.Center };
+        if (options.Caption is { } caption)
+        {
+            names.Children.Add(new TextBlock { Text = caption, FontSize = OrblitText.Caption, Foreground = OrblitColors.InkDim });
+        }
+
+        head.Children.Add(names);
+        if (options.Trailing is { } trailing)
+        {
+            Grid.SetColumn(trailing, 1);
+            head.Children.Add(trailing);
+        }
+
+        return head;
+    }
+
+    private static Control NameBox(FieldHost host, HeaderOptions options)
+    {
+        if (options.Rename is not { } rename)
+        {
+            return new TextBlock
+            {
+                Name = "inspector_title",
+                Text = options.Name,
+                FontSize = 14,
+                FontWeight = FontWeight.SemiBold,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+            };
+        }
+
         var box = new TextBox
         {
             Name = "inspector_name",
-            Text = shown,
+            Text = options.Name,
             FontSize = 14,
             FontWeight = FontWeight.SemiBold,
             Background = Brushes.Transparent,
@@ -109,7 +164,7 @@ internal static class InspectorBands
             Padding = new Thickness(0),
         };
         // A box that has just been built reports its starting text once it is shown. That is not an edit.
-        var last = shown;
+        var last = options.Name;
         box.TextChanged += (_, _) =>
         {
             var now = (box.Text ?? "").Trim();
@@ -119,10 +174,10 @@ internal static class InspectorBands
             }
 
             last = now;
-            if (now != item.Name)
+            if (rename(now) is { } command)
             {
                 host.Hold();
-                host.History.Run(new Rename(target.SceneId, item.Id, item.Name, now));
+                host.History.Run(command);
             }
         };
         box.LostFocus += (_, _) => host.Settle();
@@ -133,25 +188,7 @@ internal static class InspectorBands
                 host.Settle();
             }
         };
-
-        var kind = new TextBlock { Text = item.KindLabel, FontSize = OrblitText.Caption, Foreground = OrblitColors.InkDim };
-        var head = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(Space.Lg, Space.Xs, Space.Lg, Space.Lg) };
-        head.Children.Add(new StackPanel { Children = { box, kind }, VerticalAlignment = VerticalAlignment.Center });
-        if (item.Kind != ObjectKind.Scene)
-        {
-            var visible = new OrblitSwitch(
-                "Visible",
-                item.Visible,
-                wanted => host.Apply(() => host.History.Run(new SetVisible(target.SceneId, item.Id, item.Name, wanted))))
-            {
-                Name = "inspector_visible",
-                VerticalAlignment = VerticalAlignment.Center,
-            };
-            Grid.SetColumn(visible, 1);
-            head.Children.Add(visible);
-        }
-
-        return head;
+        return box;
     }
 
     /// <summary>One data object an object points at.</summary>
@@ -212,4 +249,18 @@ internal static class InspectorBands
         Grid.SetColumn(button, column);
         row.Children.Add(button);
     }
+}
+
+/// <summary>What a header names, and whether the name can be changed from there.</summary>
+internal sealed record HeaderOptions
+{
+    public required string Name { get; init; }
+
+    /// <summary>What kind of thing it is, under the name. Null where the name says enough.</summary>
+    public string? Caption { get; init; }
+
+    /// <summary>The command a typed name makes, or null when it is no change. Absent where the name is not editable.</summary>
+    public Func<string, EditorCommand?>? Rename { get; init; }
+
+    public Control? Trailing { get; init; }
 }
