@@ -443,4 +443,32 @@ public sealed class EditorWindowTests : IDisposable
         Assert.True(Has(window, "section_transform"));
         window.Close();
     });
+
+    [Fact]
+    public Task TheProjectPanelSitsInTheWindowAndListsTheProjectsFiles() => Headless.Run(() =>
+    {
+        File.WriteAllText(Path.Join(_temp.FullName, "notes.md"), "read me");
+        var (_, window) = Open();
+
+        Assert.Single(All<AssetBrowserPanel>(window));
+        Assert.Contains(All<AssetTile>(window), tile => tile.Asset.Name == "notes.md");
+        window.Close();
+    });
+
+    [Fact]
+    public Task OpeningASceneInTheProjectPanelLoadsIt() => Headless.Run(() =>
+    {
+        var scenes = Directory.CreateDirectory(Path.Join(_temp.FullName, "scenes")).FullName;
+        File.WriteAllText(Path.Join(scenes, "main.oscene"), SceneDocument.Encode(EditorScene.Starter()));
+        File.WriteAllText(Path.Join(scenes, "props.oscene"), SceneDocument.Encode(new EditorScene([], name: "Props")));
+        var (session, window) = Open();
+        Assert.Equal("main", session.Workspace.Loaded!.Title);
+        Headless.Render();
+
+        Headless.DoubleClick(window, All<AssetTile>(window).First(tile => tile.Asset.Name == "scenes"));
+        Headless.DoubleClick(window, All<AssetTile>(window).First(tile => tile.Asset.Name == "props.oscene"));
+
+        Assert.True(Headless.Until(() => session.Workspace.Loaded?.Title == "props"));
+        window.Close();
+    });
 }

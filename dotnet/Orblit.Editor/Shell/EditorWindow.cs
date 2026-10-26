@@ -16,8 +16,8 @@ using Orblit.Editor.Core;
 /// does not.
 /// </summary>
 /// <remarks>
-/// shortcut: a panel other than the viewport and the hierarchy shows its name until it is ported
-/// (task 16), and the rail and tabs are words because no icon set is bundled yet (decision 84).
+/// shortcut: a panel not ported yet shows its name (task 16), and the rail and tabs are words because
+/// no icon set is bundled yet (decision 84).
 /// </remarks>
 public sealed class EditorWindow : Window
 {
@@ -32,6 +32,8 @@ public sealed class EditorWindow : Window
     private readonly TextBlock _status = new() { Name = "status", FontSize = OrblitText.Caption };
     private readonly Dictionary<string, Button> _rail = [];
     private readonly EditorMenu _menu;
+    private AssetTree? _assets;
+    private CookStatusIndex? _cooks;
 
     // Keys that mean something else while a text box has the keyboard: delete a letter, copy some words.
     private static readonly HashSet<EditorVerb> ObjectVerbs = [EditorVerb.Delete, EditorVerb.Copy, EditorVerb.Cut, EditorVerb.Paste, EditorVerb.Duplicate];
@@ -93,6 +95,7 @@ public sealed class EditorWindow : Window
             _session.Workspace.Changed -= Refresh;
             _session.Said -= Say;
             _session.NameWanted -= AskSceneName;
+            _assets?.Dispose();
         };
 
         if (_session.Last is { } last)
@@ -172,7 +175,33 @@ public sealed class EditorWindow : Window
             return new OutlinerPanel(_session, _platform, () => OpenPalette("Add "));
         }
 
+        if (panel.Kind == PanelKind.Project)
+        {
+            return Project();
+        }
+
         return panel.Kind == PanelKind.Inspector ? new InspectorPanel(_session) : Placeholder(panel);
+    }
+
+    // One tree and one cook index for the window, made when the first project panel is. Two panels on
+    // one project look at the same cache, and hashing it twice would say nothing new.
+    private AssetBrowserPanel Project()
+    {
+        var directory = _session.Workspace.ProjectDirectory;
+        _assets ??= new AssetTree(directory);
+        _cooks ??= new CookStatusIndex(directory);
+        var links = new AssetBrowserLinks { OnOpenAsset = OpenAsset, OnProblem = problem => _session.Report([problem]) };
+        return new AssetBrowserPanel(_assets, _cooks, links, _renderer);
+    }
+
+    // The other kinds open in the panels that edit them, and those arrive with their rows (4 to 13).
+    private void OpenAsset(Asset asset)
+    {
+        var scene = _session.Workspace.Entries.FirstOrDefault(entry => entry.Path == asset.Path);
+        if (asset.Kind == AssetKind.Scene && scene is not null)
+        {
+            _session.LoadScene(scene);
+        }
     }
 
     private static TextBlock Placeholder(DockedPanel panel) => new TextBlock

@@ -176,6 +176,41 @@
   - A failed cook with no error reads "<shader> did not cook.".
 - `SurfaceCooks` is driven from the interface thread. `CookStatusIndex`
   can raise `Changed` from the pool.
+- Add the asset browser and the asset preview to the dock's Project panel.
+  The browser lists the project's folders and files. Each file has a mark
+  for where it stands with the cook, the header counts what is left to do,
+  and a filter keeps the files whose name has what was typed. A texture's
+  tile shows the picture, and any other file shows an icon. A right click
+  offers what can be made or done to a file. A narrow panel puts the
+  folders over the files and drops the filter. A double click opens a
+  folder, or a scene.
+- The preview sits beside the files where the panel is 560 wide or more. A
+  model is drawn by the renderer from the file on disk, framed by the size
+  the file declares and turning slowly. A drag moves the camera round it
+  and a scroll moves it in and out. A texture is shown as itself over a
+  chequer. Any other file is named by its kind. A button in the header
+  shuts the preview and frees the renderer.
+- Differences from the Dart editor:
+  - A model that is stopped stays where it is. Dart took back the turn it
+    had made and the model jumped.
+  - The extent of a model shows where there is no renderer too.
+  - A texture is shown from a copy decoded to 480 pixels wide, through the
+    cache the tiles use. Dart showed the file at full size.
+  - Deleting or renaming the file that is shown clears the selection and
+    the preview. Dart left the preview on the old path.
+  - Selecting a folder in the grid tells the editor that nothing is
+    selected.
+  - Icons are drawn from path data, because no icon font is bundled
+    (decision 84). The menu rows have none and the cook summary has no
+    warning mark.
+  - Thumbnails decode on the pool, and the cache keeps a fixed number. Any
+    file that will not decode keeps its icon.
+  - The menu follows `NewAssetGroup.Loose`, and an object dropped on a
+    folder passes the object's id.
+- Not in the browser yet: dragging a file out of it. The window wires only
+  opening a scene and the line that says a file operation failed. Opening
+  the other kinds, Build, making a prefab and the data object come with
+  rows 4 to 13.
 
 ## 1.26.0+27
 
