@@ -172,6 +172,7 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | `collision_model_test.dart` | `ModelCollisionTests` | 2 | 2 | 2 | 0 | done |
 | `assets_test.dart` | `AssetsTests` | 43 | 43 | 43 | 0 | done. The watch tests wait on the folder watcher and the settle timer, as Dart's wait on the stream |
 | `cook_status_test.dart` | `CookStatusTests` | 16 | 16 | 16 | 0 | done. Each cooks for real over a temp project, with a cache of its own |
+| `shader_test.dart` | `ShaderTests` | 17 | 15 | 17 | 0 | done. The two that compile with a real `matc` are skipped unless `ORBLIT_MATC` is set, in Dart as here. The five section tests are headless, and the colour is the editor's swatch row, not a free colour row |
 | none | `OutlinerModelTests` | 0 | 0 | 0 | 15: the rows and their depth, the folds, a scene row with a filter, an unloaded scene, where a drop lands and what a drop refuses | added |
 | none | `EditorSessionObjectsTests` | 0 | 0 | 0 | 26: selecting, adding and naming, ids, deleting, moving, duplicating, the clipboard labels and a clipboard that cannot be reached | added |
 | none | `OutlinerPanelTests` | 0 | 0 | 0 | 18: the rows and the count, the selection drawn, a scene row, the filter message, a fold, the remove button, the edit keys with and without a text box, the Add menu, the Edit menu waiting for a selection and a drop, how an unloaded scene says to load it, the mark on a scene never written, a click that only selects, discarding in the leave dialog, the hover close button, no close on the shared row, and New scene from the menu and from the key | added |
@@ -187,9 +188,9 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | none | `CookStatusTests` | 0 | 0 | 0 | 2: ready before an ask and while asking, and a path with dots in it | added |
 | none | `PaletteEntriesTests` | 0 | 0 | 0 | 5: the Edit and Add entries and New scene | added |
 | none | `AssetsTests` | 0 | 0 | 0 | 23: the last listener stopping the watch, nothing written outside the project, a slash in a name, a rename that changes only the case, a folder renamed to its own name in another case, a header that is kept, a link left out, the data object's text, the size label, the kind of a name and which files build | added |
+| none | `ShaderTests` | 0 | 0 | 0 | 2: a project with no shader is not cooked, and without a compiler the cook reports a problem against the shader and does not throw | added |
 
-Not in the inspector yet, and not counted: `shader_test.dart` (17) waits for row 3,
-`editor_shell_terrain_test.dart` (4) for row 5, `blend_inspector_test.dart` (6) and
+Not in the inspector yet, and not counted: `editor_shell_terrain_test.dart` (4) for row 5, `blend_inspector_test.dart` (6) and
 `editor_shell_blends_test.dart` (7) for row 7, and `editor_shell_prefabs_test.dart` (23) and
 `editor_shell_data_test.dart` (22) for row 13, because they need the shell. The
 inspector takes its prefab and data buttons, the model reader and the size of a

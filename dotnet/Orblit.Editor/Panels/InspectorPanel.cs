@@ -41,7 +41,7 @@ internal sealed class InspectorPanel : UserControl
         _host = new FieldHost(session.History, Rebuild);
         _fields = new Fields(_host);
         _sceneFields = new SceneFields(_fields);
-        _sections = InspectorSections.BuiltIn(_fields);
+        _sections = InspectorSections.BuiltIn(_fields, _links.Surfaces);
 
         _scroll = new ScrollViewer { Name = "inspector_scroll", Content = _stack };
         _scroll[Grid.RowProperty] = 1;
@@ -59,6 +59,11 @@ internal sealed class InspectorPanel : UserControl
         _session.Changed += _host.Changed;
         _session.History.Changed += _host.Changed;
         _session.Workspace.Changed += _host.Changed;
+        if (_links.Surfaces is { } surfaces)
+        {
+            surfaces.Changed += _host.Changed;
+        }
+
         Rebuild();
     }
 
@@ -67,6 +72,11 @@ internal sealed class InspectorPanel : UserControl
         _session.Changed -= _host.Changed;
         _session.History.Changed -= _host.Changed;
         _session.Workspace.Changed -= _host.Changed;
+        if (_links.Surfaces is { } surfaces)
+        {
+            surfaces.Changed -= _host.Changed;
+        }
+
         // A field that was being edited gets no LostFocus once it is off the tree, and a hold left over would stop every rebuild.
         _host.Settle();
         base.OnDetachedFromVisualTree(e);

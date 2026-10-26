@@ -32,4 +32,7 @@ internal sealed record InspectorLinks
     public Action<string>? OnRevertPrefab { get; init; }
 
     public Action<string>? OnUnpackPrefab { get; init; }
+
+    /// <summary>What each author-written shader in the project cooked to, for the section that sets its uniforms.</summary>
+    public SurfaceCooks? Surfaces { get; init; }
 }

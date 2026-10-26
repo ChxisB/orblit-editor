@@ -159,6 +159,23 @@
   and the window picks the brush.
 - A cook that fails reads as the exception's message. Dart printed the type
   name before it.
+- Add the shader cook and the shader section. `ShaderCook` stages the
+  project's `.oshader` files and what they include, cooks only those, and
+  keeps each good package in `.orblit/shaders/packages` so a failed save
+  leaves the last one on disk. `SurfaceCooks` holds the last good cook of
+  each shader, cooks again only when a shader file has changed, and tells
+  each new complaint once. The inspector's Shader section offers the
+  uniforms an author marked `instance`: a swatch row for `source_color`, a
+  slider for `hint_range`, a drag for the rest. The window fills
+  `InspectorLinks.Surfaces` with the shell, so the section is not on
+  screen yet.
+- Differences from the Dart editor:
+  - A colour uniform is the editor's swatch row. Dart opened a free colour
+    row.
+  - The cook runs on the thread pool. Dart ran it in an isolate.
+  - A failed cook with no error reads "<shader> did not cook.".
+- `SurfaceCooks` is driven from the interface thread. `CookStatusIndex`
+  can raise `Changed` from the pool.
 
 ## 1.26.0+27
 
