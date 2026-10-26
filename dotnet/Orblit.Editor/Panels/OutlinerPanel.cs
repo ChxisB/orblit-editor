@@ -19,7 +19,6 @@ using Orblit.Editor.Panels;
 /// </remarks>
 internal sealed class OutlinerPanel : UserControl
 {
-    private static readonly DataFormat<string> Dragged = DataFormat.CreateStringApplicationFormat("orblit.object");
     private const double DragStart = 4;
     private const double Indent = 14;
 
@@ -334,7 +333,7 @@ internal sealed class OutlinerPanel : UserControl
     private static async void Drag(PointerPressedEventArgs press, string id)
     {
         var data = new DataTransfer();
-        data.Add(DataTransferItem.Create(Dragged, id));
+        data.Add(DataTransferItem.Create(ObjectDrops.Format, id));
         await DragDrop.DoDragDropAsync(press, data, DragDropEffects.Move);
     }
 
@@ -343,7 +342,7 @@ internal sealed class OutlinerPanel : UserControl
         _model.Accepts(row, draggedId) ? OutlinerModel.BandAt(row, fraction) : null;
 
     private DropKind? Target(OutlinerRow row, Border view, DragEventArgs e) =>
-        e.DataTransfer.TryGetValue(Dragged) is { } id && view.Bounds.Height > 0
+        e.DataTransfer.TryGetValue(ObjectDrops.Format) is { } id && view.Bounds.Height > 0
             ? Band(row, id, e.GetPosition(view).Y / view.Bounds.Height)
             : null;
 
@@ -358,7 +357,7 @@ internal sealed class OutlinerPanel : UserControl
     private void OnDrop(OutlinerRow row, Border view, DragEventArgs drop)
     {
         Mark(view, null);
-        if (drop.DataTransfer.TryGetValue(Dragged) is { } id && view.Bounds.Height > 0)
+        if (drop.DataTransfer.TryGetValue(ObjectDrops.Format) is { } id && view.Bounds.Height > 0)
         {
             Release(row.Key, id, drop.GetPosition(view).Y / view.Bounds.Height);
         }

@@ -26,6 +26,7 @@ public sealed class CookStatusIndex
     private volatile string? _problem;
     private volatile bool _asking;
     private bool _askAgain;
+    private volatile bool _held;
 
     public CookStatusIndex(string projectDirectory, string? cachePath = null, CookTarget? target = null)
     {
@@ -102,6 +103,11 @@ public sealed class CookStatusIndex
     {
         lock (_gate)
         {
+            if (_held)
+            {
+                return;
+            }
+
             if (_asking)
             {
                 _askAgain = true;
@@ -139,10 +145,22 @@ public sealed class CookStatusIndex
         }
     }
 
+    /// <summary>
+    /// Takes <paramref name="states"/> as the answer and stops asking. For a test that wants the
+    /// panel's drawing of an answer, not a cook of a folder it never made.
+    /// </summary>
+    internal void Hold(IReadOnlyDictionary<string, CookState> states)
+    {
+        _held = true;
+        _states = states.ToDictionary(entry => IoPath.GetFullPath(entry.Key), entry => entry.Value);
+        Changed?.Invoke();
+    }
+
     /// <summary>Forgets everything, for a project being closed.</summary>
     public void Clear()
     {
         _states = None;
+        _held = false;
         _problem = null;
         Changed?.Invoke();
     }

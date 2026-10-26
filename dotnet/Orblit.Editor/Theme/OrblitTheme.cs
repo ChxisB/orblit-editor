@@ -4,6 +4,8 @@ using Avalonia.Media.Immutable;
 
 namespace Orblit.Editor;
 
+using Orblit.Editor.Core;
+
 /// <summary>The editor's colours. One place, so a panel never picks its own grey.</summary>
 public static class OrblitColors
 {
@@ -26,6 +28,15 @@ public static class OrblitColors
     public static readonly IBrush AxisX = Brush(0xFFF0736A);
     public static readonly IBrush AxisY = Brush(0xFF7FD083);
     public static readonly IBrush AxisZ = Brush(0xFF62A0E8);
+
+    /// <summary>The brush for a place in the theme that a model names without drawing.</summary>
+    public static IBrush For(CookMark mark) => mark switch
+    {
+        CookMark.Good => Good,
+        CookMark.Warn => Warn,
+        CookMark.Bad => Bad,
+        _ => throw new ArgumentOutOfRangeException(nameof(mark), mark, null),
+    };
 
     // Immutable, so a brush made while the type loads is safe to hand to a control on any thread.
     private static ImmutableSolidColorBrush Brush(uint argb) => new(Color.FromUInt32(argb));

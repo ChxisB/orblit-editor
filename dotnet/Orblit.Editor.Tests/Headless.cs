@@ -58,6 +58,42 @@ public static class Headless
         Dispatcher.UIThread.RunJobs();
     }
 
+    /// <summary>
+    /// Draws and waits until <paramref name="test"/> holds, for what finishes off the UI thread such as
+    /// a picture being decoded. False when it never did, so the test's own assertion says what is missing.
+    /// </summary>
+    /// <remarks>
+    /// It sleeps and does not await. Nothing runs the UI thread's queue while a test is suspended at an
+    /// await, so a continuation posted back to it would never be reached.
+    /// </remarks>
+    public static bool Until(Func<bool> test)
+    {
+        for (var tries = 0; tries < 300; tries++)
+        {
+            Render();
+            if (test())
+            {
+                return true;
+            }
+
+            Thread.Sleep(10);
+        }
+
+        return false;
+    }
+
+    /// <summary>Draws for <paramref name="milliseconds"/>, for a test that expects nothing to change.</summary>
+    public static void Wait(int milliseconds)
+    {
+        for (var left = milliseconds; left > 0; left -= 10)
+        {
+            Render();
+            Thread.Sleep(10);
+        }
+
+        Render();
+    }
+
     public static IEnumerable<T> All<T>(Control root) => root.GetLogicalDescendants().OfType<T>();
 
     public static T Find<T>(Control root, string name)
@@ -78,6 +114,13 @@ public static class Headless
         window.MouseDown(at, MouseButton.Left);
         window.MouseUp(at, MouseButton.Left);
         Render();
+    }
+
+    /// <summary>Two presses on one spot in a row, which the input system reads as a double click.</summary>
+    public static void DoubleClick(Window window, Control control)
+    {
+        Click(window, control);
+        Click(window, control);
     }
 }
 
