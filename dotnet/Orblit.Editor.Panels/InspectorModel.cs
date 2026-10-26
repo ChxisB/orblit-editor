@@ -81,17 +81,17 @@ public static class InspectorModel
     }
 
     /// <summary>
-    /// The numbers with number <paramref name="index"/> moved by <paramref name="pixels"/> at
-    /// <paramref name="step"/> units each, and not below <paramref name="minimum"/> when there is one.
+    /// The numbers with number <paramref name="index"/> moved by <paramref name="change"/>, and not
+    /// below <paramref name="minimum"/> when there is one.
     /// </summary>
     /// <remarks>
     /// A floor, so a scale cannot be dragged through zero into a matrix that cannot be inverted, nor a
     /// ball into one with no size.
     /// </remarks>
-    public static double[] Dragged(IReadOnlyList<double> values, int index, double pixels, double step, double? minimum)
+    public static double[] Dragged(IReadOnlyList<double> values, int index, double change, double? minimum)
     {
         var next = values.ToArray();
-        var moved = next[index] + (pixels * step);
+        var moved = next[index] + change;
         next[index] = minimum is { } floor && moved < floor ? floor : moved;
         return next;
     }

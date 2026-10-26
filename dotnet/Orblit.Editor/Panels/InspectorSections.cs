@@ -23,8 +23,8 @@ internal static class InspectorSections
         new("transform", IsObject, target => Transform(fields, target)),
         new("light", target => target.Item.Kind == ObjectKind.Light, target => LightSection.Build(fields, target)),
         new("mesh", target => target.Item.Kind == ObjectKind.Mesh, target => Mesh(fields, target)),
-        new("weather", target => target.Item.Kind == ObjectKind.Weather, target => WeatherSection.Weather(fields, target)),
-        new("air", target => target.Item.Kind == ObjectKind.Weather, target => WeatherSection.Air(fields, target)),
+        new("weather", target => target.Item.Kind == ObjectKind.Weather, target => new WeatherSection(fields, target).Weather()),
+        new("air", target => target.Item.Kind == ObjectKind.Weather, target => new WeatherSection(fields, target).Air()),
         new("body", BodySection.AppliesTo, target => BodySection.Build(fields, target)),
         new("zone", ZoneSection.AppliesTo, target => ZoneSection.Build(fields, target)),
         new("joint", JointSection.AppliesTo, target => JointSection.Build(fields, target)),
@@ -41,7 +41,7 @@ internal static class InspectorSections
 
     /// <summary>A flag as Off and On side by side, which reads faster in a long list than a switch does.</summary>
     /// <param name="change">The command that sets the flag to what was chosen.</param>
-    public static Control OffOn(Fields fields, InspectorTarget target, string label, bool current, Func<bool, EditorCommand> change) =>
+    public static Control OffOn(Fields fields, string label, bool current, Func<bool, EditorCommand> change) =>
         fields.Choice(
             label,
             OffOnOptions,
@@ -51,7 +51,7 @@ internal static class InspectorSections
                 var wanted = chosen == "On";
                 if (wanted != current)
                 {
-                    target.History.Run(change(wanted));
+                    fields.Host.History.Run(change(wanted));
                 }
             });
 
@@ -92,8 +92,8 @@ internal static class InspectorSections
             Fields.Column(
             [
                 fields.Palette("Base colour", item.Colour, value => history.Run(new SetColour(target.SceneId, item.Id, item.Name, item.Colour, value))),
-                OffOn(fields, target, "Cast shadows", item.CastShadows, wanted => new SetCastShadows(target.SceneId, item.Id, item.Name, wanted)),
-                OffOn(fields, target, "Receive shadows", item.ReceiveShadows, wanted => new SetReceiveShadows(target.SceneId, item.Id, item.Name, wanted)),
+                OffOn(fields, "Cast shadows", item.CastShadows, wanted => new SetCastShadows(target.SceneId, item.Id, item.Name, wanted)),
+                OffOn(fields, "Receive shadows", item.ReceiveShadows, wanted => new SetReceiveShadows(target.SceneId, item.Id, item.Name, wanted)),
                 // Nought for anything rigid, which is almost everything, so the row reads as off rather
                 // than as a number somebody has to interpret. Only the weather decides how hard it
                 // blows. This is how much this object answers.

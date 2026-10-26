@@ -40,7 +40,6 @@ internal static class LightSection
         rows.Add(Size(fields, target));
         rows.Add(InspectorSections.OffOn(
             fields,
-            target,
             "Cast shadows",
             item.CastShadows,
             wanted => new SetCastShadows(target.SceneId, item.Id, item.Name, wanted)));

@@ -35,9 +35,9 @@ public sealed class InspectorModelTests
         Assert.Equal(shown, InspectorModel.Clock(hour));
 
     [Fact]
-    public void DraggingMovesOneNumberByThePixelsTimesTheStepAndLeavesTheOthers()
+    public void DraggingMovesOneNumberByTheChangeAndLeavesTheOthers()
     {
-        var next = InspectorModel.Dragged([1, 2, 3], 1, 10, 0.02, null);
+        var next = InspectorModel.Dragged([1, 2, 3], 1, 10 * 0.02, null);
 
         Assert.Equal(1, next[0]);
         Assert.Equal(2.2, next[1], 9);
@@ -47,7 +47,7 @@ public sealed class InspectorModelTests
     [Fact]
     public void DraggingStopsAtTheMinimumSoAScaleNeverReachesZero()
     {
-        var next = InspectorModel.Dragged([0.002, 1, 1], 0, -1, 0.02, 0.001);
+        var next = InspectorModel.Dragged([0.002, 1, 1], 0, -1 * 0.02, 0.001);
 
         Assert.Equal(0.001, next[0]);
     }
@@ -57,7 +57,7 @@ public sealed class InspectorModelTests
     {
         double[] was = [1, 2, 3];
 
-        InspectorModel.Dragged(was, 0, 5, 1, null);
+        InspectorModel.Dragged(was, 0, 5, null);
 
         Assert.Equal([1, 2, 3], was);
     }

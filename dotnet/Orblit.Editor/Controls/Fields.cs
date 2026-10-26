@@ -189,11 +189,11 @@ internal sealed class Fields(FieldHost host)
             var at = index;
             fields.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
             var number = Number(
-                $"drag_{Key(label)}_{index}",
                 () => read()[at],
                 axes ? AxisOf(index) : null,
                 options.Decimals,
-                pixels => onChanged(InspectorModel.Dragged(read(), at, pixels, options.Step, options.Minimum)));
+                pixels => onChanged(InspectorModel.Dragged(read(), at, pixels * options.Step, options.Minimum)));
+            number.Name = $"drag_{Key(label)}_{index}";
             Grid.SetColumn(number, index);
             number.Margin = new Thickness(index == 0 ? 0 : 3, 0, index == values.Count - 1 ? 0 : 3, 0);
             fields.Children.Add(number);
@@ -535,7 +535,7 @@ internal sealed class Fields(FieldHost host)
     };
 
     /// <summary>One draggable number, with the letter of its axis in front where it has one.</summary>
-    private Border Number(string name, Func<double> read, (string Name, IBrush Colour)? axis, int decimals, Action<double> onDrag)
+    private Border Number(Func<double> read, (string Name, IBrush Colour)? axis, int decimals, Action<double> onDrag)
     {
         var text = new TextBlock
         {
@@ -566,7 +566,6 @@ internal sealed class Fields(FieldHost host)
         inside.Children.Add(text);
         var number = new Border
         {
-            Name = name,
             Height = Height,
             Padding = new Thickness(Space.Sm, 0),
             Background = OrblitColors.Raised,

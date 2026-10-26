@@ -56,9 +56,12 @@ internal static class InspectorBands
         }
 
         var actions = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*"), Margin = new Thickness(0, Space.Sm, 0, 0) };
-        Action(actions, 0, "Apply", PrefabApplyTip, readable ? links.OnApplyPrefab : null, selected.Id);
-        Action(actions, 1, "Revert", PrefabRevertTip, readable ? links.OnRevertPrefab : null, selected.Id);
-        Action(actions, 2, "Unpack", PrefabUnpackTip, readable ? links.OnUnpackPrefab : null, selected.Id);
+
+        // A prefab that cannot be read has nothing to apply, revert or unpack.
+        Action? On(Action<string>? link) => readable && link is not null ? () => link(selected.Id) : null;
+        Action(actions, "Apply", PrefabApplyTip, On(links.OnApplyPrefab));
+        Action(actions, "Revert", PrefabRevertTip, On(links.OnRevertPrefab));
+        Action(actions, "Unpack", PrefabUnpackTip, On(links.OnUnpackPrefab));
         column.Children.Add(actions);
         return new Border
         {
@@ -232,8 +235,10 @@ internal static class InspectorBands
         return link;
     }
 
-    private static void Action(Grid row, int column, string label, string tooltip, Action<string>? onPressed, string id)
+    // Placed in the next column, so the three read left to right in the order they are made.
+    private static void Action(Grid row, string label, string tooltip, Action? onPressed)
     {
+        var column = row.Children.Count;
         var button = new Button
         {
             Name = $"prefab_{label.ToLowerInvariant()}",
@@ -245,7 +250,7 @@ internal static class InspectorBands
             Margin = new Thickness(column == 0 ? 0 : Space.Xs, 0, 0, 0),
         };
         ToolTip.SetTip(button, tooltip);
-        button.Click += (_, _) => onPressed?.Invoke(id);
+        button.Click += (_, _) => onPressed?.Invoke();
         Grid.SetColumn(button, column);
         row.Children.Add(button);
     }
