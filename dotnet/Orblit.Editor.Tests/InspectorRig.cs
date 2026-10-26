@@ -56,9 +56,11 @@ internal static class InspectorRig
         Headless.Click(window, name);
     }
 
-    /// <summary>Presses on a control, moves the pointer sideways by <paramref name="pixels"/> and lets go.</summary>
+    /// <summary>Scrolls a control into view, presses on it, moves the pointer sideways by <paramref name="pixels"/> and lets go.</summary>
     internal static void Drag(Window window, string name, double pixels)
     {
+        Headless.Find<Control>(window, name).BringIntoView();
+        Headless.Render();
         var at = Headless.Centre(window, name);
         window.MouseDown(at, MouseButton.Left);
         window.MouseMove(at + new Vector(pixels, 0));

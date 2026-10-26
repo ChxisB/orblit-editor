@@ -186,4 +186,149 @@ public sealed class BodyTests
 
         Assert.Null(flat);
     }
+
+    // A scene saved by the editor and opened again.
+    private static EditorScene Reopened(EditorScene scene) => SceneDocument.Decode(SceneDocument.Encode(scene)).Scene;
+
+    // A document the editor did not write, opened and saved by it.
+    private static Doc.SceneDocument ThroughTheEditor(Doc.SceneDocument document) =>
+        Doc.SceneDocument.Decode(SceneDocument.Encode(SceneDocument.Decode(document.Encode()).Scene)).Document;
+
+    private static SetObjectComponent Put(EditorScene scene, Doc.BodyComponent? to, string label = "Set Crate body") =>
+        new("a", "crate", label, Doc.SceneComponents.Body, PhysicsComponents.PhysicsBodyOf(scene["crate"]!), to);
+
+    [Fact]
+    public void ABodyComesBackFromTheFileAsItWasSaved()
+    {
+        var body = new Doc.BodyComponent(
+            shape: Doc.BodyShape.Capsule,
+            radius: 0.3,
+            height: 1.8,
+            centre: new Vector3(0, 0.9, 0),
+            motion: Doc.BodyMotion.Driven,
+            friction: 0.8);
+
+        var back = Reopened(new EditorScene([Crate(body)]));
+
+        Assert.Equal(body.ToJson(), PhysicsComponents.PhysicsBodyOf(back["crate"]!)!.ToJson());
+    }
+
+    [Fact]
+    public void AnObjectWithoutABodyDoesNotGrowOne()
+    {
+        var back = Reopened(new EditorScene([Crate()]));
+
+        Assert.Null(PhysicsComponents.PhysicsBodyOf(back["crate"]!));
+        Assert.DoesNotContain("\"body\"", SceneDocument.Encode(back));
+    }
+
+    [Fact]
+    public void AComponentTheEditorHasNeverHeardOfIsWrittenBackWhole()
+    {
+        // What a newer Orblit or a project's own tool wrote. Opening the scene and saving it must not
+        // be how it is lost.
+        var back = ThroughTheEditor(new Doc.SceneDocument(
+            entities:
+            [
+                new Doc.SceneEntity(
+                    "crate",
+                    "Crate",
+                    components: new Dictionary<string, Doc.SceneComponent>
+                    {
+                        [Doc.SceneComponents.Transform] = new Doc.TransformComponent(),
+                        ["wobble"] = new Doc.UnknownComponent("wobble", new Dictionary<string, object?> { ["rate"] = 3L }),
+                    }),
+            ]));
+
+        Assert.Equal(3L, back["crate"]!["wobble"]!.ToJson()["rate"]);
+    }
+
+    [Fact]
+    public void ALampKeepsItsMeshThoughItsRowIsOnlyALight()
+    {
+        var back = ThroughTheEditor(new Doc.SceneDocument(
+            entities:
+            [
+                new Doc.SceneEntity(
+                    "lamp",
+                    "Lamp",
+                    components: new Dictionary<string, Doc.SceneComponent>
+                    {
+                        [Doc.SceneComponents.Transform] = new Doc.TransformComponent(),
+                        [Doc.SceneComponents.Light] = new Doc.LightComponent(),
+                        [Doc.SceneComponents.Mesh] = new Doc.MeshComponent(asset: "assets/meshes/lamp.glb"),
+                    }),
+            ]));
+
+        var mesh = Assert.IsType<Doc.MeshComponent>(back["lamp"]![Doc.SceneComponents.Mesh]);
+        Assert.Equal("assets/meshes/lamp.glb", mesh.Asset);
+        Assert.NotNull(back["lamp"]![Doc.SceneComponents.Light]);
+    }
+
+    [Fact]
+    public void ACopyCarriesTheBodyAndDoesNotShareTheMap()
+    {
+        var item = Crate(new Doc.BodyComponent());
+        var copy = item.CopyAs("other");
+        copy.Components.Remove(Doc.SceneComponents.Body);
+
+        Assert.NotNull(PhysicsComponents.PhysicsBodyOf(item));
+        Assert.Null(PhysicsComponents.PhysicsBodyOf(copy));
+    }
+
+    private static (EditorScene Scene, History History) Editing()
+    {
+        var scene = new EditorScene([Crate()]);
+        var workspace = new Workspace("/project");
+        workspace.Add(new SceneEntry("a", "A", scene: scene));
+        return (scene, new History(workspace));
+    }
+
+    [Fact]
+    public void AddingABodyIsUndoneByTakingItOffAgain()
+    {
+        var (scene, history) = Editing();
+        history.Run(Put(scene, new Doc.BodyComponent(), "Add body"));
+        Assert.NotNull(PhysicsComponents.PhysicsBodyOf(scene["crate"]!));
+
+        history.Undo();
+        Assert.Null(PhysicsComponents.PhysicsBodyOf(scene["crate"]!));
+
+        history.Redo();
+        Assert.NotNull(PhysicsComponents.PhysicsBodyOf(scene["crate"]!));
+    }
+
+    [Fact]
+    public void ADragThroughAFieldIsOneStep()
+    {
+        var (scene, history) = Editing();
+        history.Run(Put(scene, new Doc.BodyComponent(mass: 2), "Add body"));
+        history.Seal();
+        for (var i = 1; i <= 30; i++)
+        {
+            history.Run(Put(scene, PhysicsComponents.PhysicsBodyOf(scene["crate"]!)!.CopyWith(mass: 2.0 + i)));
+        }
+
+        Assert.Equal(32, PhysicsComponents.PhysicsBodyOf(scene["crate"]!)!.Mass);
+        Assert.Equal("Set Crate body", history.UndoLabel);
+
+        // Back to before the drag, and the body stays on: the drag and the adding are separate steps.
+        history.Undo();
+        Assert.Equal(2, PhysicsComponents.PhysicsBodyOf(scene["crate"]!)!.Mass);
+        Assert.Equal("Add body", history.UndoLabel);
+    }
+
+    [Fact]
+    public void TakingTheBodyOffIsItsOwnStepNotTheEndOfADrag()
+    {
+        var (scene, history) = Editing();
+        history.Run(Put(scene, new Doc.BodyComponent(), "Add body"));
+        history.Seal();
+        history.Run(Put(scene, PhysicsComponents.PhysicsBodyOf(scene["crate"]!)!.CopyWith(mass: 5)));
+        history.Run(Put(scene, null, "Remove body"));
+
+        Assert.Null(PhysicsComponents.PhysicsBodyOf(scene["crate"]!));
+        history.Undo();
+        Assert.Equal(5, PhysicsComponents.PhysicsBodyOf(scene["crate"]!)!.Mass);
+    }
 }

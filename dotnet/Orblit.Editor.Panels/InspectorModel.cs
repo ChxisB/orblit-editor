@@ -27,6 +27,9 @@ public sealed class InspectorTarget
     /// <summary>Opens the interface a canvas puts on screen.</summary>
     public Action<string>? OnOpenInterface { get; init; }
 
+    /// <summary>How big a mesh is in its own space where the editor holds no geometry for it, such as an imported model.</summary>
+    public Func<SceneObject, (Vector3 Min, Vector3 Max)?>? BoundsOf { get; init; }
+
     /// <summary>
     /// Whether something it is inside hides it while it is shown itself. A different state from hidden
     /// here, and an object that says "shown" while nothing appears is worse than no control at all.

@@ -100,6 +100,7 @@ internal sealed class InspectorPanel : UserControl
             OnOpenData = _links.OnOpenData,
             OnDetachData = _links.OnDetachData,
             OnOpenInterface = _links.OnOpenInterface,
+            BoundsOf = _links.BoundsOf,
         };
         Bands(scene, item);
         Body(target);

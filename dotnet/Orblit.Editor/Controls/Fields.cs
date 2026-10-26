@@ -311,6 +311,26 @@ internal sealed class Fields(FieldHost host)
         return Row(label, Tracked(track));
     }
 
+    /// <summary>Several flags in one row, each a cell that lights while it is on.</summary>
+    /// <param name="label">What the flags hold.</param>
+    /// <param name="cells">Each cell's text and whether it is on.</param>
+    /// <param name="onToggle">Called with the cell's index.</param>
+    public Control Flags(string label, IReadOnlyList<(string Name, bool On)> cells, Action<int> onToggle)
+    {
+        var track = new Grid { Height = Height };
+        for (var index = 0; index < cells.Count; index++)
+        {
+            var at = index;
+            track.ColumnDefinitions.Add(new ColumnDefinition(1, GridUnitType.Star));
+            var cell = Cell(cells[at].Name, cells[at].On, () => host.Apply(() => onToggle(at)));
+            cell.Name = $"toggle_{Key(label)}_{Key(cells[at].Name)}";
+            Grid.SetColumn(cell, at);
+            track.Children.Add(cell);
+        }
+
+        return Row(label, Tracked(track));
+    }
+
     /// <summary>A choice from a menu, for a list too long to lay side by side in a row as narrow as the inspector.</summary>
     /// <param name="label">What is chosen.</param>
     /// <param name="shown">What the row reads while closed. Not taken from the options, since the value it stands for may not be one of them.</param>

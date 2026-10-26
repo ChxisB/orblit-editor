@@ -101,11 +101,12 @@ internal sealed class ComponentRows<T>(Fields fields, InspectorTarget target, st
         target.History.Run(new SetObjectComponent(target.SceneId, item.Id, label ?? $"Set {item.Name} {type}", type, Current, next));
     }
 
-    private void Change(Func<T, T> change)
+    /// <summary>Replaces the component with what <paramref name="change"/> makes of it as it is now, if it is there.</summary>
+    public void Change(Func<T, T> change, string? label = null)
     {
         if (Current is { } component)
         {
-            Put(change(component));
+            Put(change(component), label);
         }
     }
 }

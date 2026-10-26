@@ -25,6 +25,7 @@ internal static class InspectorSections
         new("mesh", target => target.Item.Kind == ObjectKind.Mesh, target => Mesh(fields, target)),
         new("weather", target => target.Item.Kind == ObjectKind.Weather, target => WeatherSection.Weather(fields, target)),
         new("air", target => target.Item.Kind == ObjectKind.Weather, target => WeatherSection.Air(fields, target)),
+        new("body", BodySection.AppliesTo, target => BodySection.Build(fields, target)),
         new("zone", ZoneSection.AppliesTo, target => ZoneSection.Build(fields, target)),
         new("vehicle", VehicleSection.AppliesToVehicle, target => VehicleSection.Vehicle(fields, target)),
         new("wheel", VehicleSection.AppliesToWheel, target => VehicleSection.Wheel(fields, target)),
