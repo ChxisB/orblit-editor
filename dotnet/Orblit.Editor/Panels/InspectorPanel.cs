@@ -67,6 +67,8 @@ internal sealed class InspectorPanel : UserControl
         _session.Changed -= _host.Changed;
         _session.History.Changed -= _host.Changed;
         _session.Workspace.Changed -= _host.Changed;
+        // A field that was being edited gets no LostFocus once it is off the tree, and a hold left over would stop every rebuild.
+        _host.Settle();
         base.OnDetachedFromVisualTree(e);
     }
 

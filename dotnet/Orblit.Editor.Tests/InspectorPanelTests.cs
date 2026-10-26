@@ -385,6 +385,24 @@ public sealed class InspectorPanelTests
     });
 
     [Fact]
+    public Task AnEditCutShortByTheLeavingPanelDoesNotFreezeItOnComingBack() => Headless.Run(() =>
+    {
+        var (session, window) = Selecting("crate");
+        var frame = (Grid)window.Content!;
+        var panel = Assert.Single(Headless.All<InspectorPanel>(window));
+        Headless.Find<TextBox>(window, "inspector_name").Text = "Box";
+        Headless.Render();
+        frame.Children.Remove(panel);
+        Headless.Render();
+        frame.Children.Insert(0, panel);
+        Headless.Render();
+        session.Select(["cube"]);
+        Headless.Render();
+
+        Assert.Equal(session.InspectedItem!.Name, Headless.Find<TextBox>(window, "inspector_name").Text);
+    });
+
+    [Fact]
     public Task TheSceneItselfHasNoVisibleSwitch() => Headless.Run(() =>
     {
         var (session, window) = Selecting("crate");
