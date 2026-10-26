@@ -27,6 +27,9 @@ public sealed class ClipBench(History history, Func<EditorScene?> loadedScene, P
 
     public event Action? Changed;
 
+    /// <summary>Whether this bench edits clips or cutscenes, which is what the timeline calls things.</summary>
+    public PlayedOn PlayedOn => playedOn;
+
     public IReadOnlyList<OpenClip> Open => [.. _open];
 
     public OpenClip? this[string path] => _open.Find(one => one.Path == path);
@@ -240,6 +243,9 @@ public sealed class ClipBench(History history, Func<EditorScene?> loadedScene, P
 
         history.Run(new ClipEdit(this, shown.Path, label, new ClipView(shown.Clip, _selection), to, options));
     }
+
+    /// <summary>Ends a run of edits that were being merged, such as typing a length, so the next starts a new step.</summary>
+    public void Seal() => history.Seal();
 
     /// <summary>
     /// Changes the shown cutscene's shots through the undo stack. A <paramref name="gesture"/> ties a
