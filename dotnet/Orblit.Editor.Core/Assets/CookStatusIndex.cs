@@ -101,58 +101,76 @@ public sealed class CookStatusIndex
     /// </remarks>
     public async Task RefreshAsync()
     {
-        lock (_gate)
+        if (!TryClaim())
         {
-            if (_held)
-            {
-                return;
-            }
-
-            if (_asking)
-            {
-                _askAgain = true;
-                return;
-            }
-
-            _asking = true;
+            return;
         }
 
         var stopped = false;
         try
         {
             Changed?.Invoke();
-            bool again;
-            do
+            while (!stopped)
             {
-                lock (_gate)
-                {
-                    _askAgain = false;
-                }
-
-                var (states, problem) = await Task.Run(AskAsync);
-                _problem = problem;
-                _states = states;
-                // Stopped under the lock that reads the flag, so a call in between is not dropped.
-                lock (_gate)
-                {
-                    again = _askAgain;
-                    stopped = !again;
-                    _asking = again;
-                }
+                stopped = await AskOnceAsync();
             }
-            while (again);
         }
         finally
         {
             if (!stopped)
             {
-                lock (_gate)
-                {
-                    _asking = false;
-                }
+                Release();
             }
 
             Changed?.Invoke();
+        }
+    }
+
+    // Takes the right to ask. A call while another is asking leaves a note for it and takes nothing.
+    private bool TryClaim()
+    {
+        lock (_gate)
+        {
+            if (_held)
+            {
+                return false;
+            }
+
+            if (_asking)
+            {
+                _askAgain = true;
+                return false;
+            }
+
+            _asking = true;
+            return true;
+        }
+    }
+
+    // One round. True when nobody asked again meanwhile. The flag goes down under the lock that
+    // reads the note, so a call that lands between the two is not dropped.
+    private async Task<bool> AskOnceAsync()
+    {
+        lock (_gate)
+        {
+            _askAgain = false;
+        }
+
+        var (states, problem) = await Task.Run(AskAsync);
+        _problem = problem;
+        _states = states;
+        lock (_gate)
+        {
+            _asking = _askAgain;
+            return !_askAgain;
+        }
+    }
+
+    private void Release()
+    {
+        lock (_gate)
+        {
+            _asking = false;
         }
     }
 
