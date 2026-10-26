@@ -10,6 +10,8 @@ internal static class AssetIcons
     public const string Add = "M12 5v14M5 12h14";
     public const string Eye = "M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM9 12a3 3 0 1 0 6 0a3 3 0 1 0-6 0";
     public const string EyeOff = Eye + "M4 4l16 16";
+    public const string Pause = "M8 5v14M16 5v14";
+    public const string Play = "M7 4l13 8-13 8z";
     public const string Refresh = "M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7";
 
     private const string File = "M6 3h8l4 4v14H6zM14 3v4h4";

@@ -24,24 +24,34 @@ internal sealed class AssetBrowserPanel : UserControl
     // Narrower than this and the folders go over the files.
     private const double StackedBelow = 360;
 
+    // Narrower than this and the preview is left out.
+    private const double PreviewFrom = 560;
+
     private readonly AssetBrowserModel _model;
     private readonly CookStatusIndex? _cook;
     private readonly AssetBrowserLinks _links;
     private readonly AssetBrowserHeader _header;
     private readonly AssetFolderTree _folders;
     private readonly AssetGrid _grid;
+    private readonly AssetPreviewPanel _preview;
     private readonly Grid _body = new();
     private bool? _stacked;
+    private bool _roomForPreview;
+
+    // A panel along the bottom has no width to spare, so somebody working in a narrow window can shut it.
+    private bool _previewing = true;
 
     /// <param name="tree">The project's files.</param>
     /// <param name="cook">Where each asset stands with the cook, for the mark beside each file. Without one the panel draws no marks.</param>
     /// <param name="links">What the rest of the editor does for the browser.</param>
-    public AssetBrowserPanel(AssetTree tree, CookStatusIndex? cook = null, AssetBrowserLinks? links = null)
+    /// <param name="renderer">Whether this machine runs the renderer, which the preview draws a model with.</param>
+    public AssetBrowserPanel(AssetTree tree, CookStatusIndex? cook = null, AssetBrowserLinks? links = null, bool renderer = true)
     {
         _model = new AssetBrowserModel(tree);
         _cook = cook;
         _links = links ?? new AssetBrowserLinks();
-        _header = new AssetBrowserHeader(GoUp, ShowMenu, Rebuild, Filtered);
+        _header = new AssetBrowserHeader(new AssetBrowserHeaderLinks(GoUp, ShowMenu, Rebuild, Filtered, TogglePreview));
+        _preview = new AssetPreviewPanel(renderer);
         _folders = new AssetFolderTree(GoTo, _links.OnMakePrefab);
         _grid = new AssetGrid(new AssetGridLinks(Select, OpenAsset, ShowMenuFor, _links.OnMakePrefab is null ? null : id => _links.OnMakePrefab(id, _model.Directory)));
         Background = OrblitColors.Surface;
@@ -54,8 +64,14 @@ internal sealed class AssetBrowserPanel : UserControl
         frame.Children.Add(_body);
         Content = frame;
 
-        SizeChanged += (_, e) => Fit(e.NewSize.Width < StackedBelow);
+        SizeChanged += (_, e) =>
+        {
+            _roomForPreview = e.NewSize.Width >= PreviewFrom;
+            Fit(e.NewSize.Width < StackedBelow);
+            ShowPreview();
+        };
         Fit(stacked: false);
+        ShowPreview();
         Rebuild();
     }
 
@@ -111,11 +127,7 @@ internal sealed class AssetBrowserPanel : UserControl
             return;
         }
 
-        if (_model.Selected == asset.Path)
-        {
-            _model.Select(null);
-        }
-
+        Forget(asset);
         Rebuild();
     }
 
@@ -127,7 +139,18 @@ internal sealed class AssetBrowserPanel : UserControl
             return;
         }
 
+        Forget(asset);
         Rebuild();
+    }
+
+    // A file that is gone, or has another path now, is not the one picked any more.
+    private void Forget(Asset asset)
+    {
+        if (_model.Selected == asset.Path)
+        {
+            _model.Select(null);
+            _preview.Show(null);
+        }
     }
 
     // The tree raises on a thread of its own. Anything that changed a file may have changed what the
@@ -170,6 +193,7 @@ internal sealed class AssetBrowserPanel : UserControl
     private void Arrived()
     {
         Rebuild();
+        _preview.Show(null);
         _links.OnSelectAsset?.Invoke(null);
     }
 
@@ -177,6 +201,7 @@ internal sealed class AssetBrowserPanel : UserControl
     {
         _model.Select(asset.Path);
         _grid.Mark(asset.Path);
+        _preview.Show(asset);
         _links.OnSelectAsset?.Invoke(asset);
     }
 
@@ -247,6 +272,29 @@ internal sealed class AssetBrowserPanel : UserControl
         }
     }
 
+    private void TogglePreview()
+    {
+        _previewing = !_previewing;
+        ShowPreview();
+    }
+
+    // A preview where there is room for a grid worth having between it and the folders. Under that the
+    // folders go over the files, and the preview has no column to be in.
+    private void ShowPreview()
+    {
+        var shown = _roomForPreview && _stacked != true && _previewing;
+        _header.Previewing = _roomForPreview ? _previewing : null;
+        // Taken out of the body and not hidden, so the renderer behind it is freed and stops drawing.
+        if (shown && !_body.Children.Contains(_preview))
+        {
+            _body.Children.Add(_preview);
+        }
+        else if (!shown)
+        {
+            _body.Children.Remove(_preview);
+        }
+    }
+
     // Folders beside the files where there is room for both, and over them below that: the panel is as
     // likely to be a tall strip down the side of the window as a wide one under the view.
     private void Fit(bool stacked)
@@ -268,7 +316,8 @@ internal sealed class AssetBrowserPanel : UserControl
             return;
         }
 
-        _body.ColumnDefinitions.AddRange([new ColumnDefinition(GridLength.Auto), new ColumnDefinition(1, GridUnitType.Star)]);
+        _body.ColumnDefinitions.AddRange([new ColumnDefinition(GridLength.Auto), new ColumnDefinition(1, GridUnitType.Star), new ColumnDefinition(GridLength.Auto)]);
+        Grid.SetColumn(_preview, 2);
         Grid.SetRow(_grid, 0);
         Grid.SetColumn(_grid, 1);
     }

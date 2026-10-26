@@ -22,21 +22,21 @@ internal static class AssetThumbnails
     private static readonly Lock Gate = new();
 
     /// <summary>
-    /// The picture in the file at <paramref name="path"/>, or null when it cannot be read as one.
+    /// The picture in the file at <paramref name="path"/>, decoded to <paramref name="width"/>, or null when it cannot be read as one.
     /// </summary>
     /// <remarks>
     /// shortcut: the cache is emptied when it is full and not trimmed by age, so a project of thousands
     /// of textures redecodes the ones in view after it fills. Make it an LRU if that shows.
     /// </remarks>
-    public static Task<Bitmap?> LoadAsync(string path) => Task.Run(() => Load(path));
+    public static Task<Bitmap?> LoadAsync(string path, int width = DecodeWidth) => Task.Run(() => Load(path, width));
 
-    private static Bitmap? Load(string path)
+    private static Bitmap? Load(string path, int width)
     {
         string key;
         try
         {
             var info = new FileInfo(path);
-            key = $"{info.FullName}:{info.LastWriteTimeUtc.Ticks}:{info.Length}";
+            key = $"{info.FullName}:{info.LastWriteTimeUtc.Ticks}:{info.Length}:{width}";
         }
         catch (IOException)
         {
@@ -51,7 +51,7 @@ internal static class AssetThumbnails
             }
         }
 
-        var decoded = Decode(path);
+        var decoded = Decode(path, width);
         lock (Gate)
         {
             if (Kept.Count >= Capacity)
@@ -66,12 +66,12 @@ internal static class AssetThumbnails
     }
 
     // A file that is half written, or is not the picture its name says, shows its glyph instead.
-    private static Bitmap? Decode(string path)
+    private static Bitmap? Decode(string path, int width)
     {
         try
         {
             using var stream = IoFile.OpenRead(path);
-            return Bitmap.DecodeToWidth(stream, DecodeWidth);
+            return Bitmap.DecodeToWidth(stream, width);
         }
 #pragma warning disable CA1031 // The decoder throws a NullReferenceException on bytes it cannot read, and a tile's picture is loaded from an async void that would take the editor down with it.
         catch (Exception)
