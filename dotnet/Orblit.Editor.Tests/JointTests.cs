@@ -12,7 +12,7 @@ public sealed class JointTests
     private static readonly ViewportProjection Projection = GizmoView.Projection;
 
     // A door on a hinge at its edge, an arm with a forearm under it, and a lamp with nothing to hold.
-    private static EditorScene Scene(Doc.JointComponent? hinge = null, Doc.JointComponent? elbow = null)
+    internal static EditorScene Scene(Doc.JointComponent? hinge = null, Doc.JointComponent? elbow = null)
     {
         var hingeParts = new OrderedDictionary<string, Doc.SceneComponent>();
         if (hinge is not null)

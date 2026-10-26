@@ -6,7 +6,7 @@ using Orblit.Scene;
 
 public sealed class InspectorModelTests
 {
-    private static InspectorTarget TargetFor(EditorScene scene, string id) => new()
+    internal static InspectorTarget TargetFor(EditorScene scene, string id) => new()
     {
         SceneId = "main",
         Scene = scene,
