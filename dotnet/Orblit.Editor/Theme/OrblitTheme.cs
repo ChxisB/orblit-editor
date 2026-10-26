@@ -21,6 +21,7 @@ public static class OrblitColors
     public static readonly IBrush InkMid = Brush(0xFFA6B0BF);
     public static readonly IBrush InkDim = Brush(0xFF8791A1);
     public static readonly IBrush Ember = new ImmutableSolidColorBrush(EmberColor);
+    public static readonly IBrush EmberDeep = Brush(0xFFC25E22);
     public static readonly IBrush EmberWash = Brush(0x24E5893F);
     public static readonly IBrush Bad = Brush(0xFFD9634F);
     public static readonly IBrush Warn = Brush(0xFFE0B252);

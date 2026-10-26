@@ -22,9 +22,6 @@ using Orblit.Editor.Panels;
 /// </remarks>
 internal sealed class TimelinePanel : UserControl
 {
-    // The width of the names column, which the ruler and the sheet start after.
-    private const double NamesWidth = 200;
-
     private const string NothingKeyed =
         "Nothing keyed yet. Select something, then press the diamond beside a value in the inspector to key it here.";
 
@@ -34,6 +31,8 @@ internal sealed class TimelinePanel : UserControl
     private readonly TimelineRuler _ruler;
     private readonly TimelineTracks _tracks;
     private readonly TextBlock _where;
+    private readonly TimelineStrip _marks;
+    private readonly TimelineStrip _shots;
     private readonly ScrollViewer _none;
     private readonly TextBlock _nothingKeyed;
     private readonly ScrollViewer _sheet;
@@ -53,6 +52,8 @@ internal sealed class TimelinePanel : UserControl
         _toolbar = new TimelineToolbar(bench, _model, links, look);
         _ruler = new TimelineRuler(bench);
         _tracks = new TimelineTracks(bench, _model);
+        _marks = MarkStrip.Create(bench, new MarkModel(bench));
+        _shots = ShotStrip.Create(bench);
         _where = new TextBlock
         {
             Name = "timeline_where",
@@ -179,16 +180,20 @@ internal sealed class TimelinePanel : UserControl
             BorderThickness = new Thickness(0, 0, 1, 1),
             Child = _where,
         };
-        var ruler = new Grid { Height = 24, ColumnDefinitions = new ColumnDefinitions($"{NamesWidth},*") };
+        var ruler = new Grid { Height = 24, ColumnDefinitions = new ColumnDefinitions($"{TimelineTracks.NamesWidth},*") };
         Grid.SetColumn(_ruler, 1);
         ruler.Children.Add(names);
         ruler.Children.Add(_ruler);
 
-        var main = new Grid { RowDefinitions = new RowDefinitions("Auto,Auto,*") };
+        var main = new Grid { RowDefinitions = new RowDefinitions("Auto,Auto,Auto,Auto,*") };
         Grid.SetRow(ruler, 1);
-        Grid.SetRow(_body, 2);
+        Grid.SetRow(_marks, 2);
+        Grid.SetRow(_shots, 3);
+        Grid.SetRow(_body, 4);
         main.Children.Add(_toolbar);
         main.Children.Add(ruler);
+        main.Children.Add(_marks);
+        main.Children.Add(_shots);
         main.Children.Add(_body);
         return main;
     }
@@ -202,7 +207,7 @@ internal sealed class TimelinePanel : UserControl
             BorderThickness = new Thickness(0, 0, 1, 0),
             Child = _tracks,
         };
-        var both = new Grid { ColumnDefinitions = new ColumnDefinitions($"{NamesWidth},*") };
+        var both = new Grid { ColumnDefinitions = new ColumnDefinitions($"{TimelineTracks.NamesWidth},*") };
         both.Children.Add(names);
         return new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = both };
     }
@@ -240,6 +245,9 @@ internal sealed class TimelinePanel : UserControl
         _ruler.InvalidateVisual();
         _where.Text = TimelineWords.Where(_bench.At, clip.Rate);
         _tracks.Show(clip);
+        _marks.Refresh();
+        _shots.IsVisible = _bench.Shown?.Shots is not null;
+        _shots.Refresh();
         Control body = clip.Channels.Count == 0 ? _nothingKeyed : _sheet;
         if (!ReferenceEquals(_body.Content, body))
         {

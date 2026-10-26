@@ -19,6 +19,9 @@ internal sealed class TimelineTracks : StackPanel
     /// <summary>The height of every row here and in the sheet, so a channel and its keys line up.</summary>
     public const double RowHeight = 22;
 
+    /// <summary>The width of the names column, which the ruler, the strips and the sheet start after.</summary>
+    public const double NamesWidth = 200;
+
     private readonly ClipBench _bench;
     private readonly TimelineModel _model;
 
