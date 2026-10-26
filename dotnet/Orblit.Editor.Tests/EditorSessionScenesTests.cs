@@ -380,4 +380,19 @@ public sealed class EditorSessionScenesTests : IDisposable
         Assert.Null(session.SelectedScene);
         Assert.Equal(["sun"], session.Selected);
     }
+
+    [Fact]
+    public void TheInspectorLooksAtTheLoadedSceneUntilAnotherSceneRowIsSelected()
+    {
+        var session = Open();
+        session.SelectObject("sun");
+
+        Assert.Same(session.Workspace.Loaded, session.Inspected);
+        Assert.Equal("sun", session.InspectedItem!.Id);
+
+        session.SelectScene(Entry(session, "props").Id);
+
+        Assert.Equal("props", session.Inspected!.Title);
+        Assert.Null(session.InspectedItem);
+    }
 }

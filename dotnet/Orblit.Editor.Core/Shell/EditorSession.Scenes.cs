@@ -30,6 +30,12 @@ public sealed partial class EditorSession
     /// <summary>The scene whose own settings are being looked at, when no object is.</summary>
     public string? SelectedScene { get; private set; }
 
+    /// <summary>The scene whose settings the inspector shows: the loaded one, or one somebody has clicked to look at without opening.</summary>
+    public SceneEntry? Inspected => SelectedScene is null ? Workspace.Loaded : Workspace[SelectedScene];
+
+    /// <summary>The primary selection, in the scene being inspected. Null when the scene itself is selected.</summary>
+    public SceneObject? InspectedItem => Primary is null ? null : Inspected?.Scene?[Primary];
+
     /// <summary>Raised when a different scene takes the place of the loaded one, so a view can start from its camera again.</summary>
     public event Action? SceneReplaced;
 
