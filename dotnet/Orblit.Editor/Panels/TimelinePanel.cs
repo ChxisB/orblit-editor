@@ -30,6 +30,7 @@ internal sealed class TimelinePanel : UserControl
     private readonly TimelineToolbar _toolbar;
     private readonly TimelineRuler _ruler;
     private readonly TimelineTracks _tracks;
+    private readonly DopeSheet _keysView;
     private readonly TextBlock _where;
     private readonly TimelineStrip _marks;
     private readonly TimelineStrip _shots;
@@ -52,6 +53,7 @@ internal sealed class TimelinePanel : UserControl
         _toolbar = new TimelineToolbar(bench, _model, links, look);
         _ruler = new TimelineRuler(bench);
         _tracks = new TimelineTracks(bench, _model);
+        _keysView = new DopeSheet(bench);
         _marks = MarkStrip.Create(bench, new MarkModel(bench));
         _shots = ShotStrip.Create(bench);
         _where = new TextBlock
@@ -208,7 +210,9 @@ internal sealed class TimelinePanel : UserControl
             Child = _tracks,
         };
         var both = new Grid { ColumnDefinitions = new ColumnDefinitions($"{TimelineTracks.NamesWidth},*") };
+        Grid.SetColumn(_keysView, 1);
         both.Children.Add(names);
+        both.Children.Add(_keysView);
         return new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = both };
     }
 
@@ -243,6 +247,7 @@ internal sealed class TimelinePanel : UserControl
 
         _toolbar.Refresh();
         _ruler.InvalidateVisual();
+        _keysView.InvalidateVisual();
         _where.Text = TimelineWords.Where(_bench.At, clip.Rate);
         _tracks.Show(clip);
         _marks.Refresh();

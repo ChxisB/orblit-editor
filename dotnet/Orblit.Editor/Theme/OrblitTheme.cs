@@ -10,8 +10,9 @@ using Orblit.Editor.Core;
 public static class OrblitColors
 {
     public static readonly Color EmberColor = Color.FromUInt32(0xFFE5893F);
+    public static readonly Color GroundColor = Color.FromUInt32(0xFF0E1116);
 
-    public static readonly IBrush Ground = Brush(0xFF0E1116);
+    public static readonly IBrush Ground = new ImmutableSolidColorBrush(GroundColor);
     public static readonly IBrush Surface = Brush(0xFF161A21);
     public static readonly IBrush Raised = Brush(0xFF1D222B);
     public static readonly IBrush Hover = Brush(0xFF242B36);
