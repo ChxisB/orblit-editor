@@ -1,7 +1,4 @@
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Headless;
-using Avalonia.Input;
 
 namespace Orblit.Editor.Tests;
 
@@ -29,15 +26,6 @@ public sealed class InspectorSceneTests : IDisposable
     private void Write(string name, EditorScene scene) => File.WriteAllText(
         Path.Combine(_project.FullName, "scenes", name + Doc.SceneDocument.SceneExtension),
         SceneDocument.Encode(scene));
-
-    private static void Drag(Window window, string name, double pixels)
-    {
-        var at = Headless.Centre(window, name);
-        window.MouseDown(at, MouseButton.Left);
-        window.MouseMove(at + new Vector(pixels, 0));
-        window.MouseUp(at + new Vector(pixels, 0), MouseButton.Left);
-        Headless.Render();
-    }
 
     [Fact]
     public Task WithNothingSelectedItShowsTheSceneItself() => Headless.Run(() =>

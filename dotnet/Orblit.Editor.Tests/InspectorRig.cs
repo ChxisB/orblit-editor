@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Input;
 
 namespace Orblit.Editor.Tests;
@@ -45,4 +47,22 @@ internal static class InspectorRig
     internal static bool Has(Control root, string name) => Headless.All<Control>(root).Any(one => one.Name == name);
 
     internal static string TextOf(Control root, string name) => Headless.Find<TextBlock>(root, name).Text ?? "";
+
+    /// <summary>Scrolls a named control into view and clicks it, as a person does for one below the fold.</summary>
+    internal static void Press(Window window, string name)
+    {
+        Headless.Find<Control>(window, name).BringIntoView();
+        Headless.Render();
+        Headless.Click(window, name);
+    }
+
+    /// <summary>Presses on a control, moves the pointer sideways by <paramref name="pixels"/> and lets go.</summary>
+    internal static void Drag(Window window, string name, double pixels)
+    {
+        var at = Headless.Centre(window, name);
+        window.MouseDown(at, MouseButton.Left);
+        window.MouseMove(at + new Vector(pixels, 0));
+        window.MouseUp(at + new Vector(pixels, 0), MouseButton.Left);
+        Headless.Render();
+    }
 }

@@ -20,14 +20,22 @@ internal static class InspectorSections
     public static IReadOnlyList<InspectorSection<Control>> BuiltIn(Fields fields) =>
     [
         // Weather is everywhere at once, so it has no position to show.
-        new("transform", target => target.Item.Kind is not (ObjectKind.Scene or ObjectKind.Weather), target => Transform(fields, target)),
+        new("transform", IsObject, target => Transform(fields, target)),
         new("light", target => target.Item.Kind == ObjectKind.Light, target => LightSection.Build(fields, target)),
         new("mesh", target => target.Item.Kind == ObjectKind.Mesh, target => Mesh(fields, target)),
         new("weather", target => target.Item.Kind == ObjectKind.Weather, target => WeatherSection.Weather(fields, target)),
         new("air", target => target.Item.Kind == ObjectKind.Weather, target => WeatherSection.Air(fields, target)),
+        new("zone", ZoneSection.AppliesTo, target => ZoneSection.Build(fields, target)),
+        new("vehicle", VehicleSection.AppliesToVehicle, target => VehicleSection.Vehicle(fields, target)),
+        new("wheel", VehicleSection.AppliesToWheel, target => VehicleSection.Wheel(fields, target)),
+        new("sound", IsObject, target => SoundSection.Build(fields, target)),
+        new("particles", IsObject, target => ParticlesSection.Build(fields, target)),
         new("interface", target => target.Item.Kind == ObjectKind.Canvas, target => Interface(fields, target)),
         new("data", target => target.Item.Data.Count > 0, target => Data(fields, target)),
     ];
+
+    /// <summary>Whether the target is something in the world, which the scene and the weather are not.</summary>
+    private static bool IsObject(InspectorTarget target) => target.Item.Kind is not (ObjectKind.Scene or ObjectKind.Weather);
 
     /// <summary>A flag as Off and On side by side, which reads faster in a long list than a switch does.</summary>
     /// <param name="change">The command that sets the flag to what was chosen.</param>

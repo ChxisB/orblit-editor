@@ -3,7 +3,7 @@ namespace Orblit.Editor.Core;
 using Orblit.Scene;
 using Orblit.VectorMath;
 
-/// <summary>What the editor asks of an object's physics and sound components.</summary>
+/// <summary>What the editor asks of an object's physics, sound, vehicle and particle components.</summary>
 public static class PhysicsComponents
 {
     /// <summary>The joint on <paramref name="item"/>, if it has one.</summary>
@@ -21,6 +21,12 @@ public static class PhysicsComponents
     /// <summary>The sound source on <paramref name="item"/>, if it has one.</summary>
     public static SoundSourceComponent? SoundSourceOf(SceneObject item) =>
         Of<SoundSourceComponent>(item, SceneComponents.SoundSource);
+
+    /// <summary>The vehicle on <paramref name="item"/>, if it has one.</summary>
+    public static VehicleComponent? VehicleOf(SceneObject item) => Of<VehicleComponent>(item, SceneComponents.Vehicle);
+
+    /// <summary>The wheel on <paramref name="item"/>, if it has one.</summary>
+    public static WheelComponent? WheelOf(SceneObject item) => Of<WheelComponent>(item, SceneComponents.Wheel);
 
     /// <summary>Whether the solver moves <paramref name="body"/>. Ground never moves, whatever its file says.</summary>
     public static bool MovesFreely(BodyComponent body) =>
@@ -67,7 +73,8 @@ public static class PhysicsComponents
         return body is null ? null : scene.WorldOf(id).Transformed3(body.Centre);
     }
 
-    private static T? Of<T>(SceneObject item, string type)
+    /// <summary>The component of type <typeparamref name="T"/> that <paramref name="item"/> keeps under <paramref name="type"/>, if it has one.</summary>
+    public static T? Of<T>(SceneObject item, string type)
         where T : SceneComponent =>
         item.Components.TryGetValue(type, out var found) ? found as T : null;
 }

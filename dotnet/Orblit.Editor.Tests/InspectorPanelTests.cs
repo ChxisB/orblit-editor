@@ -308,8 +308,8 @@ public sealed class InspectorPanelTests
         var (_, window) = Selecting("crate", scene, links);
 
         Assert.Equal("Weight.odata", TextOf(window, "data_open_0"));
-        Headless.Click(window, "data_open_1");
-        Headless.Click(window, "data_remove_0");
+        Press(window, "data_open_1");
+        Press(window, "data_remove_0");
 
         Assert.Equal(["data/Wood.odata"], opened);
         Assert.Equal([("crate", "data/Weight.odata")], detached);
