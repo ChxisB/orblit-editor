@@ -30,13 +30,16 @@ internal sealed class TimelinePanel : UserControl
     private readonly TimelineToolbar _toolbar;
     private readonly TimelineRuler _ruler;
     private readonly TimelineTracks _tracks;
+    private readonly TimelineTracks _curveTracks;
     private readonly DopeSheet _keysView;
+    private readonly CurveView _curveView;
     private readonly TextBlock _where;
     private readonly TimelineStrip _marks;
     private readonly TimelineStrip _shots;
     private readonly ScrollViewer _none;
     private readonly TextBlock _nothingKeyed;
     private readonly ScrollViewer _sheet;
+    private readonly Grid _curves;
     private readonly ContentControl _body = new();
     private readonly Grid _main;
     private readonly Dictionary<Key, Action> _keys;
@@ -53,7 +56,9 @@ internal sealed class TimelinePanel : UserControl
         _toolbar = new TimelineToolbar(bench, _model, links, look);
         _ruler = new TimelineRuler(bench);
         _tracks = new TimelineTracks(bench, _model);
+        _curveTracks = new TimelineTracks(bench, _model);
         _keysView = new DopeSheet(bench);
+        _curveView = new CurveView(bench);
         _marks = MarkStrip.Create(bench, new MarkModel(bench));
         _shots = ShotStrip.Create(bench);
         _where = new TextBlock
@@ -67,6 +72,7 @@ internal sealed class TimelinePanel : UserControl
         _none = NoClip(bench, links);
         _nothingKeyed = Centred(Fields.Note(NothingKeyed));
         _sheet = SheetView();
+        _curves = CurvesView();
         _main = MainView();
         _keys = new Dictionary<Key, Action>
         {
@@ -92,12 +98,14 @@ internal sealed class TimelinePanel : UserControl
     {
         base.OnAttachedToVisualTree(e);
         _bench.Changed += OnChanged;
+        _model.ViewChanged += Refresh;
         OnChanged();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         _bench.Changed -= OnChanged;
+        _model.ViewChanged -= Refresh;
         _loop++;
         _requested = false;
         base.OnDetachedFromVisualTree(e);
@@ -200,20 +208,32 @@ internal sealed class TimelinePanel : UserControl
         return main;
     }
 
+    private static Border Names(TimelineTracks tracks) => new()
+    {
+        BorderBrush = OrblitColors.LineSoft,
+        BorderThickness = new Thickness(0, 0, 1, 0),
+        Child = tracks,
+    };
+
     // The names and, beside them, the room the sheet of keys takes.
     private ScrollViewer SheetView()
     {
-        var names = new Border
-        {
-            BorderBrush = OrblitColors.LineSoft,
-            BorderThickness = new Thickness(0, 0, 1, 0),
-            Child = _tracks,
-        };
+        var names = Names(_tracks);
         var both = new Grid { ColumnDefinitions = new ColumnDefinitions($"{TimelineTracks.NamesWidth},*") };
         Grid.SetColumn(_keysView, 1);
         both.Children.Add(names);
         both.Children.Add(_keysView);
         return new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = both };
+    }
+
+    // The names keep to a scroll of their own, and the curve takes the whole height beside them.
+    private Grid CurvesView()
+    {
+        var both = new Grid { ColumnDefinitions = new ColumnDefinitions($"{TimelineTracks.NamesWidth},*") };
+        Grid.SetColumn(_curveView, 1);
+        both.Children.Add(new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Content = Names(_curveTracks) });
+        both.Children.Add(_curveView);
+        return both;
     }
 
     private void TakeFocus(object? sender, PointerPressedEventArgs e)
@@ -248,12 +268,13 @@ internal sealed class TimelinePanel : UserControl
         _toolbar.Refresh();
         _ruler.InvalidateVisual();
         _keysView.InvalidateVisual();
+        _curveView.InvalidateVisual();
         _where.Text = TimelineWords.Where(_bench.At, clip.Rate);
-        _tracks.Show(clip);
+        (_model.View == TimelineView.Curves ? _curveTracks : _tracks).Show(clip);
         _marks.Refresh();
         _shots.IsVisible = _bench.Shown?.Shots is not null;
         _shots.Refresh();
-        Control body = clip.Channels.Count == 0 ? _nothingKeyed : _sheet;
+        Control body = clip.Channels.Count == 0 ? _nothingKeyed : _model.View == TimelineView.Curves ? _curves : _sheet;
         if (!ReferenceEquals(_body.Content, body))
         {
             _body.Content = body;

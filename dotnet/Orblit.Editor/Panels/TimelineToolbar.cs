@@ -30,6 +30,8 @@ internal sealed class TimelineToolbar : Border
     private readonly ToolbarMenu _rate;
     private readonly ToolbarMenu _done;
     private readonly ToolbarMenu _owner;
+    private readonly ToolbarChip _keysView;
+    private readonly ToolbarChip _curvesView;
     private readonly ToolbarMenu _hold;
     private readonly ToolbarAction _auto;
     private readonly ToolbarAction _delete;
@@ -54,7 +56,9 @@ internal sealed class TimelineToolbar : Border
         _rate = new ToolbarMenu("timeline_rate", "Frames a second, which is what keys and the playhead snap to", RateItems);
         _done = new ToolbarMenu("timeline_done", "What the clip does when it gets to the end", DoneItems);
         _owner = new ToolbarMenu("timeline_owner", "What the clip is played on while it is edited", OwnerItems, TimelineIcons.Owner);
-        _hold = new ToolbarMenu("timeline_hold", "How the picked keys travel to the next", HoldItems) { Label = "Hold" };
+        _keysView = new ToolbarChip("timeline_view_keys", "Keys", "Show the timing of each key.", () => model.Show(TimelineView.Keys));
+        _curvesView = new ToolbarChip("timeline_view_curves", "Curves", "Show how values change between keys.", () => model.Show(TimelineView.Curves));
+        _hold = new ToolbarMenu("timeline_hold", "How the picked keys travel to the next", HoldItems) { Label = "Hold", Margin = new Thickness(Space.Sm, 0, 0, 0) };
         _auto = new ToolbarAction("timeline_auto", TimelineIcons.Auto, "Work the picked keys' slopes out again", model.AutoSlopes);
         _delete = new ToolbarAction("timeline_delete", TimelineIcons.Delete, "Delete the picked keys (Delete)", model.DeleteKeys);
 
@@ -66,7 +70,7 @@ internal sealed class TimelineToolbar : Border
             Content = Left(look),
         });
         var right = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        right.Children.AddRange([_hold, _auto, _delete]);
+        right.Children.AddRange([_keysView, _curvesView, _hold, _auto, _delete]);
         Grid.SetColumn(right, 1);
         grid.Children.Add(right);
         Child = grid;
@@ -89,6 +93,8 @@ internal sealed class TimelineToolbar : Border
         _rate.Label = Rate(clip.Rate);
         _done.Label = TimelineWords.Ending(clip.WhenDone);
         ShowOwner();
+        _keysView.On = _model.View == TimelineView.Keys;
+        _curvesView.On = _model.View == TimelineView.Curves;
         _hold.IsEnabled = picked;
         _auto.IsEnabled = picked;
         _delete.IsEnabled = picked;

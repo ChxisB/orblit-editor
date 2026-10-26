@@ -313,8 +313,11 @@ public static class ClipEdits
         where T : notnull =>
         kind.TryRead(raw, out var value) ? value : null;
 
-    // Slopes are only asked for on a channel CurvesOf has already said has some.
-    private static object WorkedOutSlope(ClipChannel channel, int index) => channel switch
+    /// <summary>
+    /// The slope the key at <paramref name="index"/> has when nobody has dragged its handle: worked out from
+    /// its neighbours. Only a channel <see cref="CurvesOf"/> says has curves has slopes to ask for.
+    /// </summary>
+    public static object WorkedOutSlope(ClipChannel channel, int index) => channel switch
     {
         ClipChannel<double> number => number.Curve.SlopeAt(index),
         ClipChannel<Vector3> vector => vector.Curve.SlopeAt(index),

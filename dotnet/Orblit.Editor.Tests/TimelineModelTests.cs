@@ -435,6 +435,36 @@ public sealed class TimelineModelTests
     }
 
     [Fact]
+    public void TheTimelineStartsOnTheKeysAndSaysOnlyWhenTheViewChanges()
+    {
+        var rig = MakeRig();
+        var said = 0;
+        rig.Timeline.ViewChanged += () => said++;
+        Assert.Equal(TimelineView.Keys, rig.Timeline.View);
+
+        rig.Timeline.Show(TimelineView.Keys);
+        Assert.Equal(0, said);
+
+        rig.Timeline.Show(TimelineView.Curves);
+        rig.Timeline.Show(TimelineView.Curves);
+        Assert.Equal(TimelineView.Curves, rig.Timeline.View);
+        Assert.Equal(1, said);
+
+        rig.Timeline.Show(TimelineView.Keys);
+        Assert.Equal(2, said);
+    }
+
+    [Fact]
+    public void ChangingTheViewIsNotAnEditAndLeavesNothingToUndo()
+    {
+        var rig = MakeRig();
+
+        rig.Timeline.Show(TimelineView.Curves);
+
+        Assert.Empty(rig.History.Labels);
+    }
+
+    [Fact]
     public void AClipAndACutsceneAreNamedForWhatTheyAre()
     {
         var clip = TimelineWords.For(PlayedOn.Owner);

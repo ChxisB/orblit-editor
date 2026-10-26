@@ -6,13 +6,23 @@ using Orblit.Editor.Core;
 using Orblit.Motion;
 using Orblit.Sequence;
 
+/// <summary>Which of the two ways of looking at a clip the timeline shows.</summary>
+public enum TimelineView
+{
+    /// <summary>When each key is, on a sheet.</summary>
+    Keys,
+
+    /// <summary>How much each key says, and how the value gets from one to the next.</summary>
+    Curves,
+}
+
 /// <summary>
 /// What the timeline's controls do to the bench, without a window.
 /// </summary>
 /// <remarks>
 /// Playing is sampling: each frame asks how far the clock moved and where that puts the playhead, so
-/// scrubbing backwards shows exactly what playing forwards did. Every other control is an edit through the
-/// undo stack.
+/// scrubbing backwards shows exactly what playing forwards did. Every other control, apart from which view is
+/// shown, is an edit through the undo stack.
 /// </remarks>
 public sealed class TimelineModel(ClipBench bench)
 {
@@ -24,6 +34,22 @@ public sealed class TimelineModel(ClipBench bench)
 
     // What ties typing a length into one step.
     private object? _typing;
+
+    /// <summary>Told when <see cref="View"/> changes.</summary>
+    public event Action? ViewChanged;
+
+    /// <summary>The way of looking at the clip. Kept here and not on the bench, so a panel opened again starts on the keys.</summary>
+    public TimelineView View { get; private set; }
+
+    /// <summary>Shows the clip as keys or as curves.</summary>
+    public void Show(TimelineView view)
+    {
+        if (view != View)
+        {
+            View = view;
+            ViewChanged?.Invoke();
+        }
+    }
 
     /// <summary>
     /// Moves the playhead for a frame that began at <paramref name="now"/> on any clock that only goes
