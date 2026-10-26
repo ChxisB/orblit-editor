@@ -1,5 +1,8 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Headless;
+using Avalonia.Input;
+using Avalonia.LogicalTree;
 using Avalonia.Themes.Fluent;
 using Avalonia.Threading;
 
@@ -53,6 +56,28 @@ public static class Headless
     {
         AvaloniaHeadlessPlatform.ForceRenderTimerTick();
         Dispatcher.UIThread.RunJobs();
+    }
+
+    public static IEnumerable<T> All<T>(Control root) => root.GetLogicalDescendants().OfType<T>();
+
+    public static T Find<T>(Control root, string name)
+        where T : Control => All<T>(root).First(one => one.Name == name);
+
+    /// <summary>The middle of a named control, in the window's own coordinates.</summary>
+    public static Point Centre(Window window, string name)
+    {
+        var at = Find<Control>(window, name);
+
+        // Null only for a control off the window, and a test that clicks one has a bug to see.
+        return at.TranslatePoint(new Point(at.Bounds.Width / 2, at.Bounds.Height / 2), window)!.Value;
+    }
+
+    public static void Click(Window window, string name)
+    {
+        var at = Centre(window, name);
+        window.MouseDown(at, MouseButton.Left);
+        window.MouseUp(at, MouseButton.Left);
+        Render();
     }
 }
 

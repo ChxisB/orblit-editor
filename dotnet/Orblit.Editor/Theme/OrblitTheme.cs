@@ -12,6 +12,7 @@ public static class OrblitColors
     public static readonly IBrush Ground = Brush(0xFF0E1116);
     public static readonly IBrush Surface = Brush(0xFF161A21);
     public static readonly IBrush Raised = Brush(0xFF1D222B);
+    public static readonly IBrush Hover = Brush(0xFF242B36);
     public static readonly IBrush Line = Brush(0xFF2A313C);
     public static readonly IBrush LineSoft = Brush(0xFF212733);
     public static readonly IBrush Ink = Brush(0xFFE4E9F0);
@@ -22,6 +23,8 @@ public static class OrblitColors
     public static readonly IBrush Bad = Brush(0xFFD9634F);
     public static readonly IBrush Warn = Brush(0xFFE0B252);
     public static readonly IBrush Good = Brush(0xFF5FB483);
+    public static readonly IBrush AxisX = Brush(0xFFF0736A);
+    public static readonly IBrush AxisY = Brush(0xFF7FD083);
     public static readonly IBrush AxisZ = Brush(0xFF62A0E8);
 
     // Immutable, so a brush made while the type loads is safe to hand to a control on any thread.
