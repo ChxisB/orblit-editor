@@ -117,9 +117,10 @@ public sealed class CookStatusIndex
             _asking = true;
         }
 
-        Changed?.Invoke();
+        var stopped = false;
         try
         {
+            Changed?.Invoke();
             bool again;
             do
             {
@@ -131,16 +132,26 @@ public sealed class CookStatusIndex
                 var (states, problem) = await Task.Run(AskAsync);
                 _problem = problem;
                 _states = states;
+                // Stopped under the lock that reads the flag, so a call in between is not dropped.
                 lock (_gate)
                 {
                     again = _askAgain;
+                    stopped = !again;
+                    _asking = again;
                 }
             }
             while (again);
         }
         finally
         {
-            _asking = false;
+            if (!stopped)
+            {
+                lock (_gate)
+                {
+                    _asking = false;
+                }
+            }
+
             Changed?.Invoke();
         }
     }

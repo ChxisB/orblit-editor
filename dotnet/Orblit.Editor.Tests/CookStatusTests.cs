@@ -152,6 +152,23 @@ public sealed class CookStatusTests : IDisposable
     }
 
     [Fact]
+    public async Task AListenerThatThrowsDoesNotLeaveItAskingForEver()
+    {
+        var index = IndexFor();
+        void Throws() => throw new InvalidOperationException("The window is gone.");
+        index.Changed += Throws;
+
+        await Assert.ThrowsAsync<InvalidOperationException>(index.RefreshAsync);
+        index.Changed -= Throws;
+
+        // A flag left up would turn every later ask into a request that nobody answers.
+        Assert.False(index.Asking);
+        WriteAsset("ship.gltf", Gltf);
+        await index.RefreshAsync();
+        Assert.Equal(CookState.Stale, index[At("assets", "ship.gltf")]);
+    }
+
+    [Fact]
     public async Task ItSaysWhenItIsWorkingAndWhenItHasStopped()
     {
         WriteAsset("ship.gltf", Gltf);

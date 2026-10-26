@@ -173,11 +173,19 @@ public sealed class SurfaceCooks : IDisposable
             return "";
         }
 
-        var parts = IoDirectory.EnumerateFiles(assets, "*", SearchOption.AllDirectories)
-            .Where(ShaderCook.IsShaderFile)
-            .Select(file => new FileInfo(file))
-            .Select(info => $"{info.FullName}:{info.LastWriteTimeUtc.Ticks}:{(info.Exists ? info.Length : -1)}")
-            .Order(StringComparer.Ordinal);
-        return string.Join('\n', parts);
+        try
+        {
+            var parts = IoDirectory.EnumerateFiles(assets, "*", SearchOption.AllDirectories)
+                .Where(ShaderCook.IsShaderFile)
+                .Select(file => new FileInfo(file))
+                .Select(info => $"{info.FullName}:{info.LastWriteTimeUtc.Ticks}:{(info.Exists ? info.Length : -1)}")
+                .Order(StringComparer.Ordinal);
+            return string.Join('\n', parts);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            // A folder that went or will not open mid-walk. The last stamp stands, so nothing is cooked or dropped on a guess.
+            return _stamp;
+        }
     }
 }

@@ -192,6 +192,30 @@ public sealed class AssetsTests : IDisposable
     }
 
     [Fact]
+    public async Task AWriteUnderADotFolderIsNotNewsToTheBrowser()
+    {
+        // .git and .orblit hold the tool's own writes, and Read does not list them.
+        Directory.CreateDirectory(At(".orblit", "shaders"));
+        using var tree = new AssetTree(_root);
+        var fired = 0;
+        var seen = new TaskCompletionSource();
+        tree.Changed += () =>
+        {
+            Interlocked.Increment(ref fired);
+            seen.TrySetResult();
+        };
+        await Task.Delay(120, TestContext.Current.CancellationToken);
+
+        File.WriteAllBytes(At(".orblit", "shaders", "pulse.filamat"), [1]);
+        await Task.Delay(500, TestContext.Current.CancellationToken);
+        Assert.Equal(0, Volatile.Read(ref fired));
+
+        // The watch itself is alive, so the silence above means something.
+        File.WriteAllBytes(At("visible.png"), [1]);
+        await seen.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
     public void DeletingRemovesAFile()
     {
         var target = At("assets", "rock.png");
@@ -372,6 +396,22 @@ public sealed class AssetsTests : IDisposable
         var outside = Directory.GetParent(_root)!.FullName;
 
         Assert.NotNull(new AssetTree(_root).Write(outside, "nope.oprefab", "{}").Problem);
+    }
+
+    [Theory]
+    [InlineData("../escape.oprefab")]
+    [InlineData("deeper/escape.oprefab")]
+    [InlineData("..")]
+    public void AWrittenNameThatIsAPathIsRefusedRatherThanFollowed(string name)
+    {
+        // A project one level down, so that where a bad name would land is a folder this test owns.
+        var project = Directory.CreateDirectory(At("project")).FullName;
+
+        var made = new AssetTree(project).Write(project, name, "{}");
+
+        Assert.NotNull(made.Problem);
+        Assert.Null(made.Path);
+        Assert.False(File.Exists(At("escape.oprefab")));
     }
 
     [Fact]

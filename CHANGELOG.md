@@ -207,6 +207,11 @@
     file that will not decode keeps its icon.
   - The menu follows `NewAssetGroup.Loose`, and an object dropped on a
     folder passes the object's id.
+  - A write under a folder whose name starts with a dot, such as `.git` or
+    `.orblit`, does not make the browser read again. Dart reread for every
+    write, and a shader cook writes under `.orblit`.
+  - `AssetTree.Write` refuses a name that holds a separator or is `.` or
+    `..`. Dart wrote wherever the name led.
 - Not in the browser yet: dragging a file out of it. The window wires only
   opening a scene and the line that says a file operation failed. Opening
   the other kinds, Build, making a prefab and the data object come with

@@ -326,6 +326,12 @@ public sealed class AssetTree : IDisposable
             return new AssetMade("That folder is outside the project.", null);
         }
 
+        // The name comes from an object's own, and a scene file can hold any text.
+        if (HasSeparator(name) || name is "." or "..")
+        {
+            return new AssetMade("A name cannot be a path.", null);
+        }
+
         var path = Available(directory, name);
         try
         {
@@ -452,7 +458,20 @@ public sealed class AssetTree : IDisposable
         _settle.Change(Timeout.Infinite, Timeout.Infinite);
     }
 
-    private void Touched(object sender, FileSystemEventArgs e) => Settling();
+    private void Touched(object sender, FileSystemEventArgs e)
+    {
+        var before = e is RenamedEventArgs moved ? moved.OldFullPath : e.FullPath;
+        if (!Hidden(e.FullPath) || !Hidden(before))
+        {
+            Settling();
+        }
+    }
+
+    // Read lists no dotfile, so a write under .git or .orblit changes nothing the browser shows.
+    private bool Hidden(string path) =>
+        IoPath.GetRelativePath(Root, path)
+            .Split(IoPath.DirectorySeparatorChar, IoPath.AltDirectorySeparatorChar)
+            .Any(part => part.StartsWith('.') && part is not ("." or ".."));
 
     // A watch that lost events, as a full buffer does, leaves the list stale, so it asks for a read.
     private void Failed(object sender, ErrorEventArgs e) => Settling();

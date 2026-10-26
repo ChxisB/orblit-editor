@@ -228,6 +228,28 @@ public sealed class ShaderTests : IDisposable
         Assert.DoesNotContain(drawn.Materials, material => material.Surface is not null);
     }
 
+    [Fact]
+    [System.Runtime.Versioning.UnsupportedOSPlatform("windows")]
+    public async Task AFolderThatWillNotOpenLeavesTheLastCookStanding()
+    {
+        Assert.SkipWhen(OperatingSystem.IsWindows() || Environment.UserName == "root", "A folder cannot be locked from this user.");
+        await _surfaces.RefreshAsync();
+        var locked = Path.Combine(_project.FullName, "assets", "locked");
+        Directory.CreateDirectory(locked);
+        File.SetUnixFileMode(locked, UnixFileMode.None);
+        try
+        {
+            await _surfaces.RefreshAsync();
+
+            Assert.Equal(1, _cooks);
+            Assert.NotNull(_surfaces.CookedOf(Shader));
+        }
+        finally
+        {
+            File.SetUnixFileMode(locked, UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute);
+        }
+    }
+
     // The one place the cook runs for real, off the interface thread as the editor runs it.
     [Fact(Skip = "ORBLIT_MATC is not set", SkipUnless = nameof(HasMatc))]
     public async Task BothStartersCookWithTheRealMatcAndOfferTheirInspectorControls()
