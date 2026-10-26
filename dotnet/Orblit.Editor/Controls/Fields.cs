@@ -53,10 +53,21 @@ internal sealed class Fields(FieldHost host)
     public const double Height = 28;
     private const double LabelWidth = 80;
 
+    /// <summary>Where this set of fields sends its changes, for a control that is not a field but acts like one.</summary>
+    public FieldHost Host => host;
+
     private static readonly Colour[] StandardSwatches =
     [
         new(0xFFFFF3E0), new(0xFFD9634F), new(0xFF7FB069), new(0xFF5B8DD9), new(0xFFE5B84F), new(0xFF3B424C),
     ];
+
+    /// <summary>Fields stacked one under the other.</summary>
+    public static StackPanel Column(IEnumerable<Control> children)
+    {
+        var column = new StackPanel();
+        column.Children.AddRange(children);
+        return column;
+    }
 
     /// <summary>A label made safe to put in a control's name.</summary>
     public static string Key(string label) =>
