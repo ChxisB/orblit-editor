@@ -13,6 +13,7 @@
     <PackageReference Include="Orblit.Scene" />
     <PackageReference Include="Orblit.Sequence" />
     <PackageReference Include="Orblit.Stage" />
+    <PackageReference Include="Orblit.Ui" />
     <PackageReference Include="Orblit.VectorMath" />
     <PackageReference Include="Orblit.Weather" />
   </ItemGroup>

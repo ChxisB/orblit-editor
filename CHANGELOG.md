@@ -130,6 +130,27 @@
   as callbacks from the shell port, so those rows are absent until then.
   The shader, terrain and blend sections, and the key button for an
   animation, come with rows 3, 4, 5 and 7.
+- Add the asset model to `Orblit.Editor.Core`. `AssetTree` reads a project
+  folder, lists its folders, and renames, deletes and makes files. It tells
+  the browser when the folder changes, and joins a burst of changes into one
+  call. `NewAsset` holds every kind the browser makes, each with a starter
+  that works the moment it is written. A C++ source is written with its
+  header. `AssetKind` and `SizeLabel` say what a file is and how big.
+  `DataObject` is only as big as a new file needs. Row 10 fills it in.
+- Differences from the Dart editor:
+  - A rename to a name that differs only in case is refused when a
+    different file already has that name on a case-sensitive disk. Dart's
+    rename replaced that file.
+  - A new C++ pair keeps a header that is already there. Dart wrote over it.
+  - A name with a `/` is refused on Windows too. Dart refused only the
+    host's own separator.
+  - The folder watch asks for a fresh read when it fails. Dart's stopped
+    quietly.
+  - A new folder inside a folder that has been deleted makes the parents.
+    Dart reported an error.
+- Faults copied from the Dart editor, for decision 80: a linked file or
+  folder is left out of the browser, so a project that links in a shared
+  folder does not show it.
 
 ## 1.26.0+27
 

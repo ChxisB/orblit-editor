@@ -170,6 +170,7 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | `particles_test.dart` | `ParticlesTests`, `ComponentModelTests`, `InspectorComponentTests` | 10 | 10 | 10 | 0 | done. The file is in `ParticlesTests`. The four on ranges are on the model. Choosing what is already chosen is one C# test for this row and the sound one. The section and the other three rows are headless |
 | `vehicle_test.dart` | `VehicleTests`, `InspectorComponentTests` | 7 | 7 | 7 | 0 | done. The file and the two edits are in `VehicleTests` |
 | `collision_model_test.dart` | `ModelCollisionTests` | 2 | 2 | 2 | 0 | done |
+| `assets_test.dart` | `AssetsTests` | 43 | 43 | 43 | 0 | done. The watch tests wait on the folder watcher and the settle timer, as Dart's wait on the stream |
 | none | `OutlinerModelTests` | 0 | 0 | 0 | 15: the rows and their depth, the folds, a scene row with a filter, an unloaded scene, where a drop lands and what a drop refuses | added |
 | none | `EditorSessionObjectsTests` | 0 | 0 | 0 | 26: selecting, adding and naming, ids, deleting, moving, duplicating, the clipboard labels and a clipboard that cannot be reached | added |
 | none | `OutlinerPanelTests` | 0 | 0 | 0 | 18: the rows and the count, the selection drawn, a scene row, the filter message, a fold, the remove button, the edit keys with and without a text box, the Add menu, the Edit menu waiting for a selection and a drop, how an unloaded scene says to load it, the mark on a scene never written, a click that only selects, discarding in the leave dialog, the hover close button, no close on the shared row, and New scene from the menu and from the key | added |
@@ -183,6 +184,7 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | none | `InspectorSceneTests` | 0 | 0 | 0 | 8: the scene header, its sky, the day cycle, a few layer names, the counts and the shared scene | added |
 | none | `InspectorBodyTests`, `InspectorCompoundTests`, `InspectorComponentTests`, `InspectorJointTests` | 0 | 0 | 0 | 17: what a body is offered on, a place in the tree, a fit to an editor size, a mesh body, the collider as its own step, a wheel with no car, the steer lock, a zone a file gave to a free body, and a joint that holds nothing | added |
 | none | `PaletteEntriesTests` | 0 | 0 | 0 | 5: the Edit and Add entries and New scene | added |
+| none | `AssetsTests` | 0 | 0 | 0 | 23: the last listener stopping the watch, nothing written outside the project, a slash in a name, a rename that changes only the case, a folder renamed to its own name in another case, a header that is kept, a link left out, the data object's text, the size label, the kind of a name and which files build | added |
 
 Not in the inspector yet, and not counted: `shader_test.dart` (17) waits for row 3,
 `editor_shell_terrain_test.dart` (4) for row 5, `blend_inspector_test.dart` (6) and
