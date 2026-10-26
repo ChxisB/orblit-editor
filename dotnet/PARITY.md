@@ -97,13 +97,13 @@ can do so far. Add, delete, copy and frame join them with their panels in task
 | `editor_shell_layouts_test.dart` | `EditorSessionTests` | 3 | 3 | 2 | 0 | partial. Per-mode arrangements and focus are here. "Performance numbers are behind Stats" is tested only as the toggle, because the numbers are drawn by the viewport in task 15 |
 | `editor_shell_workspaces_test.dart` | `EditorSessionTests` | 16 | 16 | 4 | 0 | partial. The order of the rail, the panels for each job, reset and each remembering its arrangement are here. The rest need icons, terrain, cinematics, interface or the modelling panel |
 | `editor_shell_panels_test.dart` | `EditorSessionTests`, `EditorWindowTests` | 11 | 11 | 5 | 0 | partial. Closing and opening a panel, remembering, locking, a damaged layout and a layout from before workspaces are here. The rest need the viewport, the game view or the profile panel |
-| none, the Dart has no test | `EditorSessionTests`, `EditorWindowTests` | 0 | 0 | 0 | 51: the session without a window, and the window reading and writing it. Save as, its prompt and the quiet shared save are 13 of them | added |
+| none, the Dart has no test | `EditorSessionTests`, `EditorWindowTests` | 0 | 0 | 0 | 52: the session without a window, the window reading and writing it, and the inspector in the dock. Save as, its prompt and the quiet shared save are 13 of them | added |
 
 `editor_shell_test.dart` (15) is not counted. Most of it reads the outliner, the
-inspector and the project browser, which are task 16. Its save, unsaved marker
-and refused-newer-file tests have behaviour twins in `EditorSessionTests` and
-`ProjectWorkspaceTests`, and are left out of the count until the panels join
-them.
+inspector and the project browser. Its save, unsaved marker and refused-newer-file
+tests have behaviour twins in `EditorSessionTests` and `ProjectWorkspaceTests`.
+Selecting an object into the inspector and dragging a transform number are in
+`InspectorPanelTests`. The project browser is not ported.
 
 `EditorSession` holds what the Dart `EditorShell` kept in widget state, so a
 test can drive the editor with no window. `EditorWindow` draws it. The dock is a
@@ -138,9 +138,9 @@ because a binary asset is Chris's call. There is no Examples page until task 17.
 | `snapping_test.dart` | `SnappingTests` | 15 | 15 | 15 | 0 | done |
 | `grid_test.dart` | `GridTests` | 9 | 9 | 9 | 1: the tile reads back as the lines the grid draws | done. The tile is encoded by `Orblit.Sprite`, so its bytes differ from Flutter's |
 | `convex_outline_test.dart` | `ConvexOutlineTests` | 9 | 9 | 9 | 0 | done |
-| `joint_test.dart` | `JointTests` | 18 | 18 | 13 | 0 | partial. The four on what a joint holds and the nine of the gizmo are ported. The scene file, section and edit groups wait for the panels |
-| `body_test.dart` | `BodyTests` | 19 | 19 | 11 | 0 | partial. The gizmo group is ported. The scene file and edit groups wait for the panels |
-| `sound_test.dart` | `SoundTests` | 13 | 13 | 2 | 0 | partial. The gizmo group is ported. The scene file, range, section and row groups wait for the panels |
+| `joint_test.dart` | `JointTests`, `JointModelTests`, `InspectorJointTests` | 18 | 18 | 18 | 0 | done. The four on what a joint holds and the nine of the gizmo are in `JointTests`. The two on the scene file are in `JointModelTests`. The section and the add and undo are in `InspectorJointTests` |
+| `body_test.dart` | `BodyTests` | 19 | 19 | 19 | 0 | done |
+| `sound_test.dart` | `SoundTests`, `ComponentModelTests`, `InspectorComponentTests` | 13 | 13 | 13 | 0 | done. The gizmo and the scene file are in `SoundTests`. The four on the range are on the model. The section and the five row tests are headless |
 | `editor_shell_viewport_test.dart` | `EditorShellViewportTests` | 17 | 17 | 14 | 0 | partial. Flying, the wheel speed and the two finger gestures are ported. The three camera preview tests need the outliner, the inspector and the preview window, so they wait for task 16. Avalonia has no scroll phases, so the control does not turn a two finger scroll into an orbit or a pan. The four two finger tests send the gesture to the state |
 | `viewport_tools_test.dart` | `ViewportToolsTests` | 6 | 6 | 6 | 0 | done. Five Dart cases come from a `drawing` helper and one is a plain test |
 | none, the Dart view is one widget | `SceneViewportStateTests` | 0 | 0 | 0 | 15: flight, the wheel, looking, trackpad gestures, a drag on a ring, the grid switch and the clock, on the state that the control holds | added |
@@ -160,12 +160,37 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | --- | --- | --- | --- | --- | --- | --- |
 | `editor_shell_hierarchy_test.dart` | `OutlinerModelTests`, `OutlinerPanelTests` | 8 | 8 | 8 | 0 | done. The six filter tests are on the model. The two on the plus button are on the window |
 | `editor_shell_clipboard_test.dart` | `EditorSessionObjectsTests`, `OutlinerPanelTests`, `EditorSessionScenesTests` | 15 | 15 | 15 | 0 | done. The four that load a scene are session tests: copy between scenes, the clipboard surviving an unload, several into another scene, and a paste landing where it was |
-| `editor_shell_scenes_test.dart` | `EditorSessionScenesTests`, `OutlinerPanelTests` | 17 | 17 | 11 | 0 | partial. Waiting: the two save as tests, which have twins in `EditorSessionTests` under other names (row 13), the dropped mesh (row 3), and selecting the scene, its saved settings and an unloaded scene offering to load (row 2). The three drag tests call `Release`, as the hierarchy ones do |
+| `editor_shell_scenes_test.dart` | `EditorSessionScenesTests`, `OutlinerPanelTests`, `InspectorSceneTests` | 17 | 17 | 14 | 0 | partial. Waiting: the two save as tests, which have twins in `EditorSessionTests` under other names (row 13), and the dropped mesh (row 3). Selecting the scene, its saved settings and an unloaded scene offering to load are in `InspectorSceneTests`. The three drag tests call `Release`, as the hierarchy ones do |
+| `inspector_sections_test.dart` | `InspectorPanelTests` | 6 | 6 | 6 | 0 | done |
+| `editor_shell_body_test.dart` | `InspectorBodyTests`, `InspectorCompoundTests` | 8 | 8 | 8 | 0 | done. The model triangles and the compound parts are in `InspectorCompoundTests` |
+| `editor_shell_body_controls_test.dart` | `InspectorBodyTests`, `InspectorSceneTests` | 7 | 7 | 7 | 0 | done. Naming a layer is on the scene's own fields, in `InspectorSceneTests` |
+| `editor_shell_zone_test.dart` | `InspectorBodyTests`, `InspectorComponentTests` | 9 | 9 | 9 | 0 | done. The trigger undo is the last check of the place test, so four trigger tests are three in C# |
+| `editor_shell_joint_test.dart` | `InspectorJointTests` | 5 | 5 | 5 | 0 | done |
+| `zone_test.dart` | `ZoneTests` | 15 | 15 | 15 | 0 | done |
+| `particles_test.dart` | `ParticlesTests`, `ComponentModelTests`, `InspectorComponentTests` | 10 | 10 | 10 | 0 | done. The file is in `ParticlesTests`. The four on ranges are on the model. Choosing what is already chosen is one C# test for this row and the sound one. The section and the other three rows are headless |
+| `vehicle_test.dart` | `VehicleTests`, `InspectorComponentTests` | 7 | 7 | 7 | 0 | done. The file and the two edits are in `VehicleTests` |
+| `collision_model_test.dart` | `ModelCollisionTests` | 2 | 2 | 2 | 0 | done |
 | none | `OutlinerModelTests` | 0 | 0 | 0 | 15: the rows and their depth, the folds, a scene row with a filter, an unloaded scene, where a drop lands and what a drop refuses | added |
 | none | `EditorSessionObjectsTests` | 0 | 0 | 0 | 26: selecting, adding and naming, ids, deleting, moving, duplicating, the clipboard labels and a clipboard that cannot be reached | added |
 | none | `OutlinerPanelTests` | 0 | 0 | 0 | 18: the rows and the count, the selection drawn, a scene row, the filter message, a fold, the remove button, the edit keys with and without a text box, the Add menu, the Edit menu waiting for a selection and a drop, how an unloaded scene says to load it, the mark on a scene never written, a click that only selects, discarding in the leave dialog, the hover close button, no close on the shared row, and New scene from the menu and from the key | added |
 | none | `EditorSessionScenesTests` | 0 | 0 | 0 | 17: loading, what a load clears, a scene with no file, a file that is gone or unreadable, prefabs named before a read, the default answer, Stop, Save and Discard, saving with no file, new scenes and their names, closing, and the selected scene row | added |
+| none | `JointModelTests` | 0 | 0 | 0 | 17: the kinds, the seed a pulley or a path starts with, what a joint holds, the modes of a limit, an ordered range, the length a rope keeps, the labels, which ways give, driving, the next point of a path and a point set | added |
+| none | `BodyPartsTests`, `BodyFitTests` | 0 | 0 | 0 | 23: the shapes of a part, the hull a part starts as, parts added and removed, turns read back as degrees, the collider, and what a body is fitted to | added |
+| none | `ModelCollisionTests` | 0 | 0 | 0 | 2: a shape the object builds itself needs no file, and an object with nothing to read says so | added |
+| none | `InspectorModelTests`, `InspectorWeatherTests`, `LightModelTests`, `WeatherModelTests`, `SceneFieldsModelTests`, `FieldsTests` | 0 | 0 | 0 | 53: the inspector's target, the sections it offers, the fields and their drags, the light, weather and scene settings | added |
+| none | `InspectorPanelTests` | 0 | 0 | 0 | 25: no scene, the transform and its drag, renaming, the visible switch, a hidden parent, several selected, the renderer and the light, the prefab band, data links, a canvas, the folds, the header and the axis letters | added |
+| none | `ComponentModelTests` | 0 | 0 | 0 | 3: the names of the emitter shapes, what a zone takes from its body and what it gives back | added |
+| none | `InspectorSceneTests` | 0 | 0 | 0 | 8: the scene header, its sky, the day cycle, a few layer names, the counts and the shared scene | added |
+| none | `InspectorBodyTests`, `InspectorCompoundTests`, `InspectorComponentTests`, `InspectorJointTests` | 0 | 0 | 0 | 17: what a body is offered on, a place in the tree, a fit to an editor size, a mesh body, the collider as its own step, a wheel with no car, the steer lock, a zone a file gave to a free body, and a joint that holds nothing | added |
 | none | `PaletteEntriesTests` | 0 | 0 | 0 | 5: the Edit and Add entries and New scene | added |
+
+Not in the inspector yet, and not counted: `shader_test.dart` (17) waits for row 3,
+`editor_shell_terrain_test.dart` (4) for row 5, `blend_inspector_test.dart` (6) and
+`editor_shell_blends_test.dart` (7) for row 7, and `editor_shell_prefabs_test.dart` (23) and
+`editor_shell_data_test.dart` (22) for row 13, because they need the shell. The
+inspector takes its prefab and data buttons, the model reader and the size of a
+mesh from `InspectorLinks`, which the window does not fill yet. `rebuild_scope_test.dart`
+(5) tests how Flutter rebuilds, and is judged again with the shell.
 
 The Dart outliner test file is `editor_shell_hierarchy_test.dart`. There is no
 `outliner_test.dart`. The drag itself is not driven headless. The tests call

@@ -108,6 +108,28 @@
 - Not ported yet with the scene row: `_preview.forget()`, the cleared
   report notes and the bench change, which belong to rows 4 and later. The
   window does not ask about unsaved scenes when it closes.
+- The inspector sits in the dock. It shows what is selected, or the scene
+  itself when nothing is. A heading says what kind of thing it is, and a
+  click on a section's title folds it. A vector's three numbers wear the
+  letters X, Y and Z.
+- Sections for the transform, the mesh, the light, the weather and the
+  scene's own settings, then sound, particles, vehicle, wheel, zone, body
+  and joint. A section is offered where it means something. A zone is for a
+  body that stays put and a wheel is for the child of a car. A file that
+  already holds one on something else still shows it, so it can be taken
+  off. A body is fitted to what is drawn when it is added. A compound body
+  has its own parts, and a part can be a hull. A joint has a row for each
+  way its kind may move, and a spring and a drive where they apply.
+- One drag through a number is one undo step. Choosing what is already
+  chosen is not a step.
+- Differences from the Dart editor:
+  - A path with no points asks for the next one past the origin. The Dart
+    reads the last point of an empty list and throws.
+- Not wired in the window yet: the data, interface and prefab buttons, the
+  size of a mesh and the model collision button. The inspector takes them
+  as callbacks from the shell port, so those rows are absent until then.
+  The shader, terrain and blend sections, and the key button for an
+  animation, come with rows 3, 4, 5 and 7.
 
 ## 1.26.0+27
 
