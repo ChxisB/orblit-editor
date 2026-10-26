@@ -1,6 +1,7 @@
 namespace Orblit.Editor.Panels;
 
 using System.Globalization;
+using Orblit.Asset;
 using Orblit.Editor.Core;
 using Orblit.Scene;
 using Orblit.VectorMath;
@@ -29,6 +30,9 @@ public sealed class InspectorTarget
 
     /// <summary>How big a mesh is in its own space where the editor holds no geometry for it, such as an imported model.</summary>
     public Func<SceneObject, (Vector3 Min, Vector3 Max)?>? BoundsOf { get; init; }
+
+    /// <summary>Reads the triangles an object draws, for a body that collides with them. Null where there is no project to read a model from.</summary>
+    public Func<SceneObject, Task<CollisionMesh>>? CollisionOf { get; init; }
 
     /// <summary>
     /// Whether something it is inside hides it while it is shown itself. A different state from hidden

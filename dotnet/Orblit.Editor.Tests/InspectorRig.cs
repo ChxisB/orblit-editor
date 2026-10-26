@@ -56,6 +56,15 @@ internal static class InspectorRig
         Headless.Click(window, name);
     }
 
+    /// <summary>Presses the last control of a name, for a name that rows below another group's repeat.</summary>
+    internal static void PressLast(Window window, string name)
+    {
+        var control = Headless.All<Control>(window).Last(one => one.Name == name);
+        control.BringIntoView();
+        Headless.Render();
+        Headless.Click(window, control);
+    }
+
     /// <summary>Scrolls a control into view, presses on it, moves the pointer sideways by <paramref name="pixels"/> and lets go.</summary>
     internal static void Drag(Window window, string name, double pixels)
     {

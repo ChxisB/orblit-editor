@@ -51,14 +51,24 @@ internal sealed class BodySection
 
     private (Vector3 Min, Vector3 Max)? Reported => _target.BoundsOf?.Invoke(Item);
 
-    private Control Absent() =>
-        // A drawn thing gets a body its own shape, which is what adding one to a crate means. A place
-        // in the tree gets a metre box to start.
-        _rows.Add(
-            "Add body",
-            "Give this object a shape for physics.",
-            Item.IsDrawable ? BodyFit.Fitted(new BodyComponent(), Item, Reported) : new BodyComponent(),
-            $"Add body to {Item.Name}");
+    private StackPanel Absent() =>
+        Fields.Column(
+        [
+            .. Collision(),
+            // A drawn thing gets a body its own shape, which is what adding one to a crate means. A place
+            // in the tree gets a metre box to start.
+            _rows.Add(
+                "Add body",
+                "Give this object a shape for physics.",
+                Item.IsDrawable ? BodyFit.Fitted(new BodyComponent(), Item, Reported) : new BodyComponent(),
+                $"Add body to {Item.Name}"),
+        ]);
+
+    // Makes the model's own triangles the body, for something a box or a hull would only approximate.
+    private IEnumerable<Control> Collision() =>
+        _target.CollisionOf is { } read && Item.IsDrawable
+            ? [CollisionButton.Build(() => read(Item), geometry => _fields.Host.Apply(() => _rows.Put(BodyPartsModel.Collider(_rows.Current, geometry), $"Collide with {Item.Name}")))]
+            : [];
 
     private StackPanel Present(BodyComponent body)
     {
@@ -145,6 +155,11 @@ internal sealed class BodySection
         }
 
         rows.AddRange(Described(body));
+        if (body.Shape == BodyShape.Compound)
+        {
+            rows.AddRange(BodyPartRows.Build(_rows, body, BodyFit.Fitted(body.CopyWith(shape: BodyShape.Hull), Item, Reported).Hull));
+        }
+
         if (body.Shape != BodyShape.Plane)
         {
             rows.Add(Vector("Shape scale", current => current.ShapeScale, (current, value) => current.CopyWith(shapeScale: value), Positive));
@@ -221,7 +236,7 @@ internal sealed class BodySection
 
     private StackPanel Buttons(BodyComponent body)
     {
-        List<Control> buttons = [];
+        List<Control> buttons = [.. Collision()];
         if (Item.IsDrawable && body.Shape != BodyShape.Mesh)
         {
             buttons.Add(Fields.Button(

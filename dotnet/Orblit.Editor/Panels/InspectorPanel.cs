@@ -101,6 +101,7 @@ internal sealed class InspectorPanel : UserControl
             OnDetachData = _links.OnDetachData,
             OnOpenInterface = _links.OnOpenInterface,
             BoundsOf = _links.BoundsOf,
+            CollisionOf = _links.CollisionOf,
         };
         Bands(scene, item);
         Body(target);

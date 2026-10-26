@@ -64,17 +64,17 @@ public static class Headless
         where T : Control => All<T>(root).First(one => one.Name == name);
 
     /// <summary>The middle of a named control, in the window's own coordinates.</summary>
-    public static Point Centre(Window window, string name)
-    {
-        var at = Find<Control>(window, name);
+    public static Point Centre(Window window, string name) => Centre(window, Find<Control>(window, name));
 
+    public static Point Centre(Window window, Control control) =>
         // Null only for a control off the window, and a test that clicks one has a bug to see.
-        return at.TranslatePoint(new Point(at.Bounds.Width / 2, at.Bounds.Height / 2), window)!.Value;
-    }
+        control.TranslatePoint(new Point(control.Bounds.Width / 2, control.Bounds.Height / 2), window)!.Value;
 
-    public static void Click(Window window, string name)
+    public static void Click(Window window, string name) => Click(window, Find<Control>(window, name));
+
+    public static void Click(Window window, Control control)
     {
-        var at = Centre(window, name);
+        var at = Centre(window, control);
         window.MouseDown(at, MouseButton.Left);
         window.MouseUp(at, MouseButton.Left);
         Render();

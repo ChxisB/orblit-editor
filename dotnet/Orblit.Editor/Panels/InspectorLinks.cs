@@ -1,5 +1,6 @@
 namespace Orblit.Editor;
 
+using Orblit.Asset;
 using Orblit.Editor.Core;
 using Orblit.VectorMath;
 
@@ -21,6 +22,9 @@ internal sealed record InspectorLinks
 
     /// <summary>How big a mesh is in its own space where the editor holds no geometry for it, for fitting a body to it.</summary>
     public Func<SceneObject, (Vector3 Min, Vector3 Max)?>? BoundsOf { get; init; }
+
+    /// <summary>Reads the triangles an object draws, for a body that collides with them.</summary>
+    public Func<SceneObject, Task<CollisionMesh>>? CollisionOf { get; init; }
 
     /// <summary>Saves what was changed in an instance into its prefab, given the selected object's id.</summary>
     public Action<string>? OnApplyPrefab { get; init; }

@@ -20,6 +20,9 @@ internal sealed class ComponentRows<T>(Fields fields, InspectorTarget target, st
 {
     private static readonly string[] NoYes = ["No", "Yes"];
 
+    /// <summary>What the rows are built with, for the rows that sit beside them.</summary>
+    public Fields Fields => fields;
+
     public T? Current => PhysicsComponents.Of<T>(target.Item, type);
 
     public Control Drag(string label, Func<T, double> read, Func<T, double, T> change, DragOptions? options = null) =>
