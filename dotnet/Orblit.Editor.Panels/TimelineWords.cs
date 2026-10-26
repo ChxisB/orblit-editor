@@ -71,6 +71,18 @@ public static class TimelineWords
         return address.Bone is null ? field : $"{address.Bone} · {field}";
     }
 
+    public static string Stride(int frames) => frames == 1 ? "every frame" : $"every {frames} frames";
+
+    /// <summary>How many ghosts onion skin draws and how far apart, on the button that sets them.</summary>
+    public static string Ghosts(SkeletonSettings settings) => $"{settings.Before} each side, {Stride(settings.Stride)}";
+
+    /// <summary>Where the playhead is, by the second and by the frame it is nearest.</summary>
+    public static string Where(double at, double rate)
+    {
+        var frame = rate <= 0 ? 0 : (int)Math.Round(at * rate, MidpointRounding.AwayFromZero);
+        return $"{at.ToString("0.00", CultureInfo.InvariantCulture)} s   frame {frame}";
+    }
+
     /// <summary>Seconds as few figures as say them: 1, 0.5, 0.25.</summary>
     public static string Seconds(double seconds)
     {

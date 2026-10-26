@@ -76,6 +76,8 @@ public sealed class TimelineModel(ClipBench bench)
             bench.At = 0;
         }
 
+        // A clock reading kept from the last play would count the time since as played.
+        _last = null;
         _direction = 1;
         bench.Playing = true;
     }

@@ -110,6 +110,22 @@ public sealed class TimelineModelTests
         Assert.Equal(0.75, rig.Bench.At, 1e-9);
     }
 
+    [Fact]
+    public void PlayingAgainAfterTheEndDoesNotCountTheTimeSince()
+    {
+        var rig = MakeRig();
+        PlayFor(rig, 5);
+        Assert.False(rig.Bench.Playing);
+
+        // Nothing ticked while it was stopped, as when the panel stops asking for frames.
+        rig.Timeline.Play();
+        rig.Timeline.Tick(TimeSpan.FromSeconds(100));
+        rig.Timeline.Tick(TimeSpan.FromSeconds(100.5));
+
+        Assert.Equal(0.5, rig.Bench.At, 1e-9);
+        Assert.True(rig.Bench.Playing);
+    }
+
     [Theory]
     [InlineData(WhenDone.Hold)]
     [InlineData(WhenDone.Release)]
