@@ -151,6 +151,14 @@
 - Faults copied from the Dart editor, for decision 80: a linked file or
   folder is left out of the browser, so a project that links in a shared
   folder does not show it.
+- Add `CookStatusIndex`. It asks the cook where each asset stands without
+  cooking any of them, through a `CookProject` over the project's assets
+  folder and the machine's own cache. The work runs on the pool. Two asks at
+  once make one more pass, not two. `CookStateLook` gives a state its label,
+  its reason and the colour of its dot. The colour is a name, `CookMark`,
+  and the window picks the brush.
+- A cook that fails reads as the exception's message. Dart printed the type
+  name before it.
 
 ## 1.26.0+27
 
