@@ -215,11 +215,14 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | none | `BrushRingTests` | 0 | 0 | 0 | 8: 64 pieces joined end to end, a ring following the ground, a piece behind the camera left out, and the inner ring only when it would not sit on the edge or the centre | added |
 | none | `BrushPanelModelTests`, `TerrainBrushPanelTests` | 0 | 0 | 0 | 14: the words and sums behind the panel, and the terrain it names, the tool it explains, its sets and tints, and each brush setting changing the bench without a step on the undo stack | added |
 | none | `TerrainSectionModelTests`, `TerrainSectionTests` | 0 | 0 | 0 | 26: the region map, the sets, the automatic cover and the blend, each change one step | added |
+| none | `TerrainPicturesTests` | 0 | 0 | 0 | 8: a picture drawing plain until it is read and then arriving as pixels, one picture named twice read once and not again when the sets change, a picture that cannot be read said once with the ground left plain and tried again when the sets change, a terrain read from disk asking for its pictures, undo drawing the earlier pictures at once, the real decoder giving the size the renderer takes, and no decoder meaning no asking | added |
+| none | `SkiaPictureDecoderTests` | 0 | 0 | 0 | 10: a picture of the right size coming back byte for byte with straight alpha, a stretch from 4 by 4, 4 by 2, 64 by 64 and two odd sides, a JPEG of 16, 64 and 100 pixels coming back opaque, and bytes that are not a picture being refused | added |
 
 Gap in row 5: a picture is shown in a set and can be cleared, but not dropped on one. The Dart section took a drop from the
-asset browser, and the C# browser has no drag source yet. The decoder that turns a picture into the ground's textures
-(part 5e) waits on decision 89. The window runs headless only. The ring, the shelf and a stroke have not been seen in a
-real window with the renderer.
+asset browser, and the C# browser has no drag source yet. The decoder (part 5e) reads a picture with SkiaSharp 3.119.4,
+off the UI thread, at 512 by 512 with straight alpha. It ran headless, and the real one only inside the bench test. The
+window runs headless only. The ring, the shelf, a stroke and a textured set have not been seen in a real window with the
+renderer.
 
 Not in the inspector yet, and not counted: `blend_inspector_test.dart` (6) and
 `editor_shell_blends_test.dart` (7) for row 7, and `editor_shell_prefabs_test.dart` (23) and

@@ -245,9 +245,13 @@
   brush tools sits over the view, the brush panel sits beside the inspector,
   and a drag in the view shapes the ground as one undo step. A ring on the
   ground shows where the brush lands. The title shows unsaved terrain.
+- Read the pictures of a terrain set in the C# editor with SkiaSharp 3.119.4.
+  A picture is read off the UI thread at 512 by 512 with straight alpha, four
+  at a time, and a source over 8192 pixels a side is refused. One that cannot
+  be read is said once, the ground stays plain, and the next change to the
+  sets tries it again.
 - Not in the terrain mode yet: dropping a picture on a set, which needs a
-  drag source in the project browser, and decoding the picture for the
-  renderer.
+  drag source in the project browser.
 
 ## 1.26.0+27
 
