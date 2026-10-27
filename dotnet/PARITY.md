@@ -124,7 +124,8 @@ words, because no icon set is bundled yet (decision 84).
 The launcher session holds the view, the template, the search and the rules for
 opening and creating, so a test reaches them with no widget. The splash is drawn
 in code and covers the launcher only. The 622 KB logo picture is not bundled,
-because a binary asset is Chris's call. There is no Examples page until task 17.
+because a binary asset is Chris's call. The launcher has no Examples page. The
+examples live in the `orblit-examples` repository, and the editor does not show them.
 
 ## Row 8, the viewport
 

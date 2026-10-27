@@ -104,12 +104,6 @@ dependencies:
   # the same one to time their work.
   orblit_profile:
     path: ../orblit/packages/orblit_profile
-
-  # The worked examples, shown in the launcher beside the projects. The same
-  # package the gallery app uses, so an example only has to be written once
-  # and the editor never drifts from what the gallery shows.
-  orblit_examples:
-    path: ../orblit/packages/orblit_examples
   path: ^1.9.0
   path_provider: ^2.1.5
 

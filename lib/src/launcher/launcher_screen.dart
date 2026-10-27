@@ -5,7 +5,6 @@ import '../theme/orblit_theme.dart';
 import '../widgets/controls.dart';
 import '../widgets/orblit_mark.dart';
 import 'create_view.dart';
-import 'examples_view.dart';
 import 'project.dart';
 import 'projects_view.dart';
 
@@ -20,7 +19,7 @@ String ago(DateTime then) {
 }
 
 /// What the launcher is currently showing.
-enum _View { projects, create, examples }
+enum _View { projects, create }
 
 /// The first thing the editor shows.
 ///
@@ -38,13 +37,6 @@ class LauncherScreen extends StatefulWidget {
 }
 
 class _LauncherScreenState extends State<LauncherScreen> {
-  /// Whether an example has asked for the whole window.
-  ///
-  /// The rail goes with it. A full view of a scene with a navigation rail
-  /// down the side of it is not a full view, and the way back is the button
-  /// the example view puts where a project puts its own.
-  bool _full = false;
-
   final ProjectStore _store = ProjectStore();
   _View _view = _View.projects;
   ProjectTemplate _template = ProjectTemplate.scene;
@@ -99,11 +91,7 @@ class _LauncherScreenState extends State<LauncherScreen> {
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (!_full)
-            _Rail(
-              view: _view,
-              onView: (view) => setState(() => _view = view),
-            ),
+          _Rail(onProjects: () => setState(() => _view = _View.projects)),
           Expanded(
             child: Container(
               color: OrblitColors.ground,
@@ -135,12 +123,6 @@ class _LauncherScreenState extends State<LauncherScreen> {
                     onCreated: widget.onOpen,
                     onFailed: _complain,
                   ),
-                // Kept alive behind the other two, so switching away and back
-                // does not restart whatever was running — an example with a
-                // day cycle in it is worth leaving where it was.
-                _View.examples => ExamplesView(
-                    onFull: (full) => setState(() => _full = full),
-                  ),
               },
             ),
           ),
@@ -150,12 +132,11 @@ class _LauncherScreenState extends State<LauncherScreen> {
   }
 }
 
-/// The left rail: identity, then the two places a launcher goes.
+/// The left rail: identity, then the place a launcher goes.
 class _Rail extends StatelessWidget {
-  const _Rail({required this.view, required this.onView});
+  const _Rail({required this.onProjects});
 
-  final _View view;
-  final ValueChanged<_View> onView;
+  final VoidCallback onProjects;
 
   @override
   Widget build(BuildContext context) {
@@ -188,14 +169,8 @@ class _Rail extends StatelessWidget {
                 label: 'Projects',
                 icon: Icons.folder_outlined,
                 // Making a project is part of this page, so it keeps the mark.
-                selected: view != _View.examples,
-                onTap: () => onView(_View.projects),
-              ),
-              _RailItem(
-                label: 'Examples',
-                icon: Icons.auto_stories_outlined,
-                selected: view == _View.examples,
-                onTap: () => onView(_View.examples),
+                selected: true,
+                onTap: onProjects,
               ),
             ],
           ),

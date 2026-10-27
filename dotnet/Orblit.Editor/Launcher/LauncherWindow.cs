@@ -11,9 +11,6 @@ using Orblit.Editor.Core;
 /// The window the editor opens in when it is not told which project to open: a rail, and the page
 /// the session says to show. It draws what a <see cref="LauncherSession"/> holds and calls it.
 /// </summary>
-/// <remarks>
-/// shortcut: the rail has only Projects. The Dart editor's Examples page waits for the gallery (task 17).
-/// </remarks>
 public sealed class LauncherWindow : Window
 {
     internal const string Version = "Engine 0.1.0 · pre-alpha";

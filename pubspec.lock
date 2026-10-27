@@ -355,13 +355,6 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
-  orblit_examples:
-    dependency: "direct main"
-    description:
-      path: "../orblit/packages/orblit_examples"
-      relative: true
-    source: path
-    version: "0.35.0"
   orblit_filament:
     dependency: "direct main"
     description:

@@ -6,8 +6,10 @@
   holds the scene document, commands and history, the dock layout, projects,
   the key map and the palette, with no widget. `Orblit.Editor` 0.1.0 is the
   Avalonia app: a window, a dock host of our own, the command palette and
-  the launcher. The Dart editor is unchanged and stays until the migration
-  ends.
+  the launcher. The Dart editor stays until the migration ends.
+- Remove the Examples page from the launcher, in both editors. The worked
+  examples are in the `orblit-examples` repository, and the editor no longer
+  depends on `orblit_examples`.
 - Add `Orblit.Editor.Viewport` 0.1.0, the viewport's arithmetic with no
   widget: the orbit and fly cameras, the view ray and projection, the gizmo
   maths, the input order, the selection outline, snapping, the grid, and the
@@ -42,7 +44,7 @@
   writes the fixtures.
 - What is not ported yet: the skeleton and limb gizmos, mesh editing, every
   panel body, the terrain, cinematics and interface modes, the camera preview
-  window, the examples page, panel drag, and closing a project back to the
+  window, panel drag, and closing a project back to the
   launcher. Panels other than the scene view show their name.
 - No icon set or font is bundled, because that is a decision for Chris. The
   mode rail, the tabs and the palette rows are words. The 622 KB logo
