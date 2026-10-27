@@ -127,7 +127,8 @@ public sealed class PaletteEntriesTests : IDisposable
 
         var adds = PaletteEntries.For(session, HostPlatform.MacOS).Where(one => one.Label.StartsWith("Add ")).ToList();
 
-        Assert.Equal(Enum.GetValues<ShapeKind>().Length + AddMenu.Items.Count, adds.Count);
+        // The extra one is Add Terrain, which makes a file as well as an object.
+        Assert.Equal(Enum.GetValues<ShapeKind>().Length + AddMenu.Items.Count + 1, adds.Count);
         Assert.All(adds.Where(one => one.Meta == "Shape"), one => Assert.Contains(one.Label[4..], Enum.GetNames<ShapeKind>()));
     }
 

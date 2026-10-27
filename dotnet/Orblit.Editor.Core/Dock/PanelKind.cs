@@ -35,12 +35,15 @@ public sealed class PanelKind : IEquatable<PanelKind>
 
     public static readonly PanelKind Profile = new("profile", "Profile", "speed");
 
+    /// <summary>The brush's settings, beside the inspector while the ground is being shaped.</summary>
+    public static readonly PanelKind TerrainBrush = new("terrainBrush", "Brush", "brush_outlined");
+
     /// <summary>
     /// The kinds the editor has always had, which a layout can be read against before anything else
     /// has registered.
     /// </summary>
     public static readonly IReadOnlyList<PanelKind> BuiltIn =
-        [Outliner, Inspector, Viewport, Game, Project, Console, Uvs, Modelling, Timeline, Profile];
+        [Outliner, Inspector, Viewport, Game, Project, Console, Uvs, Modelling, Timeline, Profile, TerrainBrush];
 
     public PanelKind(string name, string label, string icon, bool repeatable = false)
     {

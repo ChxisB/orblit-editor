@@ -106,6 +106,20 @@ public sealed class DockLayout
         below: 0.4);
 
     /// <summary>
+    /// Shaping the ground. The brush is in front on the right, since its settings are what is reached
+    /// for most while shaping, and only the console is under the view: the other tools there have
+    /// nothing to say about the ground. The console is a short open strip, so a brush that cannot
+    /// reach a place says so where it is seen.
+    /// </summary>
+    public static DockLayout Terrain() => Columns(
+        new DockGroup("centre", [new DockPanel("scene", PanelKind.Viewport), new DockPanel("game", PanelKind.Game)]),
+        bottom: [new DockPanel("console", PanelKind.Console)],
+        right: [new DockPanel("brush", PanelKind.TerrainBrush), new DockPanel("inspector", PanelKind.Inspector)],
+        folded: false,
+        below: 0.14,
+        revision: 1);
+
+    /// <summary>
     /// Four scene views onto the same world, the way a modelling tool arranges them. The reason the
     /// layout is data at all.
     /// </summary>

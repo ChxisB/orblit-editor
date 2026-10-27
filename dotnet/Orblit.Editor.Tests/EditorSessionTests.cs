@@ -36,7 +36,7 @@ public sealed class EditorSessionTests : IDisposable
 
     [Fact]
     public void TheRailFollowsTheOrderALevelIsMadeIn() =>
-        Assert.Equal(new[] { "scene", "modelling", "animation" }, EditorModes.Standard().All.Select(mode => mode.Name));
+        Assert.Equal(new[] { "scene", "modelling", "terrain", "animation" }, EditorModes.Standard().All.Select(mode => mode.Name));
 
     [Fact]
     public void EachOneShowsThePanelsForItsJob()
@@ -57,7 +57,7 @@ public sealed class EditorSessionTests : IDisposable
     {
         var session = Open();
 
-        session.EnterMode("terrain");
+        session.EnterMode("cinematics");
 
         Assert.Equal("scene", session.Mode.Name);
     }

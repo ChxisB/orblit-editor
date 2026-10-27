@@ -34,14 +34,15 @@ public sealed record EditorMode : IRegistered
 public static class EditorModes
 {
     /// <summary>
-    /// The modes whose panels exist in the core so far, in the order work usually goes. Terrain,
-    /// cinematics and interface join them with their panels.
+    /// The modes whose panels exist in the core so far, in the order work usually goes. Cinematics and
+    /// interface join them with their panels.
     /// </summary>
     public static Registry<EditorMode> Standard()
     {
         var modes = new Registry<EditorMode>();
         modes.Register(new EditorMode { Name = "scene", Label = "Scene", Icon = "open_with", Layout = DockLayout.Standard });
         modes.Register(new EditorMode { Name = "modelling", Label = "Modelling", Icon = "view_in_ar_outlined", Layout = DockLayout.Modelling });
+        modes.Register(new EditorMode { Name = "terrain", Label = "Terrain", Icon = "landscape_outlined", Layout = DockLayout.Terrain });
         modes.Register(new EditorMode { Name = "animation", Label = "Animation", Icon = "animation", Layout = DockLayout.Animation });
         return modes;
     }

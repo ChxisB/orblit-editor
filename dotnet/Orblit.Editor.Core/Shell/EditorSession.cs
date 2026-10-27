@@ -40,6 +40,8 @@ public sealed partial class EditorSession
         Assets = new AssetTree(workspace.ProjectDirectory);
         Clips = new ClipBench(history, () => workspace.Loaded?.Scene);
         Clips.Changed += OnClipsChanged;
+        Terrains = new TerrainBench(history, workspace.ProjectDirectory, problem => Say(problem, SayLevel.Error));
+        Terrains.Changed += OnTerrainsChanged;
         history.Changed += OnHistoryChanged;
     }
 
@@ -106,8 +108,8 @@ public sealed partial class EditorSession
     public bool IsUnsaved(SceneEntry entry) =>
         entry.IsLoaded && (entry.NeverWritten || History.StampFor(entry.Id) != entry.SavedStamp);
 
-    /// <summary>Whether a scene or a clip has changes that are not on disk.</summary>
-    public bool AnyUnsaved => Workspace.Entries.Any(IsUnsaved) || Clips.AnyUnsaved;
+    /// <summary>Whether a scene, a clip or a terrain has changes that are not on disk.</summary>
+    public bool AnyUnsaved => Workspace.Entries.Any(IsUnsaved) || Clips.AnyUnsaved || Terrains.AnyUnsaved;
 
     /// <summary>Switches to a mode, with the panels as they were last left in it.</summary>
     public void EnterMode(EditorMode mode)
@@ -271,11 +273,12 @@ public sealed partial class EditorSession
     /// </para>
     /// </summary>
     /// <remarks>
-    /// shortcut: terrains and interfaces are not written here until they have benches (tasks 16 and 17).
+    /// shortcut: interfaces are not written here until they have a bench (tasks 16 and 17).
     /// </remarks>
     public void Save()
     {
         SaveClips();
+        SaveTerrains();
         if (Workspace.Loaded is not { Scene: not null } entry)
         {
             return;

@@ -53,6 +53,7 @@ public static class PaletteEntries
     [
         .. Enum.GetValues<ShapeKind>().Select(shape => Command($"Add {shape.Label}", "category_outlined", () => session.AddShape(shape), meta: "Shape")),
         .. AddMenu.Items.Select(item => Command($"Add {item.Label}", item.Icon, () => session.Add(item.Kind))),
+        Command("Add Terrain", "landscape_outlined", session.NewTerrain),
     ];
 
     private static PaletteEntry[] Views(EditorSession session) =>
