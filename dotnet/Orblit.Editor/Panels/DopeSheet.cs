@@ -178,14 +178,21 @@ internal sealed class DopeSheet : Control
 
     private void FrameLines(DrawingContext context, TimeAxis axis, double rate)
     {
+        if (rate <= 0)
+        {
+            return;
+        }
+
         var step = TimeAxis.FrameStep(axis.PerSecond, rate);
+        // A file can hold a rate under a half, which rounds to no whole second to draw stronger.
+        var perSecond = (int)Math.Round(rate);
         var second = new Pen(OrblitColors.Line, 1);
         var frame = new Pen(OrblitColors.LineSoft, 1);
-        var frames = rate <= 0 ? 0 : (int)Math.Floor(axis.Span * rate);
+        var frames = (int)Math.Floor(axis.Span * rate);
         for (var at = 0; at <= frames; at += step)
         {
             var x = Math.Round(axis.XOf(at / rate)) + 0.5;
-            var whole = at % (int)Math.Round(rate) == 0;
+            var whole = perSecond > 0 && at % perSecond == 0;
             context.DrawLine(whole ? second : frame, new Point(x, 0), new Point(x, Bounds.Height));
         }
     }

@@ -32,14 +32,14 @@ public sealed class DopeSheetTests
 
     // Two seconds long. The box's power is keyed at 0 and 1 and its range at 1 and 2, so the rows are
     // the box's heading, its power and its range.
-    private static Rig Show(double width = 900)
+    private static Rig Show(double width = 900, double rate = 30)
     {
         var scene = new EditorScene([new SceneObject("box", "Box", ObjectKind.Group)]);
         var workspace = new Workspace("/project");
         workspace.Add(new SceneEntry("a", "A", scene: scene));
         var history = new History(workspace);
         var bench = new ClipBench(history, () => scene);
-        bench.OpenDocument(Wave, new ClipDocument("wave", 2, channels: [Channel("light.power", 0, 1), Channel("light.range", 1, 2)]));
+        bench.OpenDocument(Wave, new ClipDocument("wave", 2, rate: rate, channels: [Channel("light.power", 0, 1), Channel("light.range", 1, 2)]));
         var panel = new TimelinePanel(bench, new TimelineLinks { OnNew = () => { } });
         var window = new Window { Width = width, Height = 500, Content = panel };
         window.Show();
@@ -121,6 +121,18 @@ public sealed class DopeSheetTests
         Assert.Equal(ruler.Bounds.Width, rig.Sheet.Bounds.Width);
         Assert.Equal(tracks.TranslatePoint(default, rig.Window)?.Y, rig.Sheet.TranslatePoint(default, rig.Window)?.Y);
         Assert.True(rig.Sheet.Bounds.Height >= tracks.Bounds.Height);
+    });
+
+    [Theory]
+    [InlineData(0.25)]
+    [InlineData(0.0)]
+    public Task AClipWithARateThatRoundsToNoFramesStillDraws(double rate) => Headless.Run(() =>
+    {
+        var rig = Show(rate: rate);
+
+        Headless.Render();
+
+        Assert.NotNull(rig.Bench.Clip);
     });
 
     [Fact]
