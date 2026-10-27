@@ -2,6 +2,7 @@ namespace Orblit.Editor.Core;
 
 using Orblit.Stage;
 using Orblit.Terrain;
+using Orblit.VectorMath;
 using Doc = Orblit.Scene;
 using Ground = Orblit.Terrain.Terrain;
 using Population = Orblit.Filament.Population;
@@ -43,8 +44,12 @@ public sealed class TerrainBench(History history, string projectRoot, Action<str
     private int _set;
     private GroundColour _colour = GroundColour.Of(red: 150, green: 124, blue: 96);
     private double _roughness = 0.5;
+    private Vector3? _hover;
 
     public event Action? Changed;
+
+    // Apart from Changed, so a pointer moving over the ground redraws the ring and nothing else.
+    public event Action? HoverChanged;
 
     public OpenTerrain? this[string file] => _open.GetValueOrDefault(file);
 
@@ -80,6 +85,22 @@ public sealed class TerrainBench(History history, string projectRoot, Action<str
     {
         get => _roughness;
         set => Change(ref _roughness, value);
+    }
+
+    /// <summary>Where the pointer meets the ground, or null when it is not over any.</summary>
+    public Vector3? Hover
+    {
+        get => _hover;
+        set
+        {
+            if (Equals(_hover, value))
+            {
+                return;
+            }
+
+            _hover = value;
+            HoverChanged?.Invoke();
+        }
     }
 
     /// <summary>Bumped each time the sets change, so the renderer takes their pictures again.</summary>

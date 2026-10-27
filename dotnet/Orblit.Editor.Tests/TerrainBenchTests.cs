@@ -3,6 +3,7 @@ namespace Orblit.Editor.Tests;
 using Orblit.Editor.Core;
 using Orblit.Editor.Viewport;
 using Orblit.Terrain;
+using Orblit.VectorMath;
 using Doc = Orblit.Scene;
 using Ground = Orblit.Terrain.Terrain;
 
@@ -340,5 +341,109 @@ public sealed class TerrainBenchTests : IDisposable
         var rig = MakeRig();
 
         Assert.Empty(rig.Bench.ScatterFor([GroundObject("a")]));
+    }
+
+    // Looking down at the origin from above, the way a new view does.
+    private static readonly ViewportProjection Looking = new(new OrbitCamera(), new Size(800, 600));
+    private static readonly Offset Centre = new(400, 300);
+
+    private static ViewportGesture At(ViewportPhase phase, Offset where, bool add = false) =>
+        new(phase, where, add, Looking);
+
+    private static TerrainBrushInput BrushOn(Rig rig) => new(rig.Bench, rig.History, () => rig.Open);
+
+    [Fact]
+    public void ADragOverTheGroundIsOneStrokeNamedForTheTool()
+    {
+        var rig = MakeRig();
+        var input = BrushOn(rig);
+        var along = new Offset(Centre.Dx + 40, Centre.Dy);
+
+        Assert.True(input.Handle(At(ViewportPhase.DragStart, Centre)));
+        Assert.True(input.Handle(At(ViewportPhase.DragUpdate, along)));
+        Assert.True(input.Handle(At(ViewportPhase.DragEnd, along)));
+
+        Assert.Equal("Raise hills", rig.History.UndoLabel);
+        Assert.Contains(Heights(rig.Open.Terrain), height => height > 0);
+        rig.History.Undo();
+        Assert.False(rig.History.CanUndo);
+    }
+
+    [Fact]
+    public void WithTheModifierHeldTheToolTurnsRound()
+    {
+        var rig = MakeRig();
+        var input = BrushOn(rig);
+
+        input.Handle(At(ViewportPhase.DragStart, Centre, add: true));
+        input.Handle(At(ViewportPhase.DragEnd, Centre, add: true));
+
+        Assert.Contains(Heights(rig.Open.Terrain), height => height < 0);
+        Assert.DoesNotContain(Heights(rig.Open.Terrain), height => height > 0);
+    }
+
+    [Fact]
+    public void TheSkyOrNoTerrainAtAllIsLeftToTheView()
+    {
+        var rig = MakeRig();
+
+        Assert.False(BrushOn(rig).Handle(At(ViewportPhase.Tap, new Offset(400, 0))));
+        Assert.False(rig.History.CanUndo);
+
+        var none = new TerrainBrushInput(rig.Bench, rig.History, () => null);
+        Assert.False(none.Handle(At(ViewportPhase.Tap, Centre)));
+        Assert.False(rig.History.CanUndo);
+    }
+
+    [Fact]
+    public void HoveringOverTheGroundShowsWhereTheBrushIs()
+    {
+        var rig = MakeRig();
+        var input = BrushOn(rig);
+        var moved = 0;
+        rig.Bench.HoverChanged += () => moved++;
+
+        Assert.True(input.Handle(At(ViewportPhase.Hover, Centre)));
+        Assert.NotNull(rig.Bench.Hover);
+        input.Handle(At(ViewportPhase.Leave, Centre));
+        Assert.Null(rig.Bench.Hover);
+        Assert.Equal(2, moved);
+    }
+
+    [Fact]
+    public void ADragThatLeavesTheGroundCarriesOnAtTheHeightItWasLastAt()
+    {
+        var rig = MakeRig();
+        var input = BrushOn(rig);
+
+        // Far enough back that a point beyond the last region is still in front of the eye.
+        var far = new ViewportProjection(new OrbitCamera(distance: 300), new Size(800, 600));
+        var past = far.Project(new Vector3(100, 0, 0)) ?? throw new InvalidOperationException("behind the eye");
+
+        input.Handle(new ViewportGesture(ViewportPhase.DragStart, Centre, Projection: far));
+        Assert.True(input.Handle(new ViewportGesture(ViewportPhase.DragUpdate, past, Projection: far)));
+        Assert.True(input.Handle(new ViewportGesture(ViewportPhase.DragEnd, past, Projection: far)));
+
+        // 100 is past the last region, so only the level the stroke was at can have put it there.
+        Assert.Equal(100, Some(rig.Bench.Hover).X, 3);
+        Assert.Equal("Raise hills", rig.History.UndoLabel);
+        rig.History.Undo();
+        Assert.False(rig.History.CanUndo);
+    }
+
+    [Fact]
+    public void EachToolHasItsWordsAndAStrokeIsNamedForIt()
+    {
+        foreach (var tool in Enum.GetValues<BrushTool>())
+        {
+            var words = BrushWords.Of(tool);
+            Assert.NotEmpty(words.Label);
+            Assert.NotEmpty(words.Hint);
+            Assert.NotEmpty(words.Icon);
+        }
+
+        Assert.Equal("Raise hills", BrushWords.StrokeLabel(BrushTool.Raise, "hills"));
+        Assert.Equal("Paint colour on hills", BrushWords.StrokeLabel(BrushTool.Colour, "hills"));
+        Assert.Equal("Punch holes in hills", BrushWords.StrokeLabel(BrushTool.Hole, "hills"));
     }
 }

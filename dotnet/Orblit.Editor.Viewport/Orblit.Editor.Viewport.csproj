@@ -7,6 +7,7 @@
     <PackageReference Include="Orblit.Filament" />
     <PackageReference Include="Orblit.Mesh" />
     <PackageReference Include="Orblit.Sprite" />
+    <PackageReference Include="Orblit.Terrain" />
     <PackageReference Include="Orblit.VectorMath" />
     <ProjectReference Include="..\Orblit.Editor.Core\Orblit.Editor.Core.csproj" />
   </ItemGroup>
