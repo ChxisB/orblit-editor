@@ -106,7 +106,8 @@ public sealed partial class EditorSession
     public bool IsUnsaved(SceneEntry entry) =>
         entry.IsLoaded && (entry.NeverWritten || History.StampFor(entry.Id) != entry.SavedStamp);
 
-    public bool AnyUnsaved => Workspace.Entries.Any(IsUnsaved);
+    /// <summary>Whether a scene or a clip has changes that are not on disk.</summary>
+    public bool AnyUnsaved => Workspace.Entries.Any(IsUnsaved) || Clips.AnyUnsaved;
 
     /// <summary>Switches to a mode, with the panels as they were last left in it.</summary>
     public void EnterMode(EditorMode mode)

@@ -32,7 +32,6 @@ public sealed class EditorWindow : Window
     private readonly TextBlock _status = new() { Name = "status", FontSize = OrblitText.Caption };
     private readonly Dictionary<string, Button> _rail = [];
     private readonly EditorMenu _menu;
-    private AssetTree? _assets;
     private CookStatusIndex? _cooks;
 
     // Keys that mean something else while a text box has the keyboard: delete a letter, copy some words.
@@ -95,7 +94,8 @@ public sealed class EditorWindow : Window
             _session.Workspace.Changed -= Refresh;
             _session.Said -= Say;
             _session.NameWanted -= AskSceneName;
-            _assets?.Dispose();
+            // The session made the tree, and the window is what outlives its file watcher.
+            _session.Assets.Dispose();
         };
 
         if (_session.Last is { } last)
@@ -180,23 +180,44 @@ public sealed class EditorWindow : Window
             return Project();
         }
 
+        if (panel.Kind == PanelKind.Timeline)
+        {
+            return Timeline();
+        }
+
         return panel.Kind == PanelKind.Inspector ? new InspectorPanel(_session) : Placeholder(panel);
     }
 
-    // One tree and one cook index for the window, made when the first project panel is. Two panels on
-    // one project look at the same cache, and hashing it twice would say nothing new.
+    private TimelinePanel Timeline()
+    {
+        var links = new TimelineLinks
+        {
+            OnNew = _session.NewClip,
+            OnProblem = problem => _session.Report([problem]),
+            Selected = () => _session.InspectedItem,
+        };
+        return new TimelinePanel(_session.Clips, links);
+    }
+
+    // The session's tree and one cook index for the window, made when the first project panel is. Two
+    // panels on one project look at the same cache, and hashing it twice would say nothing new.
     private AssetBrowserPanel Project()
     {
         var directory = _session.Workspace.ProjectDirectory;
-        _assets ??= new AssetTree(directory);
         _cooks ??= new CookStatusIndex(directory);
         var links = new AssetBrowserLinks { OnOpenAsset = OpenAsset, OnProblem = problem => _session.Report([problem]) };
-        return new AssetBrowserPanel(_assets, _cooks, links, _renderer);
+        return new AssetBrowserPanel(_session.Assets, _cooks, links, _renderer);
     }
 
-    // The other kinds open in the panels that edit them, and those arrive with their rows (4 to 13).
+    // The other kinds open in the panels that edit them, and those arrive with their rows (5 to 13).
     private void OpenAsset(Asset asset)
     {
+        if (asset.Kind == AssetKind.Clip)
+        {
+            _session.OpenClip(asset.Path);
+            return;
+        }
+
         var scene = _session.Workspace.Entries.FirstOrDefault(entry => entry.Path == asset.Path);
         if (asset.Kind == AssetKind.Scene && scene is not null)
         {

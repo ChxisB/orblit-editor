@@ -9,6 +9,7 @@ namespace Orblit.Editor.Tests;
 
 using Doc = Orblit.Scene;
 using Orblit.Editor.Core;
+using Orblit.Motion;
 
 public sealed class EditorWindowTests : IDisposable
 {
@@ -68,6 +69,51 @@ public sealed class EditorWindowTests : IDisposable
         Assert.Equal("modelling", session.Mode.Name);
         Assert.Equal(session.Layout.Panels.Count, Count(window, "tab_"));
         Assert.All(session.Layout.Panels, panel => Assert.True(Has(window, $"tab_{panel.Id}")));
+        window.Close();
+    });
+
+    [Fact]
+    public Task TheAnimationModeShowsTheTimeline() => Headless.Run(() =>
+    {
+        var (_, window) = Open();
+
+        Click(Find<Button>(window, "mode_animation"));
+
+        Assert.Single(All<TimelinePanel>(window));
+        Assert.True(Has(window, "timeline_none"));
+        window.Close();
+    });
+
+    [Fact]
+    public Task AClipOpenedFromTheProjectPanelShowsOnTheTimeline() => Headless.Run(() =>
+    {
+        File.WriteAllText(Path.Combine(_temp.FullName, "wave.oclip"), new ClipDocument("wave", 2).Encode());
+        var (session, window) = Open();
+        session.OpenPanel(PanelKind.Project);
+        Headless.Render();
+
+        Headless.DoubleClick(window, Headless.All<AssetTile>(window).First(tile => tile.Asset.Name == "wave.oclip"));
+
+        Assert.Equal("animation", session.Mode.Name);
+        Assert.Equal("wave", session.Clips.Clip!.Name);
+        window.Close();
+    });
+
+    [Fact]
+    public Task TheFileMenuShowsADotWhileAClipHasChangesNotOnDisk() => Headless.Run(() =>
+    {
+        File.WriteAllText(Path.Combine(_temp.FullName, "wave.oclip"), new ClipDocument("wave", 2).Encode());
+        var (session, window) = Open();
+        session.Save();
+        var file = Menu(window, "menu_file");
+        session.OpenClip(Path.Combine(_temp.FullName, "wave.oclip"));
+        Assert.Equal("File", file.Header);
+
+        session.Clips.Edit("Lengthen", _ => new ClipDocument("wave", 3));
+        Assert.Equal("File •", file.Header);
+
+        session.Save();
+        Assert.Equal("File", file.Header);
         window.Close();
     });
 

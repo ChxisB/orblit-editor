@@ -181,6 +181,22 @@ public sealed class EditorSessionClipsTests : IDisposable
     }
 
     [Fact]
+    public void AClipWithChangesCountsAsUnsavedOnItsOwn()
+    {
+        File.WriteAllText(PathOf("wave.oclip"), new ClipDocument("wave", 2).Encode());
+        var session = Open();
+        session.Save();
+        session.OpenClip(PathOf("wave.oclip"));
+        Assert.False(session.AnyUnsaved);
+
+        session.Clips.Edit("Lengthen", _ => new ClipDocument("wave", 3));
+        Assert.True(session.AnyUnsaved);
+
+        session.Save();
+        Assert.False(session.AnyUnsaved);
+    }
+
+    [Fact]
     public void ASceneIsWrittenAsItRestsWhereverThePlayheadIs()
     {
         var session = Open();

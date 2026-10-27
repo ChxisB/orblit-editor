@@ -215,9 +215,31 @@
   - `AssetTree.Write` refuses a name that holds a separator or is `.` or
     `..`. Dart wrote wherever the name led.
 - Not in the browser yet: dragging a file out of it. The window wires only
-  opening a scene and the line that says a file operation failed. Opening
-  the other kinds, Build, making a prefab and the data object come with
-  rows 4 to 13.
+  opening a scene or a clip and the line that says a file operation failed.
+  Opening the other kinds, Build, making a prefab and the data object come
+  with rows 5 to 13.
+- Add the timeline to the dock. A bar plays, steps and sets the length, the
+  rate and what happens at the end. A ruler, the marks and a cutscene's
+  shots sit over the tracks, and Keys and Curves chips swap the dope sheet
+  for the curve view. A key button follows each transform field and a
+  light's power. The animation section in the inspector links clips to an
+  object and picks the one that plays on start. Opening a clip from the
+  browser, or making one with an object chosen, shows it on the timeline.
+  Saving writes the scene as it rests, with the pose lifted off first, and
+  the clips with changes beside it. The File menu shows a dot while a scene
+  or a clip has changes that are not on disk.
+- Differences from the Dart editor in the timeline:
+  - A clip with a length that is not a number is turned away. Dart let it
+    through.
+  - A clip that cannot be made is said at the error level. Dart said it at
+    the default.
+  - Scrolling is not carried between the Keys and Curves views. Dart shares
+    one controller.
+  - A press that moves under 4 px is a tap. Dart leaves that to its gesture
+    arena.
+  - Not in the timeline yet: playing the scene with Play, Stop and the game
+    view, which no row owns, and the retarget dialog, which comes with row
+    7.
 
 ## 1.26.0+27
 

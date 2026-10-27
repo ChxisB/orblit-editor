@@ -9,6 +9,7 @@ using Orblit.Mesh;
 internal sealed class EditorMenu : Menu
 {
     private readonly EditorSession _session;
+    private readonly MenuItem _file;
     private readonly MenuItem _save;
     private readonly MenuItem _undo;
     private readonly MenuItem _redo;
@@ -48,7 +49,8 @@ internal sealed class EditorMenu : Menu
         _deleteLayout = new MenuItem { Name = "menu_delete_layout", Header = "Delete layout" };
         _lock = Item("menu_lock", "Lock layout", ToggleLock);
 
-        Items.Add(Menu("File", newScene, _save, saveAs));
+        _file = Menu("File", newScene, _save, saveAs);
+        Items.Add(_file);
         Items.Add(Menu("Edit", _undo, _redo, new Separator(), _cut, _copy, _paste, _duplicate, _delete));
         Items.Add(AddItems());
         Items.Add(Menu("View", _stats, _focus, Item("menu_save_layout", "Save layout…", askLayoutName), _loadLayout, _deleteLayout, _lock, Item("menu_reset", "Reset panels", session.ResetPanels), PanelsMenu()));
@@ -59,6 +61,8 @@ internal sealed class EditorMenu : Menu
     {
         var history = _session.History;
         var selected = _session.Selected.Count > 0;
+        // The dot is the unsaved marker, in the menu somebody opens to save.
+        _file.Header = _session.AnyUnsaved ? "File •" : "File";
         _save.IsEnabled = _session.Workspace.Loaded is not null;
         _undo.Header = history.UndoLabel is { } undo ? $"Undo {undo}" : "Undo";
         _undo.IsEnabled = history.CanUndo;
