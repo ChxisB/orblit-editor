@@ -17,7 +17,7 @@ internal static class InspectorSections
 {
     private static readonly string[] OffOnOptions = ["Off", "On"];
 
-    public static IReadOnlyList<InspectorSection<Control>> BuiltIn(Fields fields, SurfaceCooks? surfaces = null) =>
+    public static IReadOnlyList<InspectorSection<Control>> BuiltIn(Fields fields, SurfaceCooks? surfaces = null, TerrainBench? terrain = null) =>
     [
         // Weather is everywhere at once, so it has no position to show.
         new("transform", IsObject, target => Transform(fields, target)),
@@ -34,6 +34,7 @@ internal static class InspectorSections
         new("particles", IsObject, target => ParticlesSection.Build(fields, target)),
         new("motion", MotionSection.AppliesTo, target => MotionSection.Build(fields, target)),
         .. ShaderSections(fields, surfaces),
+        .. TerrainSections(fields, terrain),
         new("interface", target => target.Item.Kind == ObjectKind.Canvas, target => Interface(fields, target)),
         new("data", target => target.Item.Data.Count > 0, target => Data(fields, target)),
     ];
@@ -43,6 +44,12 @@ internal static class InspectorSections
         surfaces is null
             ? []
             : [new("shader", ShaderSection.AppliesTo, target => ShaderSection.Build(fields, surfaces, target))];
+
+    // A window with no project has no terrain files to open.
+    private static IEnumerable<InspectorSection<Control>> TerrainSections(Fields fields, TerrainBench? terrain) =>
+        terrain is null
+            ? []
+            : [new("terrain", TerrainSection.AppliesTo, target => TerrainSection.Build(fields, target, terrain))];
 
     /// <summary>Whether the target is something in the world, which the scene and the weather are not.</summary>
     private static bool IsObject(InspectorTarget target) => target.Item.Kind is not (ObjectKind.Scene or ObjectKind.Weather);

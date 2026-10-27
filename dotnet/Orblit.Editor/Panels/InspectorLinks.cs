@@ -35,4 +35,7 @@ internal sealed record InspectorLinks
 
     /// <summary>What each author-written shader in the project cooked to, for the section that sets its uniforms.</summary>
     public SurfaceCooks? Surfaces { get; init; }
+
+    /// <summary>The terrains the project holds, for the section that edits what one is made of.</summary>
+    public TerrainBench? Terrain { get; init; }
 }

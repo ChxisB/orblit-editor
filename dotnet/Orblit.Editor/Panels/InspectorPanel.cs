@@ -41,7 +41,7 @@ internal sealed class InspectorPanel : UserControl
         _host = new FieldHost(session.History, Rebuild);
         _fields = new Fields(_host);
         _sceneFields = new SceneFields(_fields);
-        _sections = InspectorSections.BuiltIn(_fields, _links.Surfaces);
+        _sections = InspectorSections.BuiltIn(_fields, _links.Surfaces, _links.Terrain);
 
         _scroll = new ScrollViewer { Name = "inspector_scroll", Content = _stack };
         _scroll[Grid.RowProperty] = 1;
