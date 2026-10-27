@@ -424,6 +424,12 @@ public sealed class SceneViewport : Border
         _state.Selected = new HashSet<string>(_session.Selected);
         _state.Primary = _session.Primary;
         _state.ModeInput = _session.Mode.UsesBrush ? _brush.Handle : null;
+        if (!_session.Mode.UsesBrush)
+        {
+            // The brush gets no leave gesture once it is switched off, so the ring would wait at the last point.
+            _session.Terrains.Hover = null;
+        }
+
         MarkDirty();
     }
 

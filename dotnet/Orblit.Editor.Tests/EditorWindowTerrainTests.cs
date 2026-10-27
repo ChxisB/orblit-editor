@@ -127,6 +127,21 @@ public sealed class EditorWindowTerrainTests
     });
 
     [Fact]
+    public Task LeavingTheTerrainModeTakesTheRingOffTheGround() => Headless.Run(() =>
+    {
+        using var rig = new ViewportRig();
+        AddTerrain(rig);
+        rig.Session.EnterMode("terrain");
+        Headless.Render();
+        rig.Window.MouseMove(rig.Centre);
+        Assert.NotNull(rig.Session.Terrains.Hover);
+
+        rig.Session.EnterMode("scene");
+
+        Assert.Null(rig.Session.Terrains.Hover);
+    });
+
+    [Fact]
     public Task ADragOutsideTheTerrainModeNeverShapesTheGround() => Headless.Run(() =>
     {
         using var rig = new ViewportRig();
