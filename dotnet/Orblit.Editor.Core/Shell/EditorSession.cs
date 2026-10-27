@@ -37,6 +37,10 @@ public sealed partial class EditorSession
         _library = new LayoutLibrary(Path.Combine(workspace.ProjectDirectory, ".orblit", "layouts.json"), panels.Kinds());
         Mode = modes.All[0];
         Layout = LayoutOf(Mode);
+        Assets = new AssetTree(workspace.ProjectDirectory);
+        Clips = new ClipBench(history, () => workspace.Loaded?.Scene);
+        Clips.Changed += OnClipsChanged;
+        history.Changed += OnHistoryChanged;
     }
 
     /// <summary>Something said to the person at the keyboard, such as a file that could not be written.</summary>
@@ -116,6 +120,8 @@ public sealed partial class EditorSession
         Mode = mode;
         Layout = LayoutOf(mode);
         mode.OnEnter?.Invoke();
+        FollowMotion(force: true);
+        OnClipsChanged();
         Changed?.Invoke();
     }
 
@@ -238,6 +244,7 @@ public sealed partial class EditorSession
         Selected = [.. ids];
         Primary = primary;
         SelectedScene = null;
+        FollowMotion();
         Changed?.Invoke();
     }
 
@@ -263,11 +270,11 @@ public sealed partial class EditorSession
     /// </para>
     /// </summary>
     /// <remarks>
-    /// shortcut: clips, terrains and interfaces are not written here until they have benches
-    /// (tasks 16 and 17).
+    /// shortcut: terrains and interfaces are not written here until they have benches (tasks 16 and 17).
     /// </remarks>
     public void Save()
     {
+        SaveClips();
         if (Workspace.Loaded is not { Scene: not null } entry)
         {
             return;
@@ -386,7 +393,7 @@ public sealed partial class EditorSession
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(entry.Path!))!);
-            IoFile.WriteAllText(entry.Path!, SceneDocument.Encode(entry.Scene!, prefabs: Prefabs));
+            IoFile.WriteAllText(entry.Path!, AtRest(() => SceneDocument.Encode(entry.Scene!, prefabs: Prefabs)));
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {

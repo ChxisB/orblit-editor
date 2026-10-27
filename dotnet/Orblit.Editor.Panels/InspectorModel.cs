@@ -34,6 +34,15 @@ public sealed class InspectorTarget
     /// <summary>Reads the triangles an object draws, for a body that collides with them. Null where there is no project to read a model from.</summary>
     public Func<SceneObject, Task<CollisionMesh>>? CollisionOf { get; init; }
 
+    /// <summary>What keys one of the object's fields into the clip being edited. Null where no clip can be.</summary>
+    public IKeying? Keying { get; init; }
+
+    /// <summary>Opens one of the object's own clips on the timeline.</summary>
+    public Action<string>? OnOpenClip { get; init; }
+
+    /// <summary>Gives the object the clip open on the timeline. Null while none is open.</summary>
+    public Action? OnAttachClip { get; init; }
+
     /// <summary>
     /// Whether something it is inside hides it while it is shown itself. A different state from hidden
     /// here, and an object that says "shown" while nothing appears is worse than no control at all.

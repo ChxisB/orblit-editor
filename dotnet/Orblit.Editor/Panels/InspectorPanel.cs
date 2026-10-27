@@ -114,6 +114,9 @@ internal sealed class InspectorPanel : UserControl
             OnOpenInterface = _links.OnOpenInterface,
             BoundsOf = _links.BoundsOf,
             CollisionOf = _links.CollisionOf,
+            Keying = _session.Clips,
+            OnOpenClip = path => _session.OpenClip(Path.Combine(_session.Workspace.ProjectDirectory, path)),
+            OnAttachClip = _session.Clips.Shown is { } shown ? () => _session.AttachClip(shown.Path) : null,
         };
         Bands(scene, item);
         Body(target);

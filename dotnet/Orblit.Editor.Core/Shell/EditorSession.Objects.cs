@@ -204,7 +204,6 @@ public sealed partial class EditorSession
     public void Paste() => Start(PasteAsync);
 
     /// <summary>Puts the selection on the clipboard, and on the system's as text.</summary>
-    /// <remarks>shortcut: a clip's pose is not lifted first, so a copy made mid-clip holds the pose (task 16 row 4).</remarks>
     public async Task CopyAsync()
     {
         if (Working?.Scene is not { } scene || Selected.Count == 0)
@@ -212,7 +211,7 @@ public sealed partial class EditorSession
             return;
         }
 
-        _clipboard.Take(scene, Selected);
+        AtRest(() => _clipboard.Take(scene, Selected));
         Changed?.Invoke();
         await TextClipboard.SetTextAsync(_clipboard.ToText());
         Say($"Copied {_clipboard.Description}.", SayLevel.Info);
@@ -227,7 +226,7 @@ public sealed partial class EditorSession
         }
 
         // Copied before it is deleted, since the delete is what makes it unreachable.
-        _clipboard.Take(scene, Selected);
+        AtRest(() => _clipboard.Take(scene, Selected));
         await TextClipboard.SetTextAsync(_clipboard.ToText());
         DeleteSelection();
     }
@@ -264,8 +263,12 @@ public sealed partial class EditorSession
         }
 
         // On its own clipboard, so duplicating does not throw away what somebody copied earlier.
-        var taken = new SceneClipboard();
-        taken.Take(scene, Selected);
+        var taken = AtRest(() =>
+        {
+            var held = new SceneClipboard();
+            held.Take(scene, Selected);
+            return held;
+        });
         Paste(open, taken, Primary is { } primary ? scene[primary]?.ParentId : null);
     }
 

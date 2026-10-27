@@ -124,6 +124,7 @@ internal static class LightSection
                 Max = isSun ? 400 : 5000,
                 Decimals = isSun ? 1 : 0,
                 Unit = isSun ? " W/m²" : " W",
+                Trailing = InspectorSections.KeyFor(target, "light.power"),
             });
     }
 

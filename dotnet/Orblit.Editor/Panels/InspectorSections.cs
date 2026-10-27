@@ -32,6 +32,7 @@ internal static class InspectorSections
         new("wheel", VehicleSection.AppliesToWheel, target => VehicleSection.Wheel(fields, target)),
         new("sound", IsObject, target => SoundSection.Build(fields, target)),
         new("particles", IsObject, target => ParticlesSection.Build(fields, target)),
+        new("motion", MotionSection.AppliesTo, target => MotionSection.Build(fields, target)),
         .. ShaderSections(fields, surfaces),
         new("interface", target => target.Item.Kind == ObjectKind.Canvas, target => Interface(fields, target)),
         new("data", target => target.Item.Data.Count > 0, target => Data(fields, target)),
@@ -72,6 +73,10 @@ internal static class InspectorSections
             Vector(fields, target, TransformField.Scale, new DragOptions { Step = 0.02, Minimum = 0.001 }),
         ]));
 
+    /// <summary>The button that keys <paramref name="field"/>, or null where nothing is keying.</summary>
+    public static KeyButton? KeyFor(InspectorTarget target, string field) =>
+        target.Keying is { } keying ? new KeyButton(keying, target.Item, field) : null;
+
     private static Control Vector(Fields fields, InspectorTarget target, TransformField field, DragOptions options)
     {
         var item = target.Item;
@@ -85,7 +90,7 @@ internal static class InspectorSections
                 item.Name,
                 field.Of(item),
                 new Vector3(values[0], values[1], values[2]))),
-            options);
+            options with { Trailing = KeyFor(target, $"transform.{field.ToString().ToLowerInvariant()}") });
     }
 
     private static double[] Components(Vector3 vector) => [vector.X, vector.Y, vector.Z];

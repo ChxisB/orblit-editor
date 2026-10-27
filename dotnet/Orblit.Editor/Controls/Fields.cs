@@ -38,6 +38,9 @@ internal sealed record SliderOptions
     public int Decimals { get; init; }
 
     public string Unit { get; init; } = "";
+
+    /// <summary>Something small after the value, such as the button that keys it.</summary>
+    public Control? Trailing { get; init; }
 }
 
 /// <summary>
@@ -276,7 +279,7 @@ internal sealed class Fields(FieldHost host)
         var both = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto") };
         both.Children.Add(slider);
         both.Children.Add(shown);
-        return Row(label, both);
+        return Row(label, both, options.Trailing);
     }
 
     /// <summary>A flag, as a switch.</summary>

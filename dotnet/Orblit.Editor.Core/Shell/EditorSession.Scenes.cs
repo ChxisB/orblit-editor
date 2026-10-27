@@ -45,6 +45,7 @@ public sealed partial class EditorSession
         Selected = [];
         Primary = null;
         SelectedScene = sceneId;
+        FollowMotion();
         Changed?.Invoke();
     }
 
@@ -97,6 +98,7 @@ public sealed partial class EditorSession
             // Its steps go with it. Undoing into a scene that is not loaded would be a step that
             // appears to do nothing.
             History.Forget(leaving.Id);
+            _preview.Forget();
             Workspace.Unload(leaving);
         }
 
@@ -120,6 +122,7 @@ public sealed partial class EditorSession
         if (leaving is not null)
         {
             History.Forget(leaving.Id);
+            _preview.Forget();
             Workspace.Unload(leaving);
         }
 
@@ -141,6 +144,11 @@ public sealed partial class EditorSession
         }
 
         History.Forget(entry.Id);
+        if (entry.IsLoaded)
+        {
+            _preview.Forget();
+        }
+
         Workspace.Remove(entry.Id);
         Selected = [];
         Primary = null;
@@ -190,6 +198,8 @@ public sealed partial class EditorSession
         Selected = [];
         Primary = null;
         SelectedScene = null;
+        FollowMotion();
+        OnClipsChanged();
         SceneReplaced?.Invoke();
         Changed?.Invoke();
     }
