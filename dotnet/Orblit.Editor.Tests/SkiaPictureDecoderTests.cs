@@ -51,12 +51,14 @@ public sealed class SkiaPictureDecoderTests
     }
 
     [Theory]
-    [InlineData(4, 4)]
-    [InlineData(4, 2)]
-    [InlineData(64, 64)]
-    public void APictureOfAnotherSizeIsStretchedToTheSideAndLowAlphaDoesNotDarkenIt(int width, int height)
+    [InlineData(4, 4, 64)]
+    [InlineData(4, 2, 64)]
+    [InlineData(64, 64, 64)]
+    [InlineData(64, 64, 1)]
+    [InlineData(64, 64, 0)]
+    public void APictureOfAnotherSizeIsStretchedToTheSideAndLowAlphaDoesNotDarkenIt(int width, int height, byte alpha)
     {
-        byte[] rgba = [200, 100, 50, 64];
+        byte[] rgba = [200, 100, 50, alpha];
 
         var decoded = new SkiaPictureDecoder().Decode(Solid(width, height, rgba), Side);
 

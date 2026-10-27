@@ -59,7 +59,8 @@ public sealed class TerrainPicturesTests : IDisposable
         var said = new List<string>();
         var history = new History(new Workspace(_root));
         var decoder = new FakeDecoder();
-        var bench = new TerrainBench(history, _root, said.Add) { Pictures = decoder };
+        var bench = new TerrainBench(history, _root, said.Add);
+        bench.ReadPicturesWith(decoder);
         Assert.Null(bench.Create(File, Hills(sets)));
         return new Rig(bench, history, bench[File]!, decoder, said);
     }
@@ -116,20 +117,34 @@ public sealed class TerrainPicturesTests : IDisposable
     });
 
     [Fact]
-    public Task APictureThatCannotBeReadIsSaidOnceAndTheGroundStaysPlain() => Headless.Run(() =>
+    public Task APictureThatCannotBeReadIsSaidAndTheGroundStaysPlain() => Headless.Run(() =>
     {
         Picture("empty.png");
         var rig = MakeRig();
 
         Use(rig, new TerrainSet("Rock", "textures/gone.png", "textures/empty.png"));
         Await(() => rig.Said.Count == 2);
-        Use(rig, new TerrainSet("Rock", "textures/gone.png", "textures/empty.png", tileSize: 8));
 
         Assert.All(rig.Said, said => Assert.StartsWith("The picture textures/", said));
         Assert.Contains(rig.Said, said => said.Contains("gone.png") && said.Contains("could not be read"));
         Assert.Contains(rig.Said, said => said.Contains("empty.png") && said.Contains("It is empty."));
         Assert.Null(Albedo(rig.Bench, 0));
-        Assert.Equal(1, rig.Decoder.Calls);
+    });
+
+    [Fact]
+    public Task APictureThatFailedIsTriedAgainWhenTheSetsChangeAndIsNotSaidTwice() => Headless.Run(() =>
+    {
+        Picture("rock.png");
+        var rig = MakeRig();
+        Use(rig, new TerrainSet("Rock", albedo: "textures/rock.png"));
+        Await(() => rig.Said.Count == 1);
+
+        Picture("rock.png", 7);
+        Use(rig, new TerrainSet("Rock", albedo: "textures/rock.png", tileSize: 8));
+        Await(() => Albedo(rig.Bench, 0) is not null);
+
+        AssertPicture(Albedo(rig.Bench, 0), 7);
+        Assert.Single(rig.Said);
     });
 
     [Fact]
@@ -137,7 +152,8 @@ public sealed class TerrainPicturesTests : IDisposable
     {
         Picture("rock.png", 7);
         MakeRig(new TerrainSet("Rock", albedo: "textures/rock.png"));
-        var bench = new TerrainBench(new History(new Workspace(_root)), _root) { Pictures = new FakeDecoder() };
+        var bench = new TerrainBench(new History(new Workspace(_root)), _root);
+        bench.ReadPicturesWith(new FakeDecoder());
 
         Assert.NotNull(bench.TerrainFor(File));
         Await(() => bench.PicturesRevision == 1);
@@ -169,7 +185,7 @@ public sealed class TerrainPicturesTests : IDisposable
     {
         Picture("rock.png", SkiaPictureDecoderTests.Solid(1024, 1024, [200, 100, 50, 64]));
         var rig = MakeRig();
-        rig.Bench.Pictures = new SkiaPictureDecoder();
+        rig.Bench.ReadPicturesWith(new SkiaPictureDecoder());
         var before = rig.Bench.PicturesRevision;
 
         Use(rig, new TerrainSet("Rock", albedo: "textures/rock.png"));

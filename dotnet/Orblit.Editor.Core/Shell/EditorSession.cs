@@ -72,7 +72,7 @@ public sealed partial class EditorSession
     public IPictureDecoder? PictureDecoder
     {
         get => Terrains.Pictures;
-        init => Terrains.Pictures = value;
+        init => Terrains.ReadPicturesWith(value);
     }
 
     public EditorMode Mode { get; private set; }

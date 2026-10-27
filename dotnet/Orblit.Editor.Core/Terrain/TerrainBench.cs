@@ -34,8 +34,8 @@ public sealed class TerrainBench(History history, string projectRoot, Action<str
 
     private readonly HashSet<string> _said = [];
 
-    // The pictures decoded so far, by path. A path holds null while it is being read, and for good when
-    // it cannot be, so a broken file is one message and not one a frame.
+    // The pictures decoded so far, by path. A path holds null while it is being read. One that could not
+    // be read is taken out, so the next change to the sets tries it again.
     private readonly Dictionary<string, byte[]?> _pictures = [];
 
     // Where each terrain's scatter stands, kept between frames so that a stroke places again only the
@@ -113,14 +113,21 @@ public sealed class TerrainBench(History history, string projectRoot, Action<str
     /// </summary>
     public const int PictureSize = 512;
 
-    /// <summary>
-    /// Reads the pictures the sets name. Without one the ground draws with the plain picture. Set it
-    /// before a terrain is opened, since a terrain asks for its pictures when it opens.
-    /// </summary>
-    public IPictureDecoder? Pictures { get; set; }
+    /// <summary>What reads the pictures the sets name. Without one the ground draws with the plain picture.</summary>
+    public IPictureDecoder? Pictures { get; private set; }
 
     /// <summary>Bumped each time a picture arrives or the sets change, so the renderer takes the pictures again.</summary>
     public int PicturesRevision { get; private set; }
+
+    /// <summary>Reads pictures with <paramref name="decoder"/> from now on, asking for those the open terrains name.</summary>
+    public void ReadPicturesWith(IPictureDecoder? decoder)
+    {
+        Pictures = decoder;
+        foreach (var open in _open.Values)
+        {
+            Fetch(open.Terrain.Sets);
+        }
+    }
 
     public bool AnyUnsaved => _open.Values.Any(IsUnsaved);
 
@@ -463,6 +470,7 @@ public sealed class TerrainBench(History history, string projectRoot, Action<str
         }
         catch (Exception error) when (error is InvalidDataException or IOException or UnauthorizedAccessException)
         {
+            _pictures.Remove(path);
             Report($"The picture {path} could not be read: {error.Message}");
         }
     }

@@ -13,14 +13,32 @@ using Orblit.Editor.Core;
 /// </remarks>
 internal sealed class SkiaPictureDecoder : IPictureDecoder
 {
-    // A side of 16384 is 1 GiB of RGBA, which is more than any ground picture is worth reading whole.
-    private const long MaxPixels = 16384L * 16384;
+    // A side of 8192 is 256 MiB of RGBA, which is more than any ground picture is worth reading whole.
+    private const long MaxPixels = 8192L * 8192;
 
     private static readonly SKSamplingOptions Sampling = new(SKFilterMode.Linear, SKMipmapMode.Linear);
 
+    // Each decode holds the whole picture, so a project full of large ones would fill memory if they all
+    // ran at once. The rest wait their turn.
+    private static readonly SemaphoreSlim Slots = new(initialCount: 4);
+
     public byte[] Decode(byte[] file, int side)
     {
-        using var codec = SKCodec.Create(SKData.CreateCopy(file)) ?? throw new InvalidDataException("It is not a picture Skia can read.");
+        Slots.Wait();
+        try
+        {
+            return Read(file, side);
+        }
+        finally
+        {
+            Slots.Release();
+        }
+    }
+
+    private static byte[] Read(byte[] file, int side)
+    {
+        using var data = SKData.CreateCopy(file);
+        using var codec = SKCodec.Create(data) ?? throw new InvalidDataException("It is not a picture Skia can read.");
         if ((long)codec.Info.Width * codec.Info.Height > MaxPixels)
         {
             throw new InvalidDataException($"It is {codec.Info.Width} by {codec.Info.Height} pixels, which is too large to read.");
@@ -44,8 +62,17 @@ internal sealed class SkiaPictureDecoder : IPictureDecoder
             : throw new InvalidDataException("It could not be resized.");
     }
 
-    private static SKBitmap Allocate(int width, int height) =>
-        new(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Unpremul));
+    private static SKBitmap Allocate(int width, int height)
+    {
+        var bitmap = new SKBitmap();
+        if (bitmap.TryAllocPixels(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Unpremul)))
+        {
+            return bitmap;
+        }
+
+        bitmap.Dispose();
+        throw new InvalidDataException("There is not the memory to read it.");
+    }
 
     // A JPEG can be decoded at a half, quarter or eighth of its size for much less work than decoding it
     // whole and resizing. It is taken only where the result is still no smaller than the side, so the
