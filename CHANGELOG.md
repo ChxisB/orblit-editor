@@ -252,6 +252,10 @@
   sets tries it again.
 - Not in the terrain mode yet: dropping a picture on a set, which needs a
   drag source in the project browser.
+- Add the selection model of the C# modelling workspace: the vertices, edges
+  and faces chosen in one mesh, the picker that finds what a click or a box
+  over the view landed on, and the size an imported model says it is. There
+  is no panel or tool on it yet.
 
 ## 1.26.0+27
 
