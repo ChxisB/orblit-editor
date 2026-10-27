@@ -145,4 +145,12 @@ public sealed class EditorSessionTerrainTests : IDisposable
         Assert.Equal(PanelKind.TerrainBrush, layout.Panels.First(panel => panel.Id == "brush").Kind);
         Assert.Equal(("Brush", "brush_outlined"), (PanelKind.TerrainBrush.Label, PanelKind.TerrainBrush.Icon));
     }
+
+    [Fact]
+    public void OnlyTheTerrainModeWorksTheBrush()
+    {
+        var working = EditorModes.Standard().All.Where(mode => mode.UsesBrush).Select(mode => mode.Name);
+
+        Assert.Equal(["terrain"], working);
+    }
 }

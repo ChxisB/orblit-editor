@@ -112,7 +112,7 @@ internal sealed class EditorMenu : Menu
         var shapes = Menu("Shape", [.. Enum.GetValues<ShapeKind>().Select(kind => Item($"add_shape_{kind}", kind.Label, () => _session.AddShape(kind)))]);
         shapes.Name = "menu_add_shape";
         var kinds = AddMenu.Items.Select(add => Item($"add_{add.Kind}", add.Label, () => _session.Add(add.Kind)));
-        return Menu("Add", [shapes, new Separator(), .. kinds]);
+        return Menu("Add", [shapes, new Separator(), .. kinds, Item("add_terrain", "Terrain", _session.NewTerrain)]);
     }
 
     private MenuItem PanelsMenu()

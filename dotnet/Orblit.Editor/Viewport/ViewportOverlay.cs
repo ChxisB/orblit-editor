@@ -33,6 +33,7 @@ internal sealed class ViewportOverlay : Control
     private const double Disc = 6;
 
     private static readonly IBrush Shadow = new ImmutableSolidColorBrush(Color.FromUInt32(0x66000000));
+    private static readonly IBrush Core = new ImmutableSolidColorBrush(OrblitColors.EmberColor, 0.45);
     private static readonly IBrush DiscFill = new ImmutableSolidColorBrush(Color.FromUInt32(0xB3161A21));
     private static readonly IBrush Pivot = new ImmutableSolidColorBrush(Color.FromUInt32(0xE6FFFFFF));
     private static readonly Typeface Bold = new(FontFamily.Default, FontStyle.Normal, FontWeight.Bold);
@@ -71,6 +72,7 @@ internal sealed class ViewportOverlay : Control
             }
         }
 
+        DrawBrush(context);
         DrawHandles(context);
         DrawOrientation(context);
     }
@@ -92,19 +94,47 @@ internal sealed class ViewportOverlay : Control
         IBrush tone,
         double width)
     {
-        var path = new StreamGeometry();
-        using (var open = path.Open())
-        {
-            foreach (var (from, to) in segments)
-            {
-                open.BeginFigure(At(from), false);
-                open.LineTo(At(to));
-                open.EndFigure(false);
-            }
-        }
-
+        var path = Path(segments);
         context.DrawGeometry(null, new Pen(Shadow, 3), path);
         context.DrawGeometry(null, new Pen(tone, width), path);
+    }
+
+    private static StreamGeometry Path(IEnumerable<(ViewOffset From, ViewOffset To)> segments)
+    {
+        var path = new StreamGeometry();
+        using var open = path.Open();
+        foreach (var (from, to) in segments)
+        {
+            open.BeginFigure(At(from), false);
+            open.LineTo(At(to));
+            open.EndFigure(false);
+        }
+
+        return path;
+    }
+
+    // The ring is where the brush would land, so it follows the pointer over the ground. The inner ring
+    // is where the strength starts to fall away, and is left out when it would sit on the edge or the centre.
+    private void DrawBrush(DrawingContext context)
+    {
+        var bench = _session.Terrains;
+        if (!_session.Mode.UsesBrush || bench.Hover is not { } centre || _session.TerrainTarget() is not { } open)
+        {
+            return;
+        }
+
+        var projection = new ViewportProjection(_state.Camera, new ViewSize(Bounds.Width, Bounds.Height));
+        var brush = bench.Brush;
+        DrawLines(context, BrushRing.Segments(open.Terrain, centre, brush.Radius, projection), OrblitColors.Ember, 1.5);
+        if (BrushRing.CoreRadius(brush) is { } core)
+        {
+            context.DrawGeometry(null, new Pen(Core, 1), Path(BrushRing.Segments(open.Terrain, centre, core, projection)));
+        }
+
+        if (projection.Project(centre) is { } middle)
+        {
+            context.DrawEllipse(OrblitColors.Ember, null, At(middle), 2, 2);
+        }
     }
 
     private void DrawBoundaries(DrawingContext context)

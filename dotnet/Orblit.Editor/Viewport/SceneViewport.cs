@@ -49,6 +49,7 @@ public sealed class SceneViewport : Border
 
     private readonly EditorSession _session;
     private readonly SceneViewportState _state;
+    private readonly TerrainBrushInput _brush;
     private readonly GridStore _grids;
     private readonly GeometryStore _geometry;
     private readonly Grid _stack = new() { Background = Brushes.Transparent, Focusable = true, ClipToBounds = true };
@@ -76,6 +77,7 @@ public sealed class SceneViewport : Border
         _grids = new GridStore(workspace.ProjectDirectory);
         _geometry = new GeometryStore(workspace.ProjectDirectory);
         _state = new SceneViewportState(workspace, new Snapping(), session.History, Gizmos) { BoundsOf = boundsOf };
+        _brush = new TerrainBrushInput(session.Terrains, session.History, session.TerrainTarget);
         _overlay = new ViewportOverlay(_state, session);
 
         Margin = new Thickness(Space.Sm);
@@ -140,6 +142,8 @@ public sealed class SceneViewport : Border
         _session.SceneReplaced += OnSceneReplaced;
         _session.History.Changed += MarkDirty;
         _session.Workspace.Changed += MarkDirty;
+        _session.Terrains.HoverChanged += MarkDirty;
+        _session.Terrains.Changed += MarkDirty;
         OnSessionChanged();
         if (_renderer is not null)
         {
@@ -157,6 +161,8 @@ public sealed class SceneViewport : Border
         _session.SceneReplaced -= OnSceneReplaced;
         _session.History.Changed -= MarkDirty;
         _session.Workspace.Changed -= MarkDirty;
+        _session.Terrains.HoverChanged -= MarkDirty;
+        _session.Terrains.Changed -= MarkDirty;
         // A frame already asked for belongs to the loop that ended here. Moving to a new group attaches
         // again at once, and the old callback would run beside the new one.
         _loop++;
@@ -417,6 +423,7 @@ public sealed class SceneViewport : Border
     {
         _state.Selected = new HashSet<string>(_session.Selected);
         _state.Primary = _session.Primary;
+        _state.ModeInput = _session.Mode.UsesBrush ? _brush.Handle : null;
         MarkDirty();
     }
 

@@ -32,7 +32,9 @@ public sealed class EditorWindow : Window
     private readonly TextBlock _status = new() { Name = "status", FontSize = OrblitText.Caption };
     private readonly Dictionary<string, Button> _rail = [];
     private readonly EditorMenu _menu;
+    private readonly TerrainToolShelf _shelf;
     private CookStatusIndex? _cooks;
+    private TerrainBrushPanel? _brush;
 
     // Keys that mean something else while a text box has the keyboard: delete a letter, copy some words.
     private static readonly HashSet<EditorVerb> ObjectVerbs = [EditorVerb.Delete, EditorVerb.Copy, EditorVerb.Cut, EditorVerb.Paste, EditorVerb.Duplicate];
@@ -69,6 +71,7 @@ public sealed class EditorWindow : Window
             [EditorVerb.Duplicate] = _session.Duplicate,
         };
 
+        _shelf = new TerrainToolShelf(_session.Terrains);
         _dock = new DockHost(_session.VisibleLayout, PanelFor);
         _dock.LayoutChanged += layout =>
         {
@@ -82,6 +85,7 @@ public sealed class EditorWindow : Window
         Content = Frame();
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Bubble);
         _session.Changed += Refresh;
+        _session.Changed += RefreshBrush;
         _session.History.Changed += Refresh;
         _session.Workspace.Changed += Refresh;
         _session.Said += Say;
@@ -90,6 +94,7 @@ public sealed class EditorWindow : Window
         Closed += (_, _) =>
         {
             _session.Changed -= Refresh;
+            _session.Changed -= RefreshBrush;
             _session.History.Changed -= Refresh;
             _session.Workspace.Changed -= Refresh;
             _session.Said -= Say;
@@ -132,11 +137,17 @@ public sealed class EditorWindow : Window
             rail.Children.Add(button);
         }
 
+        // The shelf of brush tools is over the panels and not the rail, and takes no room when it is hidden.
+        var centre = new Grid { RowDefinitions = new RowDefinitions("Auto,*") };
+        _dock[Grid.RowProperty] = 1;
+        _dock.Margin = new Thickness(0, 0, Space.Sm, Space.Sm);
+        centre.Children.Add(_shelf);
+        centre.Children.Add(_dock);
+
         var body = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
         body.Children.Add(rail);
-        _dock[Grid.ColumnProperty] = 1;
-        _dock.Margin = new Thickness(0, 0, Space.Sm, Space.Sm);
-        body.Children.Add(_dock);
+        centre[Grid.ColumnProperty] = 1;
+        body.Children.Add(centre);
 
         var bottom = new Border { Background = OrblitColors.Surface, Padding = new Thickness(Space.Md, Space.Xs), Child = _status };
 
@@ -185,7 +196,19 @@ public sealed class EditorWindow : Window
             return Timeline();
         }
 
-        return panel.Kind == PanelKind.Inspector ? new InspectorPanel(_session) : Placeholder(panel);
+        if (panel.Kind == PanelKind.TerrainBrush)
+        {
+            return Brush();
+        }
+
+        return panel.Kind == PanelKind.Inspector ? new InspectorPanel(_session, new InspectorLinks { Terrain = _session.Terrains }) : Placeholder(panel);
+    }
+
+    // Kept so the window can ask it to look again when the selection moves a stroke to another terrain.
+    private TerrainBrushPanel Brush()
+    {
+        _brush = new TerrainBrushPanel(_session.Terrains, _session.History, _session.TerrainTarget, _session.NewTerrain);
+        return _brush;
     }
 
     private TimelinePanel Timeline()
@@ -296,9 +319,13 @@ public sealed class EditorWindow : Window
         };
     }
 
+    // Which terrain the brush works on follows the selection, so a move of the selection is when to look again.
+    private void RefreshBrush() => _brush?.Refresh();
+
     private void Refresh()
     {
         _dock.Layout = _session.VisibleLayout;
+        _shelf.IsVisible = _session.Mode.UsesBrush;
         foreach (var (name, button) in _rail)
         {
             var active = name == _session.Mode.Name;
@@ -308,7 +335,8 @@ public sealed class EditorWindow : Window
 
         _menu.Refresh();
         var scene = _session.Workspace.Loaded;
-        var unsaved = scene is not null && _session.IsUnsaved(scene) ? " •" : "";
+        // A stroke is a step on a terrain's own history, which the scene's marker does not see.
+        var unsaved = scene is not null && (_session.IsUnsaved(scene) || _session.Terrains.AnyUnsaved) ? " •" : "";
         var heading = scene?.Title ?? "No scene";
         _title.Text = $"{heading}{unsaved}";
         _title.Foreground = OrblitColors.InkMid;

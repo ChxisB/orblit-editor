@@ -240,6 +240,14 @@
   - Not in the timeline yet: playing the scene with Play, Stop and the game
     view, which no row owns, and the retarget dialog, which comes with row
     7.
+- Add the terrain mode to the C# editor window. Add > Terrain makes the
+  ground and a scene object that names it. In the terrain mode a shelf of
+  brush tools sits over the view, the brush panel sits beside the inspector,
+  and a drag in the view shapes the ground as one undo step. A ring on the
+  ground shows where the brush lands. The title shows unsaved terrain.
+- Not in the terrain mode yet: dropping a picture on a set, which needs a
+  drag source in the project browser, and decoding the picture for the
+  renderer.
 
 ## 1.26.0+27
 

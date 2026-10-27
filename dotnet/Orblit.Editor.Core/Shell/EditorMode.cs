@@ -24,6 +24,9 @@ public sealed record EditorMode : IRegistered
     /// </summary>
     public required Func<DockLayout> Layout { get; init; }
 
+    /// <summary>Whether a drag in the scene view works the terrain brush, and the shelf of its tools shows.</summary>
+    public bool UsesBrush { get; init; }
+
     /// <summary>Sets up the job as the editor switches to it. Null leaves everything as it was.</summary>
     public Action? OnEnter { get; init; }
 
@@ -42,7 +45,7 @@ public static class EditorModes
         var modes = new Registry<EditorMode>();
         modes.Register(new EditorMode { Name = "scene", Label = "Scene", Icon = "open_with", Layout = DockLayout.Standard });
         modes.Register(new EditorMode { Name = "modelling", Label = "Modelling", Icon = "view_in_ar_outlined", Layout = DockLayout.Modelling });
-        modes.Register(new EditorMode { Name = "terrain", Label = "Terrain", Icon = "landscape_outlined", Layout = DockLayout.Terrain });
+        modes.Register(new EditorMode { Name = "terrain", Label = "Terrain", Icon = "landscape_outlined", Layout = DockLayout.Terrain, UsesBrush = true });
         modes.Register(new EditorMode { Name = "animation", Label = "Animation", Icon = "animation", Layout = DockLayout.Animation });
         return modes;
     }

@@ -209,8 +209,19 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | none | `EditorSessionClipsTests` | 0 | 0 | 0 | 5: a file that is not a clip, a clip attached twice, a scene saved as it rests wherever the playhead is, the window told only when whether a clip has changes flips, and a clip with changes counting as unsaved | added |
 | none | `KeyButtonTests` | 0 | 0 | 0 | 3: no buttons with no clip open, buttons appearing when a clip opens without the inspector being built again, and a key as one step on the undo stack | added |
 | none | `MotionSectionTests` | 0 | 0 | 0 | 5: an object with no animation attaching only a clip that is open, opening a clip the object plays, On start choosing which clip starts, removing the animation unlinking and keeping the files, and the scene having none | added |
+| `terrain_bench_test.dart` | `TerrainBenchTests` | 19 | 19 | 19 | 2: a drag that leaves the ground carrying on at the height it was last at, and each tool having its words and naming its stroke | done |
+| `editor_shell_terrain_test.dart` | `EditorWindowTerrainTests` | 4 | 4 | 4 | 2: the shelf and the brush panel showing one brush and following each other, and a drag outside the terrain mode never shaping the ground | done |
+| none | `EditorSessionTerrainTests` | 0 | 0 | 0 | 9: Add Terrain writing its file at once, a second terrain getting its own folder, undo leaving the file, no scene to add to, saving the ground before the scene, the unsaved flip said once each way, the brush finding the selected terrain, the mode's arrangement and only that mode working the brush. | added |
+| none | `BrushRingTests` | 0 | 0 | 0 | 8: 64 pieces joined end to end, a ring following the ground, a piece behind the camera left out, and the inner ring only when it would not sit on the edge or the centre | added |
+| none | `BrushPanelModelTests`, `TerrainBrushPanelTests` | 0 | 0 | 0 | 14: the words and sums behind the panel, and the terrain it names, the tool it explains, its sets and tints, and each brush setting changing the bench without a step on the undo stack | added |
+| none | `TerrainSectionModelTests`, `TerrainSectionTests` | 0 | 0 | 0 | 26: the region map, the sets, the automatic cover and the blend, each change one step | added |
 
-Not in the inspector yet, and not counted: `editor_shell_terrain_test.dart` (4) for row 5, `blend_inspector_test.dart` (6) and
+Gap in row 5: a picture is shown in a set and can be cleared, but not dropped on one. The Dart section took a drop from the
+asset browser, and the C# browser has no drag source yet. The decoder that turns a picture into the ground's textures
+(part 5e) waits on decision 89. The window runs headless only. The ring, the shelf and a stroke have not been seen in a
+real window with the renderer.
+
+Not in the inspector yet, and not counted: `blend_inspector_test.dart` (6) and
 `editor_shell_blends_test.dart` (7) for row 7, and `editor_shell_prefabs_test.dart` (23) and
 `editor_shell_data_test.dart` (22) for row 13, because they need the shell. The
 inspector takes its prefab and data buttons, the model reader and the size of a
