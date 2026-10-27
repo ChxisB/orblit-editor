@@ -46,6 +46,7 @@ internal static class Program
             Prefabs = prefabs.Find,
             KeepPrefabs = prefabs.KeepOnly,
             TextClipboard = clipboard,
+            PictureDecoder = new SkiaPictureDecoder(),
         };
         session.Report(opened.Problems);
         var window = new EditorWindow(session, renderer: true);

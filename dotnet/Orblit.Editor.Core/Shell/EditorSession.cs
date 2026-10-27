@@ -68,6 +68,13 @@ public sealed partial class EditorSession
     /// <summary>What a scene is folded against when it is written. Null writes every instance whole.</summary>
     public PrefabSource? Prefabs { get; init; }
 
+    /// <summary>What reads the pictures a terrain's sets name. Null leaves the ground drawing with the plain picture.</summary>
+    public IPictureDecoder? PictureDecoder
+    {
+        get => Terrains.Pictures;
+        init => Terrains.Pictures = value;
+    }
+
     public EditorMode Mode { get; private set; }
 
     /// <summary>How the panels are arranged. Data, so it survives being closed.</summary>

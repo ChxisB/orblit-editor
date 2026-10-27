@@ -34,6 +34,10 @@ public sealed class TerrainBench(History history, string projectRoot, Action<str
 
     private readonly HashSet<string> _said = [];
 
+    // The pictures decoded so far, by path. A path holds null while it is being read, and for good when
+    // it cannot be, so a broken file is one message and not one a frame.
+    private readonly Dictionary<string, byte[]?> _pictures = [];
+
     // Where each terrain's scatter stands, kept between frames so that a stroke places again only the
     // regions it touched, and what each last drew, against the placer's revision when it did.
     private readonly Dictionary<string, ScatterPlacer> _placers = [];
@@ -103,7 +107,19 @@ public sealed class TerrainBench(History history, string projectRoot, Action<str
         }
     }
 
-    /// <summary>Bumped each time the sets change, so the renderer takes their pictures again.</summary>
+    /// <summary>
+    /// Pixels a side every set's pictures are made, since the renderer keeps them as layers of one array
+    /// and those are all one size.
+    /// </summary>
+    public const int PictureSize = 512;
+
+    /// <summary>
+    /// Reads the pictures the sets name. Without one the ground draws with the plain picture. Set it
+    /// before a terrain is opened, since a terrain asks for its pictures when it opens.
+    /// </summary>
+    public IPictureDecoder? Pictures { get; set; }
+
+    /// <summary>Bumped each time a picture arrives or the sets change, so the renderer takes the pictures again.</summary>
     public int PicturesRevision { get; private set; }
 
     public bool AnyUnsaved => _open.Values.Any(IsUnsaved);
@@ -151,7 +167,9 @@ public sealed class TerrainBench(History history, string projectRoot, Action<str
 
         try
         {
-            return _open[file] = Read(file);
+            var open = _open[file] = Read(file);
+            Fetch(open.Terrain.Sets);
+            return open;
         }
         catch (Exception error) when (error is TerrainFormatException or IOException or UnauthorizedAccessException)
         {
@@ -172,6 +190,7 @@ public sealed class TerrainBench(History history, string projectRoot, Action<str
 
         _open[file] = open;
         _unreadable.Remove(file);
+        Fetch(terrain.Sets);
         Notify();
         return null;
     }
@@ -212,7 +231,8 @@ public sealed class TerrainBench(History history, string projectRoot, Action<str
     /// The terrains <paramref name="objects"/> put in the scene, as the renderer takes them.
     /// </summary>
     /// <remarks>
-    /// Pictures are not asked for yet, so every set draws as the plain one.
+    /// A set whose pictures have not arrived draws as the plain one, and the renderer takes them when
+    /// <see cref="PicturesRevision"/> moves.
     /// </remarks>
     public IReadOnlyList<RenderTerrain> RenderFor(IEnumerable<SceneObject> objects)
     {
@@ -226,6 +246,7 @@ public sealed class TerrainBench(History history, string projectRoot, Action<str
                     open.Key,
                     new TerrainViewOptions
                     {
+                        Pixels = path => _pictures.GetValueOrDefault(path),
                         PicturesRevision = PicturesRevision,
                         CastShadows = component.CastShadows,
                         ReceiveShadows = component.ReceiveShadows,
@@ -283,6 +304,8 @@ public sealed class TerrainBench(History history, string projectRoot, Action<str
         terrain.Sets.AddRange(settings.Sets);
         terrain.AutoCover = settings.AutoCover;
         terrain.BlendSharpness = settings.BlendSharpness;
+
+        Fetch(terrain.Sets);
 
         // A set's pictures may be different ones now, and the renderer takes pictures again only when told to.
         PicturesRevision++;
@@ -406,6 +429,41 @@ public sealed class TerrainBench(History history, string projectRoot, Action<str
             {
                 yield return (open, component);
             }
+        }
+    }
+
+    // Starts reading each picture the sets name that has not been asked for. One decode a path, however
+    // many sets name it.
+    private void Fetch(IEnumerable<TerrainSet> sets)
+    {
+        if (Pictures is not { } decoder)
+        {
+            return;
+        }
+
+        foreach (var path in sets.SelectMany(set => new[] { set.Albedo, set.Normal }).OfType<string>())
+        {
+            if (_pictures.TryAdd(path, null))
+            {
+                _ = DecodeAsync(path, decoder);
+            }
+        }
+    }
+
+    // The continuation runs on the context that asked, which is the UI thread, so the cache is never
+    // touched from two threads.
+    private async Task DecodeAsync(string path, IPictureDecoder decoder)
+    {
+        try
+        {
+            var file = Path.Combine(projectRoot, path);
+            _pictures[path] = await Task.Run(() => decoder.Decode(File.ReadAllBytes(file), PictureSize));
+            PicturesRevision++;
+            Notify();
+        }
+        catch (Exception error) when (error is InvalidDataException or IOException or UnauthorizedAccessException)
+        {
+            Report($"The picture {path} could not be read: {error.Message}");
         }
     }
 

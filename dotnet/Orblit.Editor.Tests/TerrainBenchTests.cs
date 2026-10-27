@@ -46,7 +46,7 @@ public sealed class TerrainBenchTests : IDisposable
     }
 
     // An object that puts the terrain in a file in the scene.
-    private static SceneObject GroundObject(string id, string file = File, bool castShadows = true, bool visible = true) =>
+    internal static SceneObject GroundObject(string id, string file = File, bool castShadows = true, bool visible = true) =>
         new(
             id,
             id,
