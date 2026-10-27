@@ -284,6 +284,27 @@ public sealed class TimelinePanelTests
     });
 
     [Fact]
+    public Task ARenamedObjectIsNamedAgainOnItsHeading() => Headless.Run(() =>
+    {
+        var rig = Show(open: false);
+        var motion = new ClipDocument(
+            "lamps",
+            1,
+            channels: [new ClipChannel<double>(string.Empty, "light.power", ChannelKind.Number, [new Key<double>(0, 1)])]);
+        rig.Bench.OpenDocument("/project/lamps.oclip", motion);
+        rig.Bench.Owner = "lamp";
+        Headless.Render();
+        Assert.Contains(Headless.All<TextBlock>(Headless.Find<Border>(rig.Window, "timeline_heading_0")), one => one.Text == "Lamp");
+
+        // The panel hears the bench and not the scene, so the next thing the bench says is when it reads the name.
+        rig.History.Run(new Rename("a", "lamp", "Lamp", "Torch"));
+        rig.Bench.At = 0.5;
+        Headless.Render();
+
+        Assert.Contains(Headless.All<TextBlock>(Headless.Find<Border>(rig.Window, "timeline_heading_0")), one => one.Text == "Torch");
+    });
+
+    [Fact]
     public Task PressingAChannelPointsTheCurveAtIt() => Headless.Run(() =>
     {
         var rig = ShowKeyed();

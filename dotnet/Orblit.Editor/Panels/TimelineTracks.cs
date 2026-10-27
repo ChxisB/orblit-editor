@@ -26,10 +26,12 @@ internal sealed class TimelineTracks : StackPanel
     private readonly TimelineModel _model;
 
     // What the rows were last built from. A playing clip changes the bench every frame and none of it
-    // changes the rows, which are rebuilt only when one of these does.
+    // changes the rows, which are rebuilt only when one of these does. The names are the headings' own,
+    // which a rename or an undo changes with the clip left as it was.
     private ClipDocument? _clip;
     private ChannelAddress? _curve;
     private string? _owner;
+    private string _names = string.Empty;
 
     public TimelineTracks(ClipBench bench, TimelineModel model)
     {
@@ -41,7 +43,8 @@ internal sealed class TimelineTracks : StackPanel
     /// <summary>Lists <paramref name="clip"/>'s rows, unless the list already is that.</summary>
     public void Show(ClipDocument clip)
     {
-        if (ReferenceEquals(clip, _clip) && _bench.Curve == _curve && _bench.Owner == _owner)
+        var names = NamesOf(clip);
+        if (ReferenceEquals(clip, _clip) && _bench.Curve == _curve && _bench.Owner == _owner && names == _names)
         {
             return;
         }
@@ -49,6 +52,7 @@ internal sealed class TimelineTracks : StackPanel
         _clip = clip;
         _curve = _bench.Curve;
         _owner = _bench.Owner;
+        _names = names;
         Children.Clear();
         var index = 0;
         foreach (var row in TimelineRow.Of(clip))
@@ -57,6 +61,9 @@ internal sealed class TimelineTracks : StackPanel
             index++;
         }
     }
+
+    private string NamesOf(ClipDocument clip) =>
+        string.Join('\n', clip.Channels.Select(channel => _bench.ObjectOf(channel.Target)?.Name));
 
     private Border Heading(int index, string target)
     {
