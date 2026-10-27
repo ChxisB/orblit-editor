@@ -80,28 +80,19 @@ public sealed class ElementSelection
         IEnumerable<MeshEdge>? edges = null,
         IEnumerable<int>? faces = null)
     {
-        Vertices = new HashSet<int>(vertices ?? []);
-        Edges = new HashSet<MeshEdge>(edges ?? []);
-        Faces = new HashSet<int>(faces ?? []);
+        Vertices = new OrderedSet<int>(vertices ?? []);
+        Edges = new OrderedSet<MeshEdge>(edges ?? []);
+        Faces = new OrderedSet<int>(faces ?? []);
     }
 
-    /// <summary>
-    /// Nothing selected, as one shared object that cannot be changed. A viewport that is not
-    /// editing anything then does not each allocate a set to hold nothing.
-    /// </summary>
-    public static ElementSelection Nothing { get; } = new()
-    {
-        Vertices = new HashSet<int>().AsReadOnly(),
-        Edges = new HashSet<MeshEdge>().AsReadOnly(),
-        Faces = new HashSet<int>().AsReadOnly(),
-    };
+    // Ordered, because the order somebody picked things in is the order a bridge or a hole fill
+    // is wound in.
+    public OrderedSet<int> Vertices { get; private set; }
 
-    public ISet<int> Vertices { get; private init; }
-
-    public ISet<MeshEdge> Edges { get; private init; }
+    public OrderedSet<MeshEdge> Edges { get; private set; }
 
     /// <summary>Faces by position in the mesh's list.</summary>
-    public ISet<int> Faces { get; private init; }
+    public OrderedSet<int> Faces { get; private set; }
 
     public bool IsEmpty => Vertices.Count == 0 && Edges.Count == 0 && Faces.Count == 0;
 
@@ -113,11 +104,13 @@ public sealed class ElementSelection
         _ => throw new UnreachableException(),
     };
 
+    // The engine's ordered set has no Clear, so the sets are replaced. Nothing holds one across a
+    // clear: the session reads them from here each time.
     public void Clear()
     {
-        Vertices.Clear();
-        Edges.Clear();
-        Faces.Clear();
+        Vertices = [];
+        Edges = [];
+        Faces = [];
     }
 
     /// <summary>The faces themselves, skipping any the mesh no longer has.</summary>

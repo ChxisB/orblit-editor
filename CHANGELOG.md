@@ -256,6 +256,11 @@
   and faces chosen in one mesh, the picker that finds what a click or a box
   over the view landed on, and the size an imported model says it is. There
   is no panel or tool on it yet.
+- Add the list of mesh actions to the C# modelling workspace: twenty-five
+  things to do to faces, edges, vertices and whole shapes, each with its
+  words, its icon name, the modes it appears in and how many elements it
+  needs. The selection keeps the order things were picked in, which is the
+  order a bridge is wound in. There is no panel on it yet.
 
 ## 1.26.0+27
 
