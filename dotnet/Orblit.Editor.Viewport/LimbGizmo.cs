@@ -87,7 +87,11 @@ public static class LimbGizmo
                 return Carry(target.Projection, hold, gesture);
             }
 
-            if (!look.Value.Bones || Under(target, gesture.At) is not { } handle)
+            // A tap is taken too, so a click that misses by a pixel does not clear the selection the
+            // handle belongs to. Nothing else is, so a hover never poses the clip to look.
+            if (!look.Value.Bones
+                || gesture.Phase is not (ViewportPhase.DragStart or ViewportPhase.Tap)
+                || Under(target, gesture.At) is not { } handle)
             {
                 return false;
             }
@@ -97,9 +101,7 @@ public static class LimbGizmo
                 _hold = Pick(target.Projection, handle, gesture.At);
             }
 
-            // A tap is taken too, so a click that misses by a pixel does not clear the selection the
-            // handle belongs to.
-            return gesture.Phase is ViewportPhase.DragStart or ViewportPhase.Tap;
+            return true;
         }
 
         private static Hold Pick(ViewportProjection projection, LimbHandle handle, Offset at)

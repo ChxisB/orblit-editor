@@ -1,4 +1,7 @@
 using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.Input;
+using Avalonia.Input.Raw;
 
 namespace Orblit.Editor.Tests;
 
@@ -6,8 +9,8 @@ using Orblit.Editor.Core;
 
 // Dart: orblit-editor/test/editor_shell_data_test.dart, the console group. The console shares the
 // bottom group with the project browser here, so "folded under the view" is "behind the project tab".
-// A png dropped with nothing selected waits with the other drops. Gone from the status bar is a later
-// message taking the status bar's place, since there is no snack bar timer to run out.
+// A png is let go over the scene view as a real drop of what a browser tile's drag carries. Gone from the
+// status bar is a later message taking the status bar's place, since there is no snack bar timer to run out.
 public sealed class EditorWindowConsoleTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_window_console");
@@ -83,6 +86,24 @@ public sealed class EditorWindowConsoleTests : IDisposable
         Press(window, "tab_console");
 
         Assert.Contains(Words(Console(window)!), text => text.StartsWith("Saved", StringComparison.Ordinal));
+    });
+
+    [Fact]
+    public Task ARefusalIsKeptThere() => Headless.Run(() =>
+    {
+        var (_, window) = Open();
+        var data = new DataTransfer();
+        data.Add(DataTransferItem.Create(AssetDrops.Format, Path.Combine(_project.FullName, "assets", "rock.png")));
+        var at = Headless.Centre(window, Headless.All<SceneViewport>(window).Single());
+        foreach (var step in new[] { RawDragEventType.DragEnter, RawDragEventType.DragOver, RawDragEventType.Drop })
+        {
+            window.DragDrop(at, step, data, DragDropEffects.Copy, RawInputModifiers.None);
+        }
+
+        // Kept, and counted where somebody who is not looking at the console will still see it.
+        Press(window, "tab_console");
+
+        Assert.Contains(Words(Console(window)!), text => text.StartsWith("Select an object first", StringComparison.Ordinal));
     });
 
     [Fact]

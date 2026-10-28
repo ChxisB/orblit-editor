@@ -397,6 +397,19 @@
   on a task, not an isolate, and a pack cannot be cancelled. The store's
   settings and downloads sit in the C# editor's own support folder, so a
   kit the Dart editor downloaded is fetched again.
+- Drop files from Project on the C# scene view. A mesh or a prefab goes in
+  the scene, a texture or a shader goes on the selection, a scene opens,
+  and a data object or an interface goes where it belongs. A picture drops
+  on a terrain set. F frames the selection.
+- Make, place, apply, revert and unpack prefabs in the C# editor.
+- With Bones on, the C# scene view shows the skeleton and onion skin of
+  the selected model, and a ring on each hand and foot poses the limb. A
+  selected camera shows what it sees in a card at the bottom left of the
+  view. The stats chip shows the frame rate.
+- The C# outliner keeps its rows while an edit only moves things, because
+  a row shows no position and a drag moves things every frame.
+- The C# shell differs from the Dart one in small ways. A model file is
+  read again when it changes on disk. A row of buttons carries words only.
 
 ## 1.26.0+27
 

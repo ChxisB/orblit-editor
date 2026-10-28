@@ -142,7 +142,7 @@ examples live in the `orblit-examples` repository, and the editor does not show 
 | `joint_test.dart` | `JointTests`, `JointModelTests`, `InspectorJointTests` | 18 | 18 | 18 | 0 | done. The four on what a joint holds and the nine of the gizmo are in `JointTests`. The two on the scene file are in `JointModelTests`. The section and the add and undo are in `InspectorJointTests` |
 | `body_test.dart` | `BodyTests` | 19 | 19 | 19 | 0 | done |
 | `sound_test.dart` | `SoundTests`, `ComponentModelTests`, `InspectorComponentTests` | 13 | 13 | 13 | 0 | done. The gizmo and the scene file are in `SoundTests`. The four on the range are on the model. The section and the five row tests are headless |
-| `editor_shell_viewport_test.dart` | `EditorShellViewportTests` | 17 | 17 | 14 | 0 | partial. Flying, the wheel speed and the two finger gestures are ported. The three camera preview tests need the outliner, the inspector and the preview window, so they wait for task 16. Avalonia has no scroll phases, so the control does not turn a two finger scroll into an orbit or a pan. The four two finger tests send the gesture to the state |
+| `editor_shell_viewport_test.dart` | `EditorShellViewportTests` | 17 | 17 | 17 | 2: a camera selected with something else shows no card, and nor does a camera in the shared set | done. The three camera preview tests open the card in a window. Its picture has not run, because a test window has no renderer. Avalonia has no scroll phases, so the control does not turn a two finger scroll into an orbit or a pan. The four two finger tests send the gesture to the state |
 | `viewport_tools_test.dart` | `ViewportToolsTests` | 6 | 6 | 6 | 0 | done. Five Dart cases come from a `drawing` helper and one is a plain test |
 | none, the Dart view is one widget | `SceneViewportStateTests` | 0 | 0 | 0 | 15: flight, the wheel, looking, trackpad gestures, a drag on a ring, the grid switch and the clock, on the state that the control holds | added |
 | none | `SceneViewportTests` | 0 | 0 | 0 | 8: a drag orbits, a tap does not, a resize, the snap chip, a key let go under a command key, a key held part way through a drag and the same view across a change, headless | added |
@@ -161,7 +161,7 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | --- | --- | --- | --- | --- | --- | --- |
 | `editor_shell_hierarchy_test.dart` | `OutlinerModelTests`, `OutlinerPanelTests` | 8 | 8 | 8 | 0 | done. The six filter tests are on the model. The two on the plus button are on the window |
 | `editor_shell_clipboard_test.dart` | `EditorSessionObjectsTests`, `OutlinerPanelTests`, `EditorSessionScenesTests` | 15 | 15 | 15 | 0 | done. The four that load a scene are session tests: copy between scenes, the clipboard surviving an unload, several into another scene, and a paste landing where it was |
-| `editor_shell_scenes_test.dart` | `EditorSessionScenesTests`, `OutlinerPanelTests`, `InspectorSceneTests` | 17 | 17 | 14 | 0 | partial. Waiting: the two save as tests, which have twins in `EditorSessionTests` under other names (row 13), and the dropped mesh, which waits on dragging a file out of the browser. Selecting the scene, its saved settings and an unloaded scene offering to load are in `InspectorSceneTests`. The three drag tests call `Release`, as the hierarchy ones do |
+| `editor_shell_scenes_test.dart` | `EditorSessionScenesTests`, `OutlinerPanelTests`, `InspectorSceneTests`, `EditorWindowTests`, `EditorWindowDropTests` | 17 | 17 | 17 | 0 | done. The two save as tests are `SaveAsWritesASecondSceneAndKeepsTheFirst` and `SaveAsRefusesToOverwriteASceneThatExists` in a window. The dropped mesh is `TheMeshIsSavedAsAPathFromTheProject`, a real drop of what a browser tile carries. Selecting the scene, its saved settings and an unloaded scene offering to load are in `InspectorSceneTests`. The three drag tests call `Release`, as the hierarchy ones do |
 | `inspector_sections_test.dart` | `InspectorPanelTests` | 6 | 6 | 6 | 0 | done |
 | `editor_shell_body_test.dart` | `InspectorBodyTests`, `InspectorCompoundTests` | 8 | 8 | 8 | 0 | done. The model triangles and the compound parts are in `InspectorCompoundTests` |
 | `editor_shell_body_controls_test.dart` | `InspectorBodyTests`, `InspectorSceneTests` | 7 | 7 | 7 | 0 | done. Naming a layer is on the scene's own fields, in `InspectorSceneTests` |
@@ -187,7 +187,7 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | `ui_responsive_test.dart` | `InterfaceCanvasTests`, `InterfaceWorkspaceTests` | 16 | 16 | 16 | 0 | done. The grid count says "4 across this screen. 12 is too fine here." with a full stop where Dart has a dash |
 | `interface_strings_test.dart` | `InterfaceBenchTests`, `InterfaceWorkspaceTests` | 11 | 11 | 11 | 0 | done |
 | none | `InterfaceBenchTests` | 0 | 0 | 0 | 16: the keys the shown interface asks for, adding inside the selection and its undo, adding after a button rather than inside it, a place away from the last element on a stack, the grid going up for a column and not for a button, a split and a split of a placed element, a drag as one step on a whole pixel, removing and the root, typing as one step per element, saving and opening again, a file gone or not an interface, the preview held either way, an element's name, and flowing | added |
-| `editor_shell_data_test.dart` | `EditorSessionInterfacesTests`, `EditorWindowInterfacesTests`, `EditorWindowDataTests`, `EditorSessionDataTests`, `EditorWindowConsoleTests` | 22 | 22 | 21 | 3: a change shown over the scene before it is saved, an interface file that cannot be read, and a data object's panel kept through a change elsewhere | partial. Waiting: a refusal on the console tab, which drops a png with nothing selected and waits with the other drops. No drop is ported, so `PutInterfaceOnScene` and `AttachData`, which are what the drops do, stand in for them. A data object is made through the browser's `MakeNew` and selected through the session. Saving after an attach is a session test. The console shares the bottom group with the project browser, so "folded under the view" is "behind the project tab" |
+| `editor_shell_data_test.dart` | `EditorSessionInterfacesTests`, `EditorWindowInterfacesTests`, `EditorWindowDataTests`, `EditorSessionDataTests`, `EditorWindowConsoleTests` | 22 | 22 | 22 | 3: a change shown over the scene before it is saved, an interface file that cannot be read, and a data object's panel kept through a change elsewhere | done. The refusal on the console tab is `ARefusalIsKeptThere`, a real drop of a png with nothing selected. The other drop cases call `PutInterfaceOnScene` and `AttachData`, which are what a drop does. `EditorWindowDropTests` drops each kind for real. A data object is made through the browser's `MakeNew` and selected through the session. Saving after an attach is a session test. The console shares the bottom group with the project browser, so "folded under the view" is "behind the project tab" |
 | `editor_shell_motion_test.dart` | `EditorSessionClipsTests` | 4 | 4 | 3 | 0 | partial. Waiting: Play in four views, which needs the game view. No row owns the game view yet |
 | none | `OutlinerModelTests` | 0 | 0 | 0 | 15: the rows and their depth, the folds, a scene row with a filter, an unloaded scene, where a drop lands and what a drop refuses | added |
 | none | `EditorSessionObjectsTests` | 0 | 0 | 0 | 26: selecting, adding and naming, ids, deleting, moving, duplicating, the clipboard labels and a clipboard that cannot be reached | added |
@@ -243,7 +243,7 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | `retarget_dialog_test.dart` | `RetargetDialogTests` | 16 | 16 | 16 | 15: the models listed, a bone given back to its name, a map's unreadable things counted, the two switches, the title, four stale bones named, one skeleton read once per model, what pairing by body could not do, a target kept, the model named when neither has a skeleton, the pairs hidden again, the choices of a bone, a menu opened twice, and a choice made after the click has returned | done. The dropdowns are `MenuFlyout`s, which open headless. The choice is posted, which headless cannot show is needed |
 | none | `BlendCanvasTests`, `BlendSketchTests` | 0 | 0 | 0 | 32: a box for each state and the flag on the start, the arrow labels and the shared ones, a label centred on its arrow or hung under a loop, the grid and the size of the sketch, the arrows that go forward and back, a change to a state that is not there left off, a state found under a spot, pressing a state, a gap or an arrow and stepping along its changes, a link dragged onto a state, onto its own or onto nothing, one that moves only a hair, the box under a drag marked, the chosen arrow in ember, the canvas following edits made elsewhere, and two state names that differ only in punctuation | added |
 | none | `BlendGraphPanelTests`, `EditorSessionBlendsTests` | 0 | 0 | 0 | 17: no blend open, the graph with the fields beside it or under it, the tabs and their close and plus, the animation mode, a file that is not a blend or not there, what could not be read, the clip names offered, the mark until saved, a graph saving itself, and a blend that cannot be written | added |
-| none | `ModelSkeletonsTests` | 0 | 0 | 0 | 7: the bones of a model in file order, a rooted path, a file with no skin or no model, the skin with the most bones, a tie, a glTF with or without its buffer beside it, and a file that changes read again | added |
+| none | `ModelSkeletonsTests` | 0 | 0 | 0 | 5: a rooted path, the skin with the most bones, a tie, a file that changes read again, and a file rewritten in the same tick read again | added |
 | none | `EditorSessionClipsTests`, `EditorWindowRetargetTests` | 0 | 0 | 0 | 10: a made clip written in `clips/` and shown, never over another, its problems counted, put on the chosen object only for the model it moves, the model of the clip's owner and not of the chosen object, a clips folder that cannot be made, a clip that cannot be written, and the dialog starting on the owner's model | added |
 | `console_test.dart` | `EditorLogTests` | 12 | 12 | 11 | 2: an entry stamped by the clock, and what the session says being kept | done. "What Flutter throws" is what the UI thread throws. Giving the handler back and nothing arriving after it are one C# test. The closed log test is not ported, because a C# event has nothing to throw |
 | none | `ConsolePanelTests` | 0 | 0 | 0 | 7: each filter's count, the newest at the top, a repeat's count and time, opening an entry's detail, an open entry kept through a new one, Copy oldest first, and letting the log go on close | added |
@@ -265,18 +265,33 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | `store_dialog_test.dart` | `StoreDialogTests` | 12 | 12 | 13 | 1: a store added and forgotten | done. Dart's fit test checked the dialog inside a small editor window. The C# dialog is a window of its own, so the case checks that Install and Close stay in view at 960×620 and 800×600 |
 | `publish_dialog_test.dart` | `PublishDialogTests` | 5 | 5 | 5 | 0 | done. The fit case checks that the buttons stay in view through a problem and a pack. The many problems case takes 40 files where Dart took 12, because the C# dialog has more room |
 | `editor_shell_publish_test.dart` | `EditorWindowPublishTests` | 2 | 2 | 2 | 1: the File menu opening the kit store | done |
+| `renderer_support_test.dart` | `RendererSupportTests` | 3 | 7 | 7 | 0 | done. Dart overrode the platform, and here it is an argument. One case runs for five platforms, and Windows and Linux get the placeholder |
+| `frame_rate_test.dart` | `FrameRateTests` | 6 | 6 | 5 | 3: the chip's words at two rates, and no rate before the first frame | done. The scene view hands frames in, so starting and stopping twice has no counterpart. The chip has not run with a real renderer |
+| `launch_arguments_test.dart` | `LaunchArgumentsTests` | 3 | 3 | 3 | 0 | done |
+| `controls_test.dart` | `ButtonRowTests` | 2 | 2 | 1 | 1: side by side while every word fits | done. The icon case has no counterpart, because a C# button carries words only |
+| `outline_chip_test.dart` | `OutlineChipTests` | 4 | 4 | 4 | 0 | done. A press is read off what the overlay draws |
+| `drag_stability_test.dart` | `DragStabilityTests` | 4 | 4 | 4 | 0 | done |
+| `material_assignment_test.dart` | `MaterialAssignmentTests` | 3 | 3 | 3 | 0 | done |
+| `editor_shell_prefabs_test.dart` | `EditorWindowPrefabsTests` | 23 | 23 | 23 | 9: the selection kept under its new id, a prefab placed under a group or beside an object, an apply from a part writing to the outermost prefab, an apply updating a shared set instance (item 81), an unreadable prefab being only a link, an unchanged apply adding no step, unpack keeping the selection, the mark naming the file, and revert | done |
+| `editor_shell_drop_test.dart` | `EditorWindowDropTests`, `EditorWindowKeysTests` | 4 | 4 | 4 | 6: the view lit while a file is over it, a scene opened, a file the scene cannot take, an include, a light with nothing to texture, and a prefab, a data object and an interface each going where they belong | done. Each is a real drop of what a browser tile's drag carries. Headless cannot start a drag, so the tile's own drag has not run. F is in `EditorWindowKeysTests` |
+| `skeleton_view_test.dart` | `SkeletonViewTests` | 9 | 9 | 9 | 0 | done. The no length case also checks a loop |
+| `skeleton_gizmo_test.dart` | `SkeletonGizmoTests`, `ModelSkeletonsTests` | 12 | 12 | 11 | 4: fainter far ghosts, no ghosts on a model the clip does not reach, bones where the model stands, and the Bones chip in the window | done. Dart's two null cases share `SaysNothingForAFileThatHasNoSkinIsNotThereOrIsNotAModel`. A model file is read again when it changes on disk, where Dart kept it until told to forget it |
+| `limb_gizmo_test.dart` | `LimbGizmoTests` | 17 | 17 | 17 | 3: a turn keyed later moving the handles only at the playhead, the nearer of two handles on a model away from the origin, and the window drawing the handles | done. A drag has not run in a window, because headless cannot start one |
+| `limb_posing_test.dart` | `LimbPosingTests` | 12 | 12 | 12 | 1: the turns keyed on the goal's model | done. The check that the three bones hang one from the next is gone. The finder places each limb as a line of bones, so it could not fail |
+| `rebuild_scope_test.dart` | `EditorWindowRebuildTests` | 5 | 5 | 5 | 0 | done. Flutter's same widget is the same row control here |
+| `frame_cost_test.dart` | none | 1 | 1 | 0 | 0 | dropped. It prints timings and asserts nothing, and a bench project would be a new package. The Profile panel and the frame rate show frame times live |
+| `drag_bench_test.dart` | none | 1 | 1 | 0 | 0 | dropped, for the same reason as `frame_cost_test.dart` |
 
-Gap in row 5: a picture is shown in a set and can be cleared, but not dropped on one. The Dart section took a drop from the
-asset browser, and the C# browser has no drag source yet. The decoder (part 5e) reads a picture with SkiaSharp 3.119.4,
+Gap in row 5: a picture dropped on a set is a real drop of the file path a browser tile carries. Headless cannot start a
+drag, so the tile's own drag has not run. The decoder (part 5e) reads a picture with SkiaSharp 3.119.4,
 off the UI thread, at 512 by 512 with straight alpha. It ran headless, and the real one only inside the bench test. The
 window runs headless only. The ring, the shelf, a stroke and a textured set have not been seen in a real window with the
 renderer.
 
-Not in the inspector yet, and not counted: `editor_shell_prefabs_test.dart` (23)
-for row 13, because it needs the shell. The inspector takes its prefab buttons,
-the model reader and the size of a mesh from `InspectorLinks`, which the window
-does not fill yet. `rebuild_scope_test.dart`
-(5) tests how Flutter rebuilds, and is judged again with the shell.
+Gaps in row 13: the window fills the prefab, data, interface and terrain links of
+`InspectorLinks`. It leaves `BoundsOf`, `CollisionOf` and `Surfaces` unset, so a
+real window shows no shader section and cannot fit a body to an imported mesh.
+The tests hand these in.
 
 Gaps in row 9: the Dart scene view and game view draw a plain interface over an opaque
 ground with dark bars, which hides the scene. The C# scene view draws it with neither.
@@ -294,8 +309,7 @@ scene selection behind it. The scene view keeps an interface it has read until t
 project opens again. New asks whether the loaded scene shows an interface, then puts
 the canvas on the working one.
 
-Gaps in row 10: a png dropped with nothing selected is not ported, and waits
-with the other drops. A new data object's kind is picked from a menu, where Dart
+Gaps in row 10: a new data object's kind is picked from a menu, where Dart
 opens a dialog. The store learns of an edit only when it is written, and the
 panel writes what is still being typed before the bindings. Selecting a scene
 row puts the inspector back. A number that is not finite is refused. The
