@@ -10,6 +10,7 @@ using Avalonia.VisualTree;
 namespace Orblit.Editor;
 
 using Orblit.Editor.Core;
+using Orblit.Editor.Panels;
 using Orblit.Ui;
 using Orblit.Ui.Avalonia;
 
@@ -45,10 +46,12 @@ internal sealed class InterfaceCanvas : UserControl
     private readonly Panel _screen;
     private readonly Border _edge = new() { Name = "interface_device_edge", BorderBrush = Bezel, BorderThickness = new Thickness(2), IsHitTestVisible = false };
     private readonly Viewbox _zoom;
+    private readonly StackPanel _nothing;
     private Drag? _drag;
 
     /// <param name="bench">The interface shown, how it is looked at, and what a press or a drag changes.</param>
-    public InterfaceCanvas(InterfaceBench bench)
+    /// <param name="onNew">Makes an interface, for a workspace that has none open.</param>
+    public InterfaceCanvas(InterfaceBench bench, Action onNew)
     {
         _bench = bench;
         Name = "interface_canvas";
@@ -60,7 +63,8 @@ internal sealed class InterfaceCanvas : UserControl
         // and letting it spill past the edge would hide it.
         _screen = new Panel { Name = "interface_screen", Background = Bars, ClipToBounds = true, Children = { _fit, _edge } };
         _zoom = new Viewbox { Margin = new Thickness(Space.Xl), Child = _screen };
-        Content = _zoom;
+        _nothing = Nothing(onNew);
+        Content = new Panel { Children = { _zoom, _nothing } };
         // Tunnelling, so a press chooses an element before a button in the interface takes it.
         AddHandler(PointerPressedEvent, OnPressed, RoutingStrategies.Tunnel);
         AddHandler(PointerMovedEvent, OnMoved, RoutingStrategies.Tunnel);
@@ -88,16 +92,14 @@ internal sealed class InterfaceCanvas : UserControl
     private void Follow()
     {
         _zoom.IsVisible = _bench.Document is not null;
-        if (_bench.Document is not { } document)
+        _nothing.IsVisible = !_zoom.IsVisible;
+        if (_bench.Document is not { } document || _bench.LaidOut is not { } laidOut)
         {
             return;
         }
 
         var canvas = document.Canvas;
         var screen = _bench.Preview ?? (canvas.Width, canvas.Height);
-        // The width the layout answers to is the screen's only when the canvas follows the screen. A
-        // fixed canvas is one layout, and the fit magnifies it.
-        var laidOut = canvas.Fit == CanvasFit.Responsive ? screen : (canvas.Width, canvas.Height);
         var inScreen = Math.Clamp(canvas.ScaleFor(screen.Width, screen.Height), LeastScale, MostScale);
         (_screen.Width, _screen.Height) = screen;
         (_zoom.MaxWidth, _zoom.MaxHeight) = (screen.Width * MostZoom, screen.Height * MostZoom);
@@ -108,6 +110,30 @@ internal sealed class InterfaceCanvas : UserControl
         _surface.Strings = _bench.Strings;
         _surface.KnownWidth = laidOut.Width;
         Dress(canvas, screen != laidOut || inScreen != 1);
+    }
+
+    private static StackPanel Nothing(Action onNew)
+    {
+        var make = Fields.Button("New interface", InterfaceSideModel.NewTip, onNew);
+        make.HorizontalAlignment = HorizontalAlignment.Center;
+        make.Padding = new Thickness(Space.Lg, Space.Xs);
+        var about = Fields.Note(InterfaceSideModel.NothingOpenAbout);
+        about.TextAlignment = TextAlignment.Center;
+        about.MaxWidth = 420;
+        return new StackPanel
+        {
+            Name = "interface_nothing",
+            Spacing = Space.Xs,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(Space.Lg),
+            Children =
+            {
+                new TextBlock { Text = InterfaceSideModel.NothingOpen, FontSize = OrblitText.Body, Foreground = OrblitColors.Ink, HorizontalAlignment = HorizontalAlignment.Center },
+                about,
+                make,
+            },
+        };
     }
 
     // The editor's own marks over the interface. Previewing takes them away, along with the wrappers

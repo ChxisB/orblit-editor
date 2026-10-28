@@ -156,6 +156,16 @@ public sealed class InterfaceBench
         }
     }
 
+    /// <summary>
+    /// The size the shown interface is laid out at, or null with nothing shown.
+    /// </summary>
+    /// <remarks>
+    /// The screen's only when the canvas follows the screen. A fixed canvas is one layout at its own
+    /// size, and the fit then magnifies it, so a phone preview of it answers to no breakpoint.
+    /// </remarks>
+    public (double Width, double Height)? LaidOut => Document?.Canvas is not { } canvas ? null
+        : canvas.Fit == CanvasFit.Responsive ? Preview ?? (canvas.Width, canvas.Height) : (canvas.Width, canvas.Height);
+
     /// <summary>Whether two element paths name the same element. Both null counts as the same.</summary>
     public static bool SamePath(IReadOnlyList<int>? a, IReadOnlyList<int>? b) =>
         a is null || b is null ? a is null && b is null : a.SequenceEqual(b);

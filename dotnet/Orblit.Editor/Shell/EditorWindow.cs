@@ -40,6 +40,7 @@ public sealed class EditorWindow : Window
     private readonly EditorMenu _menu;
     private readonly TerrainToolShelf _shelf;
     private readonly CinematicsShelf _cinematics;
+    private readonly InterfaceShelf _interfaces;
     private CookStatusIndex? _cooks;
     private TerrainBrushPanel? _brush;
 
@@ -97,6 +98,7 @@ public sealed class EditorWindow : Window
 
         _shelf = new TerrainToolShelf(_session.Terrains);
         _cinematics = new CinematicsShelf(_session.Cutscenes, _session.NewCutscene, _session.AddShot, UseThisView);
+        _interfaces = new InterfaceShelf(_session.Interfaces, _session.NewInterface);
         _dock = new DockHost(_session.VisibleLayout, PanelFor);
         _dock.LayoutChanged += layout =>
         {
@@ -113,6 +115,8 @@ public sealed class EditorWindow : Window
         _session.Changed += RefreshBrush;
         _session.History.Changed += Refresh;
         _session.Workspace.Changed += Refresh;
+        // Not the whole refresh. Pointing at an element changes the bench, and that happens on every move.
+        _session.Interfaces.Changed += Retitle;
         _session.Said += Say;
         _session.NameWanted += AskSceneName;
         _session.ConfirmLeaving = entry => LeaveDialog.Ask(this, entry);
@@ -122,6 +126,7 @@ public sealed class EditorWindow : Window
             _session.Changed -= RefreshBrush;
             _session.History.Changed -= Refresh;
             _session.Workspace.Changed -= Refresh;
+            _session.Interfaces.Changed -= Retitle;
             _session.Said -= Say;
             _session.NameWanted -= AskSceneName;
             // The session made the tree, and the window is what outlives its file watcher.
@@ -168,6 +173,7 @@ public sealed class EditorWindow : Window
         _dock.Margin = new Thickness(0, 0, Space.Sm, Space.Sm);
         centre.Children.Add(_shelf);
         centre.Children.Add(_cinematics);
+        centre.Children.Add(_interfaces);
         centre.Children.Add(_dock);
 
         var body = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
@@ -217,6 +223,9 @@ public sealed class EditorWindow : Window
         [PanelKind.TerrainBrush] = Brush,
         [PanelKind.Uvs] = () => new UvPanel(_session),
         [PanelKind.Inspector] = () => new InspectorPanel(_session, new InspectorLinks { Terrain = _session.Terrains }),
+        [PanelKind.InterfaceCanvas] = () => new InterfaceCanvas(_session.Interfaces, _session.NewInterface),
+        [PanelKind.InterfaceElements] = () => new InterfaceElements(_session.Interfaces),
+        [PanelKind.InterfaceDesign] = () => new InterfaceDesign(_session.Interfaces),
     };
 
     private SceneViewport SceneView()
@@ -431,6 +440,7 @@ public sealed class EditorWindow : Window
         _dock.Layout = _session.VisibleLayout;
         _shelf.IsVisible = _session.Mode.UsesBrush;
         _cinematics.IsVisible = _session.Mode.UsesCutscenes;
+        _interfaces.IsVisible = _session.Mode.UsesInterfaces;
         foreach (var (name, button) in _rail)
         {
             var active = name == _session.Mode.Name;
@@ -439,10 +449,28 @@ public sealed class EditorWindow : Window
         }
 
         _menu.Refresh();
-        var scene = _session.Workspace.Loaded;
-        // A stroke is a step on a terrain's own history, which the scene's marker does not see.
-        var unsaved = scene is not null && (_session.IsUnsaved(scene) || _session.Terrains.AnyUnsaved) ? " •" : "";
-        var heading = scene?.Title ?? "No scene";
+        Retitle();
+    }
+
+    // The file being worked on: the interface shown in the Interface workspace, and the scene everywhere else.
+    private void Retitle()
+    {
+        string heading;
+        bool changed;
+        if (_session.Mode.UsesInterfaces && _session.Interfaces.Shown is { } shown)
+        {
+            heading = _session.Assets.Relative(shown.Path);
+            changed = _session.Interfaces.IsUnsaved(shown);
+        }
+        else
+        {
+            var scene = _session.Workspace.Loaded;
+            heading = scene?.Title ?? "No scene";
+            // A stroke is a step on a terrain's own history, which the scene's marker does not see.
+            changed = scene is not null && (_session.IsUnsaved(scene) || _session.Terrains.AnyUnsaved);
+        }
+
+        var unsaved = changed ? " •" : "";
         _title.Text = $"{heading}{unsaved}";
         _title.Foreground = OrblitColors.InkMid;
         Title = $"Orblit Editor: {heading}{unsaved}";

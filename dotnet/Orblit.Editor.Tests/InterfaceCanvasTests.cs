@@ -67,7 +67,7 @@ public sealed class InterfaceCanvasTests : IDisposable
             File.WriteAllText(path, document.ToText());
             Bench = new InterfaceBench(new History(new Workspace(folder)));
             Assert.Null(Bench.OpenFile(path));
-            Window = new Window { Width = 1400, Height = 900, Content = new InterfaceCanvas(Bench) };
+            Window = new Window { Width = 1400, Height = 900, Content = new InterfaceCanvas(Bench, () => { }) };
             Window.Show();
             Headless.Render();
         }

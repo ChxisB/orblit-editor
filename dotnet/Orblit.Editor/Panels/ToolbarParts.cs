@@ -56,7 +56,7 @@ internal sealed class ToolbarChip : Button
 {
     private readonly TextBlock _text = new() { FontSize = 11 };
 
-    public ToolbarChip(string name, string label, string tip, Action tap)
+    public ToolbarChip(string name, string label, string? tip, Action tap)
     {
         Name = name;
         Padding = new Thickness(Space.Sm, 3);
