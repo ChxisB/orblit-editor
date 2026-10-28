@@ -333,6 +333,25 @@ public sealed class EditorSessionCinematicsTests : IDisposable
     }
 
     [Fact]
+    public async Task ANewSceneLetsGoOfTheCameraBecauseItIsNamedByItsPlaceInTheOldOne()
+    {
+        var session = OpenNewCutscene();
+        session.LookThrough("camera", "scene");
+
+        await session.NewSceneAsync();
+
+        Assert.Null(session.Piloting);
+    }
+
+    [Fact]
+    public void OnlyCinematicsShowsTheShelfOfCutsceneButtons()
+    {
+        var shown = EditorModes.Standard().All.Where(mode => mode.UsesCutscenes).Select(mode => mode.Name);
+
+        Assert.Equal(["cinematics"], shown);
+    }
+
+    [Fact]
     public void ACutsceneWithChangesCountsAsUnsavedAndSavingWritesIt()
     {
         var session = OpenNewCutscene();

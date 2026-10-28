@@ -12,6 +12,9 @@ public sealed partial class EditorSession
     /// <summary>What a key or a mark goes into: the clip in most modes, and the cutscene in cinematics.</summary>
     public IKeying Keying => Mode.Name == "cinematics" ? Cutscenes : Clips;
 
+    /// <summary>The name the scene view goes by when it looks through a camera.</summary>
+    public const string SceneView = "scene";
+
     /// <summary>
     /// The camera a view is looking through, and which view. Null when none is. Steering that view moves
     /// the camera instead of the view's own eye.
@@ -81,7 +84,7 @@ public sealed partial class EditorSession
     /// Has <paramref name="view"/> look through a camera, or stop when <paramref name="camera"/> is null
     /// or is not in the scene. Steering after this is a new undo step.
     /// </summary>
-    public void LookThrough(string? camera, string view = "scene")
+    public void LookThrough(string? camera, string view = SceneView)
     {
         History.Seal();
         Pilot(camera is not null && Workspace.Loaded?.Scene?[camera] is not null ? (camera, view) : null);

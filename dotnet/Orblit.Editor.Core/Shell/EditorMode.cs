@@ -27,6 +27,9 @@ public sealed record EditorMode : IRegistered
     /// <summary>Whether a drag in the scene view works the terrain brush, and the shelf of its tools shows.</summary>
     public bool UsesBrush { get; init; }
 
+    /// <summary>Whether the shelf of cutscene buttons shows over the panels.</summary>
+    public bool UsesCutscenes { get; init; }
+
     /// <summary>Sets up the job as the editor switches to it. Null leaves everything as it was.</summary>
     public Action? OnEnter { get; init; }
 
@@ -47,7 +50,7 @@ public static class EditorModes
         modes.Register(new EditorMode { Name = "modelling", Label = "Modelling", Icon = "view_in_ar_outlined", Layout = DockLayout.Modelling });
         modes.Register(new EditorMode { Name = "terrain", Label = "Terrain", Icon = "landscape_outlined", Layout = DockLayout.Terrain, UsesBrush = true });
         modes.Register(new EditorMode { Name = "animation", Label = "Animation", Icon = "animation", Layout = DockLayout.Animation });
-        modes.Register(new EditorMode { Name = "cinematics", Label = "Cinematics", Icon = "movie_outlined", Layout = DockLayout.Cinematics });
+        modes.Register(new EditorMode { Name = "cinematics", Label = "Cinematics", Icon = "movie_outlined", Layout = DockLayout.Cinematics, UsesCutscenes = true });
         return modes;
     }
 }

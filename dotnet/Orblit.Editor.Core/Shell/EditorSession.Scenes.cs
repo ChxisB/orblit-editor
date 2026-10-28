@@ -195,6 +195,8 @@ public sealed partial class EditorSession
 
     private void Replaced()
     {
+        // A camera is named by its place in the scene it was in.
+        Pilot(null);
         Selected = [];
         Primary = null;
         SelectedScene = null;
