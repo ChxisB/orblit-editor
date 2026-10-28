@@ -105,7 +105,7 @@ internal sealed class OutlinerPanel : UserControl
     {
         base.OnAttachedToVisualTree(e);
         _session.Changed += Rebuild;
-        _session.History.Changed += Rebuild;
+        _session.History.Changed += OnHistoryChanged;
         _session.Workspace.Changed += Rebuild;
         Rebuild();
     }
@@ -113,9 +113,18 @@ internal sealed class OutlinerPanel : UserControl
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         _session.Changed -= Rebuild;
-        _session.History.Changed -= Rebuild;
+        _session.History.Changed -= OnHistoryChanged;
         _session.Workspace.Changed -= Rebuild;
         base.OnDetachedFromVisualTree(e);
+    }
+
+    // A row shows no position, and a drag runs a move every frame.
+    private void OnHistoryChanged()
+    {
+        if (!_session.History.LastOnlyMoved)
+        {
+            Rebuild();
+        }
     }
 
     private void Rebuild()
