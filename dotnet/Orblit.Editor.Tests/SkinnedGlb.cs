@@ -42,4 +42,56 @@ internal static class SkinnedGlb
 
     /// <summary>A skeleton of bones <paramref name="names"/>, as a <c>.glb</c> file.</summary>
     public static byte[] ChainGlb(params string[] names) => Glb(ChainDocument(names));
+
+    /// <summary>
+    /// A person standing with the hips a metre up, facing +Z with the left side towards +X, as a
+    /// <c>.glb</c> file.
+    /// </summary>
+    /// <remarks>
+    /// With <paramref name="forearmTwist"/> each forearm has a bone between the elbow and the wrist that
+    /// only twists it.
+    /// </remarks>
+    public static byte[] PersonGlb(bool forearmTwist = false)
+    {
+        var nodes = new List<Dictionary<string, object>>();
+
+        int Add(string name, int parent, double x, double y, double z)
+        {
+            nodes.Add(new() { ["name"] = name, ["translation"] = new[] { x, y, z } });
+            if (parent >= 0)
+            {
+                nodes[parent].TryAdd("children", new List<int>());
+                ((List<int>)nodes[parent]["children"]).Add(nodes.Count - 1);
+            }
+
+            return nodes.Count - 1;
+        }
+
+        var hips = Add("hips", -1, 0, 1, 0);
+        var spine = Add("spine", hips, 0, 0.15, 0);
+        var chest = Add("chest", spine, 0, 0.2, 0);
+        var neck = Add("neck", chest, 0, 0.25, 0);
+        Add("head", neck, 0, 0.12, 0);
+        foreach (var (side, sign) in new[] { ("left", 1.0), ("right", -1.0) })
+        {
+            var shoulder = Add($"{side} shoulder", chest, sign * 0.06, 0.2, 0);
+            var upper = Add($"{side} upper arm", shoulder, sign * 0.1, 0, 0);
+            var lower = Add($"{side} lower arm", upper, sign * 0.28, 0, 0.02);
+            var wrist = forearmTwist ? Add($"{side} forearm twist", lower, sign * 0.12, 0, -0.01) : lower;
+            Add($"{side} hand", wrist, sign * (forearmTwist ? 0.13 : 0.25), 0, -0.02);
+            var thigh = Add($"{side} thigh", hips, sign * 0.1, -0.05, 0);
+            var shin = Add($"{side} shin", thigh, 0, -0.45, 0.02);
+            var foot = Add($"{side} foot", shin, 0, -0.42, -0.02);
+            Add($"{side} toes", foot, 0, -0.05, 0.12);
+        }
+
+        return Glb(new
+        {
+            asset = new { version = "2.0" },
+            scene = 0,
+            scenes = new[] { new { nodes = new[] { 0 } } },
+            nodes,
+            skins = new[] { new { joints = Enumerable.Range(0, nodes.Count).ToArray() } },
+        });
+    }
 }

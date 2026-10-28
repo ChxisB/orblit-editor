@@ -11,6 +11,7 @@ public enum GizmoTone
     AxisX,
     AxisY,
     AxisZ,
+    Ember,
 }
 
 /// <summary>Lines the window strokes in a tone, over a dark pass so they read against any floor.</summary>

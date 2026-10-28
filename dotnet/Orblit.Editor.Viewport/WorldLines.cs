@@ -78,6 +78,27 @@ public sealed class WorldLines(ViewportProjection projection)
         }
     }
 
+    /// <summary>
+    /// A circle round <paramref name="centre"/>, <paramref name="pixels"/> in radius however far off it
+    /// is, as a handle is drawn.
+    /// </summary>
+    public void Ring(Vector3 centre, double pixels)
+    {
+        if (projection.Project(centre) is not { } at)
+        {
+            return;
+        }
+
+        Offset On(int i) => new(
+            at.Dx + (pixels * Math.Cos(2 * Math.PI * i / Segments)),
+            at.Dy + (pixels * Math.Sin(2 * Math.PI * i / Segments)));
+
+        for (var i = 0; i < Segments; i++)
+        {
+            _strokes.Add((On(i), On(i + 1)));
+        }
+    }
+
     public void Line(Vector3 a, Vector3 b)
     {
         var from = projection.Project(a);

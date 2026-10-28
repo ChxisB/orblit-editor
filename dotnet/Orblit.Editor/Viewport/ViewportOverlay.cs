@@ -93,6 +93,7 @@ internal sealed partial class ViewportOverlay : Control
         GizmoTone.InkMid => OrblitColors.InkMid,
         GizmoTone.AxisX => OrblitColors.AxisX,
         GizmoTone.AxisY => OrblitColors.AxisY,
+        GizmoTone.Ember => OrblitColors.Ember,
         _ => OrblitColors.AxisZ,
     };
 

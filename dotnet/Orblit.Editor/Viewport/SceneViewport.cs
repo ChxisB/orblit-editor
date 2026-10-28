@@ -87,8 +87,13 @@ public sealed class SceneViewport : Border
         var workspace = session.Workspace;
         _grids = new GridStore(workspace.ProjectDirectory);
         _geometry = new GeometryStore(workspace.ProjectDirectory);
-        // The skeleton gizmo reads this session's clip, so it is made for each view.
-        var gizmos = new List<GizmoType>(Gizmos) { SkeletonGizmo.Type(session.Clips, session.Skeletons, session.SkeletonLook) };
+        // The skeleton and limb gizmos read this session's clip, and a limb drag is held by one view, so
+        // they are made for each view.
+        var gizmos = new List<GizmoType>(Gizmos)
+        {
+            SkeletonGizmo.Type(session.Clips, session.Skeletons, session.SkeletonLook),
+            LimbGizmo.Type(session.Clips, session.Skeletons, session.SkeletonLook),
+        };
         _state = new SceneViewportState(workspace, snapping ?? new Snapping(), session.History, gizmos) { BoundsOf = boundsOf, Sketch = session.Sketch };
         _brush = new TerrainBrushInput(session.Terrains, session.History, session.TerrainTarget);
         _overlay = new ViewportOverlay(_state, session);
