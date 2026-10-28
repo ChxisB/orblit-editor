@@ -187,7 +187,7 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | `ui_responsive_test.dart` | `InterfaceCanvasTests`, `InterfaceWorkspaceTests` | 16 | 16 | 16 | 0 | done. The grid count says "4 across this screen. 12 is too fine here." with a full stop where Dart has a dash |
 | `interface_strings_test.dart` | `InterfaceBenchTests`, `InterfaceWorkspaceTests` | 11 | 11 | 11 | 0 | done |
 | none | `InterfaceBenchTests` | 0 | 0 | 0 | 16: the keys the shown interface asks for, adding inside the selection and its undo, adding after a button rather than inside it, a place away from the last element on a stack, the grid going up for a column and not for a button, a split and a split of a placed element, a drag as one step on a whole pixel, removing and the root, typing as one step per element, saving and opening again, a file gone or not an interface, the preview held either way, an element's name, and flowing | added |
-| `editor_shell_data_test.dart` | `EditorSessionInterfacesTests`, `EditorWindowInterfacesTests` | 22 | 22 | 6 | 2: a change shown over the scene before it is saved, and an interface file that cannot be read | partial. The "an interface on a scene" group is here. A drop onto the scene view is not ported, so `PutInterfaceOnScene`, which is what the drop does, stands in for it. The data objects and console groups wait for row 13 |
+| `editor_shell_data_test.dart` | `EditorSessionInterfacesTests`, `EditorWindowInterfacesTests`, `EditorWindowDataTests`, `EditorSessionDataTests`, `EditorWindowConsoleTests` | 22 | 22 | 21 | 3: a change shown over the scene before it is saved, an interface file that cannot be read, and a data object's panel kept through a change elsewhere | partial. Waiting: a refusal on the console tab, which drops a png with nothing selected and waits with the other drops. No drop is ported, so `PutInterfaceOnScene` and `AttachData`, which are what the drops do, stand in for them. A data object is made through the browser's `MakeNew` and selected through the session. Saving after an attach is a session test. The console shares the bottom group with the project browser, so "folded under the view" is "behind the project tab" |
 | `editor_shell_motion_test.dart` | `EditorSessionClipsTests` | 4 | 4 | 3 | 0 | partial. Waiting: Play in four views, which needs the game view. No row owns the game view yet |
 | none | `OutlinerModelTests` | 0 | 0 | 0 | 15: the rows and their depth, the folds, a scene row with a filter, an unloaded scene, where a drop lands and what a drop refuses | added |
 | none | `EditorSessionObjectsTests` | 0 | 0 | 0 | 26: selecting, adding and naming, ids, deleting, moving, duplicating, the clipboard labels and a clipboard that cannot be reached | added |
@@ -245,6 +245,15 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | none | `BlendGraphPanelTests`, `EditorSessionBlendsTests` | 0 | 0 | 0 | 17: no blend open, the graph with the fields beside it or under it, the tabs and their close and plus, the animation mode, a file that is not a blend or not there, what could not be read, the clip names offered, the mark until saved, a graph saving itself, and a blend that cannot be written | added |
 | none | `ModelSkeletonsTests` | 0 | 0 | 0 | 7: the bones of a model in file order, a rooted path, a file with no skin or no model, the skin with the most bones, a tie, a glTF with or without its buffer beside it, and a file that changes read again | added |
 | none | `EditorSessionClipsTests`, `EditorWindowRetargetTests` | 0 | 0 | 0 | 10: a made clip written in `clips/` and shown, never over another, its problems counted, put on the chosen object only for the model it moves, the model of the clip's owner and not of the chosen object, a clips folder that cannot be made, a clip that cannot be written, and the dialog starting on the owner's model | added |
+| `console_test.dart` | `EditorLogTests` | 12 | 12 | 11 | 2: an entry stamped by the clock, and what the session says being kept | done. "What Flutter throws" is what the UI thread throws. Giving the handler back and nothing arriving after it are one C# test. The closed log test is not ported, because a C# event has nothing to throw |
+| none | `ConsolePanelTests` | 0 | 0 | 0 | 7: each filter's count, the newest at the top, a repeat's count and time, opening an entry's detail, an open entry kept through a new one, Copy oldest first, and letting the log go on close | added |
+| `data_object_test.dart` | `DataObjectTests` | 16 | 16 | 16 | 2: the TypeScript and the C++ checked against the text Dart writes | done |
+| none | `EditorSessionDataTests` | 0 | 0 | 0 | 11: the session side of the data objects group, a scene row putting the inspector back, attaching with nothing selected, a file that is not a data object, detaching, and a file that has gone | added |
+| none | `DataPanelTests` | 0 | 0 | 0 | 11: a typed value waiting for the typing to stop, text that is not a number, an empty key, a value added of each kind with a name of its own, one axis of a vector, removing, what is waiting written on close, the bindings of what was just typed, and a file that cannot be read | added |
+| `profile_panel_test.dart` | `ProfilePanelTests` | 5 | 5 | 4 | 2: closing stops the reads, and the window's panel times the frames the scene view draws | done. The clock is wound by hand. Handing a shown panel another profiler is not ported, because the window builds the panel once over its own |
+| `cpp_binding_test.dart` | `ScriptBuilderTests`, `DataObjectTests`, `AssetsTests` | 14 | 14 | 14 | 0 | done. The nine that compile real C++ are `ScriptBuilderTests`. The four that read the header's text are the C++ golden in `DataObjectTests`. Which files offer a build is a theory in `AssetsTests` |
+| none | `CodeEditorTests` | 0 | 0 | 0 | 15: the first editor on the path, an app with no command on a Mac, looking once, `where` on Windows, a file opened in its folder, a folder alone, opening by bundle, handing on to the next, no editor, a folder that has gone, revealing on each desktop, and what cannot be revealed | added |
+| none | `EditorWindowCodeTests` | 0 | 0 | 0 | 9: the File menu's labels, opening the project, Show in Finder, no editor, a script opened from Project, the palette, a build that fails, a window closed during a build, and a build with warnings | added |
 
 Gap in row 5: a picture is shown in a set and can be cleared, but not dropped on one. The Dart section took a drop from the
 asset browser, and the C# browser has no drag source yet. The decoder (part 5e) reads a picture with SkiaSharp 3.119.4,
@@ -252,11 +261,10 @@ off the UI thread, at 512 by 512 with straight alpha. It ran headless, and the r
 window runs headless only. The ring, the shelf, a stroke and a textured set have not been seen in a real window with the
 renderer.
 
-Not in the inspector yet, and not counted: `editor_shell_prefabs_test.dart` (23) and
-the data objects and console groups of `editor_shell_data_test.dart` (16) for row 13,
-because they need the shell. The
-inspector takes its prefab and data buttons, the model reader and the size of a
-mesh from `InspectorLinks`, which the window does not fill yet. `rebuild_scope_test.dart`
+Not in the inspector yet, and not counted: `editor_shell_prefabs_test.dart` (23)
+for row 13, because it needs the shell. The inspector takes its prefab buttons,
+the model reader and the size of a mesh from `InspectorLinks`, which the window
+does not fill yet. `rebuild_scope_test.dart`
 (5) tests how Flutter rebuilds, and is judged again with the shell.
 
 Gaps in row 9: the Dart scene view and game view draw a plain interface over an opaque
@@ -274,6 +282,20 @@ on the interface selection, and Cut, Copy, Paste, Duplicate and the arrows act o
 scene selection behind it. The scene view keeps an interface it has read until the
 project opens again. New asks whether the loaded scene shows an interface, then puts
 the canvas on the working one.
+
+Gaps in row 10: a png dropped with nothing selected is not ported, and waits
+with the other drops. A new data object's kind is picked from a menu, where Dart
+opens a dialog. The store learns of an edit only when it is written, and the
+panel writes what is still being typed before the bindings. Selecting a scene
+row puts the inspector back. A number that is not finite is refused. The
+profile panel counts only the frames the scene view draws, and times no spans.
+A gauge reads "12" where Dart reads "12.0". Two faults are left as Dart has
+them, items 65 and 66 of decision 80. The C++ header names its data object
+without the folder, and every script built on a Mac with ld-27037 or later
+has warnings, so there is no test of a clean build. The Orblit.Native package
+does not copy the engine headers it carries, so the editor's project copies
+them itself. The console, the data panel, the profile panel, the code editor
+and the build have run headless only, never in a real window.
 
 The Dart outliner test file is `editor_shell_hierarchy_test.dart`. There is no
 `outliner_test.dart`. The drag itself is not driven headless. The tests call

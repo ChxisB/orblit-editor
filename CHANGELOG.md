@@ -356,6 +356,26 @@
   the new element after it, where Dart puts it inside. A drag in a stack
   away from the page edge snaps to the grid on the page, where Dart snaps
   it from the stack's edge.
+- Add the console to the C# editor. It shares the bottom group with the
+  project browser. It keeps what the editor said, what the UI thread
+  threw, and a run of the same message as one entry with a count. Each
+  level has a filter with its count, and an entry opens to its detail.
+- Add data objects to the C# editor. One is made from Project with a
+  value of each kind, edited in the inspector and attached to the
+  selection as one undo step. Each edit writes the file and the
+  TypeScript and C++ bindings beside it.
+- Add the profile panel to the C# editor. It reads the frames the scene
+  view draws, the gauges, the counts and the memory, and says how fast a
+  growing heap grows.
+- The C# editor opens a script, a style or a data file in the code editor
+  it finds, from Project, the File menu or the palette. Show in Finder
+  shows the project folder. Build compiles a C++ script with the engine's
+  own compiler and headers and shows what the compiler said.
+- The C# data objects and profile panel differ from the Dart ones in
+  small ways. A new data object's kind is picked from a menu, not a
+  dialog. A number that is not finite is refused. Selecting a scene row
+  puts the inspector back. The profile panel times no spans, and a gauge
+  reads "12" where Dart reads "12.0".
 
 ## 1.26.0+27
 
