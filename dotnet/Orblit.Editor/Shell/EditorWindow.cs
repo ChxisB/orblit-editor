@@ -203,6 +203,7 @@ public sealed class EditorWindow : Window
         [PanelKind.Outliner] = () => new OutlinerPanel(_session, _platform, () => OpenPalette("Add ")),
         [PanelKind.Project] = Project,
         [PanelKind.Timeline] = Timeline,
+        [PanelKind.BlendGraph] = BlendGraph,
         [PanelKind.TerrainBrush] = Brush,
         [PanelKind.Uvs] = () => new UvPanel(_session),
         [PanelKind.Inspector] = () => new InspectorPanel(_session, new InspectorLinks { Terrain = _session.Terrains }),
@@ -226,6 +227,8 @@ public sealed class EditorWindow : Window
         return new TimelinePanel(_session.Clips, links);
     }
 
+    private BlendGraphPanel BlendGraph() => new(_session.Blends, _session.History, _session.ClipNames, _session.NewBlend);
+
     // The session's tree and one cook index for the window, made when the first project panel is. Two
     // panels on one project look at the same cache, and hashing it twice would say nothing new.
     private AssetBrowserPanel Project()
@@ -242,6 +245,12 @@ public sealed class EditorWindow : Window
         if (asset.Kind == AssetKind.Clip)
         {
             _session.OpenClip(asset.Path);
+            return;
+        }
+
+        if (asset.Kind == AssetKind.Blend)
+        {
+            _session.OpenBlend(asset.Path);
             return;
         }
 
