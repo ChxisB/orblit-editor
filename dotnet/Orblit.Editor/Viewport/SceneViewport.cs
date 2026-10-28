@@ -65,6 +65,7 @@ public sealed class SceneViewport : Border
     private bool _outlineSelection = true;
     private bool _pinching;
     private string _chipKey = "";
+    private string? _looked;
     private TimeSpan? _origin;
 
     public SceneViewport(
@@ -398,7 +399,29 @@ public sealed class SceneViewport : Border
     private void OnCameraChanged(OrbitCamera camera)
     {
         _state.Camera = camera;
+        if (_session.Piloting is { View: EditorSession.SceneView } look && _session.Workspace.Loaded?.Scene is { } scene)
+        {
+            _session.Steer(EditorSession.SceneView, CameraViews.PlaceFor(camera, scene, scene[look.Camera]?.ParentId));
+        }
+
         MarkDirty();
+    }
+
+    // Looking through a camera puts the view where the camera is. After that, moving the view steers
+    // the camera, which OnCameraChanged does. Going there is not a move, so it steers nothing.
+    private void FlyToPiloted()
+    {
+        var camera = _session.Piloting is { View: EditorSession.SceneView } look ? look.Camera : null;
+        if (camera == _looked)
+        {
+            return;
+        }
+
+        _looked = camera;
+        if (camera is not null && _session.Workspace.Loaded?.Scene is { } scene && scene[camera] is { } found)
+        {
+            _state.Camera = CameraViews.ViewThrough(scene, found);
+        }
     }
 
     // A camera left where another scene's work was would show this one from the wrong place.
@@ -438,6 +461,7 @@ public sealed class SceneViewport : Border
 
     private void OnSessionChanged()
     {
+        FlyToPiloted();
         _state.Selected = new HashSet<string>(_session.Selected);
         _state.Primary = _session.Primary;
         _state.Context = _session.Context;

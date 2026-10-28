@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Threading;
 
 namespace Orblit.Editor;
@@ -11,7 +12,8 @@ internal static class Dropdown
     /// <param name="name">The button's name. The items have none, because a list of bone names can hold two that differ only in punctuation and a window cannot hold two controls of one name.</param>
     /// <param name="shown">What the button reads while the menu is closed.</param>
     /// <param name="items">The choices, asked for each time the menu opens.</param>
-    public static Button Of(string name, string shown, Func<IEnumerable<(string Text, Action Choose)>> items)
+    /// <param name="ink">The colour of what the button reads, or null for the usual one.</param>
+    public static Button Of(string name, string shown, Func<IEnumerable<(string Text, Action Choose)>> items, IBrush? ink = null)
     {
         var menu = new MenuFlyout();
         // Built when opened. A row for every bone of a skeleton would otherwise make a menu item for every
@@ -40,8 +42,8 @@ internal static class Dropdown
             {
                 Text = shown,
                 FontSize = OrblitText.Label,
-                Foreground = OrblitColors.Ink,
-                TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis,
+                Foreground = ink ?? OrblitColors.Ink,
+                TextTrimming = TextTrimming.CharacterEllipsis,
             },
         };
     }

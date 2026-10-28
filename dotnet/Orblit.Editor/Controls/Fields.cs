@@ -77,11 +77,15 @@ internal sealed class Fields(FieldHost host)
         string.Concat(label.Select(one => char.IsLetterOrDigit(one) ? char.ToLowerInvariant(one) : '_'));
 
     /// <summary>A labelled row, so every field lines up on the same column.</summary>
-    public static Grid Row(string label, Control child, Control? trailing = null)
+    /// <param name="label">What the row is for.</param>
+    /// <param name="child">The field.</param>
+    /// <param name="trailing">Something small after the field.</param>
+    /// <param name="name">The row's name, for a list of rows that repeat a label, because a window cannot hold two controls of one name.</param>
+    public static Grid Row(string label, Control child, Control? trailing = null, string? name = null)
     {
         var row = new Grid
         {
-            Name = $"row_{Key(label)}",
+            Name = name ?? $"row_{Key(label)}",
             ColumnDefinitions = new ColumnDefinitions($"{LabelWidth},*,Auto"),
             MinHeight = Height,
             Margin = new Thickness(0, 6),

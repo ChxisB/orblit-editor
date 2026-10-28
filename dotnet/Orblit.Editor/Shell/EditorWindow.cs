@@ -39,8 +39,13 @@ public sealed class EditorWindow : Window
     private readonly Dictionary<string, Button> _rail = [];
     private readonly EditorMenu _menu;
     private readonly TerrainToolShelf _shelf;
+    private readonly CinematicsShelf _cinematics;
     private CookStatusIndex? _cooks;
     private TerrainBrushPanel? _brush;
+
+    // The scene view last built, which Use this view asks where it is looking.
+    // shortcut: a window with two scene views answers for the newer. Ask the focused one when that happens.
+    private SceneViewport? _view;
 
     // Keys that mean something else while a text box has the keyboard: delete a letter, copy some words, finish a field, type a g or a bracket, move the caret.
     private static readonly HashSet<EditorVerb> ObjectVerbs =
@@ -91,6 +96,7 @@ public sealed class EditorWindow : Window
         };
 
         _shelf = new TerrainToolShelf(_session.Terrains);
+        _cinematics = new CinematicsShelf(_session.Cutscenes, _session.NewCutscene, _session.AddShot, UseThisView);
         _dock = new DockHost(_session.VisibleLayout, PanelFor);
         _dock.LayoutChanged += layout =>
         {
@@ -161,6 +167,7 @@ public sealed class EditorWindow : Window
         _dock[Grid.RowProperty] = 1;
         _dock.Margin = new Thickness(0, 0, Space.Sm, Space.Sm);
         centre.Children.Add(_shelf);
+        centre.Children.Add(_cinematics);
         centre.Children.Add(_dock);
 
         var body = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
@@ -198,16 +205,25 @@ public sealed class EditorWindow : Window
     // One line for each panel that is ported. A kind with no line shows its name.
     private Dictionary<PanelKind, Func<Control>> BuildersOfPanels() => new()
     {
-        [PanelKind.Viewport] = () => new SceneViewport(_session, _renderer, snapping: _snapping),
+        [PanelKind.Viewport] = SceneView,
         [PanelKind.Modelling] = () => new ModellingPanel(_session, _snapping),
         [PanelKind.Outliner] = () => new OutlinerPanel(_session, _platform, () => OpenPalette("Add ")),
         [PanelKind.Project] = Project,
         [PanelKind.Timeline] = Timeline,
+        [PanelKind.CutsceneTimeline] = CutsceneTimeline,
+        [PanelKind.ShotPreview] = () => new ShotPreviewPanel(_session, _renderer),
+        [PanelKind.ShotList] = () => new ShotListPanel(_session),
         [PanelKind.BlendGraph] = BlendGraph,
         [PanelKind.TerrainBrush] = Brush,
         [PanelKind.Uvs] = () => new UvPanel(_session),
         [PanelKind.Inspector] = () => new InspectorPanel(_session, new InspectorLinks { Terrain = _session.Terrains }),
     };
+
+    private SceneViewport SceneView()
+    {
+        _view = new SceneViewport(_session, _renderer, snapping: _snapping);
+        return _view;
+    }
 
     // Kept so the window can ask it to look again when the selection moves a stroke to another terrain.
     private TerrainBrushPanel Brush()
@@ -226,6 +242,26 @@ public sealed class EditorWindow : Window
             Selected = () => _session.InspectedItem,
         };
         return new TimelinePanel(_session.Clips, links);
+    }
+
+    // A cutscene has no bones, so it has nothing to retarget.
+    private TimelinePanel CutsceneTimeline()
+    {
+        var links = new TimelineLinks
+        {
+            OnNew = _session.NewCutscene,
+            OnProblem = problem => _session.Report([problem]),
+            Selected = () => _session.InspectedItem,
+        };
+        return new TimelinePanel(_session.Cutscenes, links);
+    }
+
+    private void UseThisView()
+    {
+        if (_view is not null && _session.Workspace.Loaded?.Scene is { } scene)
+        {
+            _session.UseThisView(CameraViews.PlaceFor(_view.State.Camera, scene));
+        }
     }
 
     // The made clip is a clip of its own, so the shown one is left as it was.
@@ -267,6 +303,12 @@ public sealed class EditorWindow : Window
         if (asset.Kind == AssetKind.Blend)
         {
             _session.OpenBlend(asset.Path);
+            return;
+        }
+
+        if (asset.Kind == AssetKind.Cutscene)
+        {
+            _session.OpenCutscene(asset.Path);
             return;
         }
 
@@ -388,6 +430,7 @@ public sealed class EditorWindow : Window
     {
         _dock.Layout = _session.VisibleLayout;
         _shelf.IsVisible = _session.Mode.UsesBrush;
+        _cinematics.IsVisible = _session.Mode.UsesCutscenes;
         foreach (var (name, button) in _rail)
         {
             var active = name == _session.Mode.Name;
