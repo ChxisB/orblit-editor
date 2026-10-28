@@ -10,6 +10,7 @@ namespace Orblit.Editor;
 using DockedPanel = Orblit.Editor.Core.DockPanel;
 using Orblit.Editor.Core;
 using Orblit.Editor.Viewport;
+using Orblit.Profile;
 using Orblit.VectorMath;
 
 /// <summary>
@@ -28,6 +29,9 @@ public sealed class EditorWindow : Window
 
     // One for the window, so the modelling panel and every view agree on where a drag lands.
     private readonly Snapping _snapping = new();
+
+    // One for the window, so the profile panel reads the frames the scene view draws.
+    private readonly Profiler _profiler = Profiler.Create(heap: () => Environment.WorkingSet);
     private readonly Dictionary<string, Control> _panels = [];
     private readonly Dictionary<PanelKind, Func<Control>> _builders;
     private readonly HostPlatform _platform;
@@ -216,6 +220,7 @@ public sealed class EditorWindow : Window
         [PanelKind.Outliner] = () => new OutlinerPanel(_session, _platform, () => OpenPalette("Add ")),
         [PanelKind.Project] = Project,
         [PanelKind.Console] = () => new ConsolePanel(_session.Log, _session.TextClipboard),
+        [PanelKind.Profile] = () => new ProfilePanel(_profiler),
         [PanelKind.Timeline] = Timeline,
         [PanelKind.CutsceneTimeline] = CutsceneTimeline,
         [PanelKind.ShotPreview] = () => new ShotPreviewPanel(_session, _renderer),
@@ -240,7 +245,7 @@ public sealed class EditorWindow : Window
 
     private SceneViewport SceneView()
     {
-        _view = new SceneViewport(_session, _renderer, snapping: _snapping);
+        _view = new SceneViewport(_session, _renderer, snapping: _snapping) { Profiler = _profiler };
         return _view;
     }
 

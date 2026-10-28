@@ -13,6 +13,7 @@ namespace Orblit.Editor;
 using Orblit.Editor.Core;
 using Orblit.Editor.Viewport;
 using Orblit.Filament;
+using Orblit.Profile;
 using Orblit.VectorMath;
 using ViewOffset = Orblit.Editor.Viewport.Offset;
 using ViewSize = Orblit.Editor.Viewport.Size;
@@ -118,6 +119,9 @@ public sealed class SceneViewport : Border
 
     /// <summary>The state the control drives. A test reads what the camera did from here.</summary>
     public SceneViewportState State => _state;
+
+    /// <summary>Told of each frame the view draws.</summary>
+    public Profiler Profiler { get; init; } = Profiler.Off;
 
     /// <summary>The renderer, or null when the control was built without one.</summary>
     public RendererViewport? Renderer => _renderer;
@@ -540,6 +544,8 @@ public sealed class SceneViewport : Border
         if (_dirty)
         {
             _dirty = false;
+            // Only a drawn frame counts. A still view adds none, so the gap before its next one is rest.
+            Profiler.Frame();
             Redraw(elapsed);
         }
 
