@@ -10,6 +10,7 @@ namespace Orblit.Editor;
 using DockedPanel = Orblit.Editor.Core.DockPanel;
 using Orblit.Editor.Core;
 using Orblit.Editor.Viewport;
+using Orblit.VectorMath;
 
 /// <summary>
 /// The editor's window: menus, the rail of modes, the panels and a line of status. It draws what an
@@ -40,8 +41,15 @@ public sealed class EditorWindow : Window
     private CookStatusIndex? _cooks;
     private TerrainBrushPanel? _brush;
 
-    // Keys that mean something else while a text box has the keyboard: delete a letter, copy some words, finish a field.
-    private static readonly HashSet<EditorVerb> ObjectVerbs = [EditorVerb.Delete, EditorVerb.Copy, EditorVerb.Cut, EditorVerb.Paste, EditorVerb.Duplicate, EditorVerb.LeaveEdit, EditorVerb.FinishDraw];
+    // Keys that mean something else while a text box has the keyboard: delete a letter, copy some words, finish a field, type a g or a bracket, move the caret.
+    private static readonly HashSet<EditorVerb> ObjectVerbs =
+    [
+        EditorVerb.Delete, EditorVerb.Copy, EditorVerb.Cut, EditorVerb.Paste, EditorVerb.Duplicate, EditorVerb.LeaveEdit, EditorVerb.FinishDraw,
+        EditorVerb.CycleMode, EditorVerb.GridCoarser, EditorVerb.GridFiner, EditorVerb.NudgeX, EditorVerb.NudgeY, EditorVerb.NudgeZ,
+    ];
+
+    /// <summary>The grid the window's views and keys share. Read by tests, which cannot reach the field.</summary>
+    internal Snapping Snapping => _snapping;
 
     /// <param name="session">What the window shows and changes.</param>
     /// <param name="platform">The host's keys, or the one this process runs on.</param>
@@ -75,6 +83,9 @@ public sealed class EditorWindow : Window
             [EditorVerb.Duplicate] = _session.Duplicate,
             [EditorVerb.LeaveEdit] = _session.LeaveEdit,
             [EditorVerb.FinishDraw] = _session.FinishDrawing,
+            [EditorVerb.CycleMode] = _session.CycleMode,
+            [EditorVerb.GridCoarser] = GridCoarser,
+            [EditorVerb.GridFiner] = GridFiner,
         };
 
         _shelf = new TerrainToolShelf(_session.Terrains);
@@ -303,7 +314,7 @@ public sealed class EditorWindow : Window
     {
         if (KeyMapping.ChordOf(press) is { } chord
             && _shortcuts.TryGetValue(chord, out var action)
-            && RunVerb(action.Verb))
+            && RunVerb(action))
         {
             press.Handled = true;
         }
@@ -311,15 +322,48 @@ public sealed class EditorWindow : Window
 
     // Only the verbs the session can do so far. The rest pass through, so a key is never swallowed by
     // something that does nothing with it.
-    private bool RunVerb(EditorVerb verb)
+    private bool RunVerb(ShortcutAction action)
     {
-        if (!_verbs.TryGetValue(verb, out var run) || (ObjectVerbs.Contains(verb) && IsTyping()))
+        if (ObjectVerbs.Contains(action.Verb) && IsTyping())
+        {
+            return false;
+        }
+
+        if (AxisOf(action.Verb) is { } axis)
+        {
+            // By squares even with the grid off: an arrow key asks for a definite amount, and a square is it.
+            _session.Nudge(axis * (_snapping.Step * action.Squares));
+            return true;
+        }
+
+        if (!_verbs.TryGetValue(action.Verb, out var run))
         {
             return false;
         }
 
         run();
         return true;
+    }
+
+    private static Vector3? AxisOf(EditorVerb verb) => verb switch
+    {
+        EditorVerb.NudgeX => new Vector3(1, 0, 0),
+        EditorVerb.NudgeY => new Vector3(0, 1, 0),
+        EditorVerb.NudgeZ => new Vector3(0, 0, 1),
+        _ => null,
+    };
+
+    // Asking for a grid is asking to use it, so the key switches snapping on as well.
+    private void GridCoarser()
+    {
+        _snapping.Step = _snapping.Coarser;
+        _snapping.On = true;
+    }
+
+    private void GridFiner()
+    {
+        _snapping.Step = _snapping.Finer;
+        _snapping.On = true;
     }
 
     private bool IsTyping() => GetTopLevel(this)?.FocusManager?.GetFocusedElement() is TextBox;

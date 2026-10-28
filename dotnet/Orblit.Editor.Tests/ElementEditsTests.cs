@@ -78,6 +78,47 @@ public sealed class ElementEditsTests
         Assert.Equal(before, rig.Session.History.UndoLabel);
     }
 
+    [Fact]
+    public void TheFirstCycleGoesIntoTheGeometryAndLeavesTheModeAlone()
+    {
+        using var rig = new ModellingRig(cube: true);
+        var mode = rig.Session.ElementMode;
+
+        rig.Session.CycleMode();
+
+        Assert.Equal(EditContext.Element, rig.Session.Context);
+        Assert.Equal(mode, rig.Session.ElementMode);
+    }
+
+    [Fact]
+    public void ThenEachCycleGoesToTheNextMode()
+    {
+        using var rig = new ModellingRig(cube: true);
+        rig.Session.CycleMode();
+        var start = rig.Session.ElementMode;
+        var seen = new List<ElementMode>();
+
+        for (var press = 0; press < 3; press++)
+        {
+            rig.Session.CycleMode();
+            seen.Add(rig.Session.ElementMode);
+        }
+
+        Assert.Equal(3, seen.Distinct().Count());
+        Assert.Equal(start.Next(), seen[0]);
+        Assert.Equal(EditContext.Element, rig.Session.Context);
+    }
+
+    [Fact]
+    public void ACycleWithNothingToEditStaysOutsideTheGeometry()
+    {
+        using var rig = new ModellingRig();
+
+        rig.Session.CycleMode();
+
+        Assert.Equal(EditContext.Whole, rig.Session.Context);
+    }
+
     private static Offset OnTopFace(ViewportRig rig)
     {
         var shape = rig.Session.ChosenShape!;

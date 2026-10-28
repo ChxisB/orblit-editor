@@ -61,6 +61,21 @@ public sealed partial class EditorSession
         Changed?.Invoke();
     }
 
+    /// <summary>
+    /// The key that goes into the geometry and then round vertex, edge and face, so one key does both.
+    /// </summary>
+    public void CycleMode()
+    {
+        if (Context == EditContext.Element)
+        {
+            SetElementMode(ElementMode.Next());
+        }
+        else
+        {
+            SetContext(EditContext.Element);
+        }
+    }
+
     /// <summary>A click on a part: replaces the selection, or with <paramref name="add"/> toggles it in or out.</summary>
     public void PickElements(ElementSelection picked, bool add) => Reselect(add, next =>
     {

@@ -945,7 +945,7 @@ public sealed class SceneViewportState
         {
             if (grip.Scene[id] is { } item)
             {
-                changes[id] = new TransformChange(before, before + ShiftInParent(grip.Scene, item, shift));
+                changes[id] = new TransformChange(before, before + SceneMath.ShiftInParent(grip.Scene, item, shift));
             }
         }
 
@@ -978,13 +978,6 @@ public sealed class SceneViewportState
 
         return changes;
     }
-
-    // A world-space shift means something different inside a parent that is itself turned or scaled,
-    // so it is taken into that parent's frame before it is added to a local position.
-    private static Vector3 ShiftInParent(EditorScene scene, SceneObject item, Vector3 shift) =>
-        item.ParentId is { } parent && scene.Contains(parent)
-            ? Matrix4.Inverted(scene.WorldOf(parent)).Rotated3(shift)
-            : shift;
 
     private static Matrix3 RotationInParent(EditorScene scene, SceneObject item, Matrix3 turned)
     {

@@ -88,6 +88,15 @@ public static class SceneMath
         scene.Invalidate();
     }
 
+    /// <summary>
+    /// A shift in the world, taken into an object's parent frame so it can be added to a local position.
+    /// A world shift means something else inside a parent that is turned or scaled.
+    /// </summary>
+    public static Vector3 ShiftInParent(EditorScene scene, SceneObject item, Vector3 shift) =>
+        item.ParentId is { } parent && scene.Contains(parent)
+            ? Matrix4.Inverted(scene.WorldOf(parent)).Rotated3(shift)
+            : shift;
+
     /// <summary>The inverse of a matrix, or null when it has none.</summary>
     internal static Matrix4? TryInvert(Matrix4 matrix)
     {
