@@ -261,6 +261,11 @@
   words, its icon name, the modes it appears in and how many elements it
   needs. The selection keeps the order things were picked in, which is the
   order a bridge is wound in. There is no panel on it yet.
+- Add editing by part to the C# viewport. With a shape in Edit, the pointer
+  lights the face, edge or vertex under it, a click picks it, a box takes
+  everything inside it, and the handles move or turn what is selected.
+  Shift on a face extrudes it first. A drag is one undo step. There is no
+  panel or session on it yet.
 
 ## 1.26.0+27
 

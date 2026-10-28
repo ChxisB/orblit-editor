@@ -49,6 +49,9 @@ public sealed class SceneViewportState
 
     private GizmoMode _mode = GizmoMode.Move;
     private Grip? _grip;
+    private ElementGrip? _elementGrip;
+    private ElementSelection? _hovered;
+    private (Offset From, Offset To)? _box;
     private Offset? _orbitFrom;
     private Offset? _looking;
     private bool _flyLocked;
@@ -95,6 +98,22 @@ public sealed class SceneViewportState
     /// </summary>
     public event Action<string?, bool>? Picked;
 
+    /// <summary>
+    /// A part of the mesh was clicked, or nothing was and the selection is empty. The flag is set when
+    /// a modifier was held, which the shell reads as toggling it in the selection rather than
+    /// replacing the selection with it.
+    /// </summary>
+    public event Action<ElementSelection, bool>? ElementPicked;
+
+    /// <summary>
+    /// A box was drawn round parts of the mesh: everything inside it, which is empty when it caught
+    /// nothing. Said even then, so the shell can clear the selection.
+    /// </summary>
+    public event Action<ElementSelection, bool>? ElementsBoxed;
+
+    /// <summary>The parts of the mesh were dragged. The shell writes each frame as geometry.</summary>
+    public event Action<ElementDrag>? ElementsDragged;
+
     /// <summary>A few times a second while a scene is animating, so the other panels can keep up.</summary>
     public event Action? Clocked;
 
@@ -135,11 +154,54 @@ public sealed class SceneViewportState
     /// <summary>Whether a selected camera shows what it sees in a corner of the view.</summary>
     public bool PreviewsCameras { get; set; }
 
+    /// <summary>Whether the handles and the pointer are on whole objects or on parts of one.</summary>
+    public EditContext Context { get; set; }
+
+    /// <summary>Which kind of part a click, a box and the hover pick.</summary>
+    public ElementMode ElementMode { get; set; }
+
+    /// <summary>What is selected inside the mesh being edited. The shell owns it.</summary>
+    public ElementSelection ElementSelection { get; set; } = new();
+
+    /// <summary>Whether a click or a box also takes the parts behind the surface.</summary>
+    public bool SeeThroughElements { get; set; }
+
+    /// <summary>
+    /// Whether shift is held, which makes a drag on a selected face extrude it first. Separate from
+    /// the modifier that adds to a selection, because that one is also control and the command key.
+    /// </summary>
+    public bool ShiftHeld { get; set; }
+
     public GizmoMode Mode => _mode;
 
     public GizmoAxis? Hovered { get; private set; }
 
-    public GizmoAxis? Dragging => _grip?.Axis;
+    public GizmoAxis? Dragging => _grip?.Axis ?? _elementGrip?.Axis;
+
+    /// <summary>
+    /// The mesh being edited part by part, or null when the context is the whole object or what is
+    /// selected is not a shape with something in it.
+    /// </summary>
+    public EditingMesh? Editing
+    {
+        get
+        {
+            if (Context != EditContext.Element || EditingScene is not { } scene || Primary is not { } id)
+            {
+                return null;
+            }
+
+            return scene[id] is { Kind: ObjectKind.Shape, CurrentMesh: { IsEmpty: false } mesh }
+                ? new EditingMesh(mesh, scene.WorldOf(id))
+                : null;
+        }
+    }
+
+    /// <summary>The part under the pointer, to light it before it is clicked.</summary>
+    public ElementSelection? HoveredElement => Editing is null ? null : _hovered;
+
+    /// <summary>The box being drawn round parts of the mesh, once it is bigger than a hand shaking.</summary>
+    public Rect? Marquee => Editing is null ? null : Box();
 
     /// <summary>Whether the camera is flying: a button held to look around, or switched on.</summary>
     public bool Flying => _looking is not null || _flyLocked;
@@ -169,7 +231,7 @@ public sealed class SceneViewportState
                 return null;
             }
 
-            return new Gizmo(_mode, scene.WorldOf(id).GetTranslation(), projection);
+            return new Gizmo(_mode, ElementPivot() ?? scene.WorldOf(id).GetTranslation(), projection);
         }
     }
 
@@ -220,6 +282,15 @@ public sealed class SceneViewportState
     // The grid as it applies right now.
     private Snapping Snap =>
         SuspendSnapping ? new Snapping(false, Snapping.Step, Snapping.Angle, Snapping.To) : Snapping;
+
+    // Where the handles sit while editing parts: the middle of what is selected, in the world. The
+    // selection a drag is working on wins, because an extrude swaps it for the faces it made.
+    private Vector3? ElementPivot() =>
+        Editing is { } editing && (_elementGrip?.Selection ?? ElementSelection).PivotIn(editing.Mesh) is { } middle
+            ? editing.Transform.Transformed3(middle)
+            : null;
+
+    private bool ExtrudesOnDrag => ShiftHeld && ElementMode == ElementMode.Face && _mode == GizmoMode.Move;
 
     public void SelectMode(GizmoMode mode)
     {
@@ -513,10 +584,15 @@ public sealed class SceneViewportState
         return false;
     }
 
-    // Choosing what to work on. A drag that reaches here is not the selection's, so it goes on to
-    // turn the view.
+    // Choosing what to work on: an object, or while editing a mesh a part of it. A drag that reaches
+    // here is not the selection's, so outside editing it goes on to turn the view.
     private bool SelectionInput(ViewportGesture gesture)
     {
+        if (Editing is { } editing)
+        {
+            return ElementsInput(editing, gesture);
+        }
+
         if (gesture.Phase != ViewportPhase.Tap)
         {
             return false;
@@ -524,6 +600,93 @@ public sealed class SceneViewportState
 
         Pick(gesture.At, gesture.Add);
         return true;
+    }
+
+    // Never picks a different object while editing: a click that lands on empty space leaves the
+    // mesh and says so, and the shell decides what that means for the selection.
+    private bool ElementsInput(EditingMesh editing, ViewportGesture gesture)
+    {
+        var picker = PickerFor(editing, gesture);
+        switch (gesture.Phase)
+        {
+            case ViewportPhase.Hover:
+                return HoverElement(picker?.ElementAt(ElementMode, gesture.At));
+            case ViewportPhase.Leave:
+                return HoverElement(null);
+            case ViewportPhase.Tap:
+                ElementPicked?.Invoke(picker?.ElementAt(ElementMode, gesture.At) ?? new ElementSelection(), gesture.Add);
+                return true;
+            default:
+                return BoxInput(picker, gesture);
+        }
+    }
+
+    private bool BoxInput(MeshPicker? picker, ViewportGesture gesture)
+    {
+        switch (gesture.Phase)
+        {
+            case ViewportPhase.DragStart:
+                return DragBox(gesture.At, gesture.At);
+            case ViewportPhase.DragUpdate when _box is { } box:
+                return DragBox(box.From, gesture.At);
+            case ViewportPhase.DragEnd:
+                TakeBox(picker, gesture.Add);
+                return true;
+            case ViewportPhase.DragCancel:
+                return DropBox();
+            default:
+                return false;
+        }
+    }
+
+    private MeshPicker? PickerFor(EditingMesh editing, ViewportGesture gesture) =>
+        gesture.Projection is { } projection ? new MeshPicker(editing.Mesh, editing.Transform, projection, SeeThroughElements) : null;
+
+    private bool HoverElement(ElementSelection? found)
+    {
+        var was = _hovered;
+        _hovered = found is { IsEmpty: false } ? found : null;
+        if (!Same(was, _hovered))
+        {
+            Changed?.Invoke();
+        }
+
+        return _hovered is not null;
+    }
+
+    private static bool Same(ElementSelection? a, ElementSelection? b) =>
+        ReferenceEquals(a, b)
+        || (a is not null && b is not null
+            && a.Vertices.SequenceEqual(b.Vertices) && a.Edges.SequenceEqual(b.Edges) && a.Faces.SequenceEqual(b.Faces));
+
+    private bool DragBox(Offset from, Offset to)
+    {
+        _box = (from, to);
+        Changed?.Invoke();
+        return true;
+    }
+
+    private bool DropBox()
+    {
+        _box = null;
+        Changed?.Invoke();
+        return true;
+    }
+
+    // Under three pixels each way is a click that wobbled, which is not a box.
+    private Rect? Box() =>
+        _box is { } box && (Math.Abs(box.To.Dx - box.From.Dx) >= 3 || Math.Abs(box.To.Dy - box.From.Dy) >= 3)
+            ? Rect.Between(box.From, box.To)
+            : null;
+
+    private void TakeBox(MeshPicker? picker, bool add)
+    {
+        var box = Box();
+        DropBox();
+        if (box is { } rect && picker is not null)
+        {
+            ElementsBoxed?.Invoke(picker.ElementsIn(ElementMode, rect), add);
+        }
     }
 
     // A drag that nothing else wanted turns the view.
@@ -586,6 +749,11 @@ public sealed class SceneViewportState
             return false;
         }
 
+        if (Editing is { } editing && !ElementSelection.IsEmpty)
+        {
+            return GrabElements(editing, new Held(work.Gizmo, axis, grabbed));
+        }
+
         var items = Targets(work.Scene);
         _grip = new Grip(
             work.Scene,
@@ -597,6 +765,23 @@ public sealed class SceneViewportState
             AnchorOn(work.Scene, axis, work.Gizmo.Pivot),
             items.ToDictionary(item => item.Id, item => _mode == GizmoMode.Move ? item.Position.Clone() : item.Rotation.Clone()),
             items.ToDictionary(item => item.Id, item => work.Scene.WorldOf(item.Id).GetRotation()));
+        Changed?.Invoke();
+        return true;
+    }
+
+    private bool GrabElements(EditingMesh editing, Held held)
+    {
+        if (ElementGrip.Begin(editing, ElementSelection, held, ExtrudesOnDrag) is not { } grip)
+        {
+            return false;
+        }
+
+        _elementGrip = grip;
+        if (grip.Extrusion is { } extrusion)
+        {
+            ElementsDragged?.Invoke(extrusion);
+        }
+
         Changed?.Invoke();
         return true;
     }
@@ -638,6 +823,26 @@ public sealed class SceneViewportState
 
     // Applies the drag as it stands: one command, however many objects.
     private void DragTo(Offset at)
+    {
+        if (_elementGrip is { } held)
+        {
+            DragElements(held, at);
+        }
+        else
+        {
+            DragObjects(at);
+        }
+    }
+
+    private void DragElements(ElementGrip held, Offset at)
+    {
+        if (Handles is { } gizmo && held.Follow(gizmo, at, Snap) is { } drag)
+        {
+            ElementsDragged?.Invoke(drag);
+        }
+    }
+
+    private void DragObjects(Offset at)
     {
         if (_grip is not { } grip || Handles is not { } gizmo || _history is null)
         {
@@ -752,7 +957,7 @@ public sealed class SceneViewportState
 
     private void Release()
     {
-        if (_grip is null)
+        if (_grip is null && _elementGrip is null)
         {
             return;
         }
@@ -761,6 +966,7 @@ public sealed class SceneViewportState
         // took over it.
         _history?.Seal();
         _grip = null;
+        _elementGrip = null;
         Changed?.Invoke();
     }
 

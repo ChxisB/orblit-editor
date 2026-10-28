@@ -1,5 +1,7 @@
 namespace Orblit.Editor.Viewport;
 
+using System.Diagnostics;
+using Orblit.Editor.Core;
 using Orblit.Mesh;
 using Orblit.VectorMath;
 using MeshEdge = (int, int);
@@ -171,6 +173,24 @@ public sealed class MeshPicker(Mesh mesh, Matrix4 transform, ViewportProjection 
 
         return found;
     }
+
+    /// <summary>The one part of the kind being edited under a pixel, or an empty selection.</summary>
+    public ElementSelection ElementAt(ElementMode mode, Offset pixel) => mode switch
+    {
+        ElementMode.Vertex => new ElementSelection(vertices: VertexAt(pixel) is { } vertex ? [vertex] : null),
+        ElementMode.Edge => new ElementSelection(edges: EdgeAt(pixel) is { } edge ? [edge] : null),
+        ElementMode.Face => new ElementSelection(faces: FaceAt(pixel) is { } face ? [face] : null),
+        _ => throw new UnreachableException(),
+    };
+
+    /// <summary>Every part of the kind being edited inside a box.</summary>
+    public ElementSelection ElementsIn(ElementMode mode, Rect box) => mode switch
+    {
+        ElementMode.Vertex => new ElementSelection(vertices: VerticesIn(box)),
+        ElementMode.Edge => new ElementSelection(edges: EdgesIn(box)),
+        ElementMode.Face => new ElementSelection(faces: FacesIn(box)),
+        _ => throw new UnreachableException(),
+    };
 
     private bool IsWithin(Rect box, MeshEdge edge)
     {
