@@ -396,10 +396,11 @@ public sealed partial class EditorSession
         return true;
     }
 
-    private void Say(string text, SayLevel level)
+    /// <summary>Puts a line on the status bar and in the log, with any longer account kept in the log only.</summary>
+    public void Say(string text, SayLevel level, string detail = "")
     {
         Last = (text, level);
-        Log.Say(text, level);
+        Log.Say(text, level, detail);
         Said?.Invoke(text, level);
     }
 

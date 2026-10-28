@@ -35,6 +35,7 @@ public sealed class EditorWindow : Window
     private readonly Dictionary<string, Control> _panels = [];
     private readonly Dictionary<PanelKind, Func<Control>> _builders;
     private readonly HostPlatform _platform;
+    private readonly CodeEditor _code;
     private readonly IReadOnlyDictionary<KeyChord, ShortcutAction> _shortcuts;
     private readonly Dictionary<EditorVerb, Action> _verbs;
     private readonly DockHost _dock;
@@ -59,6 +60,9 @@ public sealed class EditorWindow : Window
         EditorVerb.CycleMode, EditorVerb.GridCoarser, EditorVerb.GridFiner, EditorVerb.NudgeX, EditorVerb.NudgeY, EditorVerb.NudgeZ,
     ];
 
+    // The kinds kept as text somebody writes by hand, which open in their code editor and not in a panel.
+    private static readonly HashSet<AssetKind> EditedAsText = [AssetKind.Script, AssetKind.Style, AssetKind.Native, AssetKind.Data, AssetKind.Material, AssetKind.Surface];
+
     /// <summary>The grid the window's views and keys share. Read by tests, which cannot reach the field.</summary>
     internal Snapping Snapping => _snapping;
 
@@ -69,9 +73,19 @@ public sealed class EditorWindow : Window
     /// a test without a native library wants.
     /// </param>
     public EditorWindow(EditorSession session, HostPlatform? platform = null, bool renderer = false)
+        : this(session, platform, renderer, CodeEditor.Here)
+    {
+    }
+
+    /// <param name="session">What the window shows and changes.</param>
+    /// <param name="platform">The host's keys, or the one this process runs on.</param>
+    /// <param name="renderer">Whether a viewport draws the scene with the renderer.</param>
+    /// <param name="code">What scripts and the project folder are handed to. A test's starts nothing.</param>
+    internal EditorWindow(EditorSession session, HostPlatform? platform, bool renderer, CodeEditor code)
     {
         _session = session;
         _renderer = renderer;
+        _code = code;
         _platform = platform ?? HostPlatforms.Current;
         _shortcuts = ShortcutMap.For(_platform);
         _builders = BuildersOfPanels();
@@ -79,7 +93,8 @@ public sealed class EditorWindow : Window
         Height = 900;
         Background = OrblitColors.Ground;
 
-        _menu = new EditorMenu(_session, _platform, AskLayoutName);
+        var project = new ProjectCommands(_code.Available, () => OpenInCode(), () => Reveal(_session.Workspace.ProjectDirectory));
+        _menu = new EditorMenu(_session, _platform, AskLayoutName, project);
         _verbs = new Dictionary<EditorVerb, Action>
         {
             [EditorVerb.Undo] = _session.Undo,
@@ -316,6 +331,7 @@ public sealed class EditorWindow : Window
             OnOpenAsset = OpenAsset,
             OnSelectAsset = _session.PickAsset,
             OnProblem = problem => _session.Report([problem]),
+            OnBuild = BuildScript,
         };
         return new AssetBrowserPanel(_session.Assets, _cooks, links, _renderer);
     }
@@ -323,6 +339,12 @@ public sealed class EditorWindow : Window
     // The other kinds open in the panels that edit them, and those arrive with their rows (5 to 13).
     private void OpenAsset(Asset asset)
     {
+        if (EditedAsText.Contains(asset.Kind))
+        {
+            OpenInCode(asset.Path);
+            return;
+        }
+
         if (asset.Kind == AssetKind.Clip)
         {
             _session.OpenClip(asset.Path);
@@ -354,6 +376,56 @@ public sealed class EditorWindow : Window
         }
     }
 
+    private void OpenInCode(string? file = null)
+    {
+        if (_code.Open(_session.Workspace.ProjectDirectory, file) is { } problem)
+        {
+            _session.Say(problem, SayLevel.Info);
+            return;
+        }
+
+        var editor = _code.Available ?? "your editor";
+        _session.Say(file is null ? $"Opened the project in {editor}." : $"Opened {Path.GetFileName(file)} in {editor}.", SayLevel.Info);
+    }
+
+    private void Reveal(string path)
+    {
+        if (_code.Reveal(path) is { } problem)
+        {
+            _session.Say(problem, SayLevel.Info);
+        }
+    }
+
+    // Internal for tests, which cannot open the tile's menu that runs it. The compile is off the UI
+    // thread, because a big file takes seconds and the window would stop drawing.
+    internal async void BuildScript(Asset asset)
+    {
+        var name = Path.GetFileName(asset.Path);
+        var directory = _session.Workspace.ProjectDirectory;
+        _session.Say($"Building {name}…", SayLevel.Info);
+        var built = await Task.Run(() => new ScriptBuilder(directory).Build(asset.Path));
+        if (!IsVisible)
+        {
+            return;
+        }
+
+        if (built.Ok)
+        {
+            var warned = built.Output.Length > 0;
+            _session.Say(warned ? $"Built {name}. With warnings." : $"Built {name}.", warned ? SayLevel.Warning : SayLevel.Info, built.Output);
+            if (!warned)
+            {
+                return;
+            }
+        }
+        else
+        {
+            _session.Say($"{name} did not build.", SayLevel.Error, built.Output);
+        }
+
+        await BuildDialog.Tell(this, built.Ok ? $"{name} built, with warnings" : $"{name} did not build", built.Output);
+    }
+
     private static TextBlock Placeholder(DockedPanel panel) => new TextBlock
     {
         Text = panel.Label,
@@ -383,7 +455,9 @@ public sealed class EditorWindow : Window
     // once the dialog is gone, so a command that opens its own dialog is not stacked under this one.
     private async void OpenPalette(string query = "")
     {
-        if (await PaletteDialog.Choose(this, PaletteEntries.For(_session, _platform), query) is { } chosen)
+        // Here and not in PaletteEntries, because handing a file to another program is the window's job.
+        PaletteEntry openInCode = new() { Group = PaletteGroup.Commands, Label = "Open in code editor", Icon = "code", OnRun = () => OpenInCode() };
+        if (await PaletteDialog.Choose(this, [.. PaletteEntries.For(_session, _platform), openInCode], query) is { } chosen)
         {
             chosen.OnRun();
         }
