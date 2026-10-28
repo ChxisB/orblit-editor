@@ -9,6 +9,7 @@ namespace Orblit.Editor;
 
 using DockedPanel = Orblit.Editor.Core.DockPanel;
 using Orblit.Editor.Core;
+using Orblit.Editor.Viewport;
 
 /// <summary>
 /// The editor's window: menus, the rail of modes, the panels and a line of status. It draws what an
@@ -23,6 +24,9 @@ public sealed class EditorWindow : Window
 {
     private readonly EditorSession _session;
     private readonly bool _renderer;
+
+    // One for the window, so the modelling panel and every view agree on where a drag lands.
+    private readonly Snapping _snapping = new();
     private readonly Dictionary<string, Control> _panels = [];
     private readonly HostPlatform _platform;
     private readonly IReadOnlyDictionary<KeyChord, ShortcutAction> _shortcuts;
@@ -180,7 +184,12 @@ public sealed class EditorWindow : Window
     {
         if (panel.Kind == PanelKind.Viewport)
         {
-            return new SceneViewport(_session, _renderer);
+            return new SceneViewport(_session, _renderer, snapping: _snapping);
+        }
+
+        if (panel.Kind == PanelKind.Modelling)
+        {
+            return new ModellingPanel(_session, _snapping);
         }
 
         if (panel.Kind == PanelKind.Outliner)

@@ -180,4 +180,21 @@ public sealed class SnappingTests
         Assert.Contains(snap.Coarser, Snapping.Steps);
         Assert.Contains(snap.Finer, Snapping.Steps);
     }
+
+    [Fact]
+    public void ChangingSnappingIsSaidOnceAndOnlyWhenItChanged()
+    {
+        var snapping = new Snapping();
+        var said = 0;
+        snapping.Changed += () => said++;
+
+        snapping.On = true;
+        snapping.On = false;
+        snapping.On = false;
+        snapping.To = SnapTo.Top;
+        snapping.Step = 1;
+        snapping.Step = 1;
+
+        Assert.Equal(3, said);
+    }
 }

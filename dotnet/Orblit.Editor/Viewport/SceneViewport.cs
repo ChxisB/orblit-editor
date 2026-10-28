@@ -70,13 +70,14 @@ public sealed class SceneViewport : Border
     public SceneViewport(
         EditorSession session,
         bool renderer = true,
-        Func<SceneObject, (Vector3 Min, Vector3 Max)?>? boundsOf = null)
+        Func<SceneObject, (Vector3 Min, Vector3 Max)?>? boundsOf = null,
+        Snapping? snapping = null)
     {
         _session = session;
         var workspace = session.Workspace;
         _grids = new GridStore(workspace.ProjectDirectory);
         _geometry = new GeometryStore(workspace.ProjectDirectory);
-        _state = new SceneViewportState(workspace, new Snapping(), session.History, Gizmos) { BoundsOf = boundsOf, Sketch = session.Sketch };
+        _state = new SceneViewportState(workspace, snapping ?? new Snapping(), session.History, Gizmos) { BoundsOf = boundsOf, Sketch = session.Sketch };
         _brush = new TerrainBrushInput(session.Terrains, session.History, session.TerrainTarget);
         _overlay = new ViewportOverlay(_state, session);
 
@@ -140,6 +141,7 @@ public sealed class SceneViewport : Border
         _state.DrawFinished += _session.FinishDrawing;
         _state.Changed += MarkDirty;
         _state.Clocked += MarkDirty;
+        _state.Snapping.Changed += MarkDirty;
         _session.Changed += OnSessionChanged;
         _session.SceneReplaced += OnSceneReplaced;
         _session.History.Changed += MarkDirty;
@@ -161,6 +163,7 @@ public sealed class SceneViewport : Border
         _state.DrawFinished -= _session.FinishDrawing;
         _state.Changed -= MarkDirty;
         _state.Clocked -= MarkDirty;
+        _state.Snapping.Changed -= MarkDirty;
         _session.Changed -= OnSessionChanged;
         _session.SceneReplaced -= OnSceneReplaced;
         _session.History.Changed -= MarkDirty;
@@ -430,6 +433,7 @@ public sealed class SceneViewport : Border
         _state.Context = _session.Context;
         _state.ElementMode = _session.ElementMode;
         _state.ElementSelection = _session.Elements;
+        _state.SeeThroughElements = _session.SeeThrough;
         _state.ModeInput = _session.Mode.UsesBrush ? _brush.Handle : null;
         if (!_session.Mode.UsesBrush)
         {

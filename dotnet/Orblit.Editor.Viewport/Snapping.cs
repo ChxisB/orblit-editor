@@ -63,17 +63,44 @@ public sealed class Snapping(bool on = true, double step = 0.5, double angle = 1
 {
     private static readonly double[] StepValues = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 2.0];
 
+    private bool _on = on;
+    private double _step = step;
+    private double _angle = angle;
+    private SnapTo _to = to;
+
+    /// <summary>
+    /// Said when any of the four changes, so the panel that sets them and the view that draws the
+    /// grid agree without either knowing the other.
+    /// </summary>
+    public event Action? Changed;
+
     /// <summary>Whether it applies at all.</summary>
-    public bool On { get; set; } = on;
+    public bool On
+    {
+        get => _on;
+        set => Set(ref _on, value);
+    }
 
     /// <summary>How far apart the grid lines are, in metres.</summary>
-    public double Step { get; set; } = step;
+    public double Step
+    {
+        get => _step;
+        set => Set(ref _step, value);
+    }
 
     /// <summary>How many degrees a turn lands on.</summary>
-    public double Angle { get; set; } = angle;
+    public double Angle
+    {
+        get => _angle;
+        set => Set(ref _angle, value);
+    }
 
     /// <summary>Which part of the thing being dragged is put on the line.</summary>
-    public SnapTo To { get; set; } = to;
+    public SnapTo To
+    {
+        get => _to;
+        set => Set(ref _to, value);
+    }
 
     /// <summary>
     /// The steps offered: a millimetre up to two metres.
@@ -197,5 +224,17 @@ public sealed class Snapping(bool on = true, double step = 0.5, double angle = 1
             _ => throw new UnreachableException(),
         };
         return at - origin.Dot(direction);
+    }
+
+    // Only a real change is announced, because the view redraws on it.
+    private void Set<T>(ref T field, T value)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value))
+        {
+            return;
+        }
+
+        field = value;
+        Changed?.Invoke();
     }
 }
