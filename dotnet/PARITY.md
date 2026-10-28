@@ -254,6 +254,10 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | `cpp_binding_test.dart` | `ScriptBuilderTests`, `DataObjectTests`, `AssetsTests` | 14 | 14 | 14 | 0 | done. The nine that compile real C++ are `ScriptBuilderTests`. The four that read the header's text are the C++ golden in `DataObjectTests`. Which files offer a build is a theory in `AssetsTests` |
 | none | `CodeEditorTests` | 0 | 0 | 0 | 17: the first editor on the path, an app with no command on a Mac, looking once, `where` on Windows, a file opened in its folder, a file given as a path to an editor without `--goto`, a folder alone, opening by bundle, handing on to the next, no editor, a folder that has gone, revealing on each desktop, and what cannot be revealed | added |
 | none | `EditorWindowCodeTests` | 0 | 0 | 0 | 9: the File menu's labels, opening the project, Show in Finder, no editor, a script opened from Project, the palette, a build that fails, a window closed during a build, and a build with warnings | added |
+| `pack_export_test.dart` | `PackExportTests` | 24 | 24 | 24 | 3: a pack set aside a second time under the same hash, a patch on a pack two files hold, and the folder listed newest first | done. The cases cook for real, as Dart's do |
+| `export_session_test.dart` | `ExportSessionTests` | 15 | 15 | 15 | 1: a slow broken read for an earlier pack showing no problem | done. The runner, the lister and the reader are one `IExportWork`. The dispose case also checks that nobody is told |
+| `export_dialog_test.dart` | `ExportDialogTests` | 11 | 12 | 12 | 0 | done. The closing case also checks that the window's own close is refused. Dart's fit test checked the dialog inside a small editor window. The C# dialog is a window of its own, so the two sizes check that its buttons stay in view over a full folder |
+| `editor_shell_export_test.dart` | `EditorWindowExportTests` | 3 | 3 | 3 | 0 | done. Dart's Scene menu is the C# File menu |
 
 Gap in row 5: a picture is shown in a set and can be cleared, but not dropped on one. The Dart section took a drop from the
 asset browser, and the C# browser has no drag source yet. The decoder (part 5e) reads a picture with SkiaSharp 3.119.4,
@@ -297,6 +301,17 @@ to 71. C# passes `--goto` only to the VS Code family. The Orblit.Native package
 does not copy the engine headers it carries, so the editor's project copies
 them itself. The console, the data panel, the profile panel, the code editor
 and the build have run headless only, never in a real window.
+
+Gaps in row 11: each target cooks on `Task.Run`, where Dart used an isolate.
+A task keeps the window drawing. Unlike an isolate, it does not keep a cook
+that runs out of memory from taking the editor down. `File.Move` refuses a
+name that is taken, so setting a pack aside moves it with overwrite on.
+Dart's spinner beside the progress line is not ported. The export dialog,
+the folder and the cook have run headless only, never in a real window.
+The row 11 review found seven faults that C# copies from Dart, items 72 to
+78 of decision 80, and one that was C# only. A whole pack that comes back
+to an earlier state is in the folder twice, and building a chain threw on
+the second. C# keeps one, as Dart's map does.
 
 The Dart outliner test file is `editor_shell_hierarchy_test.dart`. There is no
 `outliner_test.dart`. The drag itself is not driven headless. The tests call

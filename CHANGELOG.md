@@ -377,6 +377,14 @@
   dialog. A number that is not finite is refused. Selecting a scene row
   puts the inspector back. The profile panel times no spans, and a gauge
   reads "12" where Dart reads "12.0".
+- Add the export dialog to the C# editor. File › Export… and the
+  palette open it. It cooks a pack for each chosen target, or a patch
+  on a pack already exported, and shows each target as it lands. It
+  lists what the exports folder holds and what a pack serves, and it
+  cannot be closed while a cook runs.
+- The C# export differs from the Dart one in small ways. Each target
+  cooks on a task, not an isolate, so a cook that runs out of memory
+  takes the editor with it. The progress line has no spinner.
 
 ## 1.26.0+27
 
