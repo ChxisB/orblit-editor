@@ -215,6 +215,7 @@ public sealed class EditorWindow : Window
         [PanelKind.Modelling] = () => new ModellingPanel(_session, _snapping),
         [PanelKind.Outliner] = () => new OutlinerPanel(_session, _platform, () => OpenPalette("Add ")),
         [PanelKind.Project] = Project,
+        [PanelKind.Console] = () => new ConsolePanel(_session.Log, _session.TextClipboard),
         [PanelKind.Timeline] = Timeline,
         [PanelKind.CutsceneTimeline] = CutsceneTimeline,
         [PanelKind.ShotPreview] = () => new ShotPreviewPanel(_session, _renderer),

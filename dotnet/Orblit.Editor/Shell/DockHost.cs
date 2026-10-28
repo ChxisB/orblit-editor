@@ -182,7 +182,8 @@ public sealed class DockHost : ContentControl
 
     private StackPanel Tab(DockGroup group, DockedPanel panel)
     {
-        var active = group.Current == panel;
+        var showing = group.Current == panel;
+        var active = showing && !group.Collapsed;
         var label = new Button
         {
             Name = $"tab_{panel.Id}",
@@ -192,7 +193,9 @@ public sealed class DockHost : ContentControl
             Background = active ? OrblitColors.Raised : Brushes.Transparent,
             Foreground = active ? OrblitColors.Ink : OrblitColors.InkDim,
         };
-        label.Click += (_, _) => LayoutChanged?.Invoke(_layout.Show(panel.Id));
+        // The showing tab of a group that folds folds it, so the console opens and closes from its tab.
+        label.Click += (_, _) => LayoutChanged?.Invoke(
+            showing && _layout.CanCollapse(group.Id) ? _layout.Collapse(group.Id, !group.Collapsed) : _layout.Show(panel.Id));
 
         var close = new Button
         {
