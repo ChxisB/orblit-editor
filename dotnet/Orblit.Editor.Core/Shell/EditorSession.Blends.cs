@@ -39,36 +39,8 @@ public sealed partial class EditorSession
     public IReadOnlyList<string> ClipNames() =>
         [.. Assets.Find(asset => asset.Kind == AssetKind.Clip).Select(Path.GetFileNameWithoutExtension).OfType<string>()];
 
-    // Says what could not be read, and answers whether the blend is open.
-    private bool ReadBlend(string path)
-    {
-        IReadOnlyList<string> problems;
-        try
-        {
-            problems = Blends.OpenFile(path);
-        }
-        catch (BlendFormatException error)
-        {
-            Say($"{Path.GetFileName(path)} is not a blend: {error.Message}", SayLevel.Error);
-            return false;
-        }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-        {
-            Say($"{Path.GetFileName(path)} could not be read: {error.Message}", SayLevel.Error);
-            return false;
-        }
-
-        if (problems.Count > 0)
-        {
-            Say(
-                problems.Count == 1
-                    ? problems[0]
-                    : $"{problems.Count} things in that blend could not be read. First: {problems[0]}",
-                SayLevel.Warning);
-        }
-
-        return true;
-    }
+    private bool ReadBlend(string path) =>
+        ReadFile(path, "blend", Blends.OpenFile, error => error is BlendFormatException);
 
     // Writes every blend with changes, and says which could not be written.
     private void SaveBlends()

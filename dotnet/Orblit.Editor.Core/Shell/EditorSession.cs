@@ -41,6 +41,8 @@ public sealed partial class EditorSession
         Skeletons = new ModelSkeletons(workspace.ProjectDirectory);
         Clips = new ClipBench(history, () => workspace.Loaded?.Scene);
         Clips.Changed += OnClipsChanged;
+        Cutscenes = new ClipBench(history, () => workspace.Loaded?.Scene, PlayedOn.Scene);
+        Cutscenes.Changed += OnClipsChanged;
         Blends = new BlendBench(history);
         Blends.Changed += OnBlendsChanged;
         Terrains = new TerrainBench(history, workspace.ProjectDirectory, problem => Say(problem, SayLevel.Error));
@@ -118,8 +120,9 @@ public sealed partial class EditorSession
     public bool IsUnsaved(SceneEntry entry) =>
         entry.IsLoaded && (entry.NeverWritten || History.StampFor(entry.Id) != entry.SavedStamp);
 
-    /// <summary>Whether a scene, a clip, a blend or a terrain has changes that are not on disk.</summary>
-    public bool AnyUnsaved => Workspace.Entries.Any(IsUnsaved) || Clips.AnyUnsaved || Blends.AnyUnsaved || Terrains.AnyUnsaved;
+    /// <summary>Whether a scene, a clip, a cutscene, a blend or a terrain has changes that are not on disk.</summary>
+    public bool AnyUnsaved =>
+        Workspace.Entries.Any(IsUnsaved) || Clips.AnyUnsaved || Cutscenes.AnyUnsaved || Blends.AnyUnsaved || Terrains.AnyUnsaved;
 
     /// <summary>Switches to a mode, with the panels as they were last left in it.</summary>
     public void EnterMode(EditorMode mode)
@@ -129,6 +132,7 @@ public sealed partial class EditorSession
             return;
         }
 
+        Pilot(null);
         Mode.OnLeave?.Invoke();
         Mode = mode;
         Layout = LayoutOf(mode);

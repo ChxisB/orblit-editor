@@ -120,6 +120,25 @@ public sealed class DockLayout
         revision: 1);
 
     /// <summary>
+    /// Making cutscenes. The scene view has the finished shot beside it, so a camera is framed against
+    /// what it will show. The shots come first on the right. The cutscene is open under the view and as
+    /// tall as the timeline is in Animation, because timing is the work here.
+    /// </summary>
+    public static DockLayout Cinematics() => Columns(
+        new DockSplit(
+            "views",
+            DockAxis.Horizontal,
+            [
+                new DockGroup("centre", [new DockPanel("scene", PanelKind.Viewport)]),
+                new DockGroup("finished", [new DockPanel("shot", PanelKind.ShotPreview)]),
+            ],
+            [0.5, 0.5]),
+        bottom: [new DockPanel("cutsceneTimeline", PanelKind.CutsceneTimeline)],
+        right: [new DockPanel("shots", PanelKind.ShotList), new DockPanel("inspector", PanelKind.Inspector)],
+        folded: false,
+        below: 0.4);
+
+    /// <summary>
     /// Four scene views onto the same world, the way a modelling tool arranges them. The reason the
     /// layout is data at all.
     /// </summary>

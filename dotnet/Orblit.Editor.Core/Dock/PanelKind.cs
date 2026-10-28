@@ -41,12 +41,24 @@ public sealed class PanelKind : IEquatable<PanelKind>
     /// <summary>The graph of a blend: its states as boxes, its changes as arrows.</summary>
     public static readonly PanelKind BlendGraph = new("blendGraph", "Blend", "hub_outlined");
 
+    /// <summary>The finished shot, beside the scene view while a camera is being framed.</summary>
+    public static readonly PanelKind ShotPreview = new("shotPreview", "Shot", "movie_outlined");
+
+    /// <summary>The open cutscene's shots, one card each.</summary>
+    public static readonly PanelKind ShotList = new("shots", "Shots", "video_library_outlined");
+
+    /// <summary>The cutscene's keys, marks and shots over time.</summary>
+    public static readonly PanelKind CutsceneTimeline = new("cutsceneTimeline", "Cutscene", "view_timeline_outlined");
+
     /// <summary>
     /// The kinds the editor has always had, which a layout can be read against before anything else
     /// has registered.
     /// </summary>
     public static readonly IReadOnlyList<PanelKind> BuiltIn =
-        [Outliner, Inspector, Viewport, Game, Project, Console, Uvs, Modelling, Timeline, Profile, TerrainBrush, BlendGraph];
+    [
+        Outliner, Inspector, Viewport, Game, Project, Console, Uvs, Modelling, Timeline, Profile, TerrainBrush, BlendGraph,
+        ShotPreview, ShotList, CutsceneTimeline,
+    ];
 
     public PanelKind(string name, string label, string icon, bool repeatable = false)
     {

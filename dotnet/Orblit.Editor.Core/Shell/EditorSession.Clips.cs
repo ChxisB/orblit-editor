@@ -120,17 +120,21 @@ public sealed partial class EditorSession
         History.Seal();
     }
 
-    // Says what could not be read, and answers whether the clip is open.
-    private bool ReadClip(string path)
+    private bool ReadClip(string path) =>
+        ReadFile(path, "clip", Clips.OpenFile, error => error is ClipFormatException);
+
+    // Opens a file of a kind a bench reads, says what could not be read, and answers whether it is
+    // open. The noun is what the messages call the file.
+    private bool ReadFile(string path, string noun, Func<string, IReadOnlyList<string>> open, Func<Exception, bool> isFormat)
     {
         IReadOnlyList<string> problems;
         try
         {
-            problems = Clips.OpenFile(path);
+            problems = open(path);
         }
-        catch (ClipFormatException error)
+        catch (Exception error) when (isFormat(error))
         {
-            Say($"{Path.GetFileName(path)} is not a clip: {error.Message}", SayLevel.Error);
+            Say($"{Path.GetFileName(path)} is not a {noun}: {error.Message}", SayLevel.Error);
             return false;
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
@@ -144,7 +148,7 @@ public sealed partial class EditorSession
             Say(
                 problems.Count == 1
                     ? problems[0]
-                    : $"{problems.Count} things in that clip could not be read. First: {problems[0]}",
+                    : $"{problems.Count} things in that {noun} could not be read. First: {problems[0]}",
                 SayLevel.Warning);
         }
 
@@ -248,10 +252,10 @@ public sealed partial class EditorSession
         }
     }
 
-    // Writes every clip with changes, and says which could not be written.
+    // Writes every clip and cutscene with changes, and says which could not be written.
     private void SaveClips()
     {
-        foreach (var problem in Clips.SaveAll())
+        foreach (var problem in Clips.SaveAll().Concat(Cutscenes.SaveAll()))
         {
             Say(problem, SayLevel.Error);
         }
@@ -291,19 +295,35 @@ public sealed partial class EditorSession
     // show movement. Split them when playing a clip makes the outliner stutter.
     private void OnClipsChanged()
     {
-        var change = Workspace.Loaded?.Scene is { } scene
-            ? _preview.Pose(scene, Clips.Clip, Clips.Owner, Clips.At)
-            : PoseChange.None;
+        var change = Workspace.Loaded?.Scene is { } scene ? Pose(scene) : PoseChange.None;
         if (change != PoseChange.None)
         {
             Workspace.Touched();
         }
 
-        if (Clips.AnyUnsaved != _clipsUnsaved)
+        if (ClipsUnsavedFlipped())
         {
-            _clipsUnsaved = Clips.AnyUnsaved;
             Changed?.Invoke();
         }
+    }
+
+    // Cinematics shows the cutscene, which names things by the scene's own ids. Every other mode shows
+    // the clip, which is played by one object.
+    private PoseChange Pose(EditorScene scene) => Mode.Name == "cinematics"
+        ? _preview.PoseAll(scene, Cutscenes.Clip, Cutscenes.At)
+        : _preview.Pose(scene, Clips.Clip, Clips.Owner, Clips.At);
+
+    // Whether a clip or a cutscene having changes has just become true or false.
+    private bool ClipsUnsavedFlipped()
+    {
+        var unsaved = Clips.AnyUnsaved || Cutscenes.AnyUnsaved;
+        if (unsaved == _clipsUnsaved)
+        {
+            return false;
+        }
+
+        _clipsUnsaved = unsaved;
+        return true;
     }
 
     // A change from the undo stack can add or take away an animation, which the timeline follows.
@@ -314,7 +334,7 @@ public sealed partial class EditorSession
         _blendsUnsaved = Blends.AnyUnsaved;
         var layout = Layout;
         FollowMotion();
-        if (!ReferenceEquals(layout, Layout))
+        if (ClipsUnsavedFlipped() || !ReferenceEquals(layout, Layout))
         {
             Changed?.Invoke();
         }

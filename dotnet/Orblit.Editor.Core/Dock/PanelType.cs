@@ -36,14 +36,20 @@ public static class PanelTypes
 {
     /// <summary>
     /// The panels the editor has always had, in the order the View menu lists them. The first scene
-    /// view opens as <c>scene</c>, which is what every layout written before this called it.
+    /// view opens as <c>scene</c>, which is what every layout written before this called it, and the
+    /// finished shot as <c>shot</c>, which the Cinematics layout calls it.
     /// </summary>
     public static Registry<PanelType> BuiltIn()
     {
         var panels = new Registry<PanelType>();
         foreach (var kind in PanelKind.BuiltIn)
         {
-            panels.Register(new PanelType(kind, kind == PanelKind.Viewport ? "scene" : null));
+            panels.Register(new PanelType(kind, kind.Name switch
+            {
+                "viewport" => "scene",
+                "shotPreview" => "shot",
+                _ => null,
+            }));
         }
 
         return panels;
