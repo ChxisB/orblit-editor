@@ -30,6 +30,12 @@ public sealed record EditorMode : IRegistered
     /// <summary>Whether the shelf of cutscene buttons shows over the panels.</summary>
     public bool UsesCutscenes { get; init; }
 
+    /// <summary>
+    /// Whether it lays out interfaces. Entering opens the scene's interface when nothing is open, and
+    /// Delete takes out an element, since the scene's selection is not on screen there.
+    /// </summary>
+    public bool UsesInterfaces { get; init; }
+
     /// <summary>Sets up the job as the editor switches to it. Null leaves everything as it was.</summary>
     public Action? OnEnter { get; init; }
 
@@ -40,8 +46,7 @@ public sealed record EditorMode : IRegistered
 public static class EditorModes
 {
     /// <summary>
-    /// The modes whose panels exist in the core so far, in the order work usually goes. Interface joins
-    /// them with its panels.
+    /// The modes the editor has, in the order work usually goes.
     /// </summary>
     public static Registry<EditorMode> Standard()
     {
@@ -51,6 +56,7 @@ public static class EditorModes
         modes.Register(new EditorMode { Name = "terrain", Label = "Terrain", Icon = "landscape_outlined", Layout = DockLayout.Terrain, UsesBrush = true });
         modes.Register(new EditorMode { Name = "animation", Label = "Animation", Icon = "animation", Layout = DockLayout.Animation });
         modes.Register(new EditorMode { Name = "cinematics", Label = "Cinematics", Icon = "movie_outlined", Layout = DockLayout.Cinematics, UsesCutscenes = true });
+        modes.Register(new EditorMode { Name = "interface", Label = "Interface", Icon = "web_asset", Layout = DockLayout.Interface, UsesInterfaces = true });
         return modes;
     }
 }

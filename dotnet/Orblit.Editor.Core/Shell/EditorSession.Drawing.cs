@@ -82,12 +82,19 @@ public sealed partial class EditorSession
         Changed?.Invoke();
     }
 
-    /// <summary>Takes a point back while drawing, and otherwise deletes what is selected.</summary>
+    /// <summary>
+    /// Takes a point back while drawing, takes out the selected element while laying out an interface,
+    /// and otherwise deletes what is selected.
+    /// </summary>
     public void Backspace()
     {
         if (Sketch.Tool.IsDrawing())
         {
             TakeBackPoint();
+        }
+        else if (Mode.UsesInterfaces)
+        {
+            Interfaces.RemoveSelected();
         }
         else
         {
