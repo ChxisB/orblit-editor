@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -63,6 +64,7 @@ public sealed class SceneViewport : Border
     private readonly RendererViewport? _renderer;
     private readonly ToolPalette _palette;
     private readonly WrapPanel _chips = new() { Orientation = Orientation.Horizontal };
+    private readonly FrameRate _frames = new();
     private Point? _downAt;
     private bool _dragging;
     private bool _dirty = true;
@@ -546,7 +548,9 @@ public sealed class SceneViewport : Border
             _dirty = false;
             // Only a drawn frame counts. A still view adds none, so the gap before its next one is rest.
             Profiler.Frame();
+            var started = Stopwatch.GetTimestamp();
             Redraw(elapsed);
+            _frames.Took(now, Stopwatch.GetElapsedTime(started), GpuTime());
         }
 
         if (_state.NeedsClock)
@@ -577,6 +581,10 @@ public sealed class SceneViewport : Border
 
         _renderer.Frame(Build(), elapsed.TotalSeconds);
     }
+
+    // The renderer's median over its recent frames. Nought until the backend has reported, and with no renderer.
+    private TimeSpan GpuTime() =>
+        _renderer?.Renderer is { } renderer ? TimeSpan.FromMilliseconds(renderer.GetStats().GpuMilliseconds) : TimeSpan.Zero;
 
     private RenderScene Build()
     {
@@ -644,7 +652,8 @@ public sealed class SceneViewport : Border
         }
 
         var scene = _session.Workspace.Loaded?.Scene;
-        return new ChipSpec(scene is null ? "No scene" : $"{scene.Objects.Count(item => item.IsDrawable)} drawn");
+        var summary = scene is null ? "No scene" : $"{scene.Objects.Count(item => item.IsDrawable)} drawn";
+        return new ChipSpec($"{ViewportChips.Frames(_frames.Reading)} · {summary}");
     }
 
     private ChipSpec? DraggedChip()

@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
@@ -73,6 +74,17 @@ public sealed class SceneViewportTests
 
         Assert.False(rig.View.State.Snapping.On);
         Assert.True(rig.Says("Snap off"));
+    });
+
+    // With no renderer the card's half is nought, so the editor's own work is the slower half.
+    [Fact]
+    public Task TheStatsChipSaysHowFastTheFramesAre() => Headless.Run(() =>
+    {
+        using var rig = new ViewportRig();
+
+        rig.Session.ToggleStats();
+
+        Assert.Contains(rig.Words(), one => Regex.IsMatch(one, @"^\d+ fps · \d+\.\d ms cpu · (\d+ drawn|No scene)$"));
     });
 
     [Fact]

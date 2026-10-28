@@ -7,6 +7,8 @@ using Avalonia.Media.Immutable;
 
 namespace Orblit.Editor;
 
+using Orblit.Editor.Viewport;
+
 /// <summary>One chip over the view: its words, whether it is lit, and what a tap does.</summary>
 internal sealed record ChipSpec(string Text, bool On = false, string? Tip = null, Action? Tap = null);
 
@@ -37,6 +39,18 @@ internal static class ViewportChips
     {
         var text = value.ToString("F" + decimals, CultureInfo.InvariantCulture);
         return text.StartsWith('-') ? text : "+" + text;
+    }
+
+    /// <summary>The rate, and the slower half of a frame with which half it is.</summary>
+    public static string Frames(FrameReading? reading)
+    {
+        if (reading is not { } read)
+        {
+            return "— fps";
+        }
+
+        var ms = read.GpuBound ? read.GpuMs : read.BuildMs;
+        return $"{Rounded(read.Fps)} fps · {ms.ToString("0.0", CultureInfo.InvariantCulture)} ms {(read.GpuBound ? "gpu" : "cpu")}";
     }
 
     public static Border Build(ChipSpec spec)

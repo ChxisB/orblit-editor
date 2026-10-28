@@ -73,6 +73,12 @@ public static class HostPlatforms
     /// </summary>
     public static bool CommandIsMeta(this HostPlatform platform) => platform == HostPlatform.MacOS;
 
+    /// <summary>
+    /// Whether the renderer runs here. Its native library ships for macOS alone so far, and every panel
+    /// that would show a scene asks this one place, so a second platform is one line to change.
+    /// </summary>
+    public static bool HasRenderer(this HostPlatform platform) => platform == HostPlatform.MacOS;
+
     /// <summary>The label for the Command modifier, for menus and tooltips.</summary>
     public static string CommandKeyLabel(this HostPlatform platform) => platform.CommandIsMeta() ? "⌘" : "Ctrl";
 

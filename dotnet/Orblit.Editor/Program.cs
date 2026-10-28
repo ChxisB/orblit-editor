@@ -46,7 +46,7 @@ internal static class Program
             PictureDecoder = new SkiaPictureDecoder(),
         };
         session.Report(opened.Problems);
-        var window = new EditorWindow(session, renderer: true);
+        var window = new EditorWindow(session, renderer: HostPlatforms.Current.HasRenderer());
         clipboard.Attach(window);
         UiErrors.ToLog(session.Log, window);
         return window;
