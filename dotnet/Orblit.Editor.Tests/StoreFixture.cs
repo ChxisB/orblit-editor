@@ -48,14 +48,13 @@ internal sealed class StoreFixture
         }
 
         Write(Path.Combine(source, "shots", "a.png"), PngBytes);
+        // One line, byte for byte what Dart's jsonEncode writes, so both editors pack the same kit.
         Write(
             Path.Combine(source, "kit.json"),
             System.Text.Encoding.UTF8.GetBytes(
-                """
-                {"slug":"crates","publisher":"brass-lamp","name":"Crates","summary":"Some crates.","version":"1.0.0",
-                "licence":{"spdx":"MIT","url":"https://example.com/licence"},"engine":{"from":"0.30.0","to":"0.40.0"},
-                "tags":["props"],"previews":["shots/a.png"]}
-                """));
+                """{"slug":"crates","publisher":"brass-lamp","name":"Crates","summary":"Some crates.","version":"1.0.0","licence":"""
+                + """{"spdx":"MIT","url":"https://example.com/licence"},"engine":{"from":"0.30.0","to":"0.40.0"},"tags":"""
+                + """["props"],"previews":["shots/a.png"]}"""));
         var output = Path.Combine(scratch, "crates.opack");
         var summary = await KitPacking.PackAsync(source, output);
         var pack = await File.ReadAllBytesAsync(output);
