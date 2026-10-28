@@ -257,6 +257,9 @@ public sealed partial class EditorSession
     // A change from the undo stack can add or take away an animation, which the timeline follows.
     private void OnHistoryChanged()
     {
+        // An edit applies before the stack records it, so the bench's own change reads the old answer.
+        // Taken here, the bench telling us it was saved is a flip we see.
+        _blendsUnsaved = Blends.AnyUnsaved;
         var layout = Layout;
         FollowMotion();
         if (!ReferenceEquals(layout, Layout))
