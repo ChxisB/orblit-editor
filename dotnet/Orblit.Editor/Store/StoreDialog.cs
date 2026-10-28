@@ -18,12 +18,12 @@ public sealed class StoreDialog : Window
     private readonly StoreDetail _detail;
 
     /// <param name="session">What the dialog shows. The dialog disposes of it once closed.</param>
-    /// <param name="onInstall">Called with the kit and the release the person is looking at.</param>
-    public StoreDialog(StoreSession session, Action<KitRow, KitRelease> onInstall)
+    /// <param name="installFor">Makes the install of the kit and the release the person chose.</param>
+    public StoreDialog(StoreSession session, Func<KitRow, KitRelease, InstallSession> installFor)
     {
         _session = session;
         _browse = new StoreBrowse(session);
-        _detail = new StoreDetail(session, onInstall);
+        _detail = new StoreDetail(session, (row, release) => _ = InstallDialog.Open(this, installFor(row, release)));
         Title = "Kit store";
         Width = 720;
         Height = 600;
@@ -36,8 +36,8 @@ public sealed class StoreDialog : Window
     }
 
     /// <summary>Shows the dialog over <paramref name="owner"/> until it is closed.</summary>
-    public static Task Open(Window owner, StoreSession session, Action<KitRow, KitRelease> onInstall) =>
-        new StoreDialog(session, onInstall).ShowDialog(owner);
+    public static Task Open(Window owner, StoreSession session, Func<KitRow, KitRelease, InstallSession> installFor) =>
+        new StoreDialog(session, installFor).ShowDialog(owner);
 
     private Grid Layout()
     {

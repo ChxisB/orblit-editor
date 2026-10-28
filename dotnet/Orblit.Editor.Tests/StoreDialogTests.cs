@@ -6,20 +6,44 @@ namespace Orblit.Editor.Tests;
 using Orblit.Asset;
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/store_dialog_test.dart. The store dialog on a fake network.
+// Dart: orblit-editor/test/store_dialog_test.dart. The store and install dialogs on a fake network and a
+// real temporary project.
 public sealed class StoreDialogTests : IAsyncLifetime
 {
+    private const string Into = "assets/kits/crates";
+
     private readonly DirectoryInfo _scratch = Directory.CreateTempSubdirectory("orblit_store_dialog_");
     private readonly List<MapTransport> _made = [];
     private StoreFixture _fixture = null!; // set in InitializeAsync, which runs before every test
+    private (KitRow Row, KitRelease Release) _listing;
 
-    public async ValueTask InitializeAsync() => _fixture = await StoreFixture.BuildAsync(_scratch.FullName);
+    private string Project => Path.Combine(_scratch.FullName, "project");
+
+    // A project with a file of the kit's already in it, and a store with the kit. The listing is read here
+    // because a test on the UI thread cannot await work that comes back to it.
+    public async ValueTask InitializeAsync()
+    {
+        _fixture = await StoreFixture.BuildAsync(_scratch.FullName);
+        _listing = await _fixture.ListingAsync();
+        Directory.CreateDirectory(InProject($"{Into}/models"));
+        File.WriteAllText(InProject($"{Into}/models/crate.obj"), "my own crate");
+    }
 
     public ValueTask DisposeAsync()
     {
         _scratch.Delete(recursive: true);
         return ValueTask.CompletedTask;
     }
+
+    private string InProject(string name) => Path.Combine(Project, name);
+
+    private InstallSession InstallFor(KitRow row, KitRelease release) => new(
+        row: row,
+        release: release,
+        projectDirectory: Project,
+        downloads: Path.Combine(_scratch.FullName, "downloads"),
+        transport: _fixture.Transport(),
+        backoff: TimeSpan.Zero);
 
     private StoreDialog Open(string engine = "0.35.0", int width = 1440, int height = 900)
     {
@@ -34,7 +58,7 @@ public sealed class StoreDialogTests : IAsyncLifetime
                 _made.Add(transport);
                 return transport;
             });
-        _ = StoreDialog.Open(owner, session, (_, _) => { });
+        _ = StoreDialog.Open(owner, session, InstallFor);
         Headless.Render();
         return Assert.IsType<StoreDialog>(Assert.Single(owner.OwnedWindows));
     }
@@ -45,6 +69,21 @@ public sealed class StoreDialogTests : IAsyncLifetime
         Assert.True(Headless.Until(() => Words(dialog).Contains("Crates") || Words(dialog).Any(word => word.StartsWith("No kit", StringComparison.Ordinal))));
         return dialog;
     }
+
+    // An install dialog over a kit that is downloaded and checked, with its conflicts read.
+    private InstallDialog OpenInstall()
+    {
+        var owner = new Window { Width = 1440, Height = 900 };
+        owner.Show();
+        _ = InstallDialog.Open(owner, InstallFor(_listing.Row, _listing.Release));
+        var dialog = Assert.IsType<InstallDialog>(Assert.Single(owner.OwnedWindows));
+        Assert.True(Headless.Until(() => Shows(dialog, "replaces your file")));
+        return dialog;
+    }
+
+    private static bool?[] Ticks(Control root) => [.. Headless.All<CheckBox>(root).Select(box => box.IsChecked)];
+
+    private static bool Installable(Window dialog) => Headless.Find<Button>(dialog, "install").IsEnabled;
 
     private static string[] Words(Control root) =>
         [.. Headless.All<TextBlock>(root).Where(block => block.IsEffectivelyVisible).Select(block => block.Text ?? "")];
@@ -167,5 +206,105 @@ public sealed class StoreDialogTests : IAsyncLifetime
         Headless.Click(dialog, "forget_store");
         Assert.True(Headless.Until(() => Words(dialog).Contains("orblitengine.com/store/")));
         Assert.Empty(_made);
+    });
+
+    [Fact]
+    public Task OpensTheInstallDialogFromAKitAndListsItsScripts() => Headless.Run(() =>
+    {
+        var dialog = Online(Open());
+        Headless.Click(dialog, "kit_0");
+        Assert.True(Headless.Until(() => Headless.Find<Button>(dialog, "install").IsEnabled));
+
+        Headless.Click(dialog, "install");
+        Assert.True(Headless.Until(() => dialog.OwnedWindows.Count == 1));
+        var install = Assert.IsType<InstallDialog>(dialog.OwnedWindows[0]);
+        Assert.True(Headless.Until(() => Shows(install, "This kit holds 1 script.")));
+
+        Assert.True(Shows(install, "never runs them"));
+        Assert.Equal(2, Words(install).Count(word => word == "scripts/spin.js"));
+        // Nothing is written by looking.
+        Assert.False(Directory.Exists(InProject($"{Into}/scripts")));
+    });
+
+    [Fact]
+    public Task LeavesTheFileOfTheProjectAloneUnlessItIsTicked() => Headless.Run(() =>
+    {
+        var dialog = OpenInstall();
+        Assert.Equal([false, true, true], Ticks(dialog));
+
+        Headless.Click(dialog, "install");
+        Assert.True(Headless.Until(() => Shows(dialog, "Installed 2 files")));
+
+        Assert.Equal("my own crate", File.ReadAllText(InProject($"{Into}/models/crate.obj")));
+        Assert.True(File.Exists(InProject($"{Into}/scripts/spin.js")));
+        Assert.True(File.Exists(InProject(KitRules.LockName)));
+    });
+
+    [Fact]
+    public Task ReplacesTheFileOfTheProjectWhenItIsTicked() => Headless.Run(() =>
+    {
+        var dialog = OpenInstall();
+        Headless.Click(dialog, "tick_0");
+        Headless.Render();
+        Assert.Equal([true, true, true], Ticks(dialog));
+
+        Headless.Click(dialog, "install");
+        Assert.True(Headless.Until(() => Shows(dialog, "Installed 3 files")));
+
+        Assert.Equal("a crate", File.ReadAllText(InProject($"{Into}/models/crate.obj")));
+    });
+
+    [Fact]
+    public Task RefusesAFolderAKitMayNotGoInto() => Headless.Run(() =>
+    {
+        var dialog = OpenInstall();
+        Headless.Find<TextBox>(dialog, "folder").Text = ".git/hooks";
+        Headless.Render();
+
+        Assert.True(Shows(dialog, "starts with a dot"));
+        Assert.False(Installable(dialog));
+        Assert.False(Directory.Exists(InProject(".git")));
+    });
+
+    [Fact]
+    public Task KeepsTheChoicesWhenTheWriteFails() => Headless.Run(() =>
+    {
+        File.WriteAllText(InProject(KitRules.LockName), "{not json");
+        var dialog = OpenInstall();
+        Headless.Click(dialog, "tick_1");
+        Headless.Render();
+        Assert.Equal([false, false, true], Ticks(dialog));
+
+        Headless.Click(dialog, "install");
+        Assert.True(Headless.Until(() => Shows(dialog, KitRules.LockName) && Installable(dialog)));
+
+        Assert.Equal([false, false, true], Ticks(dialog));
+        Assert.False(Directory.Exists(InProject($"{Into}/scripts")));
+    });
+
+    [Fact]
+    public Task ReadsANewFolderOnlyAfterAPauseInTheTyping() => Headless.Run(() =>
+    {
+        var dialog = OpenInstall();
+        Headless.Find<TextBox>(dialog, "folder").Text = "assets/other";
+        // A third of the pause, so a slow machine does not reach its end. A read that started at once
+        // would have finished.
+        Headless.Wait(100);
+        Assert.False(Installable(dialog));
+
+        Assert.True(Headless.Until(() => Installable(dialog)));
+        Assert.False(Shows(dialog, "replaces your file"));
+    });
+
+    [Fact]
+    public Task DoesNotInstallWhenEveryFileIsUnticked() => Headless.Run(() =>
+    {
+        var dialog = OpenInstall();
+        Headless.Click(dialog, "tick_1");
+        Headless.Click(dialog, "tick_2");
+        Headless.Render();
+
+        Assert.Equal([false, false, false], Ticks(dialog));
+        Assert.False(Installable(dialog));
     });
 }
