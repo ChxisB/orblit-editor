@@ -1,8 +1,14 @@
 namespace Orblit.Editor.Core;
 
+using IoFile = System.IO.File;
+using Orblit.Ui;
+
 // Interfaces in their workspace: opened, made, put on the scene, and saved with everything else.
 public sealed partial class EditorSession
 {
+    // Each file read once, since the scene view asks on every frame it draws. An interface that is
+    // being changed is open on the bench, and the bench's copy is the one shown.
+    private readonly Dictionary<string, UiDocument?> _sceneInterfaces = [];
     private bool _interfacesUnsaved;
 
     /// <summary>The interfaces open for laying out, and how the one shown is looked at.</summary>
@@ -21,6 +27,35 @@ public sealed partial class EditorSession
         ? scene.Objects.FirstOrDefault(item =>
             item.Kind == ObjectKind.Canvas && item.Visible && scene.IsShown(item.Id) && item.InterfaceAsset is not null)?.InterfaceAsset
         : null;
+
+    /// <summary>
+    /// The interface the loaded scene puts on screen. Null when it puts none there, or its file cannot
+    /// be read.
+    /// </summary>
+    /// <remarks>
+    /// The copy being laid out when there is one, so a change shows over the scene before it is saved.
+    /// </remarks>
+    public UiDocument? SceneInterface()
+    {
+        if (SceneInterfaceAsset is not { } relative)
+        {
+            return null;
+        }
+
+        var path = Path.Combine(Workspace.ProjectDirectory, relative);
+        if (Interfaces[path] is { } open)
+        {
+            return open.Document;
+        }
+
+        if (!_sceneInterfaces.TryGetValue(relative, out var read))
+        {
+            read = ReadInterface(path);
+            _sceneInterfaces[relative] = read;
+        }
+
+        return read;
+    }
 
     /// <summary>
     /// Opens the canvas at <paramref name="path"/> in the Interface workspace.
@@ -102,6 +137,19 @@ public sealed partial class EditorSession
         if (Interfaces.Shown is null && SceneInterfaceAsset is { } path)
         {
             _ = Interfaces.OpenFile(Path.Combine(Workspace.ProjectDirectory, path));
+        }
+    }
+
+    // Quiet, since nobody asked for it. A scene that names a missing file shows nothing over it.
+    private static UiDocument? ReadInterface(string path)
+    {
+        try
+        {
+            return UiDocument.Read(IoFile.ReadAllText(path));
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            return null;
         }
     }
 

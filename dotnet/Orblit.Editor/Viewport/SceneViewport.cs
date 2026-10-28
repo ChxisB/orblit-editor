@@ -45,6 +45,10 @@ public sealed class SceneViewport : Border
         + "suspend it for one drag; the brackets make it coarser and finer, and the arrow keys move by "
         + "whole squares.";
 
+    private const string InterfaceTip =
+        "Draws the scene's interface over the viewport. Turning it off here is for getting at what is "
+        + "behind it. Hiding the canvas object is what hides it in the game.";
+
     private static readonly IReadOnlyList<GizmoType> Gizmos = [BodyGizmo.Type(), JointGizmo.Type(), SoundGizmo.Type()];
 
     private readonly EditorSession _session;
@@ -54,6 +58,7 @@ public sealed class SceneViewport : Border
     private readonly GeometryStore _geometry;
     private readonly Grid _stack = new() { Background = Brushes.Transparent, Focusable = true, ClipToBounds = true };
     private readonly ViewportOverlay _overlay;
+    private readonly ViewportInterface _interface = new();
     private readonly RendererViewport? _renderer;
     private readonly ToolPalette _palette;
     private readonly WrapPanel _chips = new() { Orientation = Orientation.Horizontal };
@@ -63,6 +68,7 @@ public sealed class SceneViewport : Border
     private bool _requested;
     private int _loop;
     private bool _outlineSelection = true;
+    private bool _showInterface = true;
     private bool _pinching;
     private string _chipKey = "";
     private string? _looked;
@@ -102,6 +108,8 @@ public sealed class SceneViewport : Border
             _stack.Children.Add(new ViewportPlaceholder());
         }
 
+        // Over the scene and under the handles, as a game draws an interface over its world.
+        _stack.Children.Add(_interface);
         _stack.Children.Add(_overlay);
         _stack.Children.Add(TopRow());
         _stack.Children.Add(HintChip());
@@ -152,6 +160,7 @@ public sealed class SceneViewport : Border
         _session.Workspace.Changed += MarkDirty;
         _session.Terrains.HoverChanged += MarkDirty;
         _session.Terrains.Changed += MarkDirty;
+        _session.Interfaces.Changed += ShowInterface;
         OnSessionChanged();
         if (_renderer is not null)
         {
@@ -177,6 +186,7 @@ public sealed class SceneViewport : Border
         _session.Workspace.Changed -= MarkDirty;
         _session.Terrains.HoverChanged -= MarkDirty;
         _session.Terrains.Changed -= MarkDirty;
+        _session.Interfaces.Changed -= ShowInterface;
         // A frame already asked for belongs to the loop that ended here. Moving to a new group attaches
         // again at once, and the old callback would run beside the new one.
         _loop++;
@@ -542,6 +552,7 @@ public sealed class SceneViewport : Border
     private void Redraw(TimeSpan elapsed)
     {
         RefreshChips();
+        ShowInterface();
         _palette.Sync();
         _overlay.InvalidateVisual();
         if (_renderer is null)
@@ -603,8 +614,21 @@ public sealed class SceneViewport : Border
     [
         new ChipSpec("Perspective"),
         new ChipSpec("Shaded"),
-        .. new[] { StatsChip(), DraggedChip(), SnapChip(), FlyChip(), OutlineChip() }.OfType<ChipSpec>(),
+        .. new[] { StatsChip(), DraggedChip(), SnapChip(), FlyChip(), OutlineChip(), InterfaceChip() }.OfType<ChipSpec>(),
     ];
+
+    // A view setting, so the scene is not changed and nothing is left to save.
+    private ChipSpec? InterfaceChip() => _session.SceneInterface() is null
+        ? null
+        : new ChipSpec("Interface", _showInterface, InterfaceTip, () =>
+        {
+            _showInterface = !_showInterface;
+            MarkDirty();
+        });
+
+    // An interface being laid out changes on the bench and not in the scene, so the bench is followed
+    // as well. The surface skips a value it already has, so a hover there costs nothing here.
+    private void ShowInterface() => _interface.Show(_showInterface ? _session.SceneInterface() : null, _session.Interfaces.Strings);
 
     private ChipSpec? StatsChip()
     {

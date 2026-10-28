@@ -222,11 +222,18 @@ public sealed class EditorWindow : Window
         [PanelKind.BlendGraph] = BlendGraph,
         [PanelKind.TerrainBrush] = Brush,
         [PanelKind.Uvs] = () => new UvPanel(_session),
-        [PanelKind.Inspector] = () => new InspectorPanel(_session, new InspectorLinks { Terrain = _session.Terrains }),
+        [PanelKind.Inspector] = Inspector,
         [PanelKind.InterfaceCanvas] = () => new InterfaceCanvas(_session.Interfaces, _session.NewInterface),
         [PanelKind.InterfaceElements] = () => new InterfaceElements(_session.Interfaces),
         [PanelKind.InterfaceDesign] = () => new InterfaceDesign(_session.Interfaces),
     };
+
+    // A canvas names its interface relative to the project.
+    private InspectorPanel Inspector() => new(_session, new InspectorLinks
+    {
+        Terrain = _session.Terrains,
+        OnOpenInterface = relative => _session.OpenInterface(Path.Combine(_session.Workspace.ProjectDirectory, relative)),
+    });
 
     private SceneViewport SceneView()
     {
@@ -318,6 +325,12 @@ public sealed class EditorWindow : Window
         if (asset.Kind == AssetKind.Cutscene)
         {
             _session.OpenCutscene(asset.Path);
+            return;
+        }
+
+        if (asset.Kind == AssetKind.Canvas)
+        {
+            _session.OpenInterface(asset.Path);
             return;
         }
 

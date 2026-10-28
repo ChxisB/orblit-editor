@@ -172,4 +172,51 @@ public sealed class EditorSessionInterfacesTests : IDisposable
 
         Assert.Equal(PanelKind.InterfaceCanvas, Assert.Single(session.VisibleLayout.Panels).Kind);
     }
+
+    [Fact]
+    public void TheSceneShowsTheInterfaceItsCanvasNames()
+    {
+        var session = Open();
+        Assert.Null(session.SceneInterface());
+
+        session.PutInterfaceOnScene(WriteHud());
+
+        Assert.Equal("Health 100", session.SceneInterface()!.Root.Children[0].Text);
+    }
+
+    [Fact]
+    public void AChangeShowsOverTheSceneBeforeItIsSaved()
+    {
+        var session = Open();
+        var hud = WriteHud();
+        session.PutInterfaceOnScene(hud);
+        Assert.NotNull(session.SceneInterface());
+
+        session.OpenInterface(hud);
+        session.Interfaces.Add(UiElement.All.First(one => one.Type == "box"));
+
+        Assert.Equal("box", session.SceneInterface()!.Root.Children[^1].Type);
+    }
+
+    [Fact]
+    public void HidingTheCanvasTakesTheInterfaceOffTheScene()
+    {
+        var session = Open();
+        session.PutInterfaceOnScene(WriteHud());
+        var canvas = Canvases(session)[0];
+
+        session.History.Run(new SetVisible(session.Workspace.Loaded!.Id, canvas.Id, canvas.Name, false));
+
+        Assert.Null(session.SceneInterface());
+    }
+
+    [Fact]
+    public void AFileThatCannotBeReadShowsNothing()
+    {
+        var session = Open();
+        session.PutInterfaceOnScene(PathOf("gone.oui"));
+
+        Assert.Null(session.SceneInterface());
+        Assert.NotEqual(SayLevel.Error, session.Last?.Level);
+    }
 }
