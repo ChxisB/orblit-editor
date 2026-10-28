@@ -14,7 +14,8 @@ using ViewSize = Orblit.Editor.Viewport.Size;
 
 /// <summary>
 /// What the view draws over the render: the handles, the gizmos of what is selected, the
-/// boundary when the renderer's outline is off, and the orientation gizmo.
+/// boundary when the renderer's outline is off, the mesh being edited, the outline being
+/// drawn, the box being dragged and the orientation gizmo.
 /// </summary>
 /// <remarks>
 /// Ordinary visuals over the frame rather than a pass in the renderer, for the same reason as the
@@ -22,7 +23,7 @@ using ViewSize = Orblit.Editor.Viewport.Size;
 /// top where a handle has to be to be grabbed. It takes no pointer, so a drag that starts here
 /// still reaches the view.
 /// </remarks>
-internal sealed class ViewportOverlay : Control
+internal sealed partial class ViewportOverlay : Control
 {
     /// <summary>The orientation gizmo's box.</summary>
     public const double OrientationSize = 56;
@@ -73,6 +74,7 @@ internal sealed class ViewportOverlay : Control
         }
 
         DrawBrush(context);
+        DrawMarks(context);
         DrawHandles(context);
         DrawOrientation(context);
     }
