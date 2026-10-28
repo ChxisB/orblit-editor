@@ -104,7 +104,7 @@ internal sealed class ModellingPanel : UserControl
     // how somebody gets a shape in the first place.
     private StackPanel Draw()
     {
-        var tools = new UniformGrid { Name = "modelling_tools", Rows = 1 };
+        var tools = new ButtonRow { Name = "modelling_tools" };
         foreach (var tool in DrawTools)
         {
             tools.Children.Add(ToolButton(tool));
@@ -122,7 +122,6 @@ internal sealed class ModellingPanel : UserControl
     private Button ToolButton(ViewportTool tool)
     {
         var button = Fields.Button(tool.Label(), $"{tool.Label()} in the view. Enter finishes. Escape cancels.", () => _session.UseTool(tool));
-        button.Margin = new Thickness(0, 0, Space.Xs, 0);
 
         // Cutting needs something to cut. Offered dimmed rather than hidden, so it is clear the tool
         // exists and what it is waiting for.

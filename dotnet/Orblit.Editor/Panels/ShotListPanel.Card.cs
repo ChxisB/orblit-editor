@@ -56,7 +56,7 @@ internal sealed partial class ShotListPanel
         return Fields.Row(field.Label, box, unit, $"{name}_row");
     }
 
-    private Grid Buttons(Card card)
+    private ButtonRow Buttons(Card card)
     {
         var looking = _session.Piloting?.Camera == card.Shot.Camera;
         var look = Fields.Button(
@@ -73,9 +73,7 @@ internal sealed partial class ShotListPanel
 
         var delete = Fields.Button("Delete", "Take this shot out of the cutscene.", () => _host.Apply(() => Replace("Delete shot", card, null, typing: false)));
         delete.Name = $"shot_{card.Index}_delete";
-        Grid.SetColumn(delete, 1);
-        delete.Margin = new Thickness(Space.Xs, 0, 0, 0);
-        return new Grid { ColumnDefinitions = new ColumnDefinitions("*,*"), Margin = new Thickness(0, 6), Children = { look, delete } };
+        return new ButtonRow { Margin = new Thickness(0, 6), Children = { look, delete } };
     }
 
     private void TypeStart(Card card, string text)

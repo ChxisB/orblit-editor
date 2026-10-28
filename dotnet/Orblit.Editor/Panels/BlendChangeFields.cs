@@ -57,24 +57,19 @@ internal sealed class BlendChangeFields(BlendRows rows, BlendDocument blend, int
         ]);
     }
 
-    private Grid Order()
+    private ButtonRow Order()
     {
         var last = blend.WrittenChanges.Count - 1;
-        var buttons = new[]
+        return new ButtonRow
         {
-            rows.Act("Earlier", "Try this change sooner.", () => rows.Run("Move change earlier", one => one.WithChangeMoved(index, -1), new ChangePicked(index - 1)), index > 0),
-            rows.Act("Later", "Try this change later.", () => rows.Run("Move change later", one => one.WithChangeMoved(index, 1), new ChangePicked(index + 1)), index < last),
-            rows.Act("Delete", "Take this change out.", () => rows.Run("Delete change", one => one.WithChangeRemoved(index), BlendPick.Nothing)),
+            Margin = new Thickness(0, 6),
+            Children =
+            {
+                rows.Act("Earlier", "Try this change sooner.", () => rows.Run("Move change earlier", one => one.WithChangeMoved(index, -1), new ChangePicked(index - 1)), index > 0),
+                rows.Act("Later", "Try this change later.", () => rows.Run("Move change later", one => one.WithChangeMoved(index, 1), new ChangePicked(index + 1)), index < last),
+                rows.Act("Delete", "Take this change out.", () => rows.Run("Delete change", one => one.WithChangeRemoved(index), BlendPick.Nothing)),
+            },
         };
-        var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*,*"), Margin = new Thickness(0, 6) };
-        for (var i = 0; i < buttons.Length; i++)
-        {
-            Grid.SetColumn(buttons[i], i);
-            buttons[i].Margin = new Thickness(i == 0 ? 0 : Space.Xs, 0, 0, 0);
-            grid.Children.Add(buttons[i]);
-        }
-
-        return grid;
     }
 
     private Control WhenSection()

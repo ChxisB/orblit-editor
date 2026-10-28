@@ -26,8 +26,7 @@ internal sealed class TerrainSets(Fields fields, TerrainBench bench, OpenTerrain
         // Only the last: the ground names a set by its place in the list.
         var remove = Fields.Button("Remove last", "Takes the last set away. Ground painted with it shows the one before.", () => fields.Host.Apply(RemoveLast));
         remove.IsEnabled = Held.Count > 1;
-        Grid.SetColumn(remove, 1);
-        rows.Add(new Grid { ColumnDefinitions = new ColumnDefinitions("*,*"), Children = { add, remove } });
+        rows.Add(new ButtonRow { Children = { add, remove } });
         return Fields.Column(rows);
     }
 

@@ -45,7 +45,6 @@ internal sealed class BlendStateFields(BlendRows rows, BlendDocument blend, Blen
     private StackPanel StateSection()
     {
         var starts = blend.WrittenStart == state.Name;
-        var buttons = new Grid { ColumnDefinitions = new ColumnDefinitions("*,*"), Margin = new Thickness(0, 6) };
         var start = rows.Act(
             starts ? "Starts here" : "Start here",
             "The blend begins in this state.",
@@ -56,14 +55,10 @@ internal sealed class BlendStateFields(BlendRows rows, BlendDocument blend, Blen
             "Take this state out, and every change into or out of it.",
             () => rows.Run("Delete state", one => one.WithStateRemoved(Here), BlendPick.Nothing),
             blend.WrittenStates.Count > 1);
-        Grid.SetColumn(delete, 1);
-        delete.Margin = new Thickness(Space.Xs, 0, 0, 0);
-        buttons.Children.Add(start);
-        buttons.Children.Add(delete);
         return Fields.Column(
         [
             rows.Name("Name", state.Name, [], text => RenameTo(text.Trim())),
-            buttons,
+            new ButtonRow { Margin = new Thickness(0, 6), Children = { start, delete } },
         ]);
     }
 
