@@ -92,7 +92,7 @@ public sealed class RetargetDialogTests
         Headless.Render();
     }
 
-    private static void Pick(Window dialog, string button, string text)
+    internal static void Pick(Window dialog, string button, string text)
     {
         var pick = Headless.Find<Button>(dialog, button);
         var menu = Assert.IsType<MenuFlyout>(pick.Flyout);
@@ -107,7 +107,7 @@ public sealed class RetargetDialogTests
     // The row of a bone of the dwarf, which is how its button is named.
     private static string Pair(string bone) => $"pair_{Array.IndexOf(["hips", "spine", "neck", "tail"], bone)}";
 
-    private static string ShownBy(Window dialog, string button) => Text(Assert.IsType<TextBlock>(Headless.Find<Button>(dialog, button).Content));
+    internal static string ShownBy(Window dialog, string button) => Text(Assert.IsType<TextBlock>(Headless.Find<Button>(dialog, button).Content));
 
     private static BoneMapLoad Stored(BoneMap map, params string[] problems) => new(map, problems);
 

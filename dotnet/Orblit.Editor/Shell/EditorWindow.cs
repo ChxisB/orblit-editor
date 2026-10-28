@@ -222,9 +222,25 @@ public sealed class EditorWindow : Window
         {
             OnNew = _session.NewClip,
             OnProblem = problem => _session.Report([problem]),
+            OnRetarget = RetargetClip,
             Selected = () => _session.InspectedItem,
         };
         return new TimelinePanel(_session.Clips, links);
+    }
+
+    // The made clip is a clip of its own, so the shown one is left as it was.
+    private async void RetargetClip()
+    {
+        if (_session.Clips.Shown is not { } shown)
+        {
+            return;
+        }
+
+        var files = new ProjectRetargetFiles(_session.Assets, _session.Skeletons);
+        if (await RetargetDialog.Choose(this, shown.Clip, files, _session.OwnerModel) is { } made)
+        {
+            _session.SaveRetargeted(made.Clip, made.Model, made.Problems);
+        }
     }
 
     private BlendGraphPanel BlendGraph() => new(_session.Blends, _session.History, _session.ClipNames, _session.NewBlend);

@@ -230,4 +230,121 @@ public sealed class EditorSessionClipsTests : IDisposable
         session.Clips.Edit("Lengthen", _ => new ClipDocument("Bounce", 3));
         Assert.Equal(1, told);
     }
+
+    private static ClipDocument Moved(string name = "wave (dwarf)") => new(name, 2);
+
+    [Fact]
+    public void ARetargetedClipIsWrittenInClipsAndShownAndTheFirstIsLeftAlone()
+    {
+        File.WriteAllText(PathOf("wave.oclip"), new ClipDocument("wave", 2).Encode());
+        var session = Open();
+        session.OpenClip(PathOf("wave.oclip"));
+
+        session.SaveRetargeted(Moved(), "dwarf.glb", []);
+
+        Assert.Equal(PathOf("clips/wave (dwarf).oclip"), session.Clips.Shown!.Path);
+        Assert.Equal("wave (dwarf)", ClipDocument.Decode(File.ReadAllText(PathOf("clips/wave (dwarf).oclip"))).Clip.Name);
+        Assert.Equal("wave", ClipDocument.Decode(File.ReadAllText(PathOf("wave.oclip"))).Clip.Name);
+        Assert.Equal(("Made wave (dwarf).oclip.", SayLevel.Info), session.Last);
+    }
+
+    [Fact]
+    public void ARetargetedClipIsNeverWrittenOverAnother()
+    {
+        var session = Open();
+        session.SaveRetargeted(Moved(), "dwarf.glb", []);
+
+        session.SaveRetargeted(Moved(), "dwarf.glb", []);
+
+        Assert.Equal(2, Directory.GetFiles(PathOf("clips")).Length);
+        Assert.NotEqual(PathOf("clips/wave (dwarf).oclip"), session.Clips.Shown!.Path);
+    }
+
+    [Fact]
+    public void WhatCouldNotBeCarriedIsCountedAndTheFirstIsGiven()
+    {
+        var session = Open();
+
+        session.SaveRetargeted(Moved(), "dwarf.glb", ["No arm.", "No leg."]);
+
+        Assert.Equal(("Made wave (dwarf).oclip. 2 things could not be carried. First: No arm.", SayLevel.Warning), session.Last);
+    }
+
+    [Fact]
+    public void ARetargetedClipGoesOnTheChosenObjectOnlyWhenItIsTheModelItMoves()
+    {
+        var session = Open();
+        Cube(session).MeshAsset = "dwarf.glb";
+        session.Select(["cube"]);
+
+        session.SaveRetargeted(Moved(), "dwarf.glb", []);
+
+        Assert.Equal(["clips/wave (dwarf).oclip"], EditorSession.MotionOf(Cube(session))!.Clips);
+        Assert.Equal("cube", session.Clips.Owner);
+    }
+
+    [Fact]
+    public void ARetargetedClipIsNotGivenToAnObjectThatIsAnotherModel()
+    {
+        var session = Open();
+        Cube(session).MeshAsset = "hero.glb";
+        session.Select(["cube"]);
+
+        session.SaveRetargeted(Moved(), "dwarf.glb", []);
+
+        Assert.Null(EditorSession.MotionOf(Cube(session)));
+        Assert.Equal(PathOf("clips/wave (dwarf).oclip"), session.Clips.Shown!.Path);
+    }
+
+    [Fact]
+    public void SaysSoWhenTheClipsFolderCannotBeMade()
+    {
+        File.WriteAllText(PathOf("clips"), "in the way");
+        var session = Open();
+
+        session.SaveRetargeted(Moved(), "dwarf.glb", []);
+
+        Assert.Equal(SayLevel.Error, session.Last!.Value.Level);
+        Assert.StartsWith("Could not make the clips folder: ", session.Last.Value.Text);
+        Assert.Null(session.Clips.Shown);
+    }
+
+    [Fact]
+    public void SaysWhyARetargetedClipCouldNotBeWritten()
+    {
+        var session = Open();
+
+        session.SaveRetargeted(Moved("no/such/folder"), "dwarf.glb", []);
+
+        Assert.Equal(SayLevel.Error, session.Last!.Value.Level);
+        Assert.StartsWith("Could not save the clip: ", session.Last.Value.Text);
+        Assert.Null(session.Clips.Shown);
+    }
+
+    [Fact]
+    public void TheModelIsTheOwnersAndNotTheChosenObjectsWhenTheyDiffer()
+    {
+        var session = Open();
+        Cube(session).MeshAsset = "hero.glb";
+        session.Select(["cube"]);
+        session.NewClip();
+
+        session.Add(ObjectKind.Camera);
+        session.Clips.Owner = "cube";
+
+        Assert.Equal("hero.glb", session.OwnerModel);
+    }
+
+    [Fact]
+    public void TheOwnerOfTheShownClipHasItsModelAndNoOwnerHasNone()
+    {
+        var session = Open();
+        Cube(session).MeshAsset = "hero.glb";
+        Assert.Null(session.OwnerModel);
+
+        session.Select(["cube"]);
+        session.NewClip();
+
+        Assert.Equal("hero.glb", session.OwnerModel);
+    }
 }

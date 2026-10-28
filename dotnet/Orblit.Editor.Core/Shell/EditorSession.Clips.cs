@@ -18,6 +18,12 @@ public sealed partial class EditorSession
     /// <summary>The project's files, which a new clip is made through.</summary>
     public AssetTree Assets { get; }
 
+    /// <summary>The skeleton each model of the project says it has, read once a file.</summary>
+    public ModelSkeletons Skeletons { get; }
+
+    /// <summary>The model of the object the shown clip belongs to, or null when it has no owner or the owner has no model.</summary>
+    public string? OwnerModel => Clips.Owner is { } owner ? Inspected?.Scene?[owner]?.MeshAsset : null;
+
     /// <summary>The animation an object plays, or null when it has none.</summary>
     public static Doc.MotionComponent? MotionOf(SceneObject target) =>
         target.Components.GetValueOrDefault(Doc.SceneComponents.Motion) as Doc.MotionComponent;
@@ -47,6 +53,41 @@ public sealed partial class EditorSession
         OpenClip(path);
         Clips.Owner = InspectedItem?.Id;
         _followingMotion = InspectedItem is not null;
+    }
+
+    /// <summary>
+    /// Saves <paramref name="clip"/>, made to move <paramref name="model"/>, in the clips folder beside the
+    /// clip it came from, and opens it. The first is left as it was.
+    /// </summary>
+    /// <param name="clip">The retargeted clip.</param>
+    /// <param name="model">The project path of the model it moves.</param>
+    /// <param name="problems">What of the first clip could not be carried.</param>
+    public void SaveRetargeted(ClipDocument clip, string model, IReadOnlyList<string> problems)
+    {
+        if (FolderOf("clips") is not { } folder)
+        {
+            return;
+        }
+
+        var written = Assets.Write(folder, $"{clip.Name}.oclip", clip.Encode());
+        if (written.Path is not { } path)
+        {
+            Say($"Could not save the clip: {written.Problem}", SayLevel.Error);
+            return;
+        }
+
+        OpenClip(path);
+        // Played by the model it was made for, so it goes on the object that is chosen only when that is the
+        // model. Giving it the clip makes the timeline follow that object's motion, which is what shows it.
+        if (InspectedItem is { } chosen && chosen.MeshAsset == model)
+        {
+            AttachClip(path);
+        }
+
+        var name = Path.GetFileName(path);
+        Say(
+            problems.Count == 0 ? $"Made {name}." : $"Made {name}. {problems.Count} things could not be carried. First: {problems[0]}",
+            problems.Count == 0 ? SayLevel.Info : SayLevel.Warning);
     }
 
     /// <summary>
@@ -110,9 +151,8 @@ public sealed partial class EditorSession
         return true;
     }
 
-    // Makes a new file of a kind in a folder of the project, and the folder first. Null, having said
-    // why, when either cannot be made.
-    private string? MakeIn(string folder, NewAsset kind)
+    // A folder of the project, made when it is not there. Null, having said why, when it cannot be.
+    private string? FolderOf(string folder)
     {
         var directory = Path.Combine(Workspace.ProjectDirectory, folder);
         try
@@ -122,6 +162,18 @@ public sealed partial class EditorSession
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
             Say($"Could not make the {folder} folder: {error.Message}", SayLevel.Error);
+            return null;
+        }
+
+        return directory;
+    }
+
+    // Makes a new file of a kind in a folder of the project, and the folder first. Null, having said
+    // why, when either cannot be made.
+    private string? MakeIn(string folder, NewAsset kind)
+    {
+        if (FolderOf(folder) is not { } directory)
+        {
             return null;
         }
 

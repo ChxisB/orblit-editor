@@ -38,6 +38,7 @@ public sealed partial class EditorSession
         Mode = modes.All[0];
         Layout = LayoutOf(Mode);
         Assets = new AssetTree(workspace.ProjectDirectory);
+        Skeletons = new ModelSkeletons(workspace.ProjectDirectory);
         Clips = new ClipBench(history, () => workspace.Loaded?.Scene);
         Clips.Changed += OnClipsChanged;
         Blends = new BlendBench(history);
