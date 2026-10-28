@@ -56,8 +56,8 @@ public sealed partial class EditorSession
     }
 
     /// <summary>
-    /// Saves <paramref name="clip"/>, made to move <paramref name="model"/>, in the clips folder beside the
-    /// clip it came from, and opens it. The first is left as it was.
+    /// Saves <paramref name="clip"/>, made to move <paramref name="model"/>, in the project's clips folder, and
+    /// opens it. The first is left as it was.
     /// </summary>
     /// <param name="clip">The retargeted clip.</param>
     /// <param name="model">The project path of the model it moves.</param>

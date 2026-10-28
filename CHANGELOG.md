@@ -321,7 +321,7 @@
   parts of a person. A bone map is saved under `retargets/` and loaded
   again. The made clip is written into `clips/` as `name (model)` and never
   over another. It goes on the chosen object only when that object wears the
-  model the clip moves. A model's bones are read once for each session.
+  model the clip moves. A model's bones are read again each time the dialog opens.
 - The C# blend graph fixes two faults that the Dart one has. Moving a change
   in a blend with no change answers the same blend, where Dart throws. A
   blend with one change reads "1 change", where Dart reads "1 changes".

@@ -125,6 +125,19 @@ public sealed class BlendCanvasTests
     });
 
     [Fact]
+    public Task TwoStatesWhoseNamesDifferOnlyInPunctuationAreTwoBoxes() => Headless.Run(() =>
+    {
+        var rig = new Rig(new BlendDocument(
+            "Moves",
+            [new BlendState("Run 2", new BlendClip("run")), new BlendState("Run-2", new BlendClip("jog")), new BlendState("Run_2", new BlendClip("sprint"))],
+            new Dictionary<string, double>()));
+
+        Assert.Equal("Run 2", rig.TextOf("state_name_run_2"));
+        Assert.Equal("Run-2", rig.TextOf("state_name_run_2_2"));
+        Assert.Equal("Run_2", rig.TextOf("state_name_run_2_3"));
+    });
+
+    [Fact]
     public Task AChangeIsALabelOnItsArrowSayingWhatMakesIt() => Headless.Run(() =>
     {
         var rig = new Rig();

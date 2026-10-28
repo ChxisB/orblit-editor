@@ -13,9 +13,6 @@ using Orblit.Motion;
 /// <param name="projectRoot">The directory a model's relative path is read from.</param>
 public sealed class ModelSkeletons(string projectRoot)
 {
-    // Misses are kept too, so a scene naming a missing file does not read the disk every frame.
-    private readonly Dictionary<string, RestSkeleton?> _known = [];
-
     /// <summary>
     /// The skeleton of the model at project path <paramref name="asset"/>, or null when it has no file, the
     /// file has no skin or the file cannot be read.
@@ -28,19 +25,9 @@ public sealed class ModelSkeletons(string projectRoot)
             return null;
         }
 
-        if (_known.TryGetValue(asset, out var known))
-        {
-            return known;
-        }
-
         // Combine keeps a rooted path as it is, so an absolute path needs no case of its own.
-        var found = Read(Path.Combine(projectRoot, asset));
-        _known[asset] = found;
-        return found;
+        return Read(Path.Combine(projectRoot, asset));
     }
-
-    /// <summary>Forgets one file, for when it has been written again.</summary>
-    public void Forget(string asset) => _known.Remove(asset);
 
     private static RestSkeleton? Read(string path)
     {

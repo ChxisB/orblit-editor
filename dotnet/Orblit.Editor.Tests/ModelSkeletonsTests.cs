@@ -113,15 +113,14 @@ public sealed class ModelSkeletonsTests : IDisposable
     }
 
     [Fact]
-    public void AnAnswerIsKeptUntilTheFileIsForgotten()
+    public void AFileThatChangesIsReadAgain()
     {
+        Assert.Null(_models.OfAsset("hero.glb"));
+
         var path = Put("hero.glb", SkinnedGlb.ChainGlb("hips"));
         Assert.Equal(["hips"], _models.OfAsset("hero.glb")!.Names);
 
         File.WriteAllBytes(path, SkinnedGlb.ChainGlb("hips", "spine"));
-        Assert.Equal(["hips"], _models.OfAsset("hero.glb")!.Names);
-
-        _models.Forget("hero.glb");
         Assert.Equal(["hips", "spine"], _models.OfAsset("hero.glb")!.Names);
     }
 

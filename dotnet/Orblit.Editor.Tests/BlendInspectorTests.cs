@@ -378,6 +378,27 @@ public sealed class BlendInspectorTests
     });
 
     [Fact]
+    public Task EachPointOfALineShowsItsOwnClip() => Headless.Run(() =>
+    {
+        var rig = new Rig(Mixed(), new StatePicked("move"));
+
+        Assert.Equal("walk", rig.TextOf("name_clip_2"));
+        Assert.Equal("run", rig.TextOf("name_clip_3"));
+    });
+
+    [Fact]
+    public Task TheClipOfAMovedPointIsStillTheOneBeingTypedInOnceItsPlaceInTheLineChanges() => Headless.Run(() =>
+    {
+        var rig = new Rig(Mixed(), new StatePicked("move"));
+
+        rig.Type("number_at_1", "3");
+        rig.Type("name_clip_1", "jog");
+
+        var line = Assert.IsType<BlendLine>(rig.Blend.WrittenStates[0].Plays);
+        Assert.Equal(["walk", "run", "jog"], line.Clips);
+    });
+
+    [Fact]
     public Task PointsAreAddedAndTakenOutOfALineAndTheLastCannotBeTaken() => Headless.Run(() =>
     {
         var rig = new Rig(Mixed(), new StatePicked("move"));

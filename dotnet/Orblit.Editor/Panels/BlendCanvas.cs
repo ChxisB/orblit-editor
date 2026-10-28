@@ -78,9 +78,10 @@ internal sealed class BlendCanvas : UserControl
         (_sketch, _arrows) = (sketch, new BlendArrows(sketch, picked));
         _page.Children.Add(_arrows);
         var start = BlendGraphModel.StateOwning(blend, blend.WrittenStart);
+        var taken = new HashSet<string>();
         foreach (var state in blend.WrittenStates)
         {
-            _page.Children.Add(StateBox(state, sketch.States[state.Name], state.Name == start));
+            _page.Children.Add(StateBox(state, sketch.States[state.Name], state.Name == start, KeyOf(state.Name, taken)));
         }
 
         if (sketch.Anywhere is { } any)
@@ -96,9 +97,21 @@ internal sealed class BlendCanvas : UserControl
         Paint();
     }
 
-    private Border StateBox(BlendState state, SketchBox at, bool isStart)
+    // Two names that differ only in punctuation make one key, and a window cannot hold two controls of one name.
+    private static string KeyOf(string name, HashSet<string> taken)
     {
-        var key = Fields.Key(state.Name);
+        var key = Fields.Key(name);
+        var made = key;
+        for (var n = 2; !taken.Add(made); n++)
+        {
+            made = $"{key}_{n}";
+        }
+
+        return made;
+    }
+
+    private Border StateBox(BlendState state, SketchBox at, bool isStart, string key)
+    {
         var text = new StackPanel
         {
             VerticalAlignment = VerticalAlignment.Center,

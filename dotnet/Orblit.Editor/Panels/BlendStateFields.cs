@@ -128,33 +128,39 @@ internal sealed class BlendStateFields(BlendRows rows, BlendDocument blend, Blen
         };
         for (var i = 0; i < line.Points.Count; i++)
         {
-            column.Add(PointAt(line, i));
-            column.Add(PointClip(line, i));
+            var place = new PointPlace(i);
+            column.Add(PointAt(line, place));
+            column.Add(PointClip(line, place));
         }
 
         column.Add(rows.Act("Add a point", "Add a point after the last one.", () => rows.Run("Add a point", one => one.WithState(Here, OnLine(BlendSourceModel.PointAdded)))));
         return Fields.Column(column);
     }
 
-    private Control PointAt(BlendLine line, int at)
+    // Putting the points in order again moves a point while its boxes are still being typed in, so the boxes follow it.
+    private sealed class PointPlace(int index)
     {
-        // Putting the points in order again moves this one while its box is still being typed in, so the box follows it.
-        var index = at;
+        public int Index { get; set; } = index;
+    }
+
+    private Control PointAt(BlendLine line, PointPlace place)
+    {
+        var at = place.Index;
         var take = line.Points.Count > 1
-            ? rows.Remove($"remove_point_{at + 1}", "Take this point out", () => rows.Run("Remove a point", one => one.WithState(Here, OnLine(was => BlendSourceModel.PointRemoved(was, at)))))
+            ? rows.Remove($"remove_point_{at + 1}", "Take this point out", () => rows.Run("Remove a point", one => one.WithState(Here, OnLine(was => BlendSourceModel.PointRemoved(was, place.Index)))))
             : null;
         return rows.Number($"At {at + 1}", line.Points[at].At, number =>
         {
-            rows.Typed("Move a point", one => one.WithState(Here, OnLine(was => BlendSourceModel.PointChanged(was, index, at: number))));
-            index = Math.Max(0, IndexAt(number, index));
+            rows.Typed("Move a point", one => one.WithState(Here, OnLine(was => BlendSourceModel.PointChanged(was, place.Index, at: number))));
+            place.Index = Math.Max(0, IndexAt(number, place.Index));
         }, take);
     }
 
-    private Control PointClip(BlendLine line, int index) => rows.Name(
-        $"Clip {index + 1}",
-        line.Points[index].Plays is BlendClip clip ? clip.Clip : "",
+    private Control PointClip(BlendLine line, PointPlace place) => rows.Name(
+        $"Clip {place.Index + 1}",
+        line.Points[place.Index].Plays is BlendClip clip ? clip.Clip : "",
         clips,
-        text => rows.Typed("Change clip", one => one.WithState(Here, OnLine(was => BlendSourceModel.PointChanged(was, index, clip: text.Trim())))));
+        text => rows.Typed("Change clip", one => one.WithState(Here, OnLine(was => BlendSourceModel.PointChanged(was, place.Index, clip: text.Trim())))));
 
     // shortcut: two points at one position are told apart by their order only, so the box may follow the other one. Tell them apart by identity when a line can hold two there.
     private int IndexAt(double at, int fallback)
