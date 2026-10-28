@@ -190,7 +190,7 @@ internal sealed class InterfaceDesign : UserControl
         rows.AddRange(_bench.StringProblems.Select(problem => Fields.Note(problem)));
         if (gaps.GetValueOrDefault(strings.Locale) is { Count: > 0 } lacking)
         {
-            rows.Add(Caption($"Missing in {strings.Locale}"));
+            rows.Add(SectionLabel.Of($"Missing in {strings.Locale}"));
             rows.AddRange(lacking.Select(key => (Control)new TextBlock { Text = key, FontSize = 10.5, FontFamily = OrblitText.Mono, Foreground = OrblitColors.InkDim }));
         }
 
@@ -207,7 +207,7 @@ internal sealed class InterfaceDesign : UserControl
         {
             On = canvas.Width == size.Width && canvas.Height == size.Height,
         })),
-        Caption("On screen"),
+        SectionLabel.Of("On screen"),
         // Chips that wrap rather than five segments sharing a row: "Match height" does not fit in a
         // fifth of a narrow panel.
         Wrap(Enum.GetValues<CanvasFit>().Select(fit => new ToolbarChip(
@@ -219,7 +219,7 @@ internal sealed class InterfaceDesign : UserControl
             On = canvas.Fit == fit,
         })),
         CanvasSlider("Safe area", canvas.SafeArea * 100, value => canvas with { SafeArea = value / 100 }, new SliderOptions { Min = 0, Max = 20, Unit = "%" }),
-        Caption("Preview on"),
+        SectionLabel.Of("Preview on"),
         Wrap(InterfaceSideModel.Devices.Select(device => new ToolbarChip(
             $"device_{device.Label.ToLowerInvariant()}",
             device.Label,
@@ -249,7 +249,7 @@ internal sealed class InterfaceDesign : UserControl
             CanvasSlider("Columns", canvas.Columns, value => canvas with { Columns = (int)Math.Round(value) }, new SliderOptions { Min = 1, Max = 24 }),
             CanvasSlider("Gutter", canvas.Gutter, value => canvas with { Gutter = value }, new SliderOptions { Min = 0, Max = 80, Unit = "px" }),
             count,
-            Caption("Fluid range"),
+            SectionLabel.Of("Fluid range"),
             CanvasSlider("Smallest", canvas.MinScale * 100, value => canvas with { MinScale = value / 100 }, new SliderOptions { Min = 40, Max = 100, Unit = "%" }),
             CanvasSlider("Largest", canvas.MaxScale * 100, value => canvas with { MaxScale = value / 100 }, new SliderOptions { Min = 100, Max = 300, Unit = "%" }),
         ]));
@@ -273,15 +273,6 @@ internal sealed class InterfaceDesign : UserControl
 
         return wrap;
     }
-
-    private static TextBlock Caption(string text) => new()
-    {
-        Text = text.ToUpperInvariant(),
-        FontSize = 9.5,
-        LetterSpacing = 0.6,
-        Foreground = OrblitColors.InkDim,
-        Margin = new Thickness(0, Space.Sm, 0, 3),
-    };
 
     // A box typed into: what it is called, the step its typing makes, and what it shows while empty.
     private sealed record Typed(string Label, string Step, string? Hint = null);

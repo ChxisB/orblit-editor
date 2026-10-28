@@ -65,15 +65,6 @@ internal sealed class StoreDetail : Grid
         TextWrapping = TextWrapping.Wrap,
     };
 
-    private static TextBlock Section(string text) => new()
-    {
-        Text = text.ToUpperInvariant(),
-        FontSize = 9.5,
-        LetterSpacing = 0.6,
-        Foreground = OrblitColors.InkDim,
-        Margin = new Thickness(0, Space.Sm, 0, 3),
-    };
-
     private List<Control> Body(KitRow row)
     {
         var manifest = row.Manifest;
@@ -152,7 +143,7 @@ internal sealed class StoreDetail : Grid
             Entry(chosen.Release),
             () => releases.Releases.Select(item => (Entry(item.Release), (Action)(() => _session.ChooseRelease(item)))));
         pick.HorizontalAlignment = HorizontalAlignment.Left;
-        List<Control> choice = [Section("Release"), pick, Words($"{SizeLabel.Of(chosen.Release.Bytes)}. {chosen.Release.Notes}")];
+        List<Control> choice = [SectionLabel.Of("Release"), pick, Words($"{SizeLabel.Of(chosen.Release.Bytes)}. {chosen.Release.Notes}")];
         if (chosen.ContainsScripts)
         {
             choice.Add(Words("Contains scripts. You see them before anything is installed.", OrblitColors.Warn));
@@ -181,7 +172,7 @@ internal sealed class StoreDetail : Grid
                 // A kit can hold thousands of files, so only the rows in view are made.
                 return
                 [
-                    Section($"Files ({files.Count})"),
+                    SectionLabel.Of($"Files ({files.Count})"),
                     new ItemsControl
                     {
                         ItemsSource = files,

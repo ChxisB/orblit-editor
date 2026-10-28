@@ -181,15 +181,8 @@ internal sealed class ModellingPanel : UserControl
             return [];
         }
 
-        var heading = new TextBlock
-        {
-            Name = $"modelling_group_{Fields.Key(group.Label())}",
-            Text = group.Label().ToUpperInvariant(),
-            FontSize = 9.5,
-            LetterSpacing = 0.6,
-            Foreground = OrblitColors.InkDim,
-            Margin = new Thickness(0, Space.Sm, 0, 3),
-        };
+        var heading = SectionLabel.Of(group.Label());
+        heading.Name = $"modelling_group_{Fields.Key(group.Label())}";
         return [heading, .. actions.Select(ActionRow)];
     }
 
