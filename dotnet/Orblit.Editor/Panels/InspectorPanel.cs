@@ -31,6 +31,7 @@ internal sealed class InspectorPanel : UserControl
     private readonly StackPanel _stack = new() { Name = "inspector_fields", Margin = new Thickness(0, Space.Sm) };
     private readonly ScrollViewer _scroll;
     private string? _shown;
+    private DataPanel? _dataPanel;
 
     /// <param name="session">What is selected and changed.</param>
     /// <param name="links">What the panel asks the rest of the editor to do. Null for a window with nothing to ask.</param>
@@ -84,6 +85,13 @@ internal sealed class InspectorPanel : UserControl
 
     private void Rebuild()
     {
+        if (_session.DataAsset is { } relative)
+        {
+            ShowData(relative);
+            return;
+        }
+
+        _dataPanel = null;
         _host.Reset();
         _bands.Children.Clear();
         _stack.Children.Clear();
@@ -121,6 +129,22 @@ internal sealed class InspectorPanel : UserControl
         };
         Bands(scene, item);
         Body(target);
+    }
+
+    // The same file keeps its panel, so a value half typed survives a change made somewhere else.
+    private void ShowData(string relative)
+    {
+        if (_dataPanel?.Relative == relative)
+        {
+            return;
+        }
+
+        _host.Reset();
+        _bands.Children.Clear();
+        _stack.Children.Clear();
+        ScrollToTopFor($"data/{relative}");
+        _dataPanel = new DataPanel(_session, relative);
+        _stack.Children.Add(_dataPanel);
     }
 
     // A different thing starts at the top, as a new panel would. The same one stays where it was.

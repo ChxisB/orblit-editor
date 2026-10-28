@@ -233,6 +233,8 @@ public sealed class EditorWindow : Window
     private InspectorPanel Inspector() => new(_session, new InspectorLinks
     {
         Terrain = _session.Terrains,
+        OnOpenData = _session.ShowData,
+        OnDetachData = _session.DetachData,
         OnOpenInterface = relative => _session.OpenInterface(Path.Combine(_session.Workspace.ProjectDirectory, relative)),
     });
 
@@ -304,7 +306,12 @@ public sealed class EditorWindow : Window
     {
         var directory = _session.Workspace.ProjectDirectory;
         _cooks ??= new CookStatusIndex(directory);
-        var links = new AssetBrowserLinks { OnOpenAsset = OpenAsset, OnProblem = problem => _session.Report([problem]) };
+        var links = new AssetBrowserLinks
+        {
+            OnOpenAsset = OpenAsset,
+            OnSelectAsset = _session.PickAsset,
+            OnProblem = problem => _session.Report([problem]),
+        };
         return new AssetBrowserPanel(_session.Assets, _cooks, links, _renderer);
     }
 

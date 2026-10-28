@@ -38,6 +38,7 @@ public sealed partial class EditorSession
         Mode = modes.All[0];
         Layout = LayoutOf(Mode);
         Assets = new AssetTree(workspace.ProjectDirectory);
+        Data = new DataStore(workspace.ProjectDirectory);
         Skeletons = new ModelSkeletons(workspace.ProjectDirectory);
         Clips = new ClipBench(history, () => workspace.Loaded?.Scene);
         Clips.Changed += OnClipsChanged;
@@ -273,6 +274,8 @@ public sealed partial class EditorSession
         Selected = [.. ids];
         Primary = primary;
         SelectedScene = null;
+        // The inspector shows one thing, and it is whatever was touched last.
+        DataAsset = null;
         if (moved)
         {
             ForgetParts();

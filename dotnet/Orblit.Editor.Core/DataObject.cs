@@ -118,21 +118,15 @@ public sealed record DataField(string Key, DataType Type, object? Value, string 
 /// such as how fast the ball moves or what a crate weighs. One asset, referenced by everything that
 /// needs it, so the value is changed in one place.
 /// </summary>
-public sealed partial class DataObject(string name, IReadOnlyList<DataField> fields, string note = "")
+/// <param name="Name">What it is called, which need not match the file name.</param>
+/// <param name="Note">What it is for. The first thing somebody opening it in six months needs.</param>
+public sealed partial record DataObject(string Name, IReadOnlyList<DataField> Fields, string Note = "")
 {
     public const string Marker = "orblit.data";
 
     public const int FormatVersion = 1;
 
     public const string Extension = ".odata";
-
-    /// <summary>What it is called, which need not match the file name.</summary>
-    public string Name { get; } = name;
-
-    /// <summary>What it is for. The first thing somebody opening it in six months needs.</summary>
-    public string Note { get; } = note;
-
-    public IReadOnlyList<DataField> Fields { get; } = fields;
 
     /// <summary>
     /// A new one, with a field already in it. Not empty: an empty data object gives nothing to react

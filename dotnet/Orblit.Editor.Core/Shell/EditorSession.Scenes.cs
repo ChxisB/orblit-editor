@@ -45,6 +45,7 @@ public sealed partial class EditorSession
         Selected = [];
         Primary = null;
         SelectedScene = sceneId;
+        DataAsset = null;
         FollowMotion();
         Changed?.Invoke();
     }
