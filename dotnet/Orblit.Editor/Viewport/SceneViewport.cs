@@ -62,6 +62,7 @@ public sealed class SceneViewport : Border
     private readonly ViewportOverlay _overlay;
     private readonly ViewportInterface _interface = new();
     private readonly RendererViewport? _renderer;
+    private readonly CameraPreview _preview;
     private readonly ToolPalette _palette;
     private readonly WrapPanel _chips = new() { Orientation = Orientation.Horizontal };
     private readonly FrameRate _frames = new();
@@ -123,6 +124,8 @@ public sealed class SceneViewport : Border
         _stack.Children.Add(_overlay);
         _stack.Children.Add(TopRow());
         _stack.Children.Add(HintChip());
+        _preview = new CameraPreview(renderer);
+        _stack.Children.Add(_preview);
         AttachInput();
         TakeFiles();
     }
@@ -612,6 +615,7 @@ public sealed class SceneViewport : Border
         ShowInterface();
         _palette.Sync();
         _overlay.InvalidateVisual();
+        _preview.IsVisible = _state.PreviewCamera is not null;
         if (_renderer is null)
         {
             return;
@@ -627,6 +631,24 @@ public sealed class SceneViewport : Border
         }
 
         _renderer.Frame(Build(), elapsed.TotalSeconds);
+        DrawPreview(elapsed);
+    }
+
+    // Drawn in the view's frame, so the card and the view never show the scene at different moments.
+    private void DrawPreview(TimeSpan elapsed)
+    {
+        if (_state.PreviewCamera is not { } camera || _session.Workspace.Loaded?.Scene is not { } scene)
+        {
+            return;
+        }
+
+        if (_preview.Waiting)
+        {
+            MarkDirty();
+            return;
+        }
+
+        _preview.Frame(scene.ToRenderScene(SceneCameras.CameraOf(scene, camera), Options()), elapsed.TotalSeconds);
     }
 
     // The renderer's median over its recent frames. Nought until the backend has reported, and with no renderer.
@@ -639,19 +661,19 @@ public sealed class SceneViewport : Border
         var scene = workspace.Loaded?.Scene ?? new EditorScene([]);
         var built = scene.ToRenderScene(
             _state.Camera.ToRenderCamera(),
-            new SceneRenderOptions
-            {
-                ProjectRoot = workspace.ProjectDirectory,
-                Shared = workspace.Shared,
-                GeometryOf = _geometry.PathFor,
-                Grid = _grids.PlanFor(_state.Snapping, _state.Camera.Target),
-            });
+            Options() with { Grid = _grids.PlanFor(_state.Snapping, _state.Camera.Target) });
         return built with
         {
             Outline = _outlineSelection
                 ? SelectionOutline.Of(scene, _state.Selected, workspace.Shared, _state.Primary)
                 : Outline.None,
         };
+    }
+
+    private SceneRenderOptions Options()
+    {
+        var workspace = _session.Workspace;
+        return new SceneRenderOptions { ProjectRoot = workspace.ProjectDirectory, Shared = workspace.Shared, GeometryOf = _geometry.PathFor };
     }
 
     private void RefreshChips()

@@ -157,9 +157,6 @@ public sealed class SceneViewportState
     /// <summary>How big an imported model says it is, for picking and for what a drag lands on.</summary>
     public Func<SceneObject, (Vector3 Min, Vector3 Max)?>? BoundsOf { get; set; }
 
-    /// <summary>Whether a selected camera shows what it sees in a corner of the view.</summary>
-    public bool PreviewsCameras { get; set; }
-
     /// <summary>
     /// The outline or path being drawn, or null. While a tool is drawing, clicks put points down and
     /// nothing else sees the pointer, so the view does not turn away from the plane being drawn on.
@@ -263,7 +260,7 @@ public sealed class SceneViewportState
 
     /// <summary>The camera whose shot is shown in the corner, if one is selected and has one.</summary>
     public SceneObject? PreviewCamera =>
-        PreviewsCameras && Target is { } target && CameraViewApplies(target) ? target.Item : null;
+        Target is { } target && CameraViewApplies(target) ? target.Item : null;
 
     /// <summary>
     /// How far the drag has taken things, for saying so on screen: in squares as well as metres,
@@ -522,7 +519,6 @@ public sealed class SceneViewportState
         target.Item.Kind == ObjectKind.Camera
         && target.Selected.Count == 1
         && ReferenceEquals(target.Scene, _workspace.Loaded?.Scene)
-        && target.Item.Visible
         && target.Scene.IsShown(target.Item.Id);
 
     // Who gets a gesture, first to last: the mode's tool, then the gizmos, then the selection, then

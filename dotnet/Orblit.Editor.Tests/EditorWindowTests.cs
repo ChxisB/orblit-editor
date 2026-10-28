@@ -447,6 +447,49 @@ public sealed class EditorWindowTests : IDisposable
         window.Close();
     });
 
+    private static void SaveAsFromTheMenu(EditorWindow window, string name)
+    {
+        Click(Menu(window, "menu_save_as"));
+        Headless.Render();
+        var prompt = Prompt(window);
+        Find<TextBox>(prompt, "name").Text = name;
+        Click(Find<Button>(prompt, "ok"));
+        Headless.Render();
+        Headless.Render();
+    }
+
+    // The two save as cases of Dart's editor_shell_scenes_test.dart.
+    [Fact]
+    public Task SaveAsWritesASecondSceneAndKeepsTheFirst() => Headless.Run(() =>
+    {
+        var (_, window) = Open();
+        Click(Menu(window, "menu_save"));
+        Headless.Render();
+
+        SaveAsFromTheMenu(window, "second");
+
+        Assert.True(File.Exists(Path.Combine(_temp.FullName, "scenes", "second.oscene")));
+        Assert.True(File.Exists(Path.Combine(_temp.FullName, "scenes", "main.oscene")));
+        Assert.Contains("scenes/second.oscene", Find<TextBlock>(window, "status").Text, StringComparison.Ordinal);
+        window.Close();
+    });
+
+    [Fact]
+    public Task SaveAsRefusesToOverwriteASceneThatExists() => Headless.Run(() =>
+    {
+        var taken = Path.Combine(_temp.FullName, "scenes", "taken.oscene");
+        var empty = SceneDocument.Encode(new EditorScene([]));
+        Directory.CreateDirectory(Path.GetDirectoryName(taken)!);
+        File.WriteAllText(taken, empty);
+        var (_, window) = Open();
+
+        SaveAsFromTheMenu(window, "taken");
+
+        Assert.Contains("already a scene", Find<TextBlock>(window, "status").Text, StringComparison.Ordinal);
+        Assert.Equal(empty, File.ReadAllText(taken));
+        window.Close();
+    });
+
     private static PaletteDialog Palette(Window window) => Assert.IsType<PaletteDialog>(Assert.Single(window.OwnedWindows));
 
     // What is chosen runs once the dialog has gone, on a later turn of the dispatcher.

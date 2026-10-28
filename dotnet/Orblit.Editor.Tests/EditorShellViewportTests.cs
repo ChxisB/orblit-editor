@@ -1,14 +1,15 @@
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
 
 namespace Orblit.Editor.Tests;
 
+using Orblit.Editor.Core;
 using Orblit.Editor.Viewport;
 
-// The Dart file drives the viewport from the shell. The three camera preview tests need the outliner,
-// the inspector and the preview window, which are task 16, so they are not here. The same rule is
-// tested on the state instead, in SceneViewportStateTests.
+// Dart: orblit-editor/test/editor_shell_viewport_test.dart. The viewport driven from the shell: flying,
+// the camera preview and the trackpad.
 public sealed class EditorShellViewportTests
 {
     private static readonly TimeSpan Frame = TimeSpan.FromMilliseconds(100);
@@ -147,6 +148,78 @@ public sealed class EditorShellViewportTests
 
         Assert.NotEqual(before, Speed(rig));
         Assert.Equal(distance, rig.View.State.Camera.Distance);
+    });
+
+    // The card keeps its label while hidden, so these ask whether it shows rather than what it says.
+    private static bool PreviewShows(ViewportRig rig)
+    {
+        Headless.Render();
+        return Headless.Find<Control>(rig.View, "camera_preview").IsEffectivelyVisible;
+    }
+
+    [Fact]
+    public Task SelectingACameraShowsWhatItSees() => Headless.Run(() =>
+    {
+        using var rig = new ViewportRig();
+        Assert.False(PreviewShows(rig));
+
+        Headless.Click(rig.Window, "row_camera");
+
+        Assert.True(PreviewShows(rig));
+    });
+
+    [Fact]
+    public Task SelectingAnythingElseTakesItAway() => Headless.Run(() =>
+    {
+        using var rig = new ViewportRig();
+        Headless.Click(rig.Window, "row_camera");
+        Assert.True(PreviewShows(rig));
+
+        Headless.Click(rig.Window, "row_crate");
+
+        Assert.False(PreviewShows(rig));
+    });
+
+    [Fact]
+    public Task HidingTheCameraTakesItAwayToo() => Headless.Run(() =>
+    {
+        using var rig = new ViewportRig();
+        Headless.Click(rig.Window, "row_camera");
+        Headless.Render();
+
+        Headless.Click(rig.Window, "inspector_visible");
+
+        // A camera that is not in the scene has no shot to preview.
+        Assert.False(PreviewShows(rig));
+    });
+
+    // Added in C#. A card each for a row of cameras would cover the view they are meant to help with.
+    [Fact]
+    public Task ACameraSelectedWithSomethingElseShowsNoCard() => Headless.Run(() =>
+    {
+        using var rig = new ViewportRig();
+        Headless.Click(rig.Window, "row_crate");
+        var at = Headless.Centre(rig.Window, "row_camera");
+
+        rig.Window.MouseDown(at, MouseButton.Left, RawInputModifiers.Meta);
+        rig.Window.MouseUp(at, MouseButton.Left, RawInputModifiers.Meta);
+
+        Assert.Equal(["crate", "camera"], rig.Session.Selected);
+        Assert.False(PreviewShows(rig));
+    });
+
+    // Added in C#. The card shows the open scene, which a camera in the shared set is not part of.
+    [Fact]
+    public Task ACameraInTheSharedSetShowsNoCard() => Headless.Run(() =>
+    {
+        using var rig = new ViewportRig();
+        rig.Session.Move("camera", new Drop(Workspace.SharedSceneId, null, 0));
+        Headless.Render();
+
+        Headless.Click(rig.Window, "row_camera");
+
+        Assert.Equal(["camera"], rig.Session.Selected);
+        Assert.False(PreviewShows(rig));
     });
 
     // Two fingers on a trackpad reach the control as a pan and a zoom. Avalonia gives no phases for a
