@@ -20,15 +20,16 @@ internal interface IPrograms
 /// </remarks>
 internal sealed class CodeEditor
 {
-    // Best first. A command takes --goto, opens into the window already open and returns at once. The
-    // bundle is for somebody who installed VS Code and never put its command on the PATH, which is most.
+    // Best first. A command opens into the window already open and returns at once. Only the VS Code family
+    // takes --goto, and the others open each path they are given. The bundle is for somebody who installed
+    // VS Code and never put its command on the PATH, which is most.
     private static readonly Candidate[] Candidates =
     [
-        new("code", "Visual Studio Code", "com.microsoft.VSCode"),
-        new("cursor", "Cursor", "com.todesktop.230313mzl4w4u92"),
-        new("code-insiders", "Visual Studio Code - Insiders", "com.microsoft.VSCodeInsiders"),
-        new("subl", "Sublime Text", "com.sublimetext.4"),
-        new("zed", "Zed", "dev.zed.Zed"),
+        new("code", "Visual Studio Code", "com.microsoft.VSCode", Goto: true),
+        new("cursor", "Cursor", "com.todesktop.230313mzl4w4u92", Goto: true),
+        new("code-insiders", "Visual Studio Code - Insiders", "com.microsoft.VSCodeInsiders", Goto: true),
+        new("subl", "Sublime Text", "com.sublimetext.4", Goto: false),
+        new("zed", "Zed", "dev.zed.Zed", Goto: false),
     ];
 
     private readonly IPrograms _programs;
@@ -59,14 +60,13 @@ internal sealed class CodeEditor
             return "That folder is not there any more.";
         }
 
-        string[] opened = file is null ? [folder] : [folder, "--goto", file];
-        if (Candidates.Any(one => OnPath(one) && _programs.Start(one.Command, opened)))
+        string[] paths = file is null ? [folder] : [folder, file];
+        if (Candidates.Any(one => OnPath(one) && _programs.Start(one.Command, one.Goto && file is not null ? [folder, "--goto", file] : paths)))
         {
             return null;
         }
 
-        string[] bundled = file is null ? [folder] : [folder, file];
-        return Candidates.Any(one => Installed(one) && _programs.Start("open", ["-b", one.Bundle, .. bundled]))
+        return Candidates.Any(one => Installed(one) && _programs.Start("open", ["-b", one.Bundle, .. paths]))
             ? null
             : "No code editor found. Install VS Code, or its \"code\" command from the command palette.";
     }
@@ -97,5 +97,5 @@ internal sealed class CodeEditor
     // -R finds the app without opening it, so asking whether it is there puts no window up.
     private bool Installed(Candidate editor) => _platform == HostPlatform.MacOS && _programs.Succeeds("open", ["-Ra", editor.Label]);
 
-    private sealed record Candidate(string Command, string Label, string Bundle);
+    private sealed record Candidate(string Command, string Label, string Bundle, bool Goto);
 }

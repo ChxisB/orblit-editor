@@ -371,8 +371,9 @@
   it finds, from Project, the File menu or the palette. Show in Finder
   shows the project folder. Build compiles a C++ script with the engine's
   own compiler and headers and shows what the compiler said.
-- The C# data objects and profile panel differ from the Dart ones in
-  small ways. A new data object's kind is picked from a menu, not a
+- The C# data objects, profile panel and code editor differ from the
+  Dart ones in small ways. Sublime Text and Zed are handed a script
+  without `--goto`, which they do not take. A new data object's kind is picked from a menu, not a
   dialog. A number that is not finite is refused. Selecting a scene row
   puts the inspector back. The profile panel times no spans, and a gauge
   reads "12" where Dart reads "12.0".

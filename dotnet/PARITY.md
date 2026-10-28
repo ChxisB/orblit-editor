@@ -252,7 +252,7 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | none | `DataPanelTests` | 0 | 0 | 0 | 11: a typed value waiting for the typing to stop, text that is not a number, an empty key, a value added of each kind with a name of its own, one axis of a vector, removing, what is waiting written on close, the bindings of what was just typed, and a file that cannot be read | added |
 | `profile_panel_test.dart` | `ProfilePanelTests` | 5 | 5 | 4 | 2: closing stops the reads, and the window's panel times the frames the scene view draws | done. The clock is wound by hand. Handing a shown panel another profiler is not ported, because the window builds the panel once over its own |
 | `cpp_binding_test.dart` | `ScriptBuilderTests`, `DataObjectTests`, `AssetsTests` | 14 | 14 | 14 | 0 | done. The nine that compile real C++ are `ScriptBuilderTests`. The four that read the header's text are the C++ golden in `DataObjectTests`. Which files offer a build is a theory in `AssetsTests` |
-| none | `CodeEditorTests` | 0 | 0 | 0 | 15: the first editor on the path, an app with no command on a Mac, looking once, `where` on Windows, a file opened in its folder, a folder alone, opening by bundle, handing on to the next, no editor, a folder that has gone, revealing on each desktop, and what cannot be revealed | added |
+| none | `CodeEditorTests` | 0 | 0 | 0 | 17: the first editor on the path, an app with no command on a Mac, looking once, `where` on Windows, a file opened in its folder, a file given as a path to an editor without `--goto`, a folder alone, opening by bundle, handing on to the next, no editor, a folder that has gone, revealing on each desktop, and what cannot be revealed | added |
 | none | `EditorWindowCodeTests` | 0 | 0 | 0 | 9: the File menu's labels, opening the project, Show in Finder, no editor, a script opened from Project, the palette, a build that fails, a window closed during a build, and a build with warnings | added |
 
 Gap in row 5: a picture is shown in a set and can be cleared, but not dropped on one. The Dart section took a drop from the
@@ -292,7 +292,8 @@ profile panel counts only the frames the scene view draws, and times no spans.
 A gauge reads "12" where Dart reads "12.0". Two faults are left as Dart has
 them, items 65 and 66 of decision 80. The C++ header names its data object
 without the folder, and every script built on a Mac with ld-27037 or later
-has warnings, so there is no test of a clean build. The Orblit.Native package
+has warnings, so there is no test of a clean build. The review adds items 67
+to 71. C# passes `--goto` only to the VS Code family. The Orblit.Native package
 does not copy the engine headers it carries, so the editor's project copies
 them itself. The console, the data panel, the profile panel, the code editor
 and the build have run headless only, never in a real window.

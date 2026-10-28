@@ -71,6 +71,20 @@ public sealed class CodeEditorTests : IDisposable
         Assert.Equal([$"code {Folder} --goto {file}"], _programs.Started);
     }
 
+    // Dart passed --goto to every command, and Sublime Text and Zed have no such option.
+    [Theory]
+    [InlineData("subl")]
+    [InlineData("zed")]
+    public void AnEditorWithoutGotoIsGivenTheFileAsAPath(string command)
+    {
+        _programs.Answers.Add($"which {command}");
+        var file = Script();
+
+        Assert.Null(On(HostPlatform.Linux).Open(Folder, file));
+
+        Assert.Equal([$"{command} {Folder} {file}"], _programs.Started);
+    }
+
     [Fact]
     public void TheFolderOpensAloneWhenNoFileIsNamed()
     {
