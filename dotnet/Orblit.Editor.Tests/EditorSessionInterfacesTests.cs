@@ -5,8 +5,9 @@ using Orblit.Ui;
 
 // The Interface workspace in the editor: opened from a file, opened on what the scene shows, made new,
 // saved with everything else. The first five follow the Interface workspace group of
-// editor_shell_workspaces_test, asked of the session rather than of the panels. The rest are added in
-// C#, since the Dart shell has no test for putting onto a chosen canvas or for focusing the canvas.
+// editor_shell_workspaces_test, asked of the session rather than of the panels. Putting onto a chosen
+// canvas, saving with the scene and the scene's interface follow the "an interface on a scene" group of
+// editor_shell_data_test, with PutInterfaceOnScene for the drop. The rest are added in C#.
 public sealed class EditorSessionInterfacesTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_interfaces_session");
@@ -148,6 +149,19 @@ public sealed class EditorSessionInterfacesTests : IDisposable
 
         Assert.Equal(("hud", "pause.oui"), (Assert.Single(Canvases(session)).Name, Canvases(session)[0].InterfaceAsset));
         Assert.Equal("hud now shows pause.oui.", session.Last!.Value.Text);
+    }
+
+    [Fact]
+    public void ItIsSavedWithTheSceneAndComesBack()
+    {
+        var session = Open();
+        session.PutInterfaceOnScene(WriteHud());
+
+        session.Save();
+
+        var load = SceneDocument.Decode(File.ReadAllText(PathOf("scenes/main.oscene")));
+        Assert.False(load.HasProblems, string.Join("; ", load.Problems));
+        Assert.Equal("hud.oui", Assert.Single(load.Scene.Objects, one => one.Kind == ObjectKind.Canvas).InterfaceAsset);
     }
 
     [Fact]

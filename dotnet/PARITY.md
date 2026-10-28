@@ -95,7 +95,7 @@ can do so far. Add, delete, copy and frame join them with their panels in task
 | --- | --- | --- | --- | --- | --- | --- |
 | `editor_shell_palette_test.dart` | `EditorWindowTests` | 5 | 5 | 4 | 0 | partial. "Go to terrain" became "go to modelling", because terrain joins the modes in task 16. "A command that changes the scene can be undone" waits for the add commands in task 16 |
 | `editor_shell_layouts_test.dart` | `EditorSessionTests` | 3 | 3 | 2 | 0 | partial. Per-mode arrangements and focus are here. "Performance numbers are behind Stats" is tested only as the toggle, because the numbers are drawn by the viewport in task 15 |
-| `editor_shell_workspaces_test.dart` | `EditorSessionTests` | 16 | 16 | 4 | 0 | partial. The order of the rail, the panels for each job, reset and each remembering its arrangement are here. The rest need icons, terrain, cinematics, interface or the modelling panel |
+| `editor_shell_workspaces_test.dart` | `EditorSessionTests`, `EditorSessionInterfacesTests`, `EditorWindowInterfacesTests` | 16 | 16 | 10 | 3: a new interface leaving the one the scene shows, a file that is not an interface, and focusing the canvas | partial. The order of the rail, the panels for each job, reset, each remembering its arrangement and the Interface group are here. The C# top bar has no Saved status, object count or frame rate, so the top bar case checks only the name. The rest need icons, terrain, cinematics or the modelling panel |
 | `editor_shell_panels_test.dart` | `EditorSessionTests`, `EditorWindowTests` | 11 | 11 | 5 | 0 | partial. Closing and opening a panel, remembering, locking, a damaged layout and a layout from before workspaces are here. The rest need the viewport, the game view or the profile panel |
 | none, the Dart has no test | `EditorSessionTests`, `EditorWindowTests` | 0 | 0 | 0 | 52: the session without a window, the window reading and writing it, and the inspector in the dock. Save as, its prompt and the quiet shared save are 13 of them | added |
 
@@ -183,6 +183,11 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | `cinematics_test.dart` | `CinematicsTests` | 18 | 18 | 18 | 3: a cut that shortens the shot running, a cut that leaves an earlier shot alone, and a camera under a parent the scene lacks | done |
 | `editor_shell_cinematics_test.dart` | `EditorWindowCinematicsTests` | 7 | 7 | 7 | 11: the shelf in the cinematics mode and nowhere else, the camera menu marking the camera in use and recutting a shot, a camera the scene lacks, a start or length taken only as a number within ten minutes, a typed number that changes nothing, a keystroke in a card the shots have moved on from, the cards letting go of looking, a renamed camera, changes elsewhere not flying the view back, the inspector keying the cutscene, and the playhead leaving a box being typed in alone | done |
 | none | `EditorSessionCinematicsTests` | 0 | 0 | 0 | 30: the panels and layout of the mode, opening, making and refusing a cutscene, Add shot and Use this view as undo steps, looking through a camera, steering it as one step and letting go when it is deleted or its add is undone, the shelf, unsaved changes, and keying the cutscene without an owner | added |
+| `ui_canvas_test.dart` | `InterfaceCanvasTests`, `InterfaceWorkspaceTests` | 20 | 20 | 20 | 3: a click that shakes does not move what it chooses, pointing at an element marks it, and each panel saying what to do with nothing open | done. The canvas follows a bench, so not designing is the bench previewing. Dart finds a control by its words and C# by its name |
+| `ui_responsive_test.dart` | `InterfaceCanvasTests`, `InterfaceWorkspaceTests` | 16 | 16 | 16 | 0 | done. The grid count says "4 across this screen. 12 is too fine here." with a full stop where Dart has a dash |
+| `interface_strings_test.dart` | `InterfaceBenchTests`, `InterfaceWorkspaceTests` | 11 | 11 | 11 | 0 | done |
+| none | `InterfaceBenchTests` | 0 | 0 | 0 | 15: the keys the shown interface asks for, adding inside the selection and its undo, a place away from the last element on a stack, the grid going up for a column and not for a button, a split and a split of a placed element, a drag as one step on a whole pixel, removing and the root, typing as one step per element, saving and opening again, a file gone or not an interface, the preview held either way, an element's name, and flowing | added |
+| `editor_shell_data_test.dart` | `EditorSessionInterfacesTests`, `EditorWindowInterfacesTests` | 22 | 22 | 6 | 2: a change shown over the scene before it is saved, and an interface file that cannot be read | partial. The "an interface on a scene" group is here. A drop onto the scene view is not ported, so `PutInterfaceOnScene`, which is what the drop does, stands in for it. The data objects and console groups wait for row 13 |
 | `editor_shell_motion_test.dart` | `EditorSessionClipsTests` | 4 | 4 | 3 | 0 | partial. Waiting: Play in four views, which needs the game view. No row owns the game view yet |
 | none | `OutlinerModelTests` | 0 | 0 | 0 | 15: the rows and their depth, the folds, a scene row with a filter, an unloaded scene, where a drop lands and what a drop refuses | added |
 | none | `EditorSessionObjectsTests` | 0 | 0 | 0 | 26: selecting, adding and naming, ids, deleting, moving, duplicating, the clipboard labels and a clipboard that cannot be reached | added |
@@ -248,10 +253,18 @@ window runs headless only. The ring, the shelf, a stroke and a textured set have
 renderer.
 
 Not in the inspector yet, and not counted: `editor_shell_prefabs_test.dart` (23) and
-`editor_shell_data_test.dart` (22) for row 13, because they need the shell. The
+the data objects and console groups of `editor_shell_data_test.dart` (16) for row 13,
+because they need the shell. The
 inspector takes its prefab and data buttons, the model reader and the size of a
 mesh from `InspectorLinks`, which the window does not fill yet. `rebuild_scope_test.dart`
 (5) tests how Flutter rebuilds, and is judged again with the shell.
+
+Gaps in row 9: the Dart scene view and game view draw a plain interface over an opaque
+ground with dark bars, which hides the scene. The C# scene view draws it with neither.
+This is item 59 of decision 80. It draws under the boundary boxes, where Dart draws it over them.
+The handles are on top in both. The Interface chip is a setting of each scene view, as the
+outline chip is, where Dart keeps one for the shell. The Interface workspace has run
+headless only, never in a real window with the renderer.
 
 The Dart outliner test file is `editor_shell_hierarchy_test.dart`. There is no
 `outliner_test.dart`. The drag itself is not driven headless. The tests call

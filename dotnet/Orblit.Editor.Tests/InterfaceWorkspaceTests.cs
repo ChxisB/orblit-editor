@@ -13,8 +13,8 @@ using Orblit.Ui.Avalonia;
 
 // Dart: orblit-editor/test/ui_canvas_test.dart, the laying one out group, ui_responsive_test.dart, the
 // editor group, and interface_strings_test.dart, the canvas speaks a language group. Dart finds a
-// control by the words on it, and here it is found by name. The last two are added in C#: each panel
-// says what to do with nothing open, and a press on New interface asks for one.
+// control by the words on it, and here it is found by name. The last is added in C#: each panel says
+// what to do with nothing open.
 public sealed class InterfaceWorkspaceTests : IDisposable
 {
     private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory("orblit_interface_workspace");

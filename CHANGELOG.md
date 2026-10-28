@@ -337,6 +337,22 @@
   re-sorts the cards when the box lets go. The Dart one moves the card as
   soon as the start is typed. A card whose shot an undo has taken back does nothing when
   typed in.
+- Add the Interface workspace to the C# editor. An interface opens from
+  Project, from the inspector of the scene's canvas or as a new one. It is
+  laid out at the size of the device previewed, held either way. A tree
+  lists the elements. The design side adds an element, edits the one
+  selected, splits a container into columns, picks a language, and sets the
+  canvas size, fit and grid. A drag snaps to the columns and is one undo
+  step. The top bar names the interface by its place in the project.
+- The C# scene view draws the interface its canvas names, and a chip puts
+  it aside without changing the scene. The Dart view paints an opaque
+  ground and dark bars under it, which hide the scene. The C# view draws
+  the interface alone.
+- The C# Interface workspace differs from the Dart one in small ways. The
+  top bar has no Saved status, object count or frame rate. The fit chips
+  wrap. The grid count has a full stop where Dart has a dash. The Interface
+  chip belongs to each scene view, not to the shell. An interface cannot be
+  dropped onto the scene view yet.
 
 ## 1.26.0+27
 
