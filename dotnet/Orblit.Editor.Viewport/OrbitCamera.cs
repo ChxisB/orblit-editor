@@ -16,7 +16,7 @@ public sealed class OrbitCamera
     // Pitch is clamped just short of straight up and straight down. At exactly vertical the up
     // vector and the view direction are parallel and the view matrix collapses, which shows up as
     // the image flipping.
-    private const double PitchLimit = (Math.PI / 2) - 0.02;
+    internal const double PitchLimit = (Math.PI / 2) - 0.02;
 
     // F2: a camera is its angles, its distance, its lens and its target, and every one has a default.
     public OrbitCamera(
