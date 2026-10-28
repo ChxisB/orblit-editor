@@ -265,6 +265,9 @@ public sealed class EditorWindow : Window
         OnOpenData = _session.ShowData,
         OnDetachData = _session.DetachData,
         OnOpenInterface = relative => _session.OpenInterface(Path.Combine(_session.Workspace.ProjectDirectory, relative)),
+        OnApplyPrefab = _session.ApplyPrefab,
+        OnRevertPrefab = _session.RevertPrefab,
+        OnUnpackPrefab = _session.UnpackPrefab,
     });
 
     private SceneViewport SceneView()
@@ -341,6 +344,7 @@ public sealed class EditorWindow : Window
             OnSelectAsset = _session.PickAsset,
             OnProblem = problem => _session.Report([problem]),
             OnBuild = BuildScript,
+            OnMakePrefab = _session.MakePrefab,
         };
         return new AssetBrowserPanel(_session.Assets, _cooks, links, _renderer);
     }

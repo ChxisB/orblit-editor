@@ -40,8 +40,7 @@ internal static class Program
         var clipboard = new WindowTextClipboard();
         var session = new EditorSession(opened.Workspace, new History(opened.Workspace), EditorModes.Standard(), PanelTypes.BuiltIn())
         {
-            Prefabs = prefabs.Find,
-            KeepPrefabs = prefabs.KeepOnly,
+            Prefabs = prefabs,
             TextClipboard = clipboard,
             PictureDecoder = new SkiaPictureDecoder(),
         };

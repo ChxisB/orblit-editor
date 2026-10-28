@@ -20,15 +20,12 @@ public sealed class EditorSessionScenesTests : IDisposable
     }
 
     // A project with a saved main scene and a props scene beside it that is listed and not loaded.
-    private EditorSession Open(EditorScene? props = null, Doc.PrefabSource? prefabs = null)
+    private EditorSession Open(EditorScene? props = null)
     {
         Write("main", EditorScene.Starter());
         Write("props", props ?? new EditorScene([], name: "Props"));
-        var opened = ProjectWorkspace.Open(_project.FullName, prefabs);
-        var session = new EditorSession(opened.Workspace, new History(opened.Workspace), EditorModes.Standard(), PanelTypes.BuiltIn())
-        {
-            Prefabs = prefabs,
-        };
+        var opened = ProjectWorkspace.Open(_project.FullName);
+        var session = new EditorSession(opened.Workspace, new History(opened.Workspace), EditorModes.Standard(), PanelTypes.BuiltIn());
         session.Said += (text, level) => _said.Add((text, level));
         return session;
     }
@@ -126,21 +123,32 @@ public sealed class EditorSessionScenesTests : IDisposable
     }
 
     [Fact]
-    public async Task EveryPrefabInUseIsNamedBeforeAnotherSceneIsRead()
+    public async Task APrefabInUseIsKeptAsItWasReadAndTheRestAreReadAgainBeforeAnotherScene()
     {
-        var instance = new SceneObject(id: "p", name: "P", kind: ObjectKind.Group, prefab: new Doc.PrefabComponent(asset: "props/crate.oprefab"));
-        var kept = new List<string>();
+        const string crate = "props/crate.oprefab";
+        const string other = "props/other.oprefab";
+        var files = new PrefabFiles(_project.FullName);
+        foreach (var asset in new[] { crate, other })
+        {
+            var made = Doc.Instances.MakePrefab(SceneDocument.DocumentOf(EditorScene.Starter()), "props", asset, files.Find);
+            Assert.Null(files.Write(asset, made.Prefab));
+        }
+
+        var instance = new SceneObject(id: "p", name: "P", kind: ObjectKind.Group, prefab: new Doc.PrefabComponent(asset: crate));
         Write("main", new EditorScene([instance], name: "Main"));
         Write("props", new EditorScene([], name: "Props"));
-        var opened = ProjectWorkspace.Open(_project.FullName);
+        var opened = ProjectWorkspace.Open(_project.FullName, files.Find);
         var session = new EditorSession(opened.Workspace, new History(opened.Workspace), EditorModes.Standard(), PanelTypes.BuiltIn())
         {
-            KeepPrefabs = assets => kept.AddRange(assets),
+            Prefabs = files,
         };
+        File.Delete(Path.Combine(_project.FullName, crate));
+        File.Delete(Path.Combine(_project.FullName, other));
 
         await session.LoadSceneAsync(Entry(session, "props"));
 
-        Assert.Equal(["props/crate.oprefab"], kept);
+        Assert.NotNull(files.Find(crate));
+        Assert.Null(files.Find(other));
     }
 
     [Fact]

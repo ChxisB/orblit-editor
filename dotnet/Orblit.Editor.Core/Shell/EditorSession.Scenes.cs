@@ -21,12 +21,6 @@ public sealed partial class EditorSession
     /// </summary>
     public Func<SceneEntry, Task<Leaving>> ConfirmLeaving { get; set; } = _ => Task.FromResult(Leaving.Stop);
 
-    /// <summary>
-    /// Given every prefab the scenes in memory hold instances of, before a scene is read. Whatever it
-    /// does not name is read again, so a prefab changed in another program shows up.
-    /// </summary>
-    public Action<IReadOnlySet<string>>? KeepPrefabs { get; init; }
-
     /// <summary>The scene whose own settings are being looked at, when no object is.</summary>
     public string? SelectedScene { get; private set; }
 
@@ -80,9 +74,10 @@ public sealed partial class EditorSession
             return;
         }
 
-        KeepPrefabs?.Invoke(PrefabsInUse());
+        // Whatever no scene in memory has an instance of is read again, so a prefab changed in another program shows up.
+        Prefabs?.KeepOnly(PrefabsInUse());
         var problems = new List<string>();
-        var (scene, read, missing) = ProjectWorkspace.ReadScene(path, Prefabs, problems);
+        var (scene, read, missing) = ProjectWorkspace.ReadScene(path, Prefabs is { } files ? files.Find : null, problems);
         if (missing)
         {
             problems.Add($"There is no scene at {path}.");

@@ -223,6 +223,11 @@ internal sealed class OutlinerPanel : UserControl
             tail.Children.Add(Note("•", OrblitText.Mono, OrblitColors.Ember));
         }
 
+        if (InstanceMark(row) is { } mark)
+        {
+            tail.Children.Add(mark);
+        }
+
         var remove = RemoveButton(row, name);
         if (remove is not null)
         {
@@ -232,6 +237,19 @@ internal sealed class OutlinerPanel : UserControl
         view.PointerEntered += (_, _) => Hover(note, remove, true);
         view.PointerExited += (_, _) => Hover(note, remove, false);
         return tail;
+    }
+
+    // An instance names its prefab, so its parts read as the prefab's and not as loose objects.
+    private static Glyph? InstanceMark(OutlinerRow row)
+    {
+        if (row.Item?.Prefab?.Asset is not { } asset)
+        {
+            return null;
+        }
+
+        var mark = new Glyph(AssetIcons.Of(AssetKind.Prefab), 11, OrblitColors.InkDim) { Name = $"instance_{row.Key}", Margin = new Thickness(0, 0, Space.Xs, 0) };
+        ToolTip.SetTip(mark, $"Instance of {Path.GetFileName(asset)}");
+        return mark;
     }
 
     private static void Hover(TextBlock? note, Button? remove, bool over)

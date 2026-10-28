@@ -77,8 +77,11 @@ public sealed partial class EditorSession
 
     public Registry<PanelType> Panels { get; }
 
-    /// <summary>What a scene is folded against when it is written. Null writes every instance whole.</summary>
-    public PrefabSource? Prefabs { get; init; }
+    /// <summary>
+    /// The project's prefabs: what a scene is folded against when it is written and opened against when
+    /// it is read, and where a made or applied prefab is saved. Null writes every instance whole.
+    /// </summary>
+    public PrefabFiles? Prefabs { get; init; }
 
     /// <summary>What reads the pictures a terrain's sets name. Null leaves the ground drawing with the plain picture.</summary>
     public IPictureDecoder? PictureDecoder
@@ -443,7 +446,7 @@ public sealed partial class EditorSession
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(entry.Path!))!);
-            IoFile.WriteAllText(entry.Path!, AtRest(() => SceneDocument.Encode(entry.Scene!, prefabs: Prefabs)));
+            IoFile.WriteAllText(entry.Path!, AtRest(() => SceneDocument.Encode(entry.Scene!, prefabs: Prefabs is { } files ? files.Find : null)));
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
