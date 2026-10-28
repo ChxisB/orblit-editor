@@ -415,11 +415,19 @@ internal sealed class Fields(FieldHost host)
     /// <param name="value">The text as the scene has it.</param>
     /// <param name="onChanged">Called with the text at every edit.</param>
     /// <param name="hint">Greyed text shown while the field is empty.</param>
-    public Control Entry(string label, string value, Action<string> onChanged, string? hint = null)
+    public Control Entry(string label, string value, Action<string> onChanged, string? hint = null) =>
+        Row(label, Box($"entry_{Key(label)}", value, onChanged, hint));
+
+    /// <summary>The box <see cref="Entry"/> is made of, for a row that has something of its own beside it.</summary>
+    /// <param name="name">The control's name.</param>
+    /// <param name="value">The text as the scene has it.</param>
+    /// <param name="onChanged">Called with the text at every edit.</param>
+    /// <param name="hint">Greyed text shown while the box is empty.</param>
+    public TextBox Box(string name, string value, Action<string> onChanged, string? hint = null)
     {
         var box = new TextBox
         {
-            Name = $"entry_{Key(label)}",
+            Name = name,
             Text = value,
             PlaceholderText = hint,
             Height = Height,
@@ -442,7 +450,7 @@ internal sealed class Fields(FieldHost host)
         };
         // Rebuilding the row under a caret would drop it, so the panel waits until the box lets go.
         box.LostFocus += (_, _) => host.Settle();
-        return Row(label, box);
+        return box;
     }
 
     /// <summary>
