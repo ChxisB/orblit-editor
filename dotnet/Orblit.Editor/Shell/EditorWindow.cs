@@ -293,7 +293,7 @@ public sealed class EditorWindow : Window
             OnRetarget = RetargetClip,
             Selected = () => _session.InspectedItem,
         };
-        return new TimelinePanel(_session.Clips, links);
+        return new TimelinePanel(_session.Clips, links, _session.SkeletonLook);
     }
 
     // A cutscene has no bones, so it has nothing to retarget.

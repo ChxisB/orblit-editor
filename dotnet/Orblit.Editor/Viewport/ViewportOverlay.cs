@@ -69,7 +69,14 @@ internal sealed partial class ViewportOverlay : Control
         {
             foreach (var stroke in strokes)
             {
-                DrawLines(context, stroke.Lines.Strokes, ToneBrush(stroke.Tone), 1.25);
+                if (stroke.Alpha < byte.MaxValue)
+                {
+                    DrawGhost(context, stroke);
+                }
+                else
+                {
+                    DrawLines(context, stroke.Lines.Strokes, ToneBrush(stroke.Tone), 1.25);
+                }
             }
         }
 
@@ -84,8 +91,18 @@ internal sealed partial class ViewportOverlay : Control
         GizmoTone.Good => OrblitColors.Good,
         GizmoTone.Warn => OrblitColors.Warn,
         GizmoTone.InkMid => OrblitColors.InkMid,
+        GizmoTone.AxisX => OrblitColors.AxisX,
+        GizmoTone.AxisY => OrblitColors.AxisY,
         _ => OrblitColors.AxisZ,
     };
+
+    private static void DrawGhost(DrawingContext context, GizmoStroke stroke)
+    {
+        using (context.PushOpacity(stroke.Alpha / 255.0))
+        {
+            context.DrawGeometry(null, new Pen(ToneBrush(stroke.Tone), 1), Path(stroke.Lines.Strokes));
+        }
+    }
 
     private static Point At(ViewOffset offset) => new(offset.Dx, offset.Dy);
 

@@ -124,6 +124,30 @@ public sealed class ModelSkeletonsTests : IDisposable
         Assert.Equal(["hips", "spine"], _models.OfAsset("hero.glb")!.Names);
     }
 
+    // Dart: skeleton_gizmo_test.dart "is read once". The C# reads a file again when it changes on disk,
+    // where the Dart waited to be told to forget it.
+    [Fact]
+    public void AFileIsReadOnceUntilItChanges()
+    {
+        Put("hero.glb", SkinnedGlb.ChainGlb("hips"));
+
+        Assert.Same(_models.OfAsset("hero.glb"), _models.OfAsset("hero.glb"));
+    }
+
+    // Added in C#. Some disks keep the time a file was written to the second.
+    [Fact]
+    public void AFileRewrittenInTheSameTickIsReadAgain()
+    {
+        var path = Put("hero.glb", SkinnedGlb.ChainGlb("hips"));
+        var written = File.GetLastWriteTimeUtc(path);
+        Assert.Equal(["hips"], _models.OfAsset("hero.glb")!.Names);
+
+        File.WriteAllBytes(path, SkinnedGlb.ChainGlb("hips", "spine"));
+        File.SetLastWriteTimeUtc(path, written);
+
+        Assert.Equal(["hips", "spine"], _models.OfAsset("hero.glb")!.Names);
+    }
+
     // A skeleton of two bones, in a document that names a buffer by [uri].
     private static object Gltf(string uri) => new
     {

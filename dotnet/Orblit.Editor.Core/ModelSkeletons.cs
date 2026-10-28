@@ -13,6 +13,8 @@ using Orblit.Motion;
 /// <param name="projectRoot">The directory a model's relative path is read from.</param>
 public sealed class ModelSkeletons(string projectRoot)
 {
+    private readonly Dictionary<string, (DateTime Written, long Length, RestSkeleton? Skeleton)> _read = [];
+
     /// <summary>
     /// The skeleton of the model at project path <paramref name="asset"/>, or null when it has no file, the
     /// file has no skin or the file cannot be read.
@@ -26,7 +28,18 @@ public sealed class ModelSkeletons(string projectRoot)
         }
 
         // Combine keeps a rooted path as it is, so an absolute path needs no case of its own.
-        return Read(Path.Combine(projectRoot, asset));
+        var path = Path.Combine(projectRoot, asset);
+        // The view asks every frame, so a file is read again only once it has changed on disk.
+        var file = new FileInfo(path);
+        var (written, length) = file.Exists ? (file.LastWriteTimeUtc, file.Length) : (DateTime.MinValue, -1L);
+        if (_read.TryGetValue(path, out var known) && known.Written == written && known.Length == length)
+        {
+            return known.Skeleton;
+        }
+
+        var skeleton = Read(path);
+        _read[path] = (written, length, skeleton);
+        return skeleton;
     }
 
     private static RestSkeleton? Read(string path)

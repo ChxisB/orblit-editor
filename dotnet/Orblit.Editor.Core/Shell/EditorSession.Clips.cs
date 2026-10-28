@@ -21,6 +21,9 @@ public sealed partial class EditorSession
     /// <summary>The skeleton each model of the project says it has, read once a file.</summary>
     public ModelSkeletons Skeletons { get; }
 
+    /// <summary>What the scene views show of a selected model's skeleton, as the timeline's chips set it.</summary>
+    public SkeletonLook SkeletonLook { get; } = new();
+
     /// <summary>The model of the object the shown clip belongs to, or null when it has no owner or the owner has no model.</summary>
     public string? OwnerModel => Clips.Owner is { } owner ? Inspected?.Scene?[owner]?.MeshAsset : null;
 

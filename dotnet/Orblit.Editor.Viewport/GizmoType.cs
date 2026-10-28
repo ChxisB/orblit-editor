@@ -8,11 +8,17 @@ public enum GizmoTone
     Good,
     Warn,
     InkMid,
+    AxisX,
+    AxisY,
     AxisZ,
 }
 
 /// <summary>Lines the window strokes in a tone, over a dark pass so they read against any floor.</summary>
-public sealed record GizmoStroke(WorldLines Lines, GizmoTone Tone);
+/// <remarks>
+/// A stroke short of full <paramref name="Alpha"/> is a ghost. It is drawn thin with no dark pass, so it
+/// sits back behind the strokes that are solid.
+/// </remarks>
+public sealed record GizmoStroke(WorldLines Lines, GizmoTone Tone, byte Alpha = byte.MaxValue);
 
 /// <summary>
 /// A kind of thing a scene view draws for what is selected, and what it does with the pointer.

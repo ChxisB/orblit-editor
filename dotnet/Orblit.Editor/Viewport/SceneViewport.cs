@@ -87,7 +87,9 @@ public sealed class SceneViewport : Border
         var workspace = session.Workspace;
         _grids = new GridStore(workspace.ProjectDirectory);
         _geometry = new GeometryStore(workspace.ProjectDirectory);
-        _state = new SceneViewportState(workspace, snapping ?? new Snapping(), session.History, Gizmos) { BoundsOf = boundsOf, Sketch = session.Sketch };
+        // The skeleton gizmo reads this session's clip, so it is made for each view.
+        var gizmos = new List<GizmoType>(Gizmos) { SkeletonGizmo.Type(session.Clips, session.Skeletons, session.SkeletonLook) };
+        _state = new SceneViewportState(workspace, snapping ?? new Snapping(), session.History, gizmos) { BoundsOf = boundsOf, Sketch = session.Sketch };
         _brush = new TerrainBrushInput(session.Terrains, session.History, session.TerrainTarget);
         _overlay = new ViewportOverlay(_state, session);
 
@@ -169,6 +171,9 @@ public sealed class SceneViewport : Border
         _session.Terrains.HoverChanged += MarkDirty;
         _session.Terrains.Changed += MarkDirty;
         _session.Interfaces.Changed += ShowInterface;
+        // A bone moves without the scene changing, so only the overlay is told.
+        _session.Clips.Changed += _overlay.InvalidateVisual;
+        _session.SkeletonLook.Changed += _overlay.InvalidateVisual;
         OnSessionChanged();
         if (_renderer is not null)
         {
@@ -196,6 +201,8 @@ public sealed class SceneViewport : Border
         _session.Terrains.HoverChanged -= MarkDirty;
         _session.Terrains.Changed -= MarkDirty;
         _session.Interfaces.Changed -= ShowInterface;
+        _session.Clips.Changed -= _overlay.InvalidateVisual;
+        _session.SkeletonLook.Changed -= _overlay.InvalidateVisual;
         // A frame already asked for belongs to the loop that ended here. Moving to a new group attaches
         // again at once, and the old callback would run beside the new one.
         _loop++;
