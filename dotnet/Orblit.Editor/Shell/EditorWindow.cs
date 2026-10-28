@@ -93,7 +93,7 @@ public sealed class EditorWindow : Window
         Height = 900;
         Background = OrblitColors.Ground;
 
-        var project = new ProjectCommands(_code.Available, () => OpenInCode(), () => Reveal(_session.Workspace.ProjectDirectory));
+        var project = new ProjectCommands(_code.Available, () => OpenInCode(), () => Reveal(_session.Workspace.ProjectDirectory), OpenExport);
         _menu = new EditorMenu(_session, _platform, AskLayoutName, project);
         _verbs = new Dictionary<EditorVerb, Action>
         {
@@ -396,6 +396,9 @@ public sealed class EditorWindow : Window
         }
     }
 
+    private async void OpenExport() =>
+        await ExportDialog.Open(this, new ExportSession(_session.Workspace.ProjectDirectory, new DiskExports()), Reveal);
+
     // Internal for tests, which cannot open the tile's menu that runs it. The compile is off the UI
     // thread, because a big file takes seconds and the window would stop drawing.
     internal async void BuildScript(Asset asset)
@@ -455,9 +458,11 @@ public sealed class EditorWindow : Window
     // once the dialog is gone, so a command that opens its own dialog is not stacked under this one.
     private async void OpenPalette(string query = "")
     {
-        // Here and not in PaletteEntries, because handing a file to another program is the window's job.
+        // Here and not in PaletteEntries, because handing a file to another program and opening a dialog
+        // are the window's job.
         PaletteEntry openInCode = new() { Group = PaletteGroup.Commands, Label = "Open in code editor", Icon = "code", OnRun = () => OpenInCode() };
-        if (await PaletteDialog.Choose(this, [.. PaletteEntries.For(_session, _platform), openInCode], query) is { } chosen)
+        PaletteEntry export = new() { Group = PaletteGroup.Commands, Label = "Export…", Icon = "inventory_2_outlined", OnRun = OpenExport };
+        if (await PaletteDialog.Choose(this, [.. PaletteEntries.For(_session, _platform), openInCode, export], query) is { } chosen)
         {
             chosen.OnRun();
         }

@@ -50,10 +50,11 @@ internal sealed class EditorMenu : Menu
         _deleteLayout = new MenuItem { Name = "menu_delete_layout", Header = "Delete layout" };
         _lock = Item("menu_lock", "Lock layout", ToggleLock);
 
+        var export = Item("menu_export", "Export…", project.Export);
         var openInCode = Item("menu_open_in_code", $"Open project in {project.Editor ?? "VS Code"}", project.OpenInCode);
         var reveal = Item("menu_reveal", platform == HostPlatform.MacOS ? "Show in Finder" : "Show project folder", project.Reveal);
 
-        _file = Menu("File", newScene, _save, saveAs, new Separator(), openInCode, reveal);
+        _file = Menu("File", newScene, _save, saveAs, new Separator(), export, openInCode, reveal);
         Items.Add(_file);
         Items.Add(Menu("Edit", _undo, _redo, new Separator(), _cut, _copy, _paste, _duplicate, _delete));
         Items.Add(AddItems());
@@ -144,6 +145,6 @@ internal sealed class EditorMenu : Menu
     }
 }
 
-/// <summary>The menu's entries that hand the project to programs outside the editor.</summary>
+/// <summary>The menu's entries that act on the whole project: its export, and handing it to programs outside the editor.</summary>
 /// <param name="Editor">The code editor found, to name on the menu, or null.</param>
-internal sealed record ProjectCommands(string? Editor, Action OpenInCode, Action Reveal);
+internal sealed record ProjectCommands(string? Editor, Action OpenInCode, Action Reveal, Action Export);
