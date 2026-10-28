@@ -352,7 +352,10 @@
   top bar has no Saved status, object count or frame rate. The fit chips
   wrap. The grid count has a full stop where Dart has a dash. The Interface
   chip belongs to each scene view, not to the shell. An interface cannot be
-  dropped onto the scene view yet.
+  dropped onto the scene view yet. With a button or text selected, Add puts
+  the new element after it, where Dart puts it inside. A drag in a stack
+  away from the page edge snaps to the grid on the page, where Dart snaps
+  it from the stack's edge.
 
 ## 1.26.0+27
 

@@ -164,6 +164,22 @@ public sealed class InterfaceBenchTests : IDisposable
     }
 
     [Fact]
+    public void AddingWithAButtonSelectedPutsTheElementAfterIt()
+    {
+        var (bench, _) = Opened(Menu());
+        bench.Selected = [];
+        bench.Add(UiElement.Button);
+
+        bench.Add(UiElement.Text);
+
+        // Nothing goes inside a button, and an add selects what it made, so a second add has to go beside it.
+        Assert.Equal(6, Root(bench).Children.Count);
+        Assert.Empty(Root(bench).Children[4].Children);
+        Assert.Equal([5], bench.Selected);
+        Assert.Equal("Text", Assert.IsType<UiNode>(bench.Element).Text);
+    }
+
+    [Fact]
     public void UndoTakesTheAddBackAndKeepsTheSelectionOnSomethingThere()
     {
         var (bench, _) = Opened(Menu());

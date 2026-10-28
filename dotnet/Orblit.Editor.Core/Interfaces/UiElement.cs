@@ -59,6 +59,12 @@ public static partial class UiElements
     private static readonly HashSet<string> Directions = ["col", "column", "stack", "row"];
 
     /// <summary>
+    /// Whether <paramref name="node"/> holds other elements. Splitting a piece of text into three
+    /// columns is not a layout, and nothing goes inside a button.
+    /// </summary>
+    public static bool IsContainer(UiNode node) => node.Type is "column" or "row" or "stack" or "box";
+
+    /// <summary>
     /// What an element is called in the tree and next to Undo.
     /// </summary>
     /// <remarks>

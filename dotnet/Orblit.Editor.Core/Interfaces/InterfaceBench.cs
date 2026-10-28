@@ -331,7 +331,7 @@ public sealed class InterfaceBench
     /// </summary>
     public void Add(UiElement what)
     {
-        var into = _selected ?? [];
+        var (into, after) = WhereToAdd();
         if (Document?.Root.At(into) is not { } parent)
         {
             return;
@@ -353,11 +353,24 @@ public sealed class InterfaceBench
             _columns = true;
         }
 
-        var count = parent.Children.Count;
+        var index = after ?? parent.Children.Count;
         Edit(
             $"Add {what.Label}",
-            document => document with { Root = document.Root.InsertAt(into, count, made) },
-            new InterfaceEditOptions(Select: [.. into, count]));
+            document => document with { Root = document.Root.InsertAt(into, index, made) },
+            new InterfaceEditOptions(Select: [.. into, index]));
+    }
+
+    // Into the selection, or just after it when nothing goes inside it. An add selects what it made, so
+    // a second add with a button selected would otherwise put one button inside another.
+    private (IReadOnlyList<int> Into, int? After) WhereToAdd()
+    {
+        var selected = _selected ?? [];
+        if (selected.Count == 0 || Document?.Root.At(selected) is not { } chosen || UiElements.IsContainer(chosen))
+        {
+            return (selected, null);
+        }
+
+        return ([.. selected.Take(selected.Count - 1)], selected[^1] + 1);
     }
 
     /// <summary>

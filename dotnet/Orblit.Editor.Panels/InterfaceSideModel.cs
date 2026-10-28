@@ -88,12 +88,6 @@ public static class InterfaceSideModel
     public static bool SpeaksMore(InterfaceBench bench) =>
         bench.Strings.Locales.Count > 0 || bench.StringProblems.Count > 0 || bench.Document?.Root.TextKeys.Count > 0;
 
-    /// <summary>
-    /// Whether a split means anything for <paramref name="node"/>. Splitting a piece of text into
-    /// three columns is not a layout.
-    /// </summary>
-    public static bool IsContainer(UiNode node) => node.Type is "column" or "row" or "stack" or "box";
-
     /// <summary>Whether a container turns into a column on a narrow screen.</summary>
     public static bool Stacks(UiNode node) =>
         node.Classes.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Contains("md:row");

@@ -183,10 +183,10 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | `cinematics_test.dart` | `CinematicsTests` | 18 | 18 | 18 | 3: a cut that shortens the shot running, a cut that leaves an earlier shot alone, and a camera under a parent the scene lacks | done |
 | `editor_shell_cinematics_test.dart` | `EditorWindowCinematicsTests` | 7 | 7 | 7 | 11: the shelf in the cinematics mode and nowhere else, the camera menu marking the camera in use and recutting a shot, a camera the scene lacks, a start or length taken only as a number within ten minutes, a typed number that changes nothing, a keystroke in a card the shots have moved on from, the cards letting go of looking, a renamed camera, changes elsewhere not flying the view back, the inspector keying the cutscene, and the playhead leaving a box being typed in alone | done |
 | none | `EditorSessionCinematicsTests` | 0 | 0 | 0 | 30: the panels and layout of the mode, opening, making and refusing a cutscene, Add shot and Use this view as undo steps, looking through a camera, steering it as one step and letting go when it is deleted or its add is undone, the shelf, unsaved changes, and keying the cutscene without an owner | added |
-| `ui_canvas_test.dart` | `InterfaceCanvasTests`, `InterfaceWorkspaceTests` | 20 | 20 | 20 | 3: a click that shakes does not move what it chooses, pointing at an element marks it, and each panel saying what to do with nothing open | done. The canvas follows a bench, so not designing is the bench previewing. Dart finds a control by its words and C# by its name |
+| `ui_canvas_test.dart` | `InterfaceCanvasTests`, `InterfaceWorkspaceTests` | 20 | 20 | 20 | 5: a click that shakes does not move what it chooses, pointing at an element marks it, each panel saying what to do with nothing open, an element in a stack away from the page edge snapping to the grid on the page, and a drag the canvas leaves half way being a step of its own | done. The canvas follows a bench, so not designing is the bench previewing. Dart finds a control by its words and C# by its name |
 | `ui_responsive_test.dart` | `InterfaceCanvasTests`, `InterfaceWorkspaceTests` | 16 | 16 | 16 | 0 | done. The grid count says "4 across this screen. 12 is too fine here." with a full stop where Dart has a dash |
 | `interface_strings_test.dart` | `InterfaceBenchTests`, `InterfaceWorkspaceTests` | 11 | 11 | 11 | 0 | done |
-| none | `InterfaceBenchTests` | 0 | 0 | 0 | 15: the keys the shown interface asks for, adding inside the selection and its undo, a place away from the last element on a stack, the grid going up for a column and not for a button, a split and a split of a placed element, a drag as one step on a whole pixel, removing and the root, typing as one step per element, saving and opening again, a file gone or not an interface, the preview held either way, an element's name, and flowing | added |
+| none | `InterfaceBenchTests` | 0 | 0 | 0 | 16: the keys the shown interface asks for, adding inside the selection and its undo, adding after a button rather than inside it, a place away from the last element on a stack, the grid going up for a column and not for a button, a split and a split of a placed element, a drag as one step on a whole pixel, removing and the root, typing as one step per element, saving and opening again, a file gone or not an interface, the preview held either way, an element's name, and flowing | added |
 | `editor_shell_data_test.dart` | `EditorSessionInterfacesTests`, `EditorWindowInterfacesTests` | 22 | 22 | 6 | 2: a change shown over the scene before it is saved, and an interface file that cannot be read | partial. The "an interface on a scene" group is here. A drop onto the scene view is not ported, so `PutInterfaceOnScene`, which is what the drop does, stands in for it. The data objects and console groups wait for row 13 |
 | `editor_shell_motion_test.dart` | `EditorSessionClipsTests` | 4 | 4 | 3 | 0 | partial. Waiting: Play in four views, which needs the game view. No row owns the game view yet |
 | none | `OutlinerModelTests` | 0 | 0 | 0 | 15: the rows and their depth, the folds, a scene row with a filter, an unloaded scene, where a drop lands and what a drop refuses | added |
@@ -265,6 +265,15 @@ This is item 59 of decision 80. It draws under the boundary boxes, where Dart dr
 The handles are on top in both. The Interface chip is a setting of each scene view, as the
 outline chip is, where Dart keeps one for the shell. The Interface workspace has run
 headless only, never in a real window with the renderer.
+
+The row 9 review found five more, items 60 to 64 of decision 80. Two are fixed in C#.
+With a button or text selected, Add puts the new element after it, where Dart puts it
+inside. A drag in a stack away from the page edge snaps to the grid on the page, where
+Dart snaps it from the stack's edge. Three are left as Dart has them. Only Delete acts
+on the interface selection, and Cut, Copy, Paste, Duplicate and the arrows act on the
+scene selection behind it. The scene view keeps an interface it has read until the
+project opens again. New asks whether the loaded scene shows an interface, then puts
+the canvas on the working one.
 
 The Dart outliner test file is `editor_shell_hierarchy_test.dart`. There is no
 `outliner_test.dart`. The drag itself is not driven headless. The tests call

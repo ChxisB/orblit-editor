@@ -119,7 +119,7 @@ internal sealed class InterfaceDesign : UserControl
 
         rows.Add(Typing(new Typed("Classes", "Edit classes", "p-4 flex-1 md:row lg:text-2xl"), selected.Classes, static (node, text) => node with { Classes = text }));
         rows.Add(Typing(new Typed("CSS", "Edit CSS", "padding: 8px 12px"), selected.Css, static (node, text) => node with { Css = text }));
-        if (InterfaceSideModel.IsContainer(selected))
+        if (UiElements.IsContainer(selected))
         {
             rows.Add(Narrow(selected));
             rows.Add(Split());

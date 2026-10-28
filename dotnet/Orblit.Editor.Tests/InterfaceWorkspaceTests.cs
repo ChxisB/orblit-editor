@@ -329,6 +329,34 @@ public sealed class InterfaceWorkspaceTests : IDisposable
     });
 
     [Fact]
+    public Task ADragTheCanvasLeavesHalfWayIsAStepOfItsOwn() => Headless.Run(() =>
+    {
+        var rig = new Rig(_root.FullName, Menu());
+        var at = Headless.Centre(rig.Window, rig.OnCanvas("Orblit").Single());
+        rig.Window.MouseDown(at, MouseButton.Left);
+        for (var step = 0; step < 6; step++)
+        {
+            at += new Vector(10, 0);
+            rig.Window.MouseMove(at);
+            Headless.Render();
+        }
+
+        // A change of workspace takes the canvas away with the button still down.
+        var content = rig.Window.Content;
+        rig.Window.Content = null;
+        Headless.Render();
+        rig.Window.Content = content;
+        Headless.Render();
+        rig.Window.MouseUp(at, MouseButton.Left);
+        rig.DragBy(rig.OnCanvas("Orblit").Single(), new Vector(40, 0));
+        rig.Undo();
+
+        // The second drag is undone and the first is still there.
+        Assert.True(rig.Bench.AnyUnsaved);
+        Assert.Equal(Math.Round(rig.Bench.Document!.Root.Children[0].Placed!.Value.Left), rig.Bench.Document.Root.Children[0].Placed!.Value.Left);
+    });
+
+    [Fact]
     public Task AnElementAColumnLaysOutIsNotDraggable() => Headless.Run(() =>
     {
         var flowed = new UiDocument

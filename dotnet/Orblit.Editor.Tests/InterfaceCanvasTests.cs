@@ -256,6 +256,52 @@ public sealed class InterfaceCanvasTests : IDisposable
     });
 
     [Fact]
+    public Task AnElementInAStackAwayFromThePageEdgeSnapsToTheGridOnThePage() => Headless.Run(() =>
+    {
+        const double inset = 203;
+        var nested = new UiDocument
+        {
+            Canvas = new UiCanvas { Fit = CanvasFit.Responsive },
+            Root = new UiNode
+            {
+                Type = "stack",
+                Classes = "w-full h-full",
+                Children =
+                [
+                    new UiNode
+                    {
+                        Type = "stack",
+                        Css = $"left: {inset}px; top: 60px; width: 1200px; height: 400px",
+                        Children = [new UiNode { Type = "text", Classes = "text-3xl", Css = "left: 0px; top: 0px", Text = "Orblit" }],
+                    },
+                ],
+            },
+        };
+        var rig = new Rig(_root.FullName, nested);
+        Show(() => rig.Bench.Columns = true);
+        Assert.Equal(inset, rig.Where("Orblit").X);
+
+        var at = rig.Centre("Orblit");
+        rig.Window.MouseDown(at, MouseButton.Left);
+        var lefts = new List<double>();
+        for (var step = 0; step < 24; step++)
+        {
+            at += new Vector(14, 0);
+            rig.Window.MouseMove(at);
+            Headless.Render();
+            lefts.Add(inset + rig.Bench.Document!.Root.Children[0].Children[0].Placed!.Value.Left);
+        }
+
+        rig.Window.MouseUp(at, MouseButton.Left);
+        Headless.Render();
+
+        // On the page, where the grid is drawn, and not from the edge of the stack it sits in.
+        var canvas = new UiCanvas { Fit = CanvasFit.Responsive };
+        Assert.All(lefts, left => Assert.True((canvas.SnapAcross(left, 1920) ?? left) == left, $"{left} is beside an edge"));
+        Assert.Contains(lefts, left => canvas.SnapAcross(left, 1920) == left);
+    });
+
+    [Fact]
     public Task NothingSnapsWhileTheGridIsDown() => Headless.Run(() =>
     {
         var rig = new Rig(_root.FullName, Responsive());

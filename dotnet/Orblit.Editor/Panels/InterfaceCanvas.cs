@@ -185,7 +185,10 @@ internal sealed class InterfaceCanvas : UserControl
         _bench.Selected = element.Path;
         if (element.Free && _bench.Document?.Root.At(element.Path) is { } node)
         {
-            _drag = new Drag(element.Path, e.GetPosition(this), e.GetPosition(_page), node.Placed ?? (0, 0));
+            var start = node.Placed ?? (0, 0);
+            // A left is from the edge of the stack the element is in, and the grid is drawn on the page.
+            var stackAt = (element.TranslatePoint(default, _page)?.X ?? start.Left) - start.Left;
+            _drag = new Drag(element.Path, e.GetPosition(this), e.GetPosition(_page), start) { StackAt = stackAt };
             e.Pointer.Capture(this);
         }
     }
@@ -210,7 +213,7 @@ internal sealed class InterfaceCanvas : UserControl
         var left = drag.Start.Left + by.X;
         if (_bench.Columns && _bench.Document is { } document)
         {
-            left = document.Canvas.SnapAcross(left, _page.Width) ?? left;
+            left = (document.Canvas.SnapAcross(drag.StackAt + left, _page.Width) - drag.StackAt) ?? left;
         }
 
         _bench.Move(drag.Path, (left, drag.Start.Top + by.Y));
@@ -263,9 +266,12 @@ internal sealed class InterfaceCanvas : UserControl
     }
 
     // A press on an element that can move: where the pointer went down, in the canvas and in the page,
-    // and where the element was. Moving once it has gone further than a shaky click.
+    // where the element was, and how far its stack is from the page edge. Moving once it has gone
+    // further than a shaky click.
     private readonly record struct Drag(IReadOnlyList<int> Path, Point Pressed, Point From, (double Left, double Top) Start)
     {
+        public double StackAt { get; init; }
+
         public bool Moving { get; init; }
     }
 }
