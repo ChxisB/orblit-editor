@@ -308,6 +308,23 @@
   The UV view holds the unit square and the faces together. Shift on a
   face handle extrudes it. Live surface, outline and boundary edits fold
   into one undo step.
+- Add the blend graph to the C# editor, in the animation workspace. A blend
+  opened from the project panel is drawn as a box for each state and an
+  arrow for each change, with the fields beside it, or under it in a narrow
+  panel. Each open blend is a tab, and a tab with changes is marked until it
+  is saved. Drag from a state onto another to make a change. The fields
+  edit a state, a change, its conditions, a fade and the inputs, and each
+  edit is one undo step.
+- Add Retarget to the clip menu of the C# timeline. A dialog asks which model
+  the clip was made for and which one it should move, shows the target's
+  bones with what moves each, and takes a pairing by hand, by name or by the
+  parts of a person. A bone map is saved under `retargets/` and loaded
+  again. The made clip is written into `clips/` as `name (model)` and never
+  over another. It goes on the chosen object only when that object wears the
+  model the clip moves. A model's bones are read once for each session.
+- The C# blend graph fixes two faults that the Dart one has. Moving a change
+  in a blend with no change answers the same blend, where Dart throws. A
+  blend with one change reads "1 change", where Dart reads "1 changes".
 
 ## 1.26.0+27
 

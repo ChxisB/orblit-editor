@@ -551,6 +551,7 @@ public sealed class AssetsTests : IDisposable
     [Theory]
     [InlineData("crate.GLB", "Mesh")]
     [InlineData("theme.css", "Stylesheet")]
+    [InlineData("retargets/a.obonemap", "Bone map")]
     [InlineData("a.tar.gz", "File")]
     [InlineData(".json", "File")]
     [InlineData("noextension", "File")]
