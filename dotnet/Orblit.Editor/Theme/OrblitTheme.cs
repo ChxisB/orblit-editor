@@ -11,6 +11,8 @@ public static class OrblitColors
 {
     public static readonly Color EmberColor = Color.FromUInt32(0xFFE5893F);
     public static readonly Color GroundColor = Color.FromUInt32(0xFF0E1116);
+    public static readonly Color InkDimColor = Color.FromUInt32(0xFF8791A1);
+    public static readonly Color GoodColor = Color.FromUInt32(0xFF5FB483);
 
     public static readonly IBrush Ground = new ImmutableSolidColorBrush(GroundColor);
     public static readonly IBrush Surface = Brush(0xFF161A21);
@@ -20,13 +22,13 @@ public static class OrblitColors
     public static readonly IBrush LineSoft = Brush(0xFF212733);
     public static readonly IBrush Ink = Brush(0xFFE4E9F0);
     public static readonly IBrush InkMid = Brush(0xFFA6B0BF);
-    public static readonly IBrush InkDim = Brush(0xFF8791A1);
+    public static readonly IBrush InkDim = new ImmutableSolidColorBrush(InkDimColor);
     public static readonly IBrush Ember = new ImmutableSolidColorBrush(EmberColor);
     public static readonly IBrush EmberDeep = Brush(0xFFC25E22);
     public static readonly IBrush EmberWash = Brush(0x24E5893F);
     public static readonly IBrush Bad = Brush(0xFFD9634F);
     public static readonly IBrush Warn = Brush(0xFFE0B252);
-    public static readonly IBrush Good = Brush(0xFF5FB483);
+    public static readonly IBrush Good = new ImmutableSolidColorBrush(GoodColor);
     public static readonly IBrush AxisX = Brush(0xFFF0736A);
     public static readonly IBrush AxisY = Brush(0xFF7FD083);
     public static readonly IBrush AxisZ = Brush(0xFF62A0E8);
