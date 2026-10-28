@@ -51,10 +51,12 @@ internal sealed class EditorMenu : Menu
         _lock = Item("menu_lock", "Lock layout", ToggleLock);
 
         var export = Item("menu_export", "Export…", project.Export);
+        var store = Item("menu_kit_store", "Kit store…", project.Store);
+        var publish = Item("menu_publish_kit", "Publish kit…", project.Publish);
         var openInCode = Item("menu_open_in_code", $"Open project in {project.Editor ?? "VS Code"}", project.OpenInCode);
         var reveal = Item("menu_reveal", platform == HostPlatform.MacOS ? "Show in Finder" : "Show project folder", project.Reveal);
 
-        _file = Menu("File", newScene, _save, saveAs, new Separator(), export, openInCode, reveal);
+        _file = Menu("File", newScene, _save, saveAs, new Separator(), export, store, publish, openInCode, reveal);
         Items.Add(_file);
         Items.Add(Menu("Edit", _undo, _redo, new Separator(), _cut, _copy, _paste, _duplicate, _delete));
         Items.Add(AddItems());
@@ -145,6 +147,22 @@ internal sealed class EditorMenu : Menu
     }
 }
 
-/// <summary>The menu's entries that act on the whole project: its export, and handing it to programs outside the editor.</summary>
-/// <param name="Editor">The code editor found, to name on the menu, or null.</param>
-internal sealed record ProjectCommands(string? Editor, Action OpenInCode, Action Reveal, Action Export);
+/// <summary>
+/// The menu's entries that act on the whole project: its export, its kits, and handing it to programs
+/// outside the editor.
+/// </summary>
+internal sealed record ProjectCommands
+{
+    /// <summary>The code editor found, to name on the menu, or null.</summary>
+    public required string? Editor { get; init; }
+
+    public required Action OpenInCode { get; init; }
+
+    public required Action Reveal { get; init; }
+
+    public required Action Export { get; init; }
+
+    public required Action Store { get; init; }
+
+    public required Action Publish { get; init; }
+}

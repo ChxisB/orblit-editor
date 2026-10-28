@@ -36,4 +36,11 @@ public static class HostPaths
             ? drive + path
             : null;
     }
+
+    /// <summary>
+    /// The folder the editor keeps its own files in: the recent projects, the store's settings and the
+    /// kits downloaded. They belong to no one project, so a kit is fetched once for all of them.
+    /// </summary>
+    public static string SupportFolder() =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Orblit");
 }

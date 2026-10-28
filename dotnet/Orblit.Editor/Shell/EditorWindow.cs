@@ -8,6 +8,7 @@ using Avalonia.Media;
 namespace Orblit.Editor;
 
 using DockedPanel = Orblit.Editor.Core.DockPanel;
+using Orblit.Asset;
 using Orblit.Editor.Core;
 using Orblit.Editor.Viewport;
 using Orblit.Profile;
@@ -93,7 +94,15 @@ public sealed class EditorWindow : Window
         Height = 900;
         Background = OrblitColors.Ground;
 
-        var project = new ProjectCommands(_code.Available, () => OpenInCode(), () => Reveal(_session.Workspace.ProjectDirectory), OpenExport);
+        var project = new ProjectCommands
+        {
+            Editor = _code.Available,
+            OpenInCode = () => OpenInCode(),
+            Reveal = () => Reveal(_session.Workspace.ProjectDirectory),
+            Export = OpenExport,
+            Store = OpenStore,
+            Publish = OpenPublish,
+        };
         _menu = new EditorMenu(_session, _platform, AskLayoutName, project);
         _verbs = new Dictionary<EditorVerb, Action>
         {
@@ -399,6 +408,19 @@ public sealed class EditorWindow : Window
     private async void OpenExport() =>
         await ExportDialog.Open(this, new ExportSession(_session.Workspace.ProjectDirectory, new DiskExports()), Reveal);
 
+    private async void OpenStore()
+    {
+        var directory = _session.Workspace.ProjectDirectory;
+        var support = HostPaths.SupportFolder();
+        // A project file with no engine reads as unknown, and the store then lists kits for any engine.
+        var engine = ProjectStore.Open(directory)?.EngineVersion ?? "unknown";
+        var store = new StoreSession(new StoreSettings(Path.Join(support, "store.json")), engine, () => new HttpTransport());
+        await StoreDialog.Open(this, store, (row, release) => new InstallSession(row, release, directory, Path.Join(support, "kit-downloads"), new HttpTransport()));
+    }
+
+    private async void OpenPublish() =>
+        await PublishDialog.Open(this, new PublishSession(_session.Workspace.ProjectDirectory), _session.TextClipboard);
+
     // Internal for tests, which cannot open the tile's menu that runs it. The compile is off the UI
     // thread, because a big file takes seconds and the window would stop drawing.
     internal async void BuildScript(Asset asset)
@@ -462,7 +484,9 @@ public sealed class EditorWindow : Window
         // are the window's job.
         PaletteEntry openInCode = new() { Group = PaletteGroup.Commands, Label = "Open in code editor", Icon = "code", OnRun = () => OpenInCode() };
         PaletteEntry export = new() { Group = PaletteGroup.Commands, Label = "Export…", Icon = "inventory_2_outlined", OnRun = OpenExport };
-        if (await PaletteDialog.Choose(this, [.. PaletteEntries.For(_session, _platform), openInCode, export], query) is { } chosen)
+        PaletteEntry store = new() { Group = PaletteGroup.Commands, Label = "Kit store…", Icon = "storefront_outlined", OnRun = OpenStore };
+        PaletteEntry publish = new() { Group = PaletteGroup.Commands, Label = "Publish kit…", Icon = "upload_outlined", OnRun = OpenPublish };
+        if (await PaletteDialog.Choose(this, [.. PaletteEntries.For(_session, _platform), openInCode, export, store, publish], query) is { } chosen)
         {
             chosen.OnRun();
         }

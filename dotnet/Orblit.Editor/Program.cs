@@ -18,10 +18,7 @@ internal static class Program
 
     // shortcut: the recents list is kept under the user's config folder, not where the Dart editor keeps
     // its own, so the two editors do not share it. Share it when a project is opened in both.
-    private static string RecentsFile() => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "Orblit",
-        "recent.json");
+    private static string RecentsFile() => Path.Combine(HostPaths.SupportFolder(), "recent.json");
 
     private static LauncherWindow Launch()
     {
