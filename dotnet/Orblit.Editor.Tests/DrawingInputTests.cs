@@ -213,4 +213,18 @@ public sealed class DrawingInputTests
 
         Assert.Empty(_pointed);
     }
+
+    [Fact]
+    public void ARayThatNeverMeetsThePlaneAddsNothingRatherThanLandingOnTheGround()
+    {
+        _sketch.Start(ViewportTool.PolyShape);
+        var pixel = On(4, 0, 3);
+        var ray = Projection.RayThrough(pixel);
+        // A plane the ray runs along, which it can never meet.
+        _sketch.PlaneAt(ray.Origin, ray.Direction.Cross(new Vector3(0, 1, 0)));
+
+        Tap(pixel);
+
+        Assert.Empty(_pointed);
+    }
 }

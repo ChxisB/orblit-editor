@@ -44,11 +44,13 @@ public sealed class ModelBoundsTests : IDisposable
         File.WriteAllBytes(Path.Combine(_root, "crate.fbx"), [1, 2, 3]);
         File.WriteAllBytes(Path.Combine(_root, "broken.glb"), [1, 2, 3]);
         File.WriteAllText(Path.Combine(_root, "broken.gltf"), "{ not json");
+        File.WriteAllText(Path.Combine(_root, "broken.obj"), "v a b c\nv 1\nv\n");
 
         Assert.Null(_models.Of(Object("empty.obj")));
         Assert.Null(_models.Of(Object("crate.fbx")));
         Assert.Null(_models.Of(Object("broken.glb")));
         Assert.Null(_models.Of(Object("broken.gltf")));
+        Assert.Null(_models.Of(Object("broken.obj")));
         Assert.Null(_models.Of(Object("gone.obj")));
     }
 

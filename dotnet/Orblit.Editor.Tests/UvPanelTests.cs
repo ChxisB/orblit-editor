@@ -8,6 +8,7 @@ namespace Orblit.Editor.Tests;
 using Orblit.Editor.Core;
 using Orblit.Editor.Panels;
 using Orblit.Mesh;
+using Orblit.VectorMath;
 
 public sealed class UvPanelTests : IDisposable
 {
@@ -145,4 +146,46 @@ public sealed class UvPanelTests : IDisposable
         Assert.Equal(before, _rig.Corners(0)[0].X, 1e-9);
         window.Close();
     });
+
+    [Fact]
+    public Task ScalingIsMeasuredFromTheMiddleOfTheFacesNotTheMiddleOfTheView() => Headless.Run(() =>
+    {
+        var window = _rig.Show();
+        _rig.Select(0);
+        _rig.Session.NudgeUvs(new Vector2(0.3, 0));
+        _rig.Select(1);
+        Headless.Render();
+        _rig.Select(0);
+        Headless.Render();
+        Press(window, "choice_drag_scale");
+        var canvas = Headless.Find<UvCanvas>(window, "uv_canvas");
+        var faces = _rig.Session.UvSelection.FacesIn(_rig.Mesh);
+        var frame = UvFrame.Around(_rig.Mesh, faces);
+        var middle = MiddleOf(faces);
+        var width = Width(_rig.Corners(0));
+
+        Point At(double along)
+        {
+            var (x, y) = frame.At(new Vector2(middle.X + along, middle.Y + along), canvas.Bounds.Width, canvas.Bounds.Height);
+            return canvas.TranslatePoint(new Point(x, y), window)!.Value;
+        }
+
+        // From a fifth of a unit out to two fifths, so the faces should come out twice as wide.
+        window.MouseDown(At(0.2), MouseButton.Left);
+        for (var step = 1; step <= 4; step++)
+        {
+            window.MouseMove(At(0.2 + (0.05 * step)));
+        }
+
+        window.MouseUp(At(0.4), MouseButton.Left);
+
+        Assert.Equal(2 * width, Width(_rig.Corners(0)), 1e-6);
+        window.Close();
+    });
+
+    private Vector2 MiddleOf(List<Face> faces) => _rig.Mesh.UvBoundsOf(faces) is { } box
+        ? (box.Min + box.Max) * 0.5
+        : throw new InvalidOperationException("No faces.");
+
+    private static double Width(List<Vector2> corners) => corners.Max(one => one.X) - corners.Min(one => one.X);
 }

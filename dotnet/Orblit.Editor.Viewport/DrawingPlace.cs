@@ -19,20 +19,23 @@ internal sealed class DrawingPlace(Sketch sketch, EditingMesh? editing, Viewport
     public DrawnPoint? ForClick(Offset pixel)
     {
         var ray = projection.RayThrough(pixel);
-        return OnSurface(pixel, ray) ?? (sketch.Tool == ViewportTool.Cut ? null : OnGround(ray));
+
+        // Once the plane is down every later point is on it, and a ray that misses it gives no point.
+        // A plane worked out afresh would follow whatever happened to be behind, and a point taken
+        // from there would sit off the plane the outline is drawn on.
+        return sketch.Origin is not null
+            ? sketch.PlaceOn(ray.Origin, ray.Direction)
+            : OnFace(pixel, ray) ?? (sketch.Tool == ViewportTool.Cut ? null : OnGround(ray));
     }
 
     /// <summary>Where the line being drawn reaches to, which can be anywhere a click could not.</summary>
     public Vector3? ForHover(Offset pixel)
     {
         var ray = projection.RayThrough(pixel);
-        return (OnSurface(pixel, ray) ?? OnGround(ray))?.At;
+        return (sketch.Origin is not null
+            ? sketch.PlaceOn(ray.Origin, ray.Direction)
+            : OnFace(pixel, ray) ?? OnGround(ray))?.At;
     }
-
-    // Once the plane is down every later point is on it. A plane worked out afresh each click would
-    // follow whatever happened to be behind.
-    private DrawnPoint? OnSurface(Offset pixel, ViewRay ray) =>
-        sketch.PlaceOn(ray.Origin, ray.Direction) ?? OnFace(pixel, ray);
 
     private DrawnPoint? OnFace(Offset pixel, ViewRay ray)
     {

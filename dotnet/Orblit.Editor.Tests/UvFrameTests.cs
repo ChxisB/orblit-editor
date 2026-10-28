@@ -93,4 +93,30 @@ public sealed class UvFrameTests
     [Fact]
     public void ASpanOfNothingIsRefused() =>
         Assert.Throws<ArgumentOutOfRangeException>(() => new UvFrame(0, new Vector2(0, 0)));
+
+    [Fact]
+    public void FacesFarFromTheSquareAreFramedWithBothInShot()
+    {
+        var (mesh, faces) = FittedFace();
+        MeshUvs.NudgeUvs(faces, new Vector2(3, 0));
+
+        var frame = UvFrame.Around(mesh, faces);
+
+        // The faces span 3 to 4 and the square 0 to 1, so the view has to reach from one to the other.
+        Assert.True(frame.Centre.X - (frame.Span / 2) <= 0);
+        Assert.True(frame.Centre.X + (frame.Span / 2) >= 4);
+    }
+
+    [Fact]
+    public void AFaceTuckedIntoACornerStillShowsTheWholeSquare()
+    {
+        var (mesh, faces) = FittedFace();
+        mesh.ScaleUvs(faces, new Vector2(0.2, 0.2));
+        MeshUvs.NudgeUvs(faces, new Vector2(0.3, 0));
+
+        var frame = UvFrame.Around(mesh, faces);
+
+        Assert.True(frame.Centre.X - (frame.Span / 2) <= 0);
+        Assert.True(frame.Centre.X + (frame.Span / 2) >= 1);
+    }
 }

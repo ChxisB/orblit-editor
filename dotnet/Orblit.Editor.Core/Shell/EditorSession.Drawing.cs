@@ -24,6 +24,12 @@ public sealed partial class EditorSession
                 Sketch.Clear();
                 Say("Select a shape to cut first.", SayLevel.Warning);
             }
+            else if (tool == ViewportTool.Cut)
+            {
+                // A cut divides a face, and faces are only offered from inside the geometry. Left
+                // whole, every click would find nothing and the tool would look dead.
+                SetContext(EditContext.Element);
+            }
         }
 
         Changed?.Invoke();

@@ -251,11 +251,28 @@ public sealed partial class EditorSession
 
     private void Choose(IReadOnlyList<string> ids, string? primary)
     {
+        var moved = primary != Primary;
         Selected = [.. ids];
         Primary = primary;
         SelectedScene = null;
+        if (moved)
+        {
+            ForgetParts();
+        }
+
         FollowMotion();
         Changed?.Invoke();
+    }
+
+    // A face number means something only on the mesh it was picked from. Kept across to another
+    // object it would pick that object's faces by position, and Delete or Paint would hit them.
+    private void ForgetParts()
+    {
+        Elements = new ElementSelection();
+        if (Context == EditContext.Element && !CanEditParts)
+        {
+            Context = EditContext.Whole;
+        }
     }
 
     /// <summary>Undoes a step, then shows what it changed, so a step in another scene is not invisible.</summary>
@@ -428,6 +445,7 @@ public sealed partial class EditorSession
         if (Primary is { } primary && !scene.Contains(primary))
         {
             Primary = Selected.Count == 0 ? null : Selected[^1];
+            ForgetParts();
         }
 
         Changed?.Invoke();

@@ -78,8 +78,15 @@ internal sealed class UvCanvas : Control
 
         e.Pointer.Capture(this);
         _host.Hold();
-        _drag = new UvDrag(_session.UvGesture, _frame.Centre, Under(e));
+        _drag = new UvDrag(_session.UvGesture, SelectionMiddle(), Under(e));
     }
+
+    // Scaling and turning hold this point still. The middle of the view is where the square sits, not
+    // where the faces are, so a face off to one side would swing away from under the pointer.
+    private Vector2 SelectionMiddle() =>
+        _session.UvMesh is { } mesh && mesh.UvBoundsOf(_session.UvSelection.FacesIn(mesh)) is { } box
+            ? (box.Min + box.Max) * 0.5
+            : _frame.Centre;
 
     protected override void OnPointerMoved(PointerEventArgs e)
     {

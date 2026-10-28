@@ -194,4 +194,68 @@ public sealed class ElementEditsTests
         rig.Session.Undo();
         Assert.True(rig.Session.ChosenShape!.IsParametric);
     });
+
+    [Fact]
+    public void ChoosingAnotherObjectLeavesThePartsOfTheFirstBehind()
+    {
+        using var rig = new ModellingRig(cube: true);
+        var first = rig.Session.Primary!;
+        rig.Session.AddShape(ShapeKind.Cube);
+        var second = rig.Session.Primary!;
+        rig.Session.SelectObject(first);
+        rig.Edit(0, 1);
+
+        rig.Session.SelectObject(second);
+
+        // Still editing, now the other shape, and with none of its faces chosen: a face number means
+        // nothing on a mesh it was not picked from.
+        Assert.Equal(EditContext.Element, rig.Session.Context);
+        Assert.Empty(rig.Session.Elements.Faces);
+    }
+
+    [Fact]
+    public void ChoosingSomethingThatHasNoPartsEndsTheEdit()
+    {
+        using var rig = new ModellingRig(cube: true);
+        rig.Edit(0);
+
+        rig.Session.ClearSelection();
+
+        Assert.Equal(EditContext.Whole, rig.Session.Context);
+        Assert.Empty(rig.Session.Elements.Faces);
+    }
+
+    [Fact]
+    public void ChoosingTheSameObjectAgainKeepsItsParts()
+    {
+        using var rig = new ModellingRig(cube: true);
+        rig.Edit(0, 1);
+
+        rig.Session.SelectObject(rig.Session.Primary!);
+
+        Assert.Equal([0, 1], rig.Session.Elements.Faces);
+    }
+
+    [Fact]
+    public Task ShiftHeldOnTheHandleExtrudesTheFaceInsteadOfMovingIt() => Headless.Run(() =>
+    {
+        using var rig = Editing();
+        var mesh = rig.Session.ChosenShape!.CurrentMesh!;
+        var top = mesh.Faces.FindIndex(face => mesh.NormalOf(face).Y > 0.99);
+        rig.Session.PickElements(Faces(top), false);
+        Headless.Render();
+        var gizmo = rig.View.State.Handles!;
+        var centre = gizmo.Projection.Project(gizmo.Pivot)!.Value;
+        var end = gizmo.Projection.Project(gizmo.EndOf(GizmoAxis.Y))!.Value;
+        var arm = Over(rig, centre + ((end - centre) * 0.6));
+        var held = RawInputModifiers.Shift | RawInputModifiers.LeftMouseButton;
+
+        rig.Window.MouseMove(arm);
+        rig.Window.MouseDown(arm, MouseButton.Left, RawInputModifiers.Shift);
+        rig.Window.MouseMove(new Point(arm.X, arm.Y - 20), held);
+        rig.Window.MouseMove(new Point(arm.X, arm.Y - 40), held);
+        rig.Window.MouseUp(new Point(arm.X, arm.Y - 40), MouseButton.Left, RawInputModifiers.Shift);
+
+        Assert.True(rig.Session.ChosenShape!.CurrentMesh!.Faces.Count > mesh.Faces.Count);
+    });
 }

@@ -32,6 +32,8 @@ public sealed class MeshPicker(Mesh mesh, Matrix4 transform, ViewportProjection 
 
     private readonly Lazy<List<Vector3>> _world = new(() => [.. mesh.Positions.Select(transform.Transformed3)]);
 
+    private List<(int Face, Vector3 A, Vector3 B, Vector3 C)>? _fans;
+
     /// <summary>
     /// Whether a point on the mesh can be seen from where the camera is: a ray from the eye to the
     /// point, hidden by anything the mesh puts in the way first. The margin matters, because a
@@ -202,9 +204,12 @@ public sealed class MeshPicker(Mesh mesh, Matrix4 transform, ViewportProjection 
             && (Visible(a) || Visible(b));
     }
 
+    // Kept because a hover asks once per pointer move, and Visible asks once per corner it tests.
+    private List<(int Face, Vector3 A, Vector3 B, Vector3 C)> Triangles() => _fans ??= [.. Fan()];
+
     // A fan from the first corner, the same way a face is triangulated for drawing, so what is
     // clicked is what is on screen.
-    private IEnumerable<(int Face, Vector3 A, Vector3 B, Vector3 C)> Triangles()
+    private IEnumerable<(int Face, Vector3 A, Vector3 B, Vector3 C)> Fan()
     {
         for (var at = 0; at < mesh.Faces.Count; at++)
         {

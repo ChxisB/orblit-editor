@@ -293,6 +293,7 @@ public sealed class SceneViewport : Border
         {
             // Read on every move, so a key pressed part way through a drag suspends the grid as well.
             _state.SuspendSnapping = Held(e.KeyModifiers, KeyModifiers.Control | KeyModifiers.Alt);
+            _state.ShiftHeld = Held(e.KeyModifiers, KeyModifiers.Shift);
             Drag(from, at, add);
         }
         else

@@ -300,6 +300,14 @@
 - Add export of a shape to the C# editor. A format choice (OBJ, glTF binary,
   STL, PLY) and a name prompt write the file into `exports/` in the project.
   An OBJ with materials brings its `.mtl`, and the message names both files.
+- The C# modelling workspace fixes seven faults that the Dart one has.
+  Choosing another object clears the selected parts, which were numbers on
+  the first mesh. The Cut tool opens the geometry, where faces are found.
+  A drawing that has its plane takes no point from a ray that misses it.
+  Turning and scaling in the UVs panel hold the middle of the faces still.
+  The UV view holds the unit square and the faces together. Shift on a
+  face handle extrudes it. Live surface, outline and boundary edits fold
+  into one undo step.
 
 ## 1.26.0+27
 

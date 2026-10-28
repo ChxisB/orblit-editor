@@ -30,7 +30,8 @@ public sealed class UvFrame
 
     /// <summary>
     /// The frame that shows these faces. The unit square is always in shot, whatever they cover, so
-    /// "is this face inside the texture" can be answered by looking.
+    /// "is this face inside the texture" can be answered by looking. It is the box that holds both,
+    /// because a point between the two would cut one off when they are far apart.
     /// </summary>
     public static UvFrame Around(Mesh mesh, IReadOnlyList<Face> faces)
     {
@@ -39,11 +40,9 @@ public sealed class UvFrame
             return Start;
         }
 
-        var wide = Math.Max(box.Max.X - box.Min.X, box.Max.Y - box.Min.Y);
-        var middle = (box.Min + box.Max) * 0.5;
-        return new UvFrame(
-            Math.Max(wide, 1.0) * 1.25,
-            new Vector2((middle.X + 0.5) / 2, (middle.Y + 0.5) / 2));
+        var low = new Vector2(Math.Min(box.Min.X, 0), Math.Min(box.Min.Y, 0));
+        var high = new Vector2(Math.Max(box.Max.X, 1), Math.Max(box.Max.Y, 1));
+        return new UvFrame(Math.Max(high.X - low.X, high.Y - low.Y) * 1.25, (low + high) * 0.5);
     }
 
     /// <summary>The coordinate under a point of a view <paramref name="width"/> across. Down the screen is down in V, which is the way a texture is read.</summary>

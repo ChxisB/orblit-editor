@@ -399,4 +399,17 @@ public sealed class DrawingSessionTests : IDisposable
         Assert.Equal(ViewportTool.None, session.Sketch.Tool);
         Assert.Equal(EditContext.Element, session.Context);
     }
+
+    [Fact]
+    public void StartingACutGoesIntoTheGeometryBecauseThatIsWhereFacesAreFound()
+    {
+        var session = Open();
+        session.AddShape(ShapeKind.Cube);
+        Assert.Equal(EditContext.Whole, session.Context);
+
+        session.UseTool(ViewportTool.Cut);
+
+        Assert.Equal(ViewportTool.Cut, session.Sketch.Tool);
+        Assert.Equal(EditContext.Element, session.Context);
+    }
 }
