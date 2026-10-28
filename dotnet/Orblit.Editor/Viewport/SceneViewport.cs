@@ -76,7 +76,7 @@ public sealed class SceneViewport : Border
         var workspace = session.Workspace;
         _grids = new GridStore(workspace.ProjectDirectory);
         _geometry = new GeometryStore(workspace.ProjectDirectory);
-        _state = new SceneViewportState(workspace, new Snapping(), session.History, Gizmos) { BoundsOf = boundsOf };
+        _state = new SceneViewportState(workspace, new Snapping(), session.History, Gizmos) { BoundsOf = boundsOf, Sketch = session.Sketch };
         _brush = new TerrainBrushInput(session.Terrains, session.History, session.TerrainTarget);
         _overlay = new ViewportOverlay(_state, session);
 
@@ -136,6 +136,8 @@ public sealed class SceneViewport : Border
         base.OnAttachedToVisualTree(e);
         _state.CameraChanged += OnCameraChanged;
         _state.Picked += OnPicked;
+        _state.DrawPointed += _session.DrawPoint;
+        _state.DrawFinished += _session.FinishDrawing;
         _state.Changed += MarkDirty;
         _state.Clocked += MarkDirty;
         _session.Changed += OnSessionChanged;
@@ -155,6 +157,8 @@ public sealed class SceneViewport : Border
     {
         _state.CameraChanged -= OnCameraChanged;
         _state.Picked -= OnPicked;
+        _state.DrawPointed -= _session.DrawPoint;
+        _state.DrawFinished -= _session.FinishDrawing;
         _state.Changed -= MarkDirty;
         _state.Clocked -= MarkDirty;
         _session.Changed -= OnSessionChanged;
@@ -423,6 +427,9 @@ public sealed class SceneViewport : Border
     {
         _state.Selected = new HashSet<string>(_session.Selected);
         _state.Primary = _session.Primary;
+        _state.Context = _session.Context;
+        _state.ElementMode = _session.ElementMode;
+        _state.ElementSelection = _session.Elements;
         _state.ModeInput = _session.Mode.UsesBrush ? _brush.Handle : null;
         if (!_session.Mode.UsesBrush)
         {

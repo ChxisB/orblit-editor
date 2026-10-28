@@ -36,8 +36,8 @@ public sealed class EditorWindow : Window
     private CookStatusIndex? _cooks;
     private TerrainBrushPanel? _brush;
 
-    // Keys that mean something else while a text box has the keyboard: delete a letter, copy some words.
-    private static readonly HashSet<EditorVerb> ObjectVerbs = [EditorVerb.Delete, EditorVerb.Copy, EditorVerb.Cut, EditorVerb.Paste, EditorVerb.Duplicate];
+    // Keys that mean something else while a text box has the keyboard: delete a letter, copy some words, finish a field.
+    private static readonly HashSet<EditorVerb> ObjectVerbs = [EditorVerb.Delete, EditorVerb.Copy, EditorVerb.Cut, EditorVerb.Paste, EditorVerb.Duplicate, EditorVerb.LeaveEdit, EditorVerb.FinishDraw];
 
     /// <param name="session">What the window shows and changes.</param>
     /// <param name="platform">The host's keys, or the one this process runs on.</param>
@@ -64,11 +64,13 @@ public sealed class EditorWindow : Window
             [EditorVerb.Save] = _session.Save,
             [EditorVerb.SaveAs] = _session.AskForName,
             [EditorVerb.Palette] = () => OpenPalette(),
-            [EditorVerb.Delete] = _session.DeleteSelection,
+            [EditorVerb.Delete] = _session.Backspace,
             [EditorVerb.Copy] = _session.Copy,
             [EditorVerb.Cut] = _session.Cut,
             [EditorVerb.Paste] = _session.Paste,
             [EditorVerb.Duplicate] = _session.Duplicate,
+            [EditorVerb.LeaveEdit] = _session.LeaveEdit,
+            [EditorVerb.FinishDraw] = _session.FinishDrawing,
         };
 
         _shelf = new TerrainToolShelf(_session.Terrains);

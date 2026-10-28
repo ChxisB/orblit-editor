@@ -114,6 +114,12 @@ public sealed class SceneViewportState
     /// <summary>The parts of the mesh were dragged. The shell writes each frame as geometry.</summary>
     public event Action<ElementDrag>? ElementsDragged;
 
+    /// <summary>A point was clicked while drawing. The shell puts it in the drawing.</summary>
+    public event Action<DrawnPoint>? DrawPointed;
+
+    /// <summary>The click came back to where the outline began, which is how somebody says they are finished.</summary>
+    public event Action? DrawFinished;
+
     /// <summary>A few times a second while a scene is animating, so the other panels can keep up.</summary>
     public event Action? Clocked;
 
@@ -153,6 +159,12 @@ public sealed class SceneViewportState
 
     /// <summary>Whether a selected camera shows what it sees in a corner of the view.</summary>
     public bool PreviewsCameras { get; set; }
+
+    /// <summary>
+    /// The outline or path being drawn, or null. While a tool is drawing, clicks put points down and
+    /// nothing else sees the pointer, so the view does not turn away from the plane being drawn on.
+    /// </summary>
+    public Sketch? Sketch { get; set; }
 
     /// <summary>Whether the handles and the pointer are on whole objects or on parts of one.</summary>
     public EditContext Context { get; set; }
@@ -523,6 +535,8 @@ public sealed class SceneViewportState
             yield return new ViewportStage("tool", tool);
         }
 
+        yield return new ViewportStage("drawing", DrawingInput);
+
         if (Target is { } target)
         {
             foreach (var type in _gizmos.All)
@@ -536,6 +550,62 @@ public sealed class SceneViewportState
 
         yield return new ViewportStage("selection", SelectionInput);
         yield return new ViewportStage("orbit", OrbitInput);
+    }
+
+    // Putting points down. Takes every gesture while a tool is drawing, because a drag that reached
+    // the camera would move the eye off the plane the first point chose.
+    private bool DrawingInput(ViewportGesture gesture)
+    {
+        if (Sketch is not { Tool: not ViewportTool.None } sketch || gesture.Projection is not { } projection)
+        {
+            return false;
+        }
+
+        var place = new DrawingPlace(sketch, Editing, projection, SeeThroughElements);
+        switch (gesture.Phase)
+        {
+            case ViewportPhase.Hover:
+                return Follow(sketch, place.ForHover(gesture.At));
+            case ViewportPhase.Tap:
+                PutDown(sketch, place.ForClick(gesture.At));
+                return true;
+            case ViewportPhase.DragStart or ViewportPhase.DragUpdate or ViewportPhase.DragEnd or ViewportPhase.DragCancel:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    // The line being drawn follows the pointer, and the view is only redrawn when it has moved.
+    private bool Follow(Sketch sketch, Vector3? at)
+    {
+        if (Moved(sketch.Hovering, at))
+        {
+            sketch.Hovering = at;
+            Changed?.Invoke();
+        }
+
+        return true;
+    }
+
+    private static bool Moved(Vector3? was, Vector3? now) =>
+        !ReferenceEquals(was, now) && (was is null || now is null || (was - now).Length > 1e-9);
+
+    private void PutDown(Sketch sketch, DrawnPoint? point)
+    {
+        if (point is null)
+        {
+            return;
+        }
+
+        if (sketch.WouldClose(point.At))
+        {
+            DrawFinished?.Invoke();
+        }
+        else
+        {
+            DrawPointed?.Invoke(point);
+        }
     }
 
     // The move and turn handles. A drag that starts on one is a transform, and anywhere else is not.

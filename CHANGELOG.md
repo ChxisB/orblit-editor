@@ -266,6 +266,12 @@
   everything inside it, and the handles move or turn what is selected.
   Shift on a face extrudes it first. A drag is one undo step. There is no
   panel or session on it yet.
+- Add drawing a shape and cutting a face to the C# editor. A click puts a
+  point on the ground or on the face under the pointer, and the first
+  point fixes the plane. Enter or a click back on the first point makes
+  the shape. A cut needs two points on the edge of a face. Backspace
+  takes a point back and escape gives up. There are no tool buttons or
+  painter on it yet.
 
 ## 1.26.0+27
 

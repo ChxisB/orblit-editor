@@ -10,6 +10,7 @@ namespace Orblit.Editor.Tests;
 using Doc = Orblit.Scene;
 using Orblit.Editor.Core;
 using Orblit.Motion;
+using Orblit.VectorMath;
 
 public sealed class EditorWindowTests : IDisposable
 {
@@ -178,6 +179,35 @@ public sealed class EditorWindowTests : IDisposable
         Assert.True(File.Exists(Path.Combine(_temp.FullName, "scenes", "main.oscene")));
         Assert.Equal("Saved scenes/main.oscene", Find<TextBlock>(window, "status").Text);
         Assert.DoesNotContain("•", Find<TextBlock>(window, "title").Text);
+        window.Close();
+    });
+
+    private static void DrawATriangle(EditorSession session)
+    {
+        session.UseTool(ViewportTool.PolyShape);
+        foreach (var (x, z) in new[] { (0.0, 0.0), (0.0, 2.0), (2.0, 2.0) })
+        {
+            session.DrawPoint(new DrawnPoint(new Vector3(x, 0, z), Vector3.Zero(), new Vector3(0, 1, 0), null));
+        }
+    }
+
+    [Fact]
+    public Task BackspaceEscapeAndEnterWorkTheDrawingTool() => Headless.Run(() =>
+    {
+        var (session, window) = Open();
+        var shapes = session.Workspace.Loaded!.Scene!.Objects.Count(one => one.Kind == ObjectKind.Shape);
+        DrawATriangle(session);
+
+        window.KeyPressQwerty(PhysicalKey.Backspace, RawInputModifiers.None);
+        Assert.Equal(2, session.Sketch.Points.Count);
+
+        window.KeyPressQwerty(PhysicalKey.Escape, RawInputModifiers.None);
+        Assert.False(session.Sketch.Tool.IsDrawing());
+
+        DrawATriangle(session);
+        window.KeyPressQwerty(PhysicalKey.Enter, RawInputModifiers.None);
+
+        Assert.Equal(shapes + 1, session.Workspace.Loaded!.Scene!.Objects.Count(one => one.Kind == ObjectKind.Shape));
         window.Close();
     });
 
