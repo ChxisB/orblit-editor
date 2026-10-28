@@ -8,6 +8,8 @@ public sealed partial class EditorSession
     /// <summary>The selected shape with the scene it is in and the mesh it draws.</summary>
     private sealed record ShapeChosen(SceneEntry Entry, SceneObject Object, Mesh Mesh);
 
+    private object? _dragRun;
+
     public EditContext Context { get; private set; }
 
     public ElementMode ElementMode { get; private set; } = ElementMode.Face;
@@ -74,6 +76,35 @@ public sealed partial class EditorSession
         next.Edges.AddRange(boxed.Edges);
         next.Faces.AddRange(boxed.Faces);
     });
+
+    /// <summary>
+    /// Takes a mesh a viewport drag has changed, as a step named for the gesture.
+    /// </summary>
+    /// <remarks>
+    /// Every frame after the first folds into the first, so a drag across the screen is one thing to
+    /// undo however many frames it took.
+    /// </remarks>
+    /// <param name="mesh">The whole mesh as the drag has taken it.</param>
+    /// <param name="selection">What is selected now. An extrude replaces it with the faces it made.</param>
+    /// <param name="what">What the step is called: "Move", "Turn" or "Extrude".</param>
+    /// <param name="merge">Whether this frame follows one of the same drag.</param>
+    public void DragElements(Mesh mesh, ElementSelection selection, string what, bool merge)
+    {
+        if (ShapeSelected() is not { } chosen)
+        {
+            return;
+        }
+
+        // A key that lasts the gesture, new on its first frame, so two drags of one face never fold together.
+        if (!merge)
+        {
+            _dragRun = new object();
+        }
+
+        Run(new SetGeometry(chosen.Entry.Id, chosen.Object.Id, chosen.Object.Name, mesh, what, _dragRun));
+        Elements = selection;
+        Changed?.Invoke();
+    }
 
     private void Reselect(bool add, Action<ElementSelection> change)
     {

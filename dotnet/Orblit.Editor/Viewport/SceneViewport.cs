@@ -137,6 +137,9 @@ public sealed class SceneViewport : Border
         base.OnAttachedToVisualTree(e);
         _state.CameraChanged += OnCameraChanged;
         _state.Picked += OnPicked;
+        _state.ElementPicked += _session.PickElements;
+        _state.ElementsBoxed += _session.BoxElements;
+        _state.ElementsDragged += OnElementsDragged;
         _state.DrawPointed += _session.DrawPoint;
         _state.DrawFinished += _session.FinishDrawing;
         _state.Changed += MarkDirty;
@@ -159,6 +162,9 @@ public sealed class SceneViewport : Border
     {
         _state.CameraChanged -= OnCameraChanged;
         _state.Picked -= OnPicked;
+        _state.ElementPicked -= _session.PickElements;
+        _state.ElementsBoxed -= _session.BoxElements;
+        _state.ElementsDragged -= OnElementsDragged;
         _state.DrawPointed -= _session.DrawPoint;
         _state.DrawFinished -= _session.FinishDrawing;
         _state.Changed -= MarkDirty;
@@ -425,6 +431,9 @@ public sealed class SceneViewport : Border
             _session.Select([.. chosen, id]);
         }
     }
+
+    private void OnElementsDragged(ElementDrag drag) =>
+        _session.DragElements(drag.Mesh, drag.Selection, drag.What, drag.Merge);
 
     private void OnSessionChanged()
     {
