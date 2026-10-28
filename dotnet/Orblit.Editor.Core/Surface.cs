@@ -100,10 +100,5 @@ public sealed record Surface
     }
 
     private static double Number(IReadOnlyDictionary<string, object?> map, string key, double fallback) =>
-        map.GetValueOrDefault(key) switch
-        {
-            long whole => whole,
-            double real => real,
-            _ => fallback,
-        };
+        JsonNumber.Of(map.GetValueOrDefault(key)) ?? fallback;
 }

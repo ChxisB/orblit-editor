@@ -138,7 +138,7 @@ public sealed class Boundary(BoundaryKind kind = BoundaryKind.Mesh, double paddi
 
         return new Boundary(
             Enum.GetValues<BoundaryKind>().FirstOrDefault(one => one.Name() == map.GetValueOrDefault("kind") as string),
-            ToDouble(map.GetValueOrDefault("pad")) ?? 0,
+            JsonNumber.Of(map.GetValueOrDefault("pad")) ?? 0,
             At(map.GetValueOrDefault("at")));
     }
 
@@ -149,18 +149,11 @@ public sealed class Boundary(BoundaryKind kind = BoundaryKind.Mesh, double paddi
             return null;
         }
 
-        var x = ToDouble(list[0]);
-        var y = ToDouble(list[1]);
-        var z = ToDouble(list[2]);
-        return x is null || y is null || z is null || list.Skip(3).Any(one => ToDouble(one) is null)
+        var x = JsonNumber.Of(list[0]);
+        var y = JsonNumber.Of(list[1]);
+        var z = JsonNumber.Of(list[2]);
+        return x is null || y is null || z is null || list.Skip(3).Any(one => JsonNumber.Of(one) is null)
             ? null
             : new Vector3(x.Value, y.Value, z.Value);
     }
-
-    private static double? ToDouble(object? value) => value switch
-    {
-        long whole => whole,
-        double real => real,
-        _ => null,
-    };
 }
