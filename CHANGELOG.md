@@ -278,6 +278,28 @@
   rule into coordinates, put it back, fit it and project it. A single
   face that follows a rule shows the rule's numbers. Parts now start in
   face mode, as they do in Dart.
+- Add the modelling panel to the C# editor, in the modelling workspace. It
+  holds the grid and snapping, the drawing tools, the mesh actions in
+  groups with the number under the button that uses it, the materials and
+  an Export section. The inspector gets a shape section with each kind's own
+  numbers, and a button that goes to the modelling workspace. The buttons are
+  words only, where the Dart panel draws an icon beside each.
+- Draw the edited mesh over the C# viewport: the wire, the chosen and lit
+  parts, the outline being drawn and the selection box. A click, a box or a
+  drag on parts goes to the session, and a drag is one undo step.
+- Add keys to the C# editor. The arrows move the selection by one grid
+  square, shift moves it up and down, and alt does ten squares. Each press is
+  its own undo step. G goes into the geometry and then round vertex, edge
+  and face. The bracket keys change the grid and switch it on. A focused
+  text box keeps all of them. The shift in a parent's frame is one function
+  in `SceneMath`, shared by the viewport and the nudge.
+- With nothing focused, Avalonia spends the first arrow key on moving focus
+  into the window, so the first arrow after a fresh start does not nudge.
+  A click in the view puts the keyboard there. The editor does not take the
+  arrow back, because that would break keyboard navigation.
+- Add export of a shape to the C# editor. A format choice (OBJ, glTF binary,
+  STL, PLY) and a name prompt write the file into `exports/` in the project.
+  An OBJ with materials brings its `.mtl`, and the message names both files.
 
 ## 1.26.0+27
 
