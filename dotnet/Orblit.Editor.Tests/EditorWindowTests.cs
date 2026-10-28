@@ -86,6 +86,18 @@ public sealed class EditorWindowTests : IDisposable
     });
 
     [Fact]
+    public Task TheUvsPanelOpensFromTheDockAsItsOwnPanel() => Headless.Run(() =>
+    {
+        var (session, window) = Open();
+
+        session.OpenPanel(PanelKind.Uvs);
+        Headless.Render();
+
+        Assert.True(Has(window, "uv_fields"));
+        window.Close();
+    });
+
+    [Fact]
     public Task AClipOpenedFromTheProjectPanelShowsOnTheTimeline() => Headless.Run(() =>
     {
         File.WriteAllText(Path.Combine(_temp.FullName, "wave.oclip"), new ClipDocument("wave", 2).Encode());

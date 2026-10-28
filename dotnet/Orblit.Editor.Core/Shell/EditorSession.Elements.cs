@@ -10,7 +10,7 @@ public sealed partial class EditorSession
 
     public EditContext Context { get; private set; }
 
-    public ElementMode ElementMode { get; private set; }
+    public ElementMode ElementMode { get; private set; } = ElementMode.Face;
 
     /// <summary>What is selected inside the shape. Replaced, not changed, so a view can tell it moved.</summary>
     public ElementSelection Elements { get; private set; } = new();
@@ -51,6 +51,48 @@ public sealed partial class EditorSession
         }
 
         Changed?.Invoke();
+    }
+
+    public void SetElementMode(ElementMode mode)
+    {
+        ElementMode = mode;
+        Changed?.Invoke();
+    }
+
+    /// <summary>A click on a part: replaces the selection, or with <paramref name="add"/> toggles it in or out.</summary>
+    public void PickElements(ElementSelection picked, bool add) => Reselect(add, next =>
+    {
+        Toggle(next.Vertices, picked.Vertices);
+        Toggle(next.Edges, picked.Edges);
+        Toggle(next.Faces, picked.Faces);
+    });
+
+    /// <summary>A box round parts: replaces the selection, or with <paramref name="add"/> adds to it. Empty clears it.</summary>
+    public void BoxElements(ElementSelection boxed, bool add) => Reselect(add, next =>
+    {
+        next.Vertices.AddRange(boxed.Vertices);
+        next.Edges.AddRange(boxed.Edges);
+        next.Faces.AddRange(boxed.Faces);
+    });
+
+    private void Reselect(bool add, Action<ElementSelection> change)
+    {
+        var next = add ? Elements.Copy() : new ElementSelection();
+        change(next);
+        Elements = next;
+        Changed?.Invoke();
+    }
+
+    private static void Toggle<T>(OrderedSet<T> set, IEnumerable<T> these)
+        where T : notnull
+    {
+        foreach (var one in these)
+        {
+            if (!set.Remove(one))
+            {
+                set.Add(one);
+            }
+        }
     }
 
     /// <summary>

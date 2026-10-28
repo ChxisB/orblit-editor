@@ -272,6 +272,12 @@
   the shape. A cut needs two points on the edge of a face. Backspace
   takes a point back and escape gives up. There are no tool buttons or
   painter on it yet.
+- Add the UVs panel to the C# editor. It draws where the texture of the
+  selected faces sits on the texture's own square. A drag in it moves,
+  scales or turns the texture, and is one undo step. Buttons freeze the
+  rule into coordinates, put it back, fit it and project it. A single
+  face that follows a rule shows the rule's numbers. Parts now start in
+  face mode, as they do in Dart.
 
 ## 1.26.0+27
 

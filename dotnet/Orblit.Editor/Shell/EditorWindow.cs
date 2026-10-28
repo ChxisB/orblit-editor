@@ -203,6 +203,11 @@ public sealed class EditorWindow : Window
             return Brush();
         }
 
+        if (panel.Kind == PanelKind.Uvs)
+        {
+            return new UvPanel(_session);
+        }
+
         return panel.Kind == PanelKind.Inspector ? new InspectorPanel(_session, new InspectorLinks { Terrain = _session.Terrains }) : Placeholder(panel);
     }
 
