@@ -343,7 +343,9 @@ public sealed class SceneViewport : Border
         {
             _state.EndLooking();
         }
-        else if (e.InitialPressMouseButton == MouseButton.Left)
+        // A press a chip took still lets go over the view. Read as a tap, it would clear the selection
+        // that the chip was about.
+        else if (e.InitialPressMouseButton == MouseButton.Left && _downAt is not null)
         {
             _state.Touch(_dragging ? ViewportPhase.DragEnd : ViewportPhase.Tap, at, add);
             _downAt = null;
