@@ -3,6 +3,7 @@ namespace Orblit.Editor;
 using System.Diagnostics;
 using Orblit.Editor.Core;
 using Orblit.Editor.Viewport;
+using Orblit.Mesh;
 
 /// <summary>What the modelling panel says that is not a label.</summary>
 internal static class ModellingWords
@@ -29,6 +30,15 @@ internal static class ModellingWords
     public static string Parts(ElementMode mode, int selected) => selected == 0
         ? $"Click {mode.Label().ToLowerInvariant()} in the viewport. Shift adds. Escape leaves."
         : $"{selected} selected. Drag the handles to move them{(mode == ElementMode.Face ? ", shift-drag to extrude" : "")}.";
+
+    public static string Format(MeshFormat format) => format switch
+    {
+        MeshFormat.Obj => "Keeps faces as they were drawn, and brings a .mtl.",
+        MeshFormat.Glb => "What the engine itself loads.",
+        MeshFormat.Stl => "Triangles and nothing else. What a printer takes.",
+        MeshFormat.Ply => "Triangles with their normals and coordinates.",
+        _ => throw new UnreachableException(),
+    };
 
     public static string Used(int faces) => faces == 0 ? "unused" : $"{faces}";
 }

@@ -91,6 +91,31 @@ public sealed class ShapeSectionTests
         window.Close();
     });
 
+    [Theory]
+    [InlineData(ShapeKind.Torus, "slider_tube")]
+    [InlineData(ShapeKind.Door, "slider_side_width")]
+    [InlineData(ShapeKind.Sphere, "slider_divisions")]
+    public Task EveryKindOffersItsOwnParameters(ShapeKind kind, string slider) => Headless.Run(() =>
+    {
+        var (_, window, _) = Open(Made(kind));
+
+        Assert.True(Has(window, slider));
+        window.Close();
+    });
+
+    [Fact]
+    public Task ANumberChangedOnAStairIsStillAShapeNotEditedGeometry() => Headless.Run(() =>
+    {
+        var (_, window, item) = Open(Made(ShapeKind.Stairs));
+        var was = item.Shape!.Steps;
+
+        Set(window, "slider_steps", was + 3);
+
+        Assert.NotEqual(was, item.Shape.Steps);
+        Assert.True(item.IsParametric);
+        window.Close();
+    });
+
     [Fact]
     public Task ADraggedSizeIsOneStepToUndo() => Headless.Run(() =>
     {

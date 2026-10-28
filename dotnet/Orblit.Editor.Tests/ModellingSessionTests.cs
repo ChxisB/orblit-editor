@@ -94,6 +94,34 @@ public sealed class ModellingSessionTests : IDisposable
     }
 
     [Fact]
+    public void PaintingIsOneStepToUndoAndTheSlotsAreAStepOfTheirOwn()
+    {
+        Session.ReplaceSurfaces([new Surface { Name = "Stone" }, new Surface { Name = "Brass" }], live: false);
+        _rig.Edit(2);
+        Session.PaintFaces(1);
+        Assert.Equal(1, _rig.Mesh.Faces[2].Material);
+
+        Session.Undo();
+
+        Assert.Equal(0, _rig.Mesh.Faces[2].Material);
+        Assert.Equal(2, Session.ChosenShape!.Surfaces.Count);
+    }
+
+    [Fact]
+    public void FlippingAllTheNormalsIsOneStepAndTheShapeStopsBeingParametric()
+    {
+        Assert.True(Session.ChosenShape!.IsParametric);
+
+        Session.RunMeshAction(Action("Flip all normals"));
+
+        Assert.NotNull(Session.ChosenShape.Geometry);
+        Assert.False(Session.ChosenShape.IsParametric);
+        Session.Undo();
+        Assert.Null(Session.ChosenShape.Geometry);
+        Assert.True(Session.ChosenShape.IsParametric);
+    }
+
+    [Fact]
     public void PaintingWithNothingSelectedChangesNothing()
     {
         Session.ReplaceSurfaces([new Surface()], live: false);

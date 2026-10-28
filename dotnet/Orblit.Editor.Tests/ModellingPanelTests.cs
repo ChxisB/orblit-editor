@@ -213,4 +213,82 @@ public sealed class ModellingPanelTests : IDisposable
         Assert.Contains("6", string.Join(' ', Headless.All<TextBlock>(Headless.Find<Border>(window, "surface_0")).Select(one => one.Text)));
         window.Close();
     });
+
+    // The window the export button's prompt opened, once there is one.
+    private static NamePrompt Prompt(Window window)
+    {
+        Assert.True(Headless.Until(() => window.OwnedWindows.Count == 1));
+        return Assert.IsType<NamePrompt>(window.OwnedWindows[0]);
+    }
+
+    private static void Answer(NamePrompt prompt, string text)
+    {
+        Headless.Find<TextBox>(prompt, "name").Text = text;
+        Headless.Find<Button>(prompt, "ok").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+    }
+
+    [Fact]
+    public Task ThereIsNothingToExportWithoutAShape() => Headless.Run(() =>
+    {
+        var window = _rig.Show();
+
+        Assert.False(Has(window, "button_export_shape"));
+        window.Close();
+    });
+
+    [Fact]
+    public Task TheFormatIsAChoiceThatSaysWhatItKeeps() => Headless.Run(() =>
+    {
+        var window = WithACube(_rig);
+        Assert.StartsWith("Keeps faces", TextOf(window, "modelling_format"));
+
+        Press(window, "choice_format_stl");
+
+        Assert.Equal(MeshFormat.Stl, _rig.Session.ExportFormat);
+        Assert.StartsWith("Triangles and nothing else", TextOf(window, "modelling_format"));
+        window.Close();
+    });
+
+    [Fact]
+    public Task ExportAsksForANameStartingWithTheShapesOwnThenWritesTheFile() => Headless.Run(() =>
+    {
+        var window = WithACube(_rig);
+        Press(window, "choice_format_gltf_binary");
+
+        Press(window, "button_export_shape");
+        var prompt = Prompt(window);
+        Assert.Equal($"Export {_rig.Session.ChosenShape!.Name}", prompt.Title);
+        Assert.Equal(_rig.Session.ChosenShape.Name, Headless.Find<TextBox>(prompt, "name").Text);
+        Answer(prompt, "steps");
+        Assert.True(Headless.Until(() => File.Exists(Path.Combine(_rig.Session.Workspace.ProjectDirectory, "exports", "steps.glb"))));
+
+        window.Close();
+    });
+
+    [Fact]
+    public Task CancellingTheNameWritesNothing() => Headless.Run(() =>
+    {
+        var window = WithACube(_rig);
+
+        Press(window, "button_export_shape");
+        Headless.Find<Button>(Prompt(window), "cancel").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+        Headless.Render();
+
+        Assert.False(Directory.Exists(Path.Combine(_rig.Session.Workspace.ProjectDirectory, "exports")));
+        window.Close();
+    });
+
+    [Fact]
+    public Task AnEmptyNameWritesNothing() => Headless.Run(() =>
+    {
+        var window = WithACube(_rig);
+
+        Press(window, "button_export_shape");
+        Answer(Prompt(window), "");
+        Assert.True(Headless.Until(() => window.OwnedWindows.Count == 0));
+        Headless.Render();
+
+        Assert.False(Directory.Exists(Path.Combine(_rig.Session.Workspace.ProjectDirectory, "exports")));
+        window.Close();
+    });
 }

@@ -8,6 +8,7 @@ namespace Orblit.Editor;
 
 using Orblit.Editor.Core;
 using Orblit.Editor.Viewport;
+using Orblit.Mesh;
 
 /// <summary>
 /// The modelling tools as a place rather than a section: where a drag lands, the tools that are
@@ -77,6 +78,7 @@ internal sealed class ModellingPanel : UserControl
 
         _stack.Children.Add(_fields.Section("Geometry", Geometry()));
         _stack.Children.Add(_fields.Section("Materials", Materials(shape)));
+        _stack.Children.Add(_fields.Section("Export", Export()));
     }
 
     // Beside the drawing tools rather than in the inspector, because it is a property of how somebody
@@ -232,6 +234,34 @@ internal sealed class ModellingPanel : UserControl
 
         rows.Add(Fields.Button("Add material", "Add another material for this shape's faces.", AddMaterial));
         return Fields.Column(rows);
+    }
+
+    // A shape blocked out here is often the start of something finished somewhere else, and a tool that
+    // can only be a dead end is one people stop putting real work into.
+    private StackPanel Export()
+    {
+        var formats = Enum.GetValues<MeshFormat>();
+        var format = _session.ExportFormat;
+        return Fields.Column(
+        [
+            _fields.Choice("Format", [.. formats.Select(one => one.Label)], format.Label, picked => _session.SetExportFormat(formats.First(one => one.Label == picked))),
+            Say(ModellingWords.Format(format), "modelling_format"),
+            Fields.Button("Export shape", "Save this shape as a model file.", AskExport),
+        ]);
+    }
+
+    private async void AskExport()
+    {
+        if (_session.ChosenShape is not { } shape || TopLevel.GetTopLevel(this) is not Window owner)
+        {
+            return;
+        }
+
+        var prompt = new NamePrompt($"Export {shape.Name}", $"Goes in exports/, as .{_session.ExportFormat.Extension}.", shape.Name) { AcceptText = "Export" };
+        if (await prompt.ShowDialog<string?>(owner) is { Length: > 0 } name)
+        {
+            _session.ExportShape(name);
+        }
     }
 
     private void AddMaterial()
