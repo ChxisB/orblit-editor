@@ -325,6 +325,18 @@
 - The C# blend graph fixes two faults that the Dart one has. Moving a change
   in a blend with no change answers the same blend, where Dart throws. A
   blend with one change reads "1 change", where Dart reads "1 changes".
+- Add the cinematics mode to the C# editor. A shot list shows one card for
+  each shot of the open cutscene, with its camera, start and length, and a
+  way to look through the camera or delete the shot. A shelf makes a cutscene
+  and cuts to the selected camera, or to the scene view with Use this view. A
+  preview draws the scene through the shot at the playhead. Looking through a
+  camera flies the scene view to it and steers it from the view, until
+  something else stops it. The preview draws the scene only, with no
+  interface or sound, because the game view is not in C# yet.
+- The C# shot list keeps a card where it is while its start is typed, and
+  re-sorts the cards when the box lets go. The Dart one moves the card as
+  soon as the start is typed. A card whose shot an undo has taken back does nothing when
+  typed in.
 
 ## 1.26.0+27
 

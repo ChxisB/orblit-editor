@@ -212,6 +212,34 @@ public sealed class CinematicsTests
     }
 
     [Fact]
+    public void ACutsceneKeysThingsByTheirIdsInTheScene()
+    {
+        var rig = MakeRig();
+        rig.Bench.Key(Some(rig.Scene["cube"]), "transform.position");
+
+        Assert.Equal("cube", Assert.Single(Some(rig.Bench.Clip).Channels).Target);
+        // A cutscene plays on the scene, so nothing is chosen to play it on.
+        Assert.Null(rig.Bench.Owner);
+        Assert.Equal(["Key Cube position"], rig.History.Labels);
+    }
+
+    [Fact]
+    public void ACutsceneKeepsItsShotsInOrderAndUndoPutsThemBack()
+    {
+        var rig = MakeRig();
+        rig.Bench.EditShots("Add shot", _ => [Shot("side", 2, 2)]);
+        rig.Bench.EditShots("Add shot", shots => [.. shots, Shot("front", 0, 2)]);
+        Assert.Equal([("front", 0d, 2d), ("side", 2d, 4d)], Spans(Some(rig.Bench.Shown?.Shots)));
+        Assert.Equal(["Add shot", "Add shot"], rig.History.Labels);
+        Assert.True(rig.Bench.AnyUnsaved);
+
+        rig.History.Undo();
+        rig.History.Undo();
+        Assert.Empty(Some(rig.Bench.Shown?.Shots));
+        Assert.False(rig.Bench.AnyUnsaved);
+    }
+
+    [Fact]
     public void OneNumberTypedIntoAShotIsOneStep()
     {
         var rig = MakeRig();
