@@ -385,6 +385,18 @@
 - The C# export differs from the Dart one in small ways. Each target
   cooks on a task, not an isolate, so a cook that runs out of memory
   takes the editor with it. The progress line has no spinner.
+- Add the kit store to the C# editor. File › Kit store… and the palette
+  open it. It browses a store's kits with search, sort and filters, shows
+  a kit's releases, notes and files, and installs the files chosen into a
+  folder of the project. The `kits.lock` it writes is the one the Dart
+  editor writes for the same kit, byte for byte.
+- Add the publish dialog to the C# editor. File › Publish kit… and the
+  palette open it. It packs a folder of the project as a kit and shows
+  the store entry to copy. Nothing is uploaded.
+- The C# store differs from the Dart one in small ways. A kit is packed
+  on a task, not an isolate, and a pack cannot be cancelled. The store's
+  settings and downloads sit in the C# editor's own support folder, so a
+  kit the Dart editor downloaded is fetched again.
 
 ## 1.26.0+27
 

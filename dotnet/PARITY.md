@@ -258,6 +258,13 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | `export_session_test.dart` | `ExportSessionTests` | 15 | 15 | 15 | 1: a slow broken read for an earlier pack showing no problem | done. The runner, the lister and the reader are one `IExportWork`. The dispose case also checks that nobody is told |
 | `export_dialog_test.dart` | `ExportDialogTests` | 11 | 12 | 12 | 0 | done. The closing case also checks that the window's own close is refused. Dart's fit test checked the dialog inside a small editor window. The C# dialog is a window of its own, so the two sizes check that its buttons stay in view over a full folder |
 | `editor_shell_export_test.dart` | `EditorWindowExportTests` | 3 | 3 | 3 | 0 | done. Dart's Scene menu is the C# File menu |
+| `store_query_test.dart` | `StoreQueryTests` | 7 | 7 | 7 | 0 | done. The sort case also checks that newest first and by name give two orders |
+| `store_session_test.dart` | `StoreSessionTests` | 9 | 9 | 9 | 0 | done. `MapTransport` answers on a pool thread, so a held reply makes the stale one arrive after the person moved on |
+| `store_install_test.dart` | `StoreInstallTests` | 12 | 12 | 12 | 0 | done. Two more checks: no `.tmp` is left beside the lock, and a refused install is not a failed download. The lock against Dart's is in the files table |
+| `publish_session_test.dart` | `PublishSessionTests` | 6 | 6 | 6 | 0 | done. The folder case also refuses a whole path into the project |
+| `store_dialog_test.dart` | `StoreDialogTests` | 12 | 12 | 13 | 1: a store added and forgotten | done. Dart's fit test checked the dialog inside a small editor window. The C# dialog is a window of its own, so the case checks that Install and Close stay in view at 960×620 and 800×600 |
+| `publish_dialog_test.dart` | `PublishDialogTests` | 5 | 5 | 5 | 0 | done. The fit case checks that the buttons stay in view through a problem and a pack. The many problems case takes 40 files where Dart took 12, because the C# dialog has more room |
+| `editor_shell_publish_test.dart` | `EditorWindowPublishTests` | 2 | 2 | 2 | 1: the File menu opening the kit store | done |
 
 Gap in row 5: a picture is shown in a set and can be cleared, but not dropped on one. The Dart section took a drop from the
 asset browser, and the C# browser has no drag source yet. The decoder (part 5e) reads a picture with SkiaSharp 3.119.4,
@@ -313,6 +320,18 @@ The row 11 review found seven faults that C# copies from Dart, items 72 to
 to an earlier state is in the folder twice, and building a chain threw on
 the second. C# keeps one, as Dart's map does.
 
+Gaps in row 12: a kit is packed on `Task.Run`, where Dart used an isolate.
+The engine's `KitPacking.PublishAsync` takes no token, so a pack cannot be
+cancelled. The store keeps its settings and downloads under the C# editor's
+own support folder, so a kit the Dart editor downloaded is fetched again.
+The store reads the engine from the project file when it opens. One fault
+Dart shares is left as Dart has it, item 79 of decision 80. The install
+dialog reads the conflicts only when every file of the kit fits the folder,
+but checks the folder against the ticked files only, so two cases leave
+Install off with no reason shown. The store, install and publish dialogs
+have run headless only, never in a real window, and no kit has been fetched
+from a real store.
+
 The Dart outliner test file is `editor_shell_hierarchy_test.dart`. There is no
 `outliner_test.dart`. The drag itself is not driven headless. The tests call
 `Release`, which the drop handler calls, so the drop logic is covered and the
@@ -323,6 +342,7 @@ pointer gesture is not.
 | Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
 | --- | --- | --- | --- | --- | --- | --- |
 | `tool/parity/dart_files_test.dart` (an exporter, not a test) | `DartFilesTests` | 0 | 0 | 0 | 10: a project file, three template scenes, four layouts, the layouts the code builds, and a layout library | added |
+| `tool/parity/kits_lock_test.dart` (an exporter, not a test) | `StoreInstallTests` | 0 | 0 | 0 | 1: the `kits.lock` the Dart editor writes for a kit, written byte for byte by the C# install of the same kit | added |
 
 The exporter writes the files the Dart editor saves into
 `dotnet/Orblit.Editor.Tests/Fixtures/dart`. Each C# test reads one and writes
