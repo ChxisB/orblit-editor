@@ -119,7 +119,9 @@ public sealed class OpenedExports : IAsyncDisposable
     /// <summary>The packs <paramref name="top"/> stands on, the whole pack first and <paramref name="top"/> last.</summary>
     public IReadOnlyList<AssetPack> ChainTo(AssetPack top)
     {
-        var byHash = _open.ToDictionary(one => one.Pack.Hash, one => one.Pack);
+        // A pack that comes back to an earlier state is in the folder twice, set aside and current. Both
+        // hold the same assets, so either will do.
+        var byHash = _open.DistinctBy(one => one.Pack.Hash).ToDictionary(one => one.Pack.Hash, one => one.Pack);
         List<AssetPack> chain = [top];
         var next = top;
         while (next.Base is { } under)

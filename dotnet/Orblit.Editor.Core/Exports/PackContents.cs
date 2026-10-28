@@ -47,7 +47,7 @@ public sealed record PackContents(IReadOnlyList<string> Packs, IReadOnlyList<Con
             .Select(entry => new ContentsRow(
                 entry.Key.ToString(),
                 entry.Value.Bytes,
-                entry.Value.Hash.Hex[..12],
+                ExportFolder.ShortHash(entry.Value.Hash),
                 // Every id in the manifest has an owner, since the manifest is built from the same map.
                 names[mounted.OwnerOf(entry.Key)!]))
             .OrderByDescending(row => row.Bytes)

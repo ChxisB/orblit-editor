@@ -171,6 +171,23 @@ public sealed class PackExportTests : IDisposable
         Assert.Equal(3, Exported().Length);
     }
 
+    // Added in C#. A whole pack that comes back to an earlier state leaves two files with one hash, the
+    // pack set aside and the current one. Dart's map kept one of them, where ToDictionary threw.
+    [Fact]
+    public async Task APatchStandsOnAPackThatTwoFilesHold()
+    {
+        await Export("macos");
+        WriteAsset("ship.gltf", Gltf(10));
+        await Export("macos");
+        WriteAsset("ship.gltf", Gltf());
+        var whole = (await Export("macos")).Path!;
+        WriteAsset("rock.gltf", Gltf(60));
+
+        var done = await Export("macos", whole);
+
+        Assert.Equal(ExportOutcome.Packed, done.Outcome);
+    }
+
     private async Task<string> Whole() => (await Export("macos")).Path!;
 
     [Fact]
