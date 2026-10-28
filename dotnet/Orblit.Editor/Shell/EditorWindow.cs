@@ -29,6 +29,7 @@ public sealed class EditorWindow : Window
     // One for the window, so the modelling panel and every view agree on where a drag lands.
     private readonly Snapping _snapping = new();
     private readonly Dictionary<string, Control> _panels = [];
+    private readonly Dictionary<PanelKind, Func<Control>> _builders;
     private readonly HostPlatform _platform;
     private readonly IReadOnlyDictionary<KeyChord, ShortcutAction> _shortcuts;
     private readonly Dictionary<EditorVerb, Action> _verbs;
@@ -63,6 +64,7 @@ public sealed class EditorWindow : Window
         _renderer = renderer;
         _platform = platform ?? HostPlatforms.Current;
         _shortcuts = ShortcutMap.For(_platform);
+        _builders = BuildersOfPanels();
         Width = 1440;
         Height = 900;
         Background = OrblitColors.Ground;
@@ -191,45 +193,20 @@ public sealed class EditorWindow : Window
         return built;
     }
 
-    private Control Build(DockedPanel panel)
+    private Control Build(DockedPanel panel) => _builders.TryGetValue(panel.Kind, out var make) ? make() : Placeholder(panel);
+
+    // One line for each panel that is ported. A kind with no line shows its name.
+    private Dictionary<PanelKind, Func<Control>> BuildersOfPanels() => new()
     {
-        if (panel.Kind == PanelKind.Viewport)
-        {
-            return new SceneViewport(_session, _renderer, snapping: _snapping);
-        }
-
-        if (panel.Kind == PanelKind.Modelling)
-        {
-            return new ModellingPanel(_session, _snapping);
-        }
-
-        if (panel.Kind == PanelKind.Outliner)
-        {
-            return new OutlinerPanel(_session, _platform, () => OpenPalette("Add "));
-        }
-
-        if (panel.Kind == PanelKind.Project)
-        {
-            return Project();
-        }
-
-        if (panel.Kind == PanelKind.Timeline)
-        {
-            return Timeline();
-        }
-
-        if (panel.Kind == PanelKind.TerrainBrush)
-        {
-            return Brush();
-        }
-
-        if (panel.Kind == PanelKind.Uvs)
-        {
-            return new UvPanel(_session);
-        }
-
-        return panel.Kind == PanelKind.Inspector ? new InspectorPanel(_session, new InspectorLinks { Terrain = _session.Terrains }) : Placeholder(panel);
-    }
+        [PanelKind.Viewport] = () => new SceneViewport(_session, _renderer, snapping: _snapping),
+        [PanelKind.Modelling] = () => new ModellingPanel(_session, _snapping),
+        [PanelKind.Outliner] = () => new OutlinerPanel(_session, _platform, () => OpenPalette("Add ")),
+        [PanelKind.Project] = Project,
+        [PanelKind.Timeline] = Timeline,
+        [PanelKind.TerrainBrush] = Brush,
+        [PanelKind.Uvs] = () => new UvPanel(_session),
+        [PanelKind.Inspector] = () => new InspectorPanel(_session, new InspectorLinks { Terrain = _session.Terrains }),
+    };
 
     // Kept so the window can ask it to look again when the selection moves a stroke to another terrain.
     private TerrainBrushPanel Brush()
