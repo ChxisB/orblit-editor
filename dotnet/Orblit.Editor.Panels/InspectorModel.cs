@@ -28,6 +28,9 @@ public sealed class InspectorTarget
     /// <summary>Opens the interface a canvas puts on screen.</summary>
     public Action<string>? OnOpenInterface { get; init; }
 
+    /// <summary>Goes to the modelling workspace, where a shape's geometry is changed.</summary>
+    public Action? OnOpenTools { get; init; }
+
     /// <summary>How big a mesh is in its own space where the editor holds no geometry for it, such as an imported model.</summary>
     public Func<SceneObject, (Vector3 Min, Vector3 Max)?>? BoundsOf { get; init; }
 

@@ -35,6 +35,7 @@ internal static class InspectorSections
         new("motion", MotionSection.AppliesTo, target => MotionSection.Build(fields, target)),
         .. ShaderSections(fields, surfaces),
         .. TerrainSections(fields, terrain),
+        new("shape", ShapeSection.AppliesTo, target => ShapeSection.Build(fields, target)),
         new("interface", target => target.Item.Kind == ObjectKind.Canvas, target => Interface(fields, target)),
         new("data", target => target.Item.Data.Count > 0, target => Data(fields, target)),
     ];
