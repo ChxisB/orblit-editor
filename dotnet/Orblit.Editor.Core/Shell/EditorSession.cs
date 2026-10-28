@@ -65,6 +65,9 @@ public sealed partial class EditorSession
     /// <summary>What was said last, for a window that opens after something was already said.</summary>
     public (string Text, SayLevel Level)? Last { get; private set; }
 
+    /// <summary>Everything said, for somebody who was not looking at the status line when it was.</summary>
+    public EditorLog Log { get; } = new();
+
     public Workspace Workspace { get; }
 
     public History History { get; }
@@ -393,6 +396,7 @@ public sealed partial class EditorSession
     private void Say(string text, SayLevel level)
     {
         Last = (text, level);
+        Log.Say(text, level);
         Said?.Invoke(text, level);
     }
 

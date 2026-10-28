@@ -51,6 +51,7 @@ internal static class Program
         session.Report(opened.Problems);
         var window = new EditorWindow(session, renderer: true);
         clipboard.Attach(window);
+        UiErrors.ToLog(session.Log, window);
         return window;
     }
 }
