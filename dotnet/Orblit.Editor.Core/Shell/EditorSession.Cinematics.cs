@@ -96,14 +96,8 @@ public sealed partial class EditorSession
     /// </summary>
     public void Steer(string view, Placement to)
     {
-        if (Piloting is not { } look || look.View != view || Workspace.Loaded is not { } open)
+        if (Piloting is not { } look || look.View != view || Workspace.Loaded is not { } open || open.Scene?[look.Camera] is not { } camera)
         {
-            return;
-        }
-
-        if (open.Scene?[look.Camera] is not { } camera)
-        {
-            Pilot(null);
             return;
         }
 
@@ -119,6 +113,15 @@ public sealed partial class EditorSession
 
         var at = Cutscenes.Frame;
         Cutscenes.EditShots("Add shot", shots => Cinematics.CutTo(shots, camera, at, clip.Duration));
+    }
+
+    // A delete or an undo can take out the camera being looked through, and nothing is left to steer.
+    private void LetGoOfAMissingCamera()
+    {
+        if (Piloting is { } look && Workspace.Loaded?.Scene?[look.Camera] is null)
+        {
+            Pilot(null);
+        }
     }
 
     private void Pilot((string Camera, string View)? next)

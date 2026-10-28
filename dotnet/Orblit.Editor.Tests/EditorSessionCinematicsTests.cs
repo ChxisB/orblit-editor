@@ -310,13 +310,27 @@ public sealed class EditorSessionCinematicsTests : IDisposable
     }
 
     [Fact]
-    public void SteeringACameraThatIsGoneLetsGoOfIt()
+    public void DeletingTheCameraBeingLookedThroughLetsGoOfIt()
     {
         var session = OpenNewCutscene();
         session.LookThrough("camera", "scene");
+
         session.Delete("camera");
 
-        session.Steer("scene", new Placement(Vector3.Zero(), Vector3.Zero()));
+        Assert.Null(session.Piloting);
+    }
+
+    [Fact]
+    public void UndoingTheAddOfTheCameraBeingLookedThroughLetsGoOfIt()
+    {
+        var session = OpenNewCutscene();
+        session.UseThisView(new Placement(Vector3.Zero(), Vector3.Zero()));
+        var made = session.Primary!;
+        session.LookThrough(made, "scene");
+
+        session.Undo();
+        Assert.NotNull(session.Piloting);
+        session.Undo();
 
         Assert.Null(session.Piloting);
     }
@@ -379,6 +393,13 @@ public sealed class EditorSessionCinematicsTests : IDisposable
 
         session.AddShot();
         Assert.Equal(1, told);
+
+        // Saving is a flip back, and the playhead after it is quiet again.
+        session.Save();
+        told = 0;
+        session.Cutscenes.At = 3;
+        session.Cutscenes.At = 4;
+        Assert.Equal(0, told);
     }
 
     [Fact]

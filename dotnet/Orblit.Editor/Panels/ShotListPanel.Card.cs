@@ -19,8 +19,8 @@ internal sealed partial class ShotListPanel
         Fields.Column(
         [
             CameraRow(card),
-            TimeRow(card, "Starts at", "start", card.Shot.Start, text => TypeStart(card, text)),
-            TimeRow(card, "Length", "length", card.Shot.Duration, text => TypeLength(card, text)),
+            TimeRow(card, new TimeField("Starts at", "start", card.Shot.Start, text => TypeStart(card, text))),
+            TimeRow(card, new TimeField("Length", "length", card.Shot.Duration, text => TypeLength(card, text))),
             Buttons(card),
         ]));
 
@@ -45,12 +45,15 @@ internal sealed partial class ShotListPanel
             (camera.Id == card.Shot.Camera ? "✓ " : "    ") + camera.Name,
             (Action)(() => _host.Apply(() => Replace("Change shot camera", card, card.Shot.CopyWith(camera: camera.Id), typing: false)))));
 
-    private Grid TimeRow(Card card, string label, string part, double seconds, Action<string> onTyped)
+    // A number of seconds typed into a card: what it is called, where it is named, and what it is now.
+    private sealed record TimeField(string Label, string Part, double Seconds, Action<string> OnTyped);
+
+    private Grid TimeRow(Card card, TimeField field)
     {
-        var name = $"shot_{card.Index}_{part}";
-        var box = _fields.Box(name, seconds.ToString("0.###", CultureInfo.InvariantCulture), onTyped);
+        var name = $"shot_{card.Index}_{field.Part}";
+        var box = _fields.Box(name, field.Seconds.ToString("0.###", CultureInfo.InvariantCulture), field.OnTyped);
         var unit = new TextBlock { Text = "s", FontSize = OrblitText.Caption, Foreground = OrblitColors.InkDim, VerticalAlignment = VerticalAlignment.Center };
-        return Fields.Row(label, box, unit, $"{name}_row");
+        return Fields.Row(field.Label, box, unit, $"{name}_row");
     }
 
     private Grid Buttons(Card card)

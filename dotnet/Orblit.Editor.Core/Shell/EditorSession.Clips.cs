@@ -301,7 +301,9 @@ public sealed partial class EditorSession
             Workspace.Touched();
         }
 
-        if (ClipsUnsavedFlipped())
+        var flipped = ClipsUnsaved != _clipsUnsaved;
+        _clipsUnsaved = ClipsUnsaved;
+        if (flipped)
         {
             Changed?.Invoke();
         }
@@ -313,18 +315,7 @@ public sealed partial class EditorSession
         ? _preview.PoseAll(scene, Cutscenes.Clip, Cutscenes.At)
         : _preview.Pose(scene, Clips.Clip, Clips.Owner, Clips.At);
 
-    // Whether a clip or a cutscene having changes has just become true or false.
-    private bool ClipsUnsavedFlipped()
-    {
-        var unsaved = Clips.AnyUnsaved || Cutscenes.AnyUnsaved;
-        if (unsaved == _clipsUnsaved)
-        {
-            return false;
-        }
-
-        _clipsUnsaved = unsaved;
-        return true;
-    }
+    private bool ClipsUnsaved => Clips.AnyUnsaved || Cutscenes.AnyUnsaved;
 
     // A change from the undo stack can add or take away an animation, which the timeline follows.
     private void OnHistoryChanged()
@@ -334,7 +325,10 @@ public sealed partial class EditorSession
         _blendsUnsaved = Blends.AnyUnsaved;
         var layout = Layout;
         FollowMotion();
-        if (ClipsUnsavedFlipped() || !ReferenceEquals(layout, Layout))
+        LetGoOfAMissingCamera();
+        var flipped = ClipsUnsaved != _clipsUnsaved;
+        _clipsUnsaved = ClipsUnsaved;
+        if (flipped || !ReferenceEquals(layout, Layout))
         {
             Changed?.Invoke();
         }
