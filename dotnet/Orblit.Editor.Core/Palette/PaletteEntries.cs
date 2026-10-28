@@ -7,7 +7,7 @@ using Orblit.Mesh;
 /// objects in the scene.
 /// </summary>
 /// <remarks>
-/// shortcut: only the commands the session can do so far. Frame, play, export and the kit store join
+/// shortcut: only the commands the session can do so far. Play, export and the kit store join
 /// them with the panels that need them (task 16).
 /// </remarks>
 public static class PaletteEntries
@@ -47,6 +47,7 @@ public static class PaletteEntries
         Command("Paste", "content_paste", session.Paste, platform.CommandShortcutLabel("V")),
         Command("Duplicate", "control_point_duplicate", session.Duplicate, platform.CommandShortcutLabel("D")),
         Command("Delete", "delete_outline", session.DeleteSelection, "⌫"),
+        Command("Frame selection", "center_focus_strong", session.Frame, "F"),
     ];
 
     private static PaletteEntry[] Adds(EditorSession session) =>
@@ -81,7 +82,12 @@ public static class PaletteEntries
                 // Where it sits, since a scene of forty crates has forty of the same word and the group
                 // is what tells them apart.
                 Meta = one.ParentId is { } parent ? scene[parent]?.Name ?? "" : "",
-                OnRun = () => session.Select([one.Id]),
+                // Framed as well, since an object found by name may be anywhere, off screen included.
+                OnRun = () =>
+                {
+                    session.Select([one.Id]);
+                    session.Frame();
+                },
             }),
         ];
     }

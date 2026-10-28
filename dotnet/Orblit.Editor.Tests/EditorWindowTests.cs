@@ -224,13 +224,13 @@ public sealed class EditorWindowTests : IDisposable
     });
 
     [Fact]
-    public Task AKeyTheWindowCannotActOnYetIsLeftAlone() => Headless.Run(() =>
+    public Task AKeyNothingIsBoundToIsLeftAlone() => Headless.Run(() =>
     {
         var (_, window) = Open();
         bool? handled = null;
         window.AddHandler(InputElement.KeyDownEvent, (_, press) => handled = press.Handled, RoutingStrategies.Bubble, handledEventsToo: true);
 
-        window.KeyPressQwerty(PhysicalKey.F, RawInputModifiers.None);
+        window.KeyPressQwerty(PhysicalKey.J, RawInputModifiers.None);
 
         Assert.False(handled);
         window.Close();

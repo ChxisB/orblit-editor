@@ -117,6 +117,7 @@ public sealed class SceneViewport : Border
         _stack.Children.Add(TopRow());
         _stack.Children.Add(HintChip());
         AttachInput();
+        TakeFiles();
     }
 
     /// <summary>The state the control drives. A test reads what the camera did from here.</summary>
@@ -162,6 +163,7 @@ public sealed class SceneViewport : Border
         _state.Snapping.Changed += MarkDirty;
         _session.Changed += OnSessionChanged;
         _session.SceneReplaced += OnSceneReplaced;
+        _session.FrameAsked += OnFrameAsked;
         _session.History.Changed += MarkDirty;
         _session.Workspace.Changed += MarkDirty;
         _session.Terrains.HoverChanged += MarkDirty;
@@ -188,6 +190,7 @@ public sealed class SceneViewport : Border
         _state.Snapping.Changed -= MarkDirty;
         _session.Changed -= OnSessionChanged;
         _session.SceneReplaced -= OnSceneReplaced;
+        _session.FrameAsked -= OnFrameAsked;
         _session.History.Changed -= MarkDirty;
         _session.Workspace.Changed -= MarkDirty;
         _session.Terrains.HoverChanged -= MarkDirty;
@@ -444,6 +447,36 @@ public sealed class SceneViewport : Border
 
     // A camera left where another scene's work was would show this one from the wrong place.
     private void OnSceneReplaced() => OnCameraChanged(new OrbitCamera());
+
+    // Framing goes through a camera change like any other, so a camera being looked through moves with it.
+    private void OnFrameAsked()
+    {
+        if (_session.Working?.Scene is not { } scene)
+        {
+            return;
+        }
+
+        var (centre, radius) = _session.Primary is { } id && scene[id] is not null ? scene.BoundsOf(id) : scene.BoundsOfEverything();
+        OnCameraChanged(_state.Camera.Framing(centre, radius));
+    }
+
+    // Any file is taken, and the session says what it does with one it has no use for. A drop refused
+    // here would leave somebody guessing why nothing happened.
+    private void TakeFiles()
+    {
+        var hint = new Border
+        {
+            Name = "drop_hint",
+            IsVisible = false,
+            IsHitTestVisible = false,
+            Background = OrblitColors.EmberWash,
+            BorderBrush = OrblitColors.Ember,
+            BorderThickness = new Thickness(2),
+            CornerRadius = Radii.Card,
+        };
+        _stack.Children.Add(hint);
+        AssetDrops.Accept(this, _ => true, _session.DropAsset, over => hint.IsVisible = over);
+    }
 
     // A tap on empty space clears the selection, a plain tap on a thing selects it, and a tap with a
     // modifier held adds the thing or takes it away.

@@ -15,6 +15,7 @@ using Orblit.Terrain;
 internal sealed class TerrainSets(Fields fields, TerrainBench bench, OpenTerrain open)
 {
     private static readonly string[] WrapOptions = ["Stretch", "Wrap"];
+    private static readonly string[] PictureTypes = [".png", ".jpg", ".jpeg"];
 
     private List<TerrainSet> Held => open.Terrain.Sets;
 
@@ -128,20 +129,37 @@ internal sealed class TerrainSets(Fields fields, TerrainBench bench, OpenTerrain
         };
     }
 
-    // Shows the picture and takes it off. Putting one on waits for the project browser to drag files from.
+    // Shows the picture, takes one dragged from the project's files, and takes it off.
     private Grid Picture(string label, int index, string? path, string what, Func<TerrainSet, string?, TerrainSet> put)
     {
         var key = Fields.Key(label);
         var shown = new TextBlock
         {
             Name = $"picture_{key}_{index}",
-            Text = path is null ? "None" : Path.GetFileName(path),
+            Text = path is null ? "Drop a PNG or JPEG here" : Path.GetFileName(path),
             FontSize = OrblitText.Caption,
             FontFamily = OrblitText.Mono,
             Foreground = OrblitColors.InkDim,
             TextTrimming = Avalonia.Media.TextTrimming.CharacterEllipsis,
             VerticalAlignment = VerticalAlignment.Center,
         };
+        var well = new Border
+        {
+            Name = $"picture_well_{key}_{index}",
+            Height = 24,
+            Padding = new Thickness(Space.Sm, 0),
+            CornerRadius = Radii.Control,
+            BorderThickness = new Thickness(1),
+            Child = shown,
+        };
+        Lit(well, over: false);
+        AssetDrops.Accept(well, TakesPicture, dropped =>
+        {
+            if (bench.Relative(dropped) is { } to && to != path)
+            {
+                fields.Host.Apply(() => EditSet(index, what, one => put(one, to)));
+            }
+        }, over => Lit(well, over));
         Button? clear = null;
         if (path is not null)
         {
@@ -149,6 +167,16 @@ internal sealed class TerrainSets(Fields fields, TerrainBench bench, OpenTerrain
             clear.Name = $"picture_clear_{key}_{index}";
         }
 
-        return Fields.Row(label, shown, clear);
+        return Fields.Row(label, well, clear);
+    }
+
+    // What the terrain can decode, and only from inside the project, or the file would not be found anywhere else.
+    private bool TakesPicture(string path) =>
+        PictureTypes.Contains(Path.GetExtension(path).ToLowerInvariant()) && bench.Relative(path) is not null;
+
+    private static void Lit(Border well, bool over)
+    {
+        well.Background = over ? OrblitColors.Hover : OrblitColors.Raised;
+        well.BorderBrush = over ? OrblitColors.Ember : Avalonia.Media.Brushes.Transparent;
     }
 }

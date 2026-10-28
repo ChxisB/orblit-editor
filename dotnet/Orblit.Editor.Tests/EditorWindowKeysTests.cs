@@ -11,8 +11,9 @@ using Orblit.Editor.Viewport;
 using Orblit.Mesh;
 using Orblit.VectorMath;
 
-// Ported from nudge_test.dart and the G key cases of editor_shell_geometry_test.dart. The distance is the
-// window's own grid step, so these press the keys. NudgeTests holds what the session does with it.
+// Ported from nudge_test.dart, the G key cases of editor_shell_geometry_test.dart and the F key case of
+// editor_shell_drop_test.dart. The distance is the window's own grid step, so these press the keys.
+// NudgeTests holds what the session does with it.
 public sealed class EditorWindowKeysTests
 {
     // The click gives the keyboard somewhere to be. With nothing focused the toolkit spends the first arrow
@@ -166,6 +167,25 @@ public sealed class EditorWindowKeysTests
     });
 
     [Fact]
+    public Task FFramesTheSelectionWithoutTurningTheCamera() => Headless.Run(() =>
+    {
+        using var rig = Choosing("ground");
+        var before = rig.View.State.Camera;
+
+        Press(rig, PhysicalKey.F);
+
+        // The ground is wide, so framing it pulls the camera back.
+        var ground = rig.View.State.Camera.Distance;
+        Assert.NotEqual(before.Distance, ground);
+        Assert.Equal(before.Yaw, rig.View.State.Camera.Yaw);
+
+        // The cube is small, so it is framed from nearer than the ground was.
+        rig.Session.SelectObject("cube");
+        Press(rig, PhysicalKey.F);
+        Assert.True(rig.View.State.Camera.Distance < ground);
+    });
+
+    [Fact]
     public Task TheseKeysAreLeftToATextBoxThatHasTheKeyboard() => Headless.Run(() =>
     {
         using var rig = Choosing("ground");
@@ -173,8 +193,10 @@ public sealed class EditorWindowKeysTests
         field.Focus();
         var before = Where(rig).X;
         var mode = rig.Session.Context;
+        var distance = rig.View.State.Camera.Distance;
 
-        // Typing a g into a name must not go into the geometry, nor a bracket change the grid.
+        // Typing a g into a name must not go into the geometry, nor a bracket change the grid, nor an f move the camera.
+        Press(rig, PhysicalKey.F);
         Press(rig, PhysicalKey.G);
         Press(rig, PhysicalKey.BracketRight);
         Press(rig, PhysicalKey.ArrowRight, RawInputModifiers.Alt);
@@ -182,5 +204,6 @@ public sealed class EditorWindowKeysTests
         Assert.Equal(mode, rig.Session.Context);
         Assert.Equal(before, Where(rig).X);
         Assert.Equal(new Snapping().Step, rig.Window.Snapping.Step);
+        Assert.Equal(distance, rig.View.State.Camera.Distance);
     });
 }

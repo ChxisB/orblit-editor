@@ -1,4 +1,7 @@
 using Avalonia.Controls;
+using Avalonia.Headless;
+using Avalonia.Input;
+using Avalonia.Input.Raw;
 using Avalonia.Interactivity;
 
 namespace Orblit.Editor.Tests;
@@ -51,6 +54,20 @@ public sealed class TerrainSectionTests : IDisposable
     }
 
     private static Control Card(Window window, int index) => Headless.Find<Control>(window, $"set_card_{index}");
+
+    // What a browser tile's drag carries, let go over a picture well.
+    private static void Drop(Window window, string path, string well)
+    {
+        var data = new DataTransfer();
+        data.Add(DataTransferItem.Create(AssetDrops.Format, path));
+        var at = Headless.Centre(window, well);
+        foreach (var step in new[] { RawDragEventType.DragEnter, RawDragEventType.DragOver, RawDragEventType.Drop })
+        {
+            window.DragDrop(at, step, data, DragDropEffects.Copy, RawInputModifiers.None);
+        }
+
+        Headless.Render();
+    }
 
     [Fact]
     public Task ATerrainShowsItsFileAndWhatItIsMadeOf() => Headless.Run(() =>
@@ -214,13 +231,40 @@ public sealed class TerrainSectionTests : IDisposable
     {
         var (session, _, open, window) = Show();
         Assert.Equal("rock.png", TextOf(window, "picture_colour_0"));
-        Assert.Equal("None", TextOf(window, "picture_colour_1"));
+        Assert.Equal("Drop a PNG or JPEG here", TextOf(window, "picture_colour_1"));
         Assert.False(Has(window, "picture_clear_colour_1"));
 
         Headless.Click(window, "picture_clear_colour_0");
 
         Assert.Null(open!.Terrain.Sets[0].Albedo);
         Assert.Equal("Set Rock colour picture", session.History.UndoLabel);
+    });
+
+    [Fact]
+    public Task APictureDroppedOnAWellGoesOnTheSet() => Headless.Run(() =>
+    {
+        var (session, _, open, window) = Show();
+
+        Drop(window, Path.Combine(_root, "textures", "sand.png"), "picture_well_colour_1");
+
+        Assert.Equal("textures/sand.png", open!.Terrain.Sets[1].Albedo);
+        Assert.Equal("Set Grass colour picture", session.History.UndoLabel);
+        Assert.Equal("sand.png", TextOf(window, "picture_colour_1"));
+    });
+
+    [Fact]
+    public Task AWellRefusesWhatIsNotAPictureInTheProject() => Headless.Run(() =>
+    {
+        var (session, _, open, window) = Show();
+        var steps = 0;
+        session.History.Changed += () => steps++;
+
+        Drop(window, Path.Combine(_root, "textures", "sand.tga"), "picture_well_colour_1");
+        Drop(window, Path.Combine(Path.GetTempPath(), "elsewhere.png"), "picture_well_colour_1");
+        Drop(window, Path.Combine(_root, "textures", "rock.png"), "picture_well_colour_0");
+
+        Assert.Null(open!.Terrain.Sets[1].Albedo);
+        Assert.Equal(0, steps);
     });
 
     [Fact]

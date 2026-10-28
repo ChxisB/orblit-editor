@@ -86,16 +86,33 @@ public sealed class PaletteEntriesTests : IDisposable
     }
 
     [Fact]
-    public void ChoosingAnObjectSelectsIt()
+    public void ChoosingAnObjectSelectsAndFramesIt()
     {
         var session = Session();
         session.History.Run(new AddObject(new SceneObject(id: "extra", name: "Extra", kind: ObjectKind.Group), "scene0"));
+        var framed = 0;
+        session.FrameAsked += () => framed++;
 
         var entry = Entry(session, "Extra");
         entry.OnRun();
 
         Assert.Equal(PaletteGroup.Objects, entry.Group);
         Assert.Equal(["extra"], session.Selected);
+        Assert.Equal(1, framed);
+    }
+
+    [Fact]
+    public void FrameSelectionAsksTheViewToFrameAndShowsItsKey()
+    {
+        var session = Session();
+        var framed = 0;
+        session.FrameAsked += () => framed++;
+
+        var entry = Entry(session, "Frame selection");
+        entry.OnRun();
+
+        Assert.Equal("F", entry.Keys);
+        Assert.Equal(1, framed);
     }
 
     [Fact]

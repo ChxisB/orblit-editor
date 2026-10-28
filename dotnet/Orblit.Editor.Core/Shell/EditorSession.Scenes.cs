@@ -33,6 +33,12 @@ public sealed partial class EditorSession
     /// <summary>Raised when a different scene takes the place of the loaded one, so a view can start from its camera again.</summary>
     public event Action? SceneReplaced;
 
+    /// <summary>Raised when the selection, or the whole scene with nothing selected, should be fitted in the view.</summary>
+    public event Action? FrameAsked;
+
+    /// <summary>Asks the scene view to fit the selection. The camera is the view's, so the session only asks.</summary>
+    public void Frame() => FrameAsked?.Invoke();
+
     /// <summary>Selects a scene row, which leaves no object selected.</summary>
     public void SelectScene(string sceneId)
     {
@@ -48,6 +54,21 @@ public sealed partial class EditorSession
     public void NewScene() => Start(NewSceneAsync);
 
     public void LoadScene(SceneEntry entry) => Start(() => LoadSceneAsync(entry));
+
+    /// <summary>
+    /// Loads the scene file at <paramref name="path"/>. One made since the project opened is listed
+    /// first, or opening it from the files would do nothing.
+    /// </summary>
+    public void OpenScene(string path)
+    {
+        if (Workspace.EntryFor(path) is not { } entry)
+        {
+            entry = new SceneEntry($"scene{_nextSceneId++}", Path.GetFileNameWithoutExtension(path), path);
+            Workspace.Add(entry);
+        }
+
+        LoadScene(entry);
+    }
 
     public void CloseScene(SceneEntry entry) => Start(() => CloseSceneAsync(entry));
 

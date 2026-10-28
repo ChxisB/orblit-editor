@@ -57,6 +57,14 @@ public sealed class TerrainBench(History history, string projectRoot, Action<str
 
     public OpenTerrain? this[string file] => _open.GetValueOrDefault(file);
 
+    /// <summary>
+    /// A picture's path as a terrain keeps it: from the project folder, with forward slashes. Null for
+    /// one outside the project, which the terrain would not find on anybody else's machine.
+    /// </summary>
+    public string? Relative(string path) => AssetTree.IsWithin(projectRoot, path)
+        ? Path.GetRelativePath(projectRoot, path).Replace(Path.DirectorySeparatorChar, '/')
+        : null;
+
     public BrushTool Tool
     {
         get => _tool;

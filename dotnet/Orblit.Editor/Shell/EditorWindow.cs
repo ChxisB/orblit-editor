@@ -54,10 +54,10 @@ public sealed class EditorWindow : Window
     // shortcut: a window with two scene views answers for the newer. Ask the focused one when that happens.
     private SceneViewport? _view;
 
-    // Keys that mean something else while a text box has the keyboard: delete a letter, copy some words, finish a field, type a g or a bracket, move the caret.
+    // Keys that mean something else while a text box has the keyboard: delete a letter, copy some words, finish a field, type an f, a g or a bracket, move the caret.
     private static readonly HashSet<EditorVerb> ObjectVerbs =
     [
-        EditorVerb.Delete, EditorVerb.Copy, EditorVerb.Cut, EditorVerb.Paste, EditorVerb.Duplicate, EditorVerb.LeaveEdit, EditorVerb.FinishDraw,
+        EditorVerb.Delete, EditorVerb.Copy, EditorVerb.Cut, EditorVerb.Paste, EditorVerb.Duplicate, EditorVerb.LeaveEdit, EditorVerb.FinishDraw, EditorVerb.Frame,
         EditorVerb.CycleMode, EditorVerb.GridCoarser, EditorVerb.GridFiner, EditorVerb.NudgeX, EditorVerb.NudgeY, EditorVerb.NudgeZ,
     ];
 
@@ -122,6 +122,7 @@ public sealed class EditorWindow : Window
             [EditorVerb.CycleMode] = _session.CycleMode,
             [EditorVerb.GridCoarser] = GridCoarser,
             [EditorVerb.GridFiner] = GridFiner,
+            [EditorVerb.Frame] = _session.Frame,
         };
 
         _shelf = new TerrainToolShelf(_session.Terrains);
@@ -382,10 +383,9 @@ public sealed class EditorWindow : Window
             return;
         }
 
-        var scene = _session.Workspace.Entries.FirstOrDefault(entry => entry.Path == asset.Path);
-        if (asset.Kind == AssetKind.Scene && scene is not null)
+        if (asset.Kind == AssetKind.Scene)
         {
-            _session.LoadScene(scene);
+            _session.OpenScene(asset.Path);
         }
     }
 
@@ -506,8 +506,8 @@ public sealed class EditorWindow : Window
         }
     }
 
-    // Only the verbs the session can do so far. The rest pass through, so a key is never swallowed by
-    // something that does nothing with it.
+    // A verb with nothing to run passes through, so a key is never swallowed by something that does
+    // nothing with it.
     private bool RunVerb(ShortcutAction action)
     {
         if (ObjectVerbs.Contains(action.Verb) && IsTyping())

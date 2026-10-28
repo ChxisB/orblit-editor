@@ -183,7 +183,7 @@ public sealed class AssetTree : IDisposable
             return "";
         }
 
-        return IsWithin(path) ? IoPath.GetRelativePath(Root, path).Replace(IoPath.DirectorySeparatorChar, '/') : path;
+        return IsWithin(Root, path) ? IoPath.GetRelativePath(Root, path).Replace(IoPath.DirectorySeparatorChar, '/') : path;
     }
 
     /// <summary>
@@ -421,11 +421,12 @@ public sealed class AssetTree : IDisposable
             IoPath.TrimEndingDirectorySeparator(IoPath.GetFullPath(b)),
             OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 
-    private bool Holds(string directory) => SamePath(directory, Root) || IsWithin(directory);
+    private bool Holds(string directory) => SamePath(directory, Root) || IsWithin(Root, directory);
 
-    private bool IsWithin(string path)
+    /// <summary>Whether <paramref name="path"/> is somewhere under <paramref name="root"/>, and not the root itself.</summary>
+    public static bool IsWithin(string root, string path)
     {
-        var relative = IoPath.GetRelativePath(Root, path);
+        var relative = IoPath.GetRelativePath(root, path);
         return relative != "."
             && relative != ".."
             && !IoPath.IsPathRooted(relative)

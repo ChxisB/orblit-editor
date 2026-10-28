@@ -25,10 +25,16 @@ internal sealed class AssetTile : Border
     // Half the gap between tiles, which the grid does not add itself.
     private const double Gap = 4;
 
+    // How far a press moves before it is a drag and not a click.
+    private const double DragStart = 4;
+
     private readonly Glyph _glyph;
     private readonly TextBlock _name;
     private bool _selected;
     private bool _hovering;
+
+    // A file pressed on and not yet let go of or dragged, and where.
+    private (PointerPressedEventArgs Press, Point At)? _pending;
 
     public AssetTile(Asset asset, CookState? state, AssetGridLinks links)
     {
@@ -60,9 +66,12 @@ internal sealed class AssetTile : Border
         {
             if (press.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
             {
+                _pending = asset.IsFolder ? null : (press, press.GetPosition(this));
                 links.Select(asset);
             }
         };
+        PointerMoved += OnMoved;
+        PointerReleased += (_, _) => _pending = null;
         DoubleTapped += (_, _) => links.Open(asset);
         ContextRequested += (_, e) =>
         {
@@ -136,6 +145,21 @@ internal sealed class AssetTile : Border
         if (await AssetThumbnails.LoadAsync(path) is { } bitmap)
         {
             picture.Child = new Image { Source = bitmap, Stretch = Stretch.UniformToFill, IsHitTestVisible = false };
+        }
+    }
+
+    private void OnMoved(object? sender, PointerEventArgs move)
+    {
+        if (_pending is not { } pending || !move.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+        {
+            return;
+        }
+
+        var to = move.GetPosition(this);
+        if (Math.Abs(to.X - pending.At.X) > DragStart || Math.Abs(to.Y - pending.At.Y) > DragStart)
+        {
+            _pending = null;
+            AssetDrops.Drag(pending.Press, Asset.Path);
         }
     }
 
