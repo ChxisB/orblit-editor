@@ -40,6 +40,8 @@ public sealed partial class EditorSession
         Assets = new AssetTree(workspace.ProjectDirectory);
         Data = new DataStore(workspace.ProjectDirectory);
         Skeletons = new ModelSkeletons(workspace.ProjectDirectory);
+        Models = new ModelBounds(workspace.ProjectDirectory);
+        Surfaces = new SurfaceCooks(workspace.ProjectDirectory, problem => Say(problem, SayLevel.Error));
         Clips = new ClipBench(history, () => workspace.Loaded?.Scene);
         Clips.Changed += OnClipsChanged;
         Cutscenes = new ClipBench(history, () => workspace.Loaded?.Scene, PlayedOn.Scene);

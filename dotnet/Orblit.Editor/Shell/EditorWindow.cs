@@ -148,6 +148,7 @@ public sealed class EditorWindow : Window
         _session.Interfaces.Changed += Retitle;
         _session.Said += Say;
         _session.NameWanted += AskSceneName;
+        _session.Assets.Changed += CookShaders;
         _session.ConfirmLeaving = entry => LeaveDialog.Ask(this, entry);
         Closed += (_, _) =>
         {
@@ -158,8 +159,10 @@ public sealed class EditorWindow : Window
             _session.Interfaces.Changed -= Retitle;
             _session.Said -= Say;
             _session.NameWanted -= AskSceneName;
+            _session.Assets.Changed -= CookShaders;
             // The session made the tree, and the window is what outlives its file watcher.
             _session.Assets.Dispose();
+            _session.Surfaces.Dispose();
         };
 
         if (_session.Last is { } last)
@@ -168,7 +171,11 @@ public sealed class EditorWindow : Window
         }
 
         Refresh();
+        _ = _session.Surfaces.RefreshAsync();
     }
+
+    // The tree says so on a thread of its own, and a cook lands back on the thread that asked.
+    private void CookShaders() => Dispatcher.Post(() => _ = _session.Surfaces.RefreshAsync());
 
     private Grid Frame()
     {
@@ -269,6 +276,9 @@ public sealed class EditorWindow : Window
         OnApplyPrefab = _session.ApplyPrefab,
         OnRevertPrefab = _session.RevertPrefab,
         OnUnpackPrefab = _session.UnpackPrefab,
+        BoundsOf = _session.Models.Of,
+        CollisionOf = new ModelCollision(_session.Workspace.ProjectDirectory).ReadAsync,
+        Surfaces = _session.Surfaces,
     });
 
     private SceneViewport SceneView()

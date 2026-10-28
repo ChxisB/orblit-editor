@@ -81,7 +81,6 @@ public sealed class SceneViewport : Border
     public SceneViewport(
         EditorSession session,
         bool renderer = true,
-        Func<SceneObject, (Vector3 Min, Vector3 Max)?>? boundsOf = null,
         Snapping? snapping = null)
     {
         _session = session;
@@ -95,7 +94,7 @@ public sealed class SceneViewport : Border
             SkeletonGizmo.Type(session.Clips, session.Skeletons, session.SkeletonLook),
             LimbGizmo.Type(session.Clips, session.Skeletons, session.SkeletonLook),
         };
-        _state = new SceneViewportState(workspace, snapping ?? new Snapping(), session.History, gizmos) { BoundsOf = boundsOf, Sketch = session.Sketch };
+        _state = new SceneViewportState(workspace, snapping ?? new Snapping(), session.History, gizmos) { BoundsOf = session.Models.Of, Sketch = session.Sketch };
         _brush = new TerrainBrushInput(session.Terrains, session.History, session.TerrainTarget);
         _overlay = new ViewportOverlay(_state, session);
 
@@ -178,6 +177,7 @@ public sealed class SceneViewport : Border
         _session.Workspace.Changed += MarkDirty;
         _session.Terrains.HoverChanged += MarkDirty;
         _session.Terrains.Changed += MarkDirty;
+        _session.Surfaces.Changed += MarkDirty;
         _session.Interfaces.Changed += ShowInterface;
         // A bone moves without the scene changing, so only the overlay is told.
         _session.Clips.Changed += _overlay.InvalidateVisual;
@@ -208,6 +208,7 @@ public sealed class SceneViewport : Border
         _session.Workspace.Changed -= MarkDirty;
         _session.Terrains.HoverChanged -= MarkDirty;
         _session.Terrains.Changed -= MarkDirty;
+        _session.Surfaces.Changed -= MarkDirty;
         _session.Interfaces.Changed -= ShowInterface;
         _session.Clips.Changed -= _overlay.InvalidateVisual;
         _session.SkeletonLook.Changed -= _overlay.InvalidateVisual;
@@ -673,7 +674,13 @@ public sealed class SceneViewport : Border
     private SceneRenderOptions Options()
     {
         var workspace = _session.Workspace;
-        return new SceneRenderOptions { ProjectRoot = workspace.ProjectDirectory, Shared = workspace.Shared, GeometryOf = _geometry.PathFor };
+        return new SceneRenderOptions
+        {
+            ProjectRoot = workspace.ProjectDirectory,
+            Shared = workspace.Shared,
+            GeometryOf = _geometry.PathFor,
+            SurfaceOf = _session.Surfaces.SurfaceFor,
+        };
     }
 
     private void RefreshChips()

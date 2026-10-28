@@ -410,6 +410,10 @@
   a row shows no position and a drag moves things every frame.
 - The C# shell differs from the Dart one in small ways. A model file is
   read again when it changes on disk. A row of buttons carries words only.
+- The C# editor cooks the project's shaders when it opens and when one is
+  saved. The inspector shows a shader's section, and fits a body or a
+  collider to an imported model. The scene view picks a model by the size
+  in its file, and the views draw the cooked shaders.
 
 ## 1.26.0+27
 

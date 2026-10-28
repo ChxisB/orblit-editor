@@ -21,6 +21,12 @@ public sealed partial class EditorSession
     /// <summary>The skeleton each model of the project says it has, read once a file.</summary>
     public ModelSkeletons Skeletons { get; }
 
+    /// <summary>The size each model of the project says it is, which a pick and a fitted body read.</summary>
+    public ModelBounds Models { get; }
+
+    /// <summary>The project's shaders, cooked, keeping the last version of each that compiled.</summary>
+    public SurfaceCooks Surfaces { get; }
+
     /// <summary>What the scene views show of a selected model's skeleton, as the timeline's chips set it.</summary>
     public SkeletonLook SkeletonLook { get; } = new();
 

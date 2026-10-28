@@ -79,6 +79,7 @@ internal sealed class ShotPreviewPanel : Border
         _session.History.Changed += MarkDirty;
         _session.Workspace.Changed += MarkDirty;
         _session.Changed += MarkDirty;
+        _session.Surfaces.Changed += MarkDirty;
         MarkDirty();
     }
 
@@ -88,6 +89,7 @@ internal sealed class ShotPreviewPanel : Border
         _session.History.Changed -= MarkDirty;
         _session.Workspace.Changed -= MarkDirty;
         _session.Changed -= MarkDirty;
+        _session.Surfaces.Changed -= MarkDirty;
         // A frame already asked for belongs to the loop that ended here.
         _loop++;
         _requested = false;
@@ -151,7 +153,13 @@ internal sealed class ShotPreviewPanel : Border
 
         _dirty = false;
         var workspace = _session.Workspace;
-        var options = new SceneRenderOptions { ProjectRoot = workspace.ProjectDirectory, Shared = workspace.Shared, GeometryOf = _geometry.PathFor };
+        var options = new SceneRenderOptions
+        {
+            ProjectRoot = workspace.ProjectDirectory,
+            Shared = workspace.Shared,
+            GeometryOf = _geometry.PathFor,
+            SurfaceOf = _session.Surfaces.SurfaceFor,
+        };
         _renderer.Frame(scene.ToRenderScene(camera, options), (now - _origin.Value).TotalSeconds);
     }
 }
