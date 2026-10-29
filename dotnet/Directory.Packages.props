@@ -3,7 +3,7 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
-  <!-- The Orblit packages are the versions the engine had on 2026-10-25. -->
+  <!-- The Orblit packages are the versions the engine had on 2026-10-25. VectorMath is the one Filament and Asset need since 2026-10-29. -->
   <ItemGroup>
     <PackageVersion Include="xunit.v3" Version="4.0.2" />
     <PackageVersion Include="Avalonia" Version="12.1.4" />
@@ -29,7 +29,7 @@
     <PackageVersion Include="Orblit.Terrain" Version="0.5.0" />
     <PackageVersion Include="Orblit.Ui" Version="0.2.0" />
     <PackageVersion Include="Orblit.Ui.Avalonia" Version="0.2.0" />
-    <PackageVersion Include="Orblit.VectorMath" Version="0.18.0" />
+    <PackageVersion Include="Orblit.VectorMath" Version="0.20.0" />
     <PackageVersion Include="Orblit.Weather" Version="0.1.0" />
   </ItemGroup>
 </Project>
