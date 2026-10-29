@@ -173,9 +173,6 @@ public sealed class EditorWindowDataTests : IDisposable
 
         Headless.Click(window, "button_write_script_bindings");
 
-        // Both languages from the one declaration, which is what makes a field renamed here a build
-        // error in whatever reads it.
-        Assert.Contains("export interface", File.ReadAllText(PathOf("ball.d.ts")), StringComparison.Ordinal);
         Assert.Contains("namespace Ball", File.ReadAllText(PathOf("ball.h")), StringComparison.Ordinal);
     });
 }

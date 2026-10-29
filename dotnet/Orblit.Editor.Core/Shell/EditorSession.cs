@@ -50,9 +50,6 @@ public sealed partial class EditorSession
         Blends.Changed += OnBlendsChanged;
         Terrains = new TerrainBench(history, workspace.ProjectDirectory, problem => Say(problem, SayLevel.Error));
         Terrains.Changed += OnTerrainsChanged;
-        Interfaces = new InterfaceBench(history, Path.Combine(workspace.ProjectDirectory, "strings"));
-        Interfaces.Changed += OnInterfacesChanged;
-        Interfaces.LoadStrings();
         history.Changed += OnHistoryChanged;
     }
 
@@ -118,8 +115,8 @@ public sealed partial class EditorSession
                 return Layout;
             }
 
-            var panel = (Layout.GroupOf("scene") ?? Layout.GroupOf("canvas"))?.Current
-                ?? Layout.Panels.FirstOrDefault(one => one.Kind == PanelKind.Viewport || one.Kind == PanelKind.InterfaceCanvas)
+            var panel = Layout.GroupOf("scene")?.Current
+                ?? Layout.Panels.FirstOrDefault(one => one.Kind == PanelKind.Viewport)
                 ?? Layout.Panels[0];
             return Layout.CopyWith(root: new DockGroup("focused", [panel]), locked: true);
         }
@@ -131,10 +128,9 @@ public sealed partial class EditorSession
     public bool IsUnsaved(SceneEntry entry) =>
         entry.IsLoaded && (entry.NeverWritten || History.StampFor(entry.Id) != entry.SavedStamp);
 
-    /// <summary>Whether a scene, a clip, a cutscene, a blend, a terrain or an interface has changes that are not on disk.</summary>
+    /// <summary>Whether a scene, a clip, a cutscene, a blend or a terrain has changes that are not on disk.</summary>
     public bool AnyUnsaved =>
-        Workspace.Entries.Any(IsUnsaved) || Clips.AnyUnsaved || Cutscenes.AnyUnsaved || Blends.AnyUnsaved || Terrains.AnyUnsaved
-        || Interfaces.AnyUnsaved;
+        Workspace.Entries.Any(IsUnsaved) || Clips.AnyUnsaved || Cutscenes.AnyUnsaved || Blends.AnyUnsaved || Terrains.AnyUnsaved;
 
     /// <summary>Switches to a mode, with the panels as they were last left in it.</summary>
     public void EnterMode(EditorMode mode)
@@ -149,10 +145,6 @@ public sealed partial class EditorSession
         Mode = mode;
         Layout = LayoutOf(mode);
         mode.OnEnter?.Invoke();
-        if (mode.UsesInterfaces)
-        {
-            ShowSceneInterface();
-        }
 
         FollowMotion(force: true);
         OnClipsChanged();
@@ -327,7 +319,6 @@ public sealed partial class EditorSession
         SaveClips();
         SaveBlends();
         SaveTerrains();
-        SaveInterfaces();
         if (Workspace.Loaded is not { Scene: not null } entry)
         {
             return;

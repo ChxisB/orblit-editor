@@ -188,17 +188,15 @@ public sealed class EditorWindowDropTests : IDisposable
     });
 
     [Fact]
-    public Task APrefabDataObjectAndInterfaceGoWhereTheyBelong() => Headless.Run(() =>
+    public Task APrefabOrDataObjectThatIsGoneSaysSo() => Headless.Run(() =>
     {
-        var (session, window) = Open();
+        var (_, window) = Open();
 
         Drop(window, PathOf("prefabs/gone.oprefab"));
         Drop(window, PathOf("data/gone.odata"));
-        Drop(window, PathOf("ui/hud.oui"));
 
         Assert.Contains(_said, text => text.EndsWith("is not in the project any more.", StringComparison.Ordinal));
         Assert.Contains("gone.odata is not a readable data object.", _said);
-        Assert.Single(session.Workspace.Loaded!.Scene!.Objects, one => one.Kind == ObjectKind.Canvas);
         window.Close();
     });
 }

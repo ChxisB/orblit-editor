@@ -27,8 +27,6 @@
     <PackageVersion Include="Orblit.Sprite" Version="0.4.0" />
     <PackageVersion Include="Orblit.Stage" Version="0.5.0" />
     <PackageVersion Include="Orblit.Terrain" Version="0.5.0" />
-    <PackageVersion Include="Orblit.Ui" Version="0.2.0" />
-    <PackageVersion Include="Orblit.Ui.Avalonia" Version="0.2.0" />
     <PackageVersion Include="Orblit.VectorMath" Version="0.20.0" />
     <PackageVersion Include="Orblit.Weather" Version="0.1.0" />
   </ItemGroup>

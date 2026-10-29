@@ -335,28 +335,6 @@ public sealed class InspectorPanelTests
     });
 
     [Fact]
-    public Task ACanvasShowsItsInterfaceAndOpensIt() => Headless.Run(() =>
-    {
-        var scene = new EditorScene([new SceneObject("hud", "Hud", ObjectKind.Canvas) { InterfaceAsset = "ui/Hud.oui" }]);
-        var opened = new List<string>();
-        var (_, window) = Selecting("hud", scene, new InspectorLinks { OnOpenInterface = opened.Add });
-
-        Assert.Equal("Hud.oui", TextOf(window, "interface_link"));
-        Headless.Click(window, "interface_link");
-
-        Assert.Equal(["ui/Hud.oui"], opened);
-    });
-
-    [Fact]
-    public Task ACanvasWithNoInterfaceSaysHowToGiveItOne() => Headless.Run(() =>
-    {
-        var (_, window) = Selecting("hud", new EditorScene([new SceneObject("hud", "Hud", ObjectKind.Canvas)]));
-
-        Assert.Contains(Headless.All<TextBlock>(window), one => (one.Text ?? "").StartsWith("Nothing yet. Drag a .oui", StringComparison.Ordinal));
-        Assert.False(Has(window, "interface_link"));
-    });
-
-    [Fact]
     public Task AFoldedSectionStaysFoldedWhenAnotherObjectIsSelected() => Headless.Run(() =>
     {
         var (session, window) = Selecting("crate");

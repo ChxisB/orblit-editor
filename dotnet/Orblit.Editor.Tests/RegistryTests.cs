@@ -32,17 +32,17 @@ public sealed class RegistryTests
     public void PutsAThingAheadOfTheOneItIsRegisteredBefore()
     {
         _registry.Register(new Thing("light"));
-        _registry.Register(new Thing("interface"));
-        _registry.Register(new Thing("shape"), before: "interface");
+        _registry.Register(new Thing("data"));
+        _registry.Register(new Thing("shape"), before: "data");
 
-        Assert.Equal(["light", "shape", "interface"], Names());
+        Assert.Equal(["light", "shape", "data"], Names());
     }
 
     [Fact]
     public void RegisteredBeforeSomethingMissingItGoesLast()
     {
         _registry.Register(new Thing("light"));
-        _registry.Register(new Thing("shape"), before: "interface");
+        _registry.Register(new Thing("shape"), before: "data");
 
         Assert.Equal(["light", "shape"], Names());
     }

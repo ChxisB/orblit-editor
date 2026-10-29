@@ -129,7 +129,7 @@ public sealed class AssetPreviewModelTests : IDisposable
         Assert.Equal(PreviewStage.Picture, Showing(Make("colormap.png", "x")).Stage);
         // A GPU format the picture decoder has nothing for, and a script.
         Assert.Equal(PreviewStage.Kind, Showing(Make("rock.ktx2", "x")).Stage);
-        Assert.Equal(PreviewStage.Kind, Showing(Make("player.ts", "export {}")).Stage);
+        Assert.Equal(PreviewStage.Kind, Showing(Make("player.cpp", "int x;")).Stage);
     }
 
     [Fact]
@@ -172,12 +172,12 @@ public sealed class AssetPreviewModelTests : IDisposable
     [Fact]
     public void AFileItCannotDrawIsNamedByItsKind()
     {
-        var model = Showing(Make("player.ts", "export {}"));
+        var model = Showing(Make("player.cpp", "int x;"));
 
         // Naming the kind confirms the editor knows what the file is, which is the question somebody
         // has when nothing is drawn.
-        Assert.Contains(AssetKind.Script.Label, model.Saying, StringComparison.Ordinal);
-        Assert.Equal("player.ts", model.Heading);
+        Assert.Contains(AssetKind.Native.Label, model.Saying, StringComparison.Ordinal);
+        Assert.Equal("player.cpp", model.Heading);
         Assert.False(model.OffersTurn);
         Assert.Null(model.Scene());
     }

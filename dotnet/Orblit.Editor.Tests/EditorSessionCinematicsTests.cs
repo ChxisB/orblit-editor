@@ -52,7 +52,7 @@ public sealed class EditorSessionCinematicsTests : IDisposable
         var modes = EditorModes.Standard();
         var layout = modes["cinematics"]!.Layout();
 
-        Assert.Equal(["scene", "modelling", "terrain", "animation", "cinematics", "interface"], modes.All.Select(mode => mode.Name));
+        Assert.Equal(["scene", "modelling", "terrain", "animation", "cinematics"], modes.All.Select(mode => mode.Name));
         Assert.Equal(
             ["outliner", "scene", "shot", "cutsceneTimeline", "shots", "inspector"],
             layout.Panels.Select(panel => panel.Id));

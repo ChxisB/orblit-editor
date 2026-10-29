@@ -36,7 +36,6 @@ internal static class InspectorSections
         .. ShaderSections(fields, surfaces),
         .. TerrainSections(fields, terrain),
         new("shape", ShapeSection.AppliesTo, target => ShapeSection.Build(fields, target)),
-        new("interface", target => target.Item.Kind == ObjectKind.Canvas, target => Interface(fields, target)),
         new("data", target => target.Item.Data.Count > 0, target => Data(fields, target)),
     ];
 
@@ -149,26 +148,6 @@ internal static class InspectorSections
         clear.Margin = new Thickness(Space.Xs, 0, 0, 0);
         shown.Children.Add(clear);
         return shown;
-    }
-
-    // A reference and not a copy, which is the same rule as a mesh and a data object: the .oui is the
-    // document, and two scenes showing the same one both change when it changes.
-    private static Control Interface(Fields fields, InspectorTarget target)
-    {
-        var shown = target.Item.InterfaceAsset;
-        if (shown is null)
-        {
-            return fields.Section("Interface", Fields.Note("Nothing yet. Drag a .oui from the project onto the viewport."));
-        }
-
-        var open = target.OnOpenInterface;
-        return fields.Section(
-            "Interface",
-            Fields.Column(
-            [
-                InspectorBands.Link("interface_link", Path.GetFileName(shown), shown, open is null ? null : () => open(shown)),
-                Fields.Note("Drawn over the scene. Hidden here hides it in the game too."),
-            ]));
     }
 
     // Listed and not inlined: the values belong to the file, and showing them here as though they were

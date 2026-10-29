@@ -349,10 +349,10 @@ public sealed class EditorWindowPrefabsTests : IDisposable
         Assert.Contains(NewAsset.Folder, tags);
         Assert.Contains(NewAsset.Scene, tags);
         Assert.NotEmpty(Group(menu, "Script").Items);
-        Assert.NotEmpty(Group(menu, "Style").Items);
+        Assert.NotEmpty(Group(menu, "Data").Items);
         // Nothing inside a group is on the menu itself.
-        Assert.DoesNotContain(NewAsset.Script, tags);
-        Assert.DoesNotContain(NewAsset.Stylesheet, tags);
+        Assert.DoesNotContain(NewAsset.Native, tags);
+        Assert.DoesNotContain(NewAsset.Json, tags);
     });
 
     [Fact]
@@ -361,13 +361,10 @@ public sealed class EditorWindowPrefabsTests : IDisposable
         var script = Items(Group(AssetMenu.Build(_ => { }), "Script"));
         var words = script.SelectMany(Words).ToList();
 
-        Assert.Contains("TypeScript", words);
-        // On the menu, because the workspace tab says Interface too.
-        Assert.Contains("Interface", words);
         Assert.Contains("C++", words);
         Assert.Contains("C++ header", words);
         // And what each one would actually write.
-        Assert.Contains(".tsx", words);
+        Assert.Contains(".cpp", words);
     });
 
     [Fact]
@@ -385,26 +382,12 @@ public sealed class EditorWindowPrefabsTests : IDisposable
     {
         var (_, window) = Open();
         var picked = new List<NewAsset>();
-        var item = Items(Group(AssetMenu.Build(picked.Add), "Script")).Single(one => Equals(one.Tag, NewAsset.Script));
+        var item = Items(Group(AssetMenu.Build(picked.Add), "Script")).Single(one => Equals(one.Tag, NewAsset.Native));
 
         item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
         Headless.All<AssetBrowserPanel>(window).Single().MakeNew(Assert.Single(picked), "walker");
 
-        Assert.Contains("onFrame", File.ReadAllText(PathOf("walker.ts")), StringComparison.Ordinal);
-    });
-
-    [Fact]
-    public Task AThemeAndAStylesheetAreBothOffered() => Headless.Run(() =>
-    {
-        var (_, window) = Open();
-        var style = Items(Group(AssetMenu.Build(_ => { }), "Style")).Select(one => one.Tag).ToList();
-        Assert.Contains(NewAsset.Stylesheet, style);
-        Assert.Contains(NewAsset.Theme, style);
-
-        Headless.All<AssetBrowserPanel>(window).Single().MakeNew(NewAsset.Theme, "dark");
-
-        // The theme is the values, not the rules.
-        Assert.Contains("--accent", File.ReadAllText(PathOf("dark.css")), StringComparison.Ordinal);
+        Assert.Contains("orblit_step", File.ReadAllText(PathOf("walker.cpp")), StringComparison.Ordinal);
     });
 
     [Fact]

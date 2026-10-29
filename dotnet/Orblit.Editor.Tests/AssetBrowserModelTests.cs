@@ -124,7 +124,7 @@ public sealed class AssetBrowserModelTests : IDisposable
     public void AFolderOrAScriptIsNeverShownAsAPicture()
     {
         Assert.False(AssetBrowserModel.ShowsPicture(Entry("a.png", AssetKind.Folder)));
-        Assert.False(AssetBrowserModel.ShowsPicture(Entry("a.png", AssetKind.Script)));
+        Assert.False(AssetBrowserModel.ShowsPicture(Entry("a.png", AssetKind.Native)));
     }
 
     [Fact]

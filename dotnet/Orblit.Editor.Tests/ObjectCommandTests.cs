@@ -187,21 +187,6 @@ public sealed class ObjectCommandTests
     }
 
     [Fact]
-    public void AnInterfaceIsSetAndCleared()
-    {
-        var (history, scene) = Rig();
-
-        history.Run(new SetInterface("a", "cube", "Cube", "menu.oui"));
-        Assert.Equal("menu.oui", scene["cube"]!.InterfaceAsset);
-
-        history.Run(new SetInterface("a", "cube", "Cube", null));
-        Assert.Equal("Clear Cube", history.UndoLabel);
-
-        history.Undo();
-        Assert.Equal("menu.oui", scene["cube"]!.InterfaceAsset);
-    }
-
-    [Fact]
     public void AddingAComponentIsUndoneByTakingItOffAndASliderOnItIsOneStep()
     {
         var (history, scene) = Rig();

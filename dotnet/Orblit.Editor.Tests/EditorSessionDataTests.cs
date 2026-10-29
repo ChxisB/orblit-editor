@@ -165,10 +165,8 @@ public sealed class EditorSessionDataTests : IDisposable
 
         session.WriteBindings("data/ball.odata");
 
-        // Both languages from the one declaration, which is what makes a field renamed here a build
-        // error in whatever reads it.
-        Assert.Contains("export interface", File.ReadAllText(PathOf("data/ball.d.ts")), StringComparison.Ordinal);
         Assert.Contains("namespace Ball", File.ReadAllText(PathOf("data/ball.h")), StringComparison.Ordinal);
-        Assert.Equal("Wrote ball.d.ts and ball.h.", session.Last?.Text);
+        Assert.False(File.Exists(PathOf("data/ball.d.ts")));
+        Assert.Equal("Wrote ball.h.", session.Last?.Text);
     }
 }

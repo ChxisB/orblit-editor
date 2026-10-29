@@ -89,16 +89,16 @@ public sealed class EditorWindowCodeTests : IDisposable
     [Fact]
     public Task OpeningAScriptFromProjectOpensItInTheEditor() => Headless.Run(() =>
     {
-        File.WriteAllText(Path.Combine(Folder, "hero.ts"), "");
+        File.WriteAllText(Path.Combine(Folder, "hero.cpp"), "");
         var (session, window) = Open();
         session.OpenPanel(PanelKind.Project);
         Headless.Render();
 
-        Headless.DoubleClick(window, Headless.All<AssetTile>(window).First(tile => tile.Asset.Name == "hero.ts"));
+        Headless.DoubleClick(window, Headless.All<AssetTile>(window).First(tile => tile.Asset.Name == "hero.cpp"));
         Headless.Render();
 
-        Assert.Equal([$"code {Folder} --goto {Path.Combine(Folder, "hero.ts")}"], _programs.Started);
-        Assert.Equal("Opened hero.ts in Visual Studio Code.", Status(window));
+        Assert.Equal([$"code {Folder} --goto {Path.Combine(Folder, "hero.cpp")}"], _programs.Started);
+        Assert.Equal("Opened hero.cpp in Visual Studio Code.", Status(window));
     });
 
     [Fact]

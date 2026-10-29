@@ -62,12 +62,12 @@ public sealed class AssetPreviewTests : IDisposable
     [Fact]
     public Task AFileItCannotDrawIsNamedByItsKind() => Headless.Run(() =>
     {
-        Write("player.ts", "export {}");
+        Write("player.cpp", "int x;");
         var window = Show(renderer: true);
 
-        Pick(window, "player.ts");
+        Pick(window, "player.cpp");
 
-        Assert.True(Says(Preview(window), AssetKind.Script.Label));
+        Assert.True(Says(Preview(window), AssetKind.Native.Label));
         Assert.Null(Preview(window).Renderer);
         Assert.True(Assert.Single(Headless.All<Glyph>(Assert.Single(Headless.All<PreviewNote>(Preview(window))))).IsVisible);
     });
@@ -114,10 +114,10 @@ public sealed class AssetPreviewTests : IDisposable
     [Fact]
     public Task AFileWithNothingToTurnHasNoTurnButton() => Headless.Run(() =>
     {
-        Write("player.ts", "export {}");
+        Write("player.cpp", "int x;");
         var window = Show();
 
-        Pick(window, "player.ts");
+        Pick(window, "player.cpp");
 
         Assert.False(Headless.Find<Button>(window, "preview_turn").IsVisible);
     });
@@ -154,13 +154,13 @@ public sealed class AssetPreviewTests : IDisposable
     {
         // The dock it lives in can be dragged down to a couple of rows. An icon over two lines of words
         // does not fit there, and the words are the part that matters.
-        Write("player.ts", "export {}");
+        Write("player.cpp", "int x;");
         var window = Show(width: 900, height: 132);
 
-        Pick(window, "player.ts");
+        Pick(window, "player.cpp");
         var note = Assert.Single(Headless.All<PreviewNote>(Preview(window)));
 
-        Assert.True(Says(note, AssetKind.Script.Label));
+        Assert.True(Says(note, AssetKind.Native.Label));
         Assert.All(Headless.All<Glyph>(note), icon => Assert.False(icon.IsVisible));
     });
 

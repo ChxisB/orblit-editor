@@ -85,8 +85,8 @@ public sealed partial class EditorSession
     }
 
     /// <summary>
-    /// Writes a .d.ts and a .h beside a data object. Both come from the one declaration, so a field
-    /// renamed here breaks the build of whatever reads it rather than quietly reading nothing.
+    /// Writes a .h beside a data object. It comes from the one declaration, so a field renamed here
+    /// breaks the build of whatever reads it rather than quietly reading nothing.
     /// </summary>
     public void WriteBindings(string relative)
     {
@@ -97,22 +97,17 @@ public sealed partial class EditorSession
 
         var name = Path.GetFileNameWithoutExtension(relative);
         var folder = Path.GetDirectoryName(Path.Combine(Workspace.ProjectDirectory, relative)) ?? Workspace.ProjectDirectory;
-        List<string> written = [];
-        foreach (var (file, text) in new[] { ($"{name}.d.ts", data.ToTypeScript(name)), ($"{name}.h", data.ToCpp(name)) })
+        var file = $"{name}.h";
+        try
         {
-            try
-            {
-                IoFile.WriteAllText(Path.Combine(folder, file), text);
-            }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-            {
-                Say($"Could not write {file}: {error.Message}", SayLevel.Error);
-                return;
-            }
-
-            written.Add(file);
+            IoFile.WriteAllText(Path.Combine(folder, file), data.ToCpp(name));
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            Say($"Could not write {file}: {error.Message}", SayLevel.Error);
+            return;
         }
 
-        Say($"Wrote {string.Join(" and ", written)}.", SayLevel.Info);
+        Say($"Wrote {file}.", SayLevel.Info);
     }
 }

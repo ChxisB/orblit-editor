@@ -139,21 +139,6 @@ public sealed class DockLayout
         below: 0.4);
 
     /// <summary>
-    /// Laying out the screens a game shows over its scene. The canvas is in the middle, where the scene
-    /// view is in the other workspaces, since a screen is laid out at a fixed size and wants all the
-    /// room there is. The elements are where the scene's tree is, and only the console is under the
-    /// view: nothing else there says anything about a screen.
-    /// </summary>
-    public static DockLayout Interface() => Columns(
-        new DockGroup("centre", [new DockPanel("canvas", PanelKind.InterfaceCanvas)]),
-        bottom: [new DockPanel("console", PanelKind.Console)],
-        right: [new DockPanel("design", PanelKind.InterfaceDesign)],
-        left: [new DockPanel("elements", PanelKind.InterfaceElements)],
-        folded: false,
-        below: 0.14,
-        revision: 2);
-
-    /// <summary>
     /// Four scene views onto the same world, the way a modelling tool arranges them. The reason the
     /// layout is data at all.
     /// </summary>

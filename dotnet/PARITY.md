@@ -95,7 +95,7 @@ can do so far. Add, delete, copy and frame join them with their panels in task
 | --- | --- | --- | --- | --- | --- | --- |
 | `editor_shell_palette_test.dart` | `EditorWindowTests` | 5 | 5 | 4 | 0 | partial. "Go to terrain" became "go to modelling", because terrain joins the modes in task 16. "A command that changes the scene can be undone" waits for the add commands in task 16 |
 | `editor_shell_layouts_test.dart` | `EditorSessionTests` | 3 | 3 | 2 | 0 | partial. Per-mode arrangements and focus are here. "Performance numbers are behind Stats" is tested only as the toggle, because the numbers are drawn by the viewport in task 15 |
-| `editor_shell_workspaces_test.dart` | `EditorSessionTests`, `EditorSessionInterfacesTests`, `EditorWindowInterfacesTests` | 16 | 16 | 10 | 3: a new interface leaving the one the scene shows, a file that is not an interface, and focusing the canvas | partial. The order of the rail, the panels for each job, reset, each remembering its arrangement and the Interface group are here. The C# top bar has no Saved status, object count or frame rate, so the top bar case checks only the name. The rest need icons, terrain, cinematics or the modelling panel |
+| `editor_shell_workspaces_test.dart` | `EditorSessionTests` | 16 | 16 | 4 | 0 | partial. The order of the rail, the panels for each job, reset and each remembering its arrangement are here. The six cases of the Interface group are dropped by decision 96. The rest need icons, terrain, cinematics or the modelling panel |
 | `editor_shell_panels_test.dart` | `EditorSessionTests`, `EditorWindowTests` | 11 | 11 | 5 | 0 | partial. Closing and opening a panel, remembering, locking, a damaged layout and a layout from before workspaces are here. The rest need the viewport, the game view or the profile panel |
 | none, the Dart has no test | `EditorSessionTests`, `EditorWindowTests` | 0 | 0 | 0 | 52: the session without a window, the window reading and writing it, and the inspector in the dock. Save as, its prompt and the quiet shared save are 13 of them | added |
 
@@ -183,11 +183,10 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | `cinematics_test.dart` | `CinematicsTests` | 18 | 18 | 18 | 3: a cut that shortens the shot running, a cut that leaves an earlier shot alone, and a camera under a parent the scene lacks | done |
 | `editor_shell_cinematics_test.dart` | `EditorWindowCinematicsTests` | 7 | 7 | 7 | 11: the shelf in the cinematics mode and nowhere else, the camera menu marking the camera in use and recutting a shot, a camera the scene lacks, a start or length taken only as a number within ten minutes, a typed number that changes nothing, a keystroke in a card the shots have moved on from, the cards letting go of looking, a renamed camera, changes elsewhere not flying the view back, the inspector keying the cutscene, and the playhead leaving a box being typed in alone | done |
 | none | `EditorSessionCinematicsTests` | 0 | 0 | 0 | 30: the panels and layout of the mode, opening, making and refusing a cutscene, Add shot and Use this view as undo steps, looking through a camera, steering it as one step and letting go when it is deleted or its add is undone, the shelf, unsaved changes, and keying the cutscene without an owner | added |
-| `ui_canvas_test.dart` | `InterfaceCanvasTests`, `InterfaceWorkspaceTests` | 20 | 20 | 20 | 5: a click that shakes does not move what it chooses, pointing at an element marks it, each panel saying what to do with nothing open, an element in a stack away from the page edge snapping to the grid on the page, and a drag the canvas leaves half way being a step of its own | done. The canvas follows a bench, so not designing is the bench previewing. Dart finds a control by its words and C# by its name |
-| `ui_responsive_test.dart` | `InterfaceCanvasTests`, `InterfaceWorkspaceTests` | 16 | 16 | 16 | 0 | done. The grid count says "4 across this screen. 12 is too fine here." with a full stop where Dart has a dash |
-| `interface_strings_test.dart` | `InterfaceBenchTests`, `InterfaceWorkspaceTests` | 11 | 11 | 11 | 0 | done |
-| none | `InterfaceBenchTests` | 0 | 0 | 0 | 16: the keys the shown interface asks for, adding inside the selection and its undo, adding after a button rather than inside it, a place away from the last element on a stack, the grid going up for a column and not for a button, a split and a split of a placed element, a drag as one step on a whole pixel, removing and the root, typing as one step per element, saving and opening again, a file gone or not an interface, the preview held either way, an element's name, and flowing | added |
-| `editor_shell_data_test.dart` | `EditorSessionInterfacesTests`, `EditorWindowInterfacesTests`, `EditorWindowDataTests`, `EditorSessionDataTests`, `EditorWindowConsoleTests` | 22 | 22 | 22 | 3: a change shown over the scene before it is saved, an interface file that cannot be read, and a data object's panel kept through a change elsewhere | done. The refusal on the console tab is `ARefusalIsKeptThere`, a real drop of a png with nothing selected. The other drop cases call `PutInterfaceOnScene` and `AttachData`, which are what a drop does. `EditorWindowDropTests` drops each kind for real. A data object is made through the browser's `MakeNew` and selected through the session. Saving after an attach is a session test. The console shares the bottom group with the project browser, so "folded under the view" is "behind the project tab" |
+| `ui_canvas_test.dart` | none | 20 | 20 | 0 | 0 | dropped by decision 96 on 2026-10-29, with the Interface workspace |
+| `ui_responsive_test.dart` | none | 16 | 16 | 0 | 0 | dropped by decision 96 on 2026-10-29, with the Interface workspace |
+| `interface_strings_test.dart` | none | 11 | 11 | 0 | 0 | dropped by decision 96 on 2026-10-29, with the Interface workspace |
+| `editor_shell_data_test.dart` | `EditorWindowDataTests`, `EditorSessionDataTests`, `EditorWindowConsoleTests` | 22 | 22 | 16 | 1: a data object's panel kept through a change elsewhere | done. The six cases of the "an interface on a scene" group are dropped by decision 96. The refusal on the console tab is `ARefusalIsKeptThere`, a real drop of a png with nothing selected. The other drop cases call `AttachData`, which is what a drop does. `EditorWindowDropTests` drops each kind for real. A data object is made through the browser's `MakeNew` and selected through the session. Saving after an attach is a session test. The console shares the bottom group with the project browser, so "folded under the view" is "behind the project tab" |
 | `editor_shell_motion_test.dart` | `EditorSessionClipsTests` | 4 | 4 | 3 | 0 | partial. Waiting: Play in four views, which needs the game view. No row owns the game view yet |
 | none | `OutlinerModelTests` | 0 | 0 | 0 | 15: the rows and their depth, the folds, a scene row with a filter, an unloaded scene, where a drop lands and what a drop refuses | added |
 | none | `EditorSessionObjectsTests` | 0 | 0 | 0 | 26: selecting, adding and naming, ids, deleting, moving, duplicating, the clipboard labels and a clipboard that cannot be reached | added |
@@ -247,7 +246,7 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | none | `EditorSessionClipsTests`, `EditorWindowRetargetTests` | 0 | 0 | 0 | 10: a made clip written in `clips/` and shown, never over another, its problems counted, put on the chosen object only for the model it moves, the model of the clip's owner and not of the chosen object, a clips folder that cannot be made, a clip that cannot be written, and the dialog starting on the owner's model | added |
 | `console_test.dart` | `EditorLogTests` | 12 | 12 | 11 | 2: an entry stamped by the clock, and what the session says being kept | done. "What Flutter throws" is what the UI thread throws. Giving the handler back and nothing arriving after it are one C# test. The closed log test is not ported, because a C# event has nothing to throw |
 | none | `ConsolePanelTests` | 0 | 0 | 0 | 7: each filter's count, the newest at the top, a repeat's count and time, opening an entry's detail, an open entry kept through a new one, Copy oldest first, and letting the log go on close | added |
-| `data_object_test.dart` | `DataObjectTests` | 16 | 16 | 16 | 2: the TypeScript and the C++ checked against the text Dart writes | done |
+| `data_object_test.dart` | `DataObjectTests` | 16 | 16 | 12 | 1: the C++ checked against the text Dart writes | done. Four of the five TypeScript cases are dropped by decision 94. A name that starts with a digit is checked on the C++ |
 | none | `EditorSessionDataTests` | 0 | 0 | 0 | 11: the session side of the data objects group, a scene row putting the inspector back, attaching with nothing selected, a file that is not a data object, detaching, and a file that has gone | added |
 | none | `DataPanelTests` | 0 | 0 | 0 | 11: a typed value waiting for the typing to stop, text that is not a number, an empty key, a value added of each kind with a name of its own, one axis of a vector, removing, what is waiting written on close, the bindings of what was just typed, and a file that cannot be read | added |
 | `profile_panel_test.dart` | `ProfilePanelTests` | 5 | 5 | 4 | 2: closing stops the reads, and the window's panel times the frames the scene view draws | done. The clock is wound by hand. Handing a shown panel another profiler is not ported, because the window builds the panel once over its own |
@@ -273,7 +272,7 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | `drag_stability_test.dart` | `DragStabilityTests` | 4 | 4 | 4 | 0 | done |
 | `material_assignment_test.dart` | `MaterialAssignmentTests` | 3 | 3 | 3 | 0 | done |
 | `editor_shell_prefabs_test.dart` | `EditorWindowPrefabsTests` | 23 | 23 | 23 | 9: the selection kept under its new id, a prefab placed under a group or beside an object, an apply from a part writing to the outermost prefab, an apply updating a shared set instance (item 81), an unreadable prefab being only a link, an unchanged apply adding no step, unpack keeping the selection, the mark naming the file, and revert | done |
-| `editor_shell_drop_test.dart` | `EditorWindowDropTests`, `EditorWindowKeysTests` | 4 | 4 | 4 | 6: the view lit while a file is over it, a scene opened, a file the scene cannot take, an include, a light with nothing to texture, and a prefab, a data object and an interface each going where they belong | done. Each is a real drop of what a browser tile's drag carries. Headless cannot start a drag, so the tile's own drag has not run. F is in `EditorWindowKeysTests` |
+| `editor_shell_drop_test.dart` | `EditorWindowDropTests`, `EditorWindowKeysTests` | 4 | 4 | 4 | 6: the view lit while a file is over it, a scene opened, a file the scene cannot take, an include, a light with nothing to texture, and a prefab and a data object that are gone each saying so | done. Each is a real drop of what a browser tile's drag carries. Headless cannot start a drag, so the tile's own drag has not run. F is in `EditorWindowKeysTests` |
 | `skeleton_view_test.dart` | `SkeletonViewTests` | 9 | 9 | 9 | 0 | done. The no length case also checks a loop |
 | `skeleton_gizmo_test.dart` | `SkeletonGizmoTests`, `ModelSkeletonsTests` | 12 | 12 | 11 | 4: fainter far ghosts, no ghosts on a model the clip does not reach, bones where the model stands, and the Bones chip in the window | done. Dart's two null cases share `SaysNothingForAFileThatHasNoSkinIsNotThereOrIsNotAModel`. A model file is read again when it changes on disk, where Dart kept it until told to forget it |
 | `limb_gizmo_test.dart` | `LimbGizmoTests` | 17 | 17 | 17 | 3: a turn keyed later moving the handles only at the playhead, the nearer of two handles on a model away from the origin, and the window drawing the handles | done. A drag has not run in a window, because headless cannot start one |
@@ -288,26 +287,13 @@ off the UI thread, at 512 by 512 with straight alpha. It ran headless, and the r
 window runs headless only. The ring, the shelf, a stroke and a textured set have not been seen in a real window with the
 renderer.
 
-Gaps in row 13: the window fills the prefab, data, interface and terrain links of
+Gaps in row 13: the window fills the prefab, data and terrain links of
 `InspectorLinks`. It leaves `BoundsOf`, `CollisionOf` and `Surfaces` unset, so a
 real window shows no shader section and cannot fit a body to an imported mesh.
 The tests hand these in.
 
-Gaps in row 9: the Dart scene view and game view draw a plain interface over an opaque
-ground with dark bars, which hides the scene. The C# scene view draws it with neither.
-This is item 59 of decision 80. It draws under the boundary boxes, where Dart draws it over them.
-The handles are on top in both. The Interface chip is a setting of each scene view, as the
-outline chip is, where Dart keeps one for the shell. The Interface workspace has run
-headless only, never in a real window with the renderer.
-
-The row 9 review found five more, items 60 to 64 of decision 80. Two are fixed in C#.
-With a button or text selected, Add puts the new element after it, where Dart puts it
-inside. A drag in a stack away from the page edge snaps to the grid on the page, where
-Dart snaps it from the stack's edge. Three are left as Dart has them. Only Delete acts
-on the interface selection, and Cut, Copy, Paste, Duplicate and the arrows act on the
-scene selection behind it. The scene view keeps an interface it has read until the
-project opens again. New asks whether the loaded scene shows an interface, then puts
-the canvas on the working one.
+Gap in row 9: the interface over the scene view and the Interface workspace are dropped
+by decision 96. Items 59 to 64 of decision 80 went with them.
 
 Gaps in row 10: a new data object's kind is picked from a menu, where Dart
 opens a dialog. The store learns of an edit only when it is written, and the

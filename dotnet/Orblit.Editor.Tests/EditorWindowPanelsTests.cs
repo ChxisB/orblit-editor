@@ -42,9 +42,6 @@ public sealed class EditorWindowPanelsTests : IDisposable
     [InlineData("terrainBrush", typeof(TerrainBrushPanel))]
     [InlineData("uvs", typeof(UvPanel))]
     [InlineData("inspector", typeof(InspectorPanel))]
-    [InlineData("interfaceCanvas", typeof(InterfaceCanvas))]
-    [InlineData("interfaceElements", typeof(InterfaceElements))]
-    [InlineData("interfaceDesign", typeof(InterfaceDesign))]
     public Task APanelOpensAsItsOwnControl(string kind, Type control) => Headless.Run(() =>
     {
         var (session, window) = OpenWithTheCharacterSelected();

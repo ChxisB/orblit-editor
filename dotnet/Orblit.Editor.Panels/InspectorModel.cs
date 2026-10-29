@@ -25,9 +25,6 @@ public sealed class InspectorTarget
     /// <summary>Takes one of the object's data objects off it, given the object's id and the path.</summary>
     public Action<string, string>? OnDetachData { get; init; }
 
-    /// <summary>Opens the interface a canvas puts on screen.</summary>
-    public Action<string>? OnOpenInterface { get; init; }
-
     /// <summary>Goes to the modelling workspace, where a shape's geometry is changed.</summary>
     public Action? OnOpenTools { get; init; }
 

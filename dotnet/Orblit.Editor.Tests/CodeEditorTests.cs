@@ -15,7 +15,7 @@ public sealed class CodeEditorTests : IDisposable
 
     private string Script()
     {
-        var path = Path.Combine(Folder, "hero.ts");
+        var path = Path.Combine(Folder, "hero.cpp");
         File.WriteAllText(path, "");
         return path;
     }

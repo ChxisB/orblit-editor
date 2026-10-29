@@ -50,15 +50,6 @@ public sealed class PanelKind : IEquatable<PanelKind>
     /// <summary>The cutscene's keys, marks and shots over time.</summary>
     public static readonly PanelKind CutsceneTimeline = new("cutsceneTimeline", "Cutscene", "view_timeline_outlined");
 
-    /// <summary>The canvas being laid out, in the middle of the Interface workspace.</summary>
-    public static readonly PanelKind InterfaceCanvas = new("interfaceCanvas", "Canvas", "web_asset");
-
-    /// <summary>The elements on the canvas, as a tree.</summary>
-    public static readonly PanelKind InterfaceElements = new("interfaceElements", "Elements", "account_tree_outlined");
-
-    /// <summary>What to add, the selected element's properties and the canvas's.</summary>
-    public static readonly PanelKind InterfaceDesign = new("interfaceDesign", "Design", "tune");
-
     /// <summary>
     /// The kinds the editor has always had, which a layout can be read against before anything else
     /// has registered.
@@ -66,7 +57,7 @@ public sealed class PanelKind : IEquatable<PanelKind>
     public static readonly IReadOnlyList<PanelKind> BuiltIn =
     [
         Outliner, Inspector, Viewport, Game, Project, Console, Uvs, Modelling, Timeline, Profile, TerrainBrush, BlendGraph,
-        ShotPreview, ShotList, CutsceneTimeline, InterfaceCanvas, InterfaceElements, InterfaceDesign,
+        ShotPreview, ShotList, CutsceneTimeline,
     ];
 
     public PanelKind(string name, string label, string icon, bool repeatable = false)

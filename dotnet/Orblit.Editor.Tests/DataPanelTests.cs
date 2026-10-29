@@ -136,7 +136,7 @@ public sealed class DataPanelTests : IDisposable
 
         Headless.Click(window, "button_write_script_bindings");
 
-        Assert.Contains("speed: number;", File.ReadAllText(PathOf("ball.d.ts")), StringComparison.Ordinal);
+        Assert.Contains("inline double speed(", File.ReadAllText(PathOf("ball.h")), StringComparison.Ordinal);
     });
 
     [Fact]

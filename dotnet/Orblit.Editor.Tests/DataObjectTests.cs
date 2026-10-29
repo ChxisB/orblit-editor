@@ -2,8 +2,8 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/data_object_test.dart. The two bindings checked against the text Dart
-// writes are added, since the C++ one has no Dart test.
+// Dart: orblit-editor/test/data_object_test.dart. The C++ binding checked against the text Dart
+// writes is added, since it has no Dart test. The script binding's cases are dropped by decision 94.
 public sealed class DataObjectTests : IDisposable
 {
     private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory("orblit_data");
@@ -81,34 +81,8 @@ public sealed class DataObjectTests : IDisposable
         Assert.NotEqual("value", DataObject.Blank("settings").Available("value"));
 
     [Fact]
-    public void TheTypeScriptNamesATypeAfterTheObjectInPascalCase() =>
-        Assert.Contains("export interface BallSettings {", Full().ToTypeScript("ball"), StringComparison.Ordinal);
-
-    [Fact]
-    public void TheTypeScriptGivesEveryFieldTheTypeItActuallyHolds()
-    {
-        var types = Full().ToTypeScript("ball");
-
-        Assert.Contains("speed: number;", types, StringComparison.Ordinal);
-        Assert.Contains("label: string;", types, StringComparison.Ordinal);
-        Assert.Contains("bouncy: boolean;", types, StringComparison.Ordinal);
-        Assert.Contains("spawn: [number, number, number];", types, StringComparison.Ordinal);
-        // A colour and an asset are both paths through a string.
-        Assert.Contains("tint: string;", types, StringComparison.Ordinal);
-        Assert.Contains("mesh: string;", types, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void TheTypeScriptCarriesTheNotesAcross() =>
-        Assert.Contains("/** Metres a second */", Full().ToTypeScript("ball"), StringComparison.Ordinal);
-
-    [Fact]
     public void ANameThatStartsWithADigitStillMakesALegalType() =>
-        Assert.Contains("interface Data3rdFaction", new DataObject("3rd faction", []).ToTypeScript("f"), StringComparison.Ordinal);
-
-    [Fact]
-    public void TheTypeScriptSaysItWasGeneratedSoNobodyEditsIt() =>
-        Assert.Contains("Do not edit", Full().ToTypeScript("ball"), StringComparison.Ordinal);
+        Assert.Contains("namespace Data3rdFaction {", new DataObject("3rd faction", []).ToCpp("f"), StringComparison.Ordinal);
 
     private static DataObject Probe() => new(
         "Ball settings",
@@ -119,25 +93,6 @@ public sealed class DataObjectTests : IDisposable
             new DataField("spawn", DataType.Vector, new List<object?> { 0L, 1L, 2L }),
         ],
         "How it behaves");
-
-    // The text Dart's toTypeScript wrote for Probe on 2026-10-28.
-    [Fact]
-    public void TheTypeScriptIsTheTextTheDartEditorWrites() => Assert.Equal(
-        "// Written by the editor from ball.odata. Do not edit.\n"
-        + "//\n"
-        + "// Ball settings \u2014 How it behaves\n"
-        + "\n"
-        + "export interface BallSettings {\n"
-        + "  /** Metres a second */\n"
-        + "  speed: number;\n"
-        + "  bouncy: boolean;\n"
-        + "  tint: string;\n"
-        + "  spawn: [number, number, number];\n"
-        + "}\n"
-        + "\n"
-        + "declare const data: BallSettings;\n"
-        + "export default data;\n",
-        Probe().ToTypeScript("ball"));
 
     // The text Dart's toCpp wrote for Probe on 2026-10-28. It has no Dart test of its own.
     [Fact]

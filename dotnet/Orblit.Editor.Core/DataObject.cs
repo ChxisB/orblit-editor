@@ -202,29 +202,8 @@ public sealed partial record DataObject(string Name, IReadOnlyList<DataField> Fi
     }
 
     /// <summary>
-    /// The TypeScript a script imports this as. Generated rather than written by hand, so a field
-    /// renamed in the editor is a type error in the script rather than an undefined at runtime.
-    /// </summary>
-    public string ToTypeScript(string importName)
-    {
-        var type = Pascal(Name);
-        List<string> lines = [.. Header(importName), "", $"export interface {type} {{"];
-        foreach (var field in Fields)
-        {
-            if (field.Note.Length > 0)
-            {
-                lines.Add($"  /** {field.Note} */");
-            }
-
-            lines.Add($"  {field.Key}: {TypeScriptOf(field.Type)};");
-        }
-
-        lines.AddRange(["}", "", $"declare const data: {type};", "export default data;", ""]);
-        return string.Join('\n', lines);
-    }
-
-    /// <summary>
-    /// The C++ a script includes to read this, the same declaration as <see cref="ToTypeScript"/>.
+    /// The C++ a script includes to read this. Generated rather than written by hand, so a field
+    /// renamed in the editor breaks the build of the script rather than reading nothing at runtime.
     /// Accessors rather than a struct of values, because a struct would be a copy, and a copy is
     /// what a shared data object is not.
     /// </summary>
@@ -270,15 +249,6 @@ public sealed partial record DataObject(string Name, IReadOnlyList<DataField> Fi
         "//",
         $"// {Name}{(Note.Length == 0 ? "" : $" \u2014 {Note}")}",
     ];
-
-    private static string TypeScriptOf(DataType type) => type switch
-    {
-        DataType.Number => "number",
-        DataType.Text or DataType.Colour or DataType.Asset => "string",
-        DataType.Toggle => "boolean",
-        DataType.Vector => "[number, number, number]",
-        _ => throw new UnreachableException(),
-    };
 
     private static string[] CppReader(DataField field) => field.Type switch
     {

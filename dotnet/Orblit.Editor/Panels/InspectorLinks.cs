@@ -17,9 +17,6 @@ internal sealed record InspectorLinks
     /// <summary>Takes a data object off an object, given the object's id and the path.</summary>
     public Action<string, string>? OnDetachData { get; init; }
 
-    /// <summary>Opens the interface a canvas puts on screen.</summary>
-    public Action<string>? OnOpenInterface { get; init; }
-
     /// <summary>How big a mesh is in its own space where the editor holds no geometry for it, for fitting a body to it.</summary>
     public Func<SceneObject, (Vector3 Min, Vector3 Max)?>? BoundsOf { get; init; }
 

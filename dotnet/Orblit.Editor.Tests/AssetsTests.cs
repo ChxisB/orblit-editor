@@ -335,10 +335,10 @@ public sealed class AssetsTests : IDisposable
     [Fact]
     public void AScriptGetsItsExtensionAndSomethingToRun()
     {
-        var made = new AssetTree(_root).Create(_root, NewAsset.Script, "walker");
+        var made = new AssetTree(_root).Create(_root, NewAsset.Native, "walker");
 
-        Assert.EndsWith("walker.ts", made.Path);
-        Assert.Contains("onFrame", File.ReadAllText(made.Path!));
+        Assert.EndsWith("walker.cpp", made.Path);
+        Assert.Contains("orblit_step", File.ReadAllText(made.Path!));
     }
 
     [Fact]
@@ -412,14 +412,6 @@ public sealed class AssetsTests : IDisposable
         Assert.NotNull(made.Problem);
         Assert.Null(made.Path);
         Assert.False(File.Exists(At("escape.oprefab")));
-    }
-
-    [Fact]
-    public void WhatAScriptIsCalledItIsKindedAs()
-    {
-        var made = new AssetTree(_root).Create(_root, NewAsset.Interface, "panel");
-
-        Assert.Same(AssetKind.Script, AssetTree.Describe(made.Path!).Kind);
     }
 
     [Fact]
@@ -550,7 +542,7 @@ public sealed class AssetsTests : IDisposable
 
     [Theory]
     [InlineData("crate.GLB", "Mesh")]
-    [InlineData("theme.css", "Stylesheet")]
+    [InlineData("player.HPP", "C++")]
     [InlineData("retargets/a.obonemap", "Bone map")]
     [InlineData("a.tar.gz", "File")]
     [InlineData(".json", "File")]
@@ -564,7 +556,7 @@ public sealed class AssetsTests : IDisposable
     [InlineData("a.cpp", true)]
     [InlineData("A.CC", true)]
     [InlineData("a.h", false)]
-    [InlineData("a.ts", false)]
+    [InlineData("a.json", false)]
     public void OnlyASourceFileOffersToBuild(string name, bool builds)
     {
         Assert.Equal(builds, new Asset(name, "/p/" + name, AssetKind.Of(name)).CanBuild);

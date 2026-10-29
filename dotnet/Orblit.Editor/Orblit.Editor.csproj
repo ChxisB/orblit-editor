@@ -11,7 +11,6 @@
     <PackageReference Include="Avalonia.Themes.Fluent" />
     <PackageReference Include="Orblit.Filament.Avalonia" />
     <PackageReference Include="Orblit.Native" GeneratePathProperty="true" />
-    <PackageReference Include="Orblit.Ui.Avalonia" />
     <PackageReference Include="SkiaSharp" />
     <ProjectReference Include="..\Orblit.Editor.Core\Orblit.Editor.Core.csproj" />
     <ProjectReference Include="..\Orblit.Editor.Panels\Orblit.Editor.Panels.csproj" />

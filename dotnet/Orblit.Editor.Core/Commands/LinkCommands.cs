@@ -1,6 +1,6 @@
 namespace Orblit.Editor.Core;
 
-// Links out of the scene, to a data file or an interface, and the breaking of them. A prefab's
+// Links out of the scene to a data file, and the breaking of them. A prefab's
 // link is a change to the whole document, and goes through ApplySceneDiff.
 
 /// <summary>
@@ -60,50 +60,5 @@ public sealed class SetDataLinks(string sceneId, string id, string name, IReadOn
     {
         target.Data.Clear();
         target.Data.AddRange(paths);
-    }
-}
-
-/// <summary>
-/// Changes which interface a canvas object shows.
-/// <para>
-/// A reference rather than a copy, like a mesh: the .oui is the document and the scene says which
-/// one is on screen, so one interface can be on two scenes and editing it changes both.
-/// </para>
-/// </summary>
-public sealed class SetInterface(string sceneId, string id, string name, string? to) : EditorCommand
-{
-    private string? _was;
-
-    public override string SceneId { get; } = sceneId;
-
-    public string Id { get; } = id;
-
-    public string Name { get; } = name;
-
-    public string? To { get; } = to;
-
-    public override string Label => To is null ? $"Clear {Name}" : $"Set {Name}";
-
-    public override void Apply(ISceneHost host)
-    {
-        if (host.SceneFor(SceneId) is not { } scene || scene[Id] is not { } target)
-        {
-            return;
-        }
-
-        _was = target.InterfaceAsset;
-        target.InterfaceAsset = To;
-        scene.Invalidate();
-    }
-
-    public override void Revert(ISceneHost host)
-    {
-        if (host.SceneFor(SceneId) is not { } scene || scene[Id] is not { } target)
-        {
-            return;
-        }
-
-        target.InterfaceAsset = _was;
-        scene.Invalidate();
     }
 }

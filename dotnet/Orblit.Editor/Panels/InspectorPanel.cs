@@ -119,7 +119,6 @@ internal sealed class InspectorPanel : UserControl
             History = _session.History,
             OnOpenData = _links.OnOpenData,
             OnDetachData = _links.OnDetachData,
-            OnOpenInterface = _links.OnOpenInterface,
             OnOpenTools = () => _session.EnterMode("modelling"),
             BoundsOf = _links.BoundsOf,
             CollisionOf = _links.CollisionOf,

@@ -331,12 +331,12 @@ public sealed class AssetBrowserTests : IDisposable
         var opened = new List<string>();
         var (panel, window) = Show(links: new AssetBrowserLinks { OnOpenAsset = asset => opened.Add(asset.Name) });
 
-        panel.MakeNew(NewAsset.Script, "player");
+        panel.MakeNew(NewAsset.Json, "player");
 
-        Assert.Equal(["player.ts"], Names(window));
-        Assert.True(File.Exists(At("player.ts")));
-        Assert.Equal(["player.ts"], opened);
-        Assert.True(Tile(window, "player.ts").Selected);
+        Assert.Equal(["player.json"], Names(window));
+        Assert.True(File.Exists(At("player.json")));
+        Assert.Equal(["player.json"], opened);
+        Assert.True(Tile(window, "player.json").Selected);
     });
 
     [Fact]
@@ -357,7 +357,7 @@ public sealed class AssetBrowserTests : IDisposable
         var problems = new List<string>();
         var (panel, window) = Show(links: new AssetBrowserLinks { OnProblem = problems.Add });
 
-        panel.MakeNew(NewAsset.Script, "a/b");
+        panel.MakeNew(NewAsset.Json, "a/b");
 
         Assert.Equal(["Could not create it: A name cannot be a path."], problems);
         Assert.Empty(Names(window));

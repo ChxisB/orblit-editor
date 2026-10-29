@@ -20,10 +20,6 @@ public sealed partial class EditorSession
         {
             AttachData(path);
         }
-        else if (kind == AssetKind.Canvas)
-        {
-            PutInterfaceOnScene(path);
-        }
         else if (kind == AssetKind.Texture || kind == AssetKind.Surface)
         {
             ApplyMaterial(path);

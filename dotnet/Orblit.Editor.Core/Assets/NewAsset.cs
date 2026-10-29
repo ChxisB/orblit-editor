@@ -1,7 +1,6 @@
 namespace Orblit.Editor.Core;
 
 using Orblit.Motion;
-using Orblit.Ui;
 using DataFile = DataObject;
 
 /// <summary>The things the project browser knows how to make.</summary>
@@ -18,98 +17,13 @@ public sealed class NewAsset
 {
     public static readonly NewAsset Folder = new("Folder", "", "New folder", _ => "");
 
-    public static readonly NewAsset Script = new("TypeScript", ".ts", "behaviour", Starter(
-        """
-        // A behaviour, in TypeScript.
-        //
-        // Everything this puts in the world it puts through `spawn`. The engine asks
-        // for a frame, this runs, and what it says is what is drawn.
-
-        import { spawn, onFrame } from "orblit/scene";
-
-        spawn({
-          id: "thing",
-          at: [0, 0, 0],
-          size: 1,
-          colour: "#D9634F",
-        });
-
-        onFrame((seconds) => {
-          spawn({
-            id: "thing",
-            at: [Math.sin(seconds) * 3, 0, 0],
-            size: 1,
-            colour: "#D9634F",
-          });
-        });
-        """));
-
-    public static readonly NewAsset Interface = new("Interface", ".tsx", "panel", Starter(
-        """
-        // An interface, in TypeScript.
-        //
-        // A component is a function from props to elements. There is no state hook
-        // and no lifecycle: the reconciler is on the other side of this, and the
-        // interface is described again after every event.
-
-        import { mount } from "orblit";
-
-        const state = { count: 0 };
-
-        function Panel() {
-          return (
-            <column class="p-4 gap-2 bg-slate-900 rounded-lg border border-slate-700">
-              <text class="text-lg font-semibold text-slate-100">Panel</text>
-              <text class="text-slate-300">Pressed {state.count} times</text>
-              <button
-                class="px-3 py-2 rounded bg-ember-500 text-white"
-                key="press"
-                onPressed={() => { state.count += 1; }}
-              >
-                Press me
-              </button>
-            </column>
-          );
-        }
-
-        mount(() => <Panel />);
-        """));
-
-    public static readonly NewAsset Stylesheet = new("Stylesheet", ".css", "theme", Starter(
-        """
-        /* Declarations an interface can wear over its class list.
-         *
-         * A subset, and an honest one: what is here is what maps onto a widget tree
-         * without lying. Floats, grid areas, selectors and the cascade need a
-         * document, and there is not one.
-         */
-
-        .panel {
-          padding: 16px;
-          gap: 8px;
-          background: #111418;
-          border-radius: 10px;
-          border: 1px solid #2A313A;
-        }
-
-        .heading {
-          font-size: 18px;
-          font-weight: 600;
-          color: #E9EDF2;
-        }
-        """));
-
     public static readonly NewAsset Native = new("C++", ".cpp", "system", Starter(
         """
         // A script, in C++.
         //
-        // The same four questions every script answers, whatever it is written in:
-        // what contract it was built against, what to do when it starts, what to do
-        // each frame, and what to do when it stops. ORBLIT_SCRIPT answers the first and
-        // hands you the host.
-        //
-        // Worth writing in C++ when the loop touches everything every frame. Anything
-        // else is quicker to write in TypeScript and fast enough there.
+        // The four questions every script answers: what contract it was built
+        // against, what to do when it starts, what to do each frame, and what to do
+        // when it stops. ORBLIT_SCRIPT answers the first and hands you the host.
 
         #include "NAME.h"
 
@@ -173,35 +87,10 @@ public sealed class NewAsset
         };
         """));
 
-    public static readonly NewAsset Theme = new("Theme", ".css", "theme", Starter(
-        """
-        /* The values an interface is built out of, in one place.
-         *
-         * Separate from a stylesheet on purpose: a stylesheet says how one thing
-         * looks, and this says what the whole project's colours and spacing are. Two
-         * files because they change for different reasons and at different rates.
-         */
-
-        :root {
-          --ink: #E9EDF2;
-          --ink-dim: #8A94A3;
-          --surface: #111418;
-          --raised: #191E25;
-          --line: #2A313A;
-          --accent: #E58A3F;
-
-          --space: 8px;
-          --radius: 10px;
-        }
-        """));
-
     // Written by DataFile.Blank rather than as text here, so there is one definition of what a new one contains.
     public static readonly NewAsset DataObject = new("Data object", ".odata", "settings", stem => DataFile.Blank(stem).ToText());
 
     public static readonly NewAsset Json = new("JSON", ".json", "data", Starter("{}"));
-
-    // Written by UiDocument.Blank, for the same reason as a data object.
-    public static readonly NewAsset Canvas = new("Canvas", ".oui", "screen", stem => UiDocument.Blank(stem).ToText());
 
     public static readonly NewAsset Scene = new("Scene", ".oscene", "untitled", Starter("""{"version":3,"objects":[]}"""));
 
@@ -258,8 +147,7 @@ public sealed class NewAsset
     /// <summary>Every kind, in the order the browser lists them.</summary>
     public static readonly IReadOnlyList<NewAsset> Values =
     [
-        Folder, Script, Interface, Stylesheet, Native, Header, Theme, DataObject, Json, Canvas, Scene, Clip, Blend, Cutscene, Shader,
-        UnlitShader,
+        Folder, Native, Header, DataObject, Json, Scene, Clip, Blend, Cutscene, Shader, UnlitShader,
     ];
 
     private readonly Func<string, string> _contents;
