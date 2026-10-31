@@ -127,7 +127,9 @@ internal sealed class EditorMenu : Menu
         var panels = new MenuItem { Name = "menu_panels", Header = "Panels" };
         foreach (var type in _session.Panels.All)
         {
-            panels.Items.Add(Item($"panel_{type.Name}", type.Kind.Label, () => _session.OpenPanel(type.Kind)));
+            // Through Relayout so the panel is kept with the project. OpenPanel is for the editor's own
+            // asks, such as showing the timeline for a clip, which should not outlast the session.
+            panels.Items.Add(Item($"panel_{type.Name}", type.Kind.Label, () => _session.Relayout(_session.Layout.Add(type.Panel))));
         }
 
         return panels;
