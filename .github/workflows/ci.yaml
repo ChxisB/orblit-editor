@@ -4,57 +4,34 @@ on:
   push:
     branches: [main]
   pull_request:
-  workflow_dispatch:
-    inputs:
-      channel:
-        description: 'Flutter channel to build against'
-        required: false
-        default: stable
-        type: choice
-        options: [stable, beta, master]
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
-env:
-  FLUTTER_CHANNEL: ${{ inputs.channel || 'stable' }}
 
 jobs:
-  check:
-    name: Analyze, test and build
-    runs-on: macos-latest
+  # The engine packages are packed from the engine checkout beside this one.
+  # The engine branch with this branch's name is the pair when there is one,
+  # so a change here and the engine change it needs build together. Without
+  # one it uses the engine's default branch.
+  dotnet:
+    name: .NET (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-      # Both checkouts go under the workspace, which puts them side by side —
-      # which is what the editor's pubspec needs. Its engine dependencies are
-      # path dependencies to ../orblit, deliberately: the renderer and the
-      # editor change together, and a git dependency would put a push and a
-      # pub upgrade between writing a renderer change and seeing it. The cost
-      # is that the sibling has to exist here too, and the directory names
-      # have to be exactly these.
       - uses: actions/checkout@v4
         with:
           path: orblit-editor
 
-      # Which branch of the engine to build against.
-      #
-      # Its default, unless the engine has a branch named exactly the same as
-      # this one -- in which case that is the pair, and building against the
-      # default would be building against a repository that does not have the
-      # change yet. A change that spans both repositories is the ordinary case
-      # here, not the exception: this pubspec depends on the engine by path
-      # precisely so the two move together, and pinning CI to the default
-      # branch makes every coordinated change red until the engine half lands.
-      # Which trains people to ignore a red build on exactly the pull requests
-      # that most need reading.
       - id: engine
+        shell: bash
+        env:
+          BRANCH: ${{ github.head_ref || github.ref_name }}
         run: |
-          branch="${{ github.head_ref || github.ref_name }}"
           if git ls-remote --exit-code --heads \
-              https://github.com/ChxisB/orblit.git "$branch" > /dev/null; then
-            echo "Building against ChxisB/orblit@$branch"
-            echo "ref=$branch" >> "$GITHUB_OUTPUT"
+              https://github.com/ChxisB/orblit.git "$BRANCH" > /dev/null; then
+            echo "Building against ChxisB/orblit@$BRANCH"
+            echo "ref=$BRANCH" >> "$GITHUB_OUTPUT"
           else
             echo "No matching engine branch; using its default"
             echo "ref=" >> "$GITHUB_OUTPUT"
@@ -62,49 +39,38 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          # No token: these repositories are public, so the default
-          # GITHUB_TOKEN reads them. Nothing here needs a secret.
+          # No token: the engine is public, and the default GITHUB_TOKEN
+          # reads it.
           repository: ChxisB/orblit
           ref: ${{ steps.engine.outputs.ref }}
           path: orblit
 
-      - uses: subosito/flutter-action@v2
+      - uses: actions/setup-dotnet@v4
         with:
-          channel: ${{ env.FLUTTER_CHANNEL }}
-          cache: true
+          global-json-file: orblit-editor/dotnet/global.json
 
-      - name: Cache Filament SDK
-        uses: actions/cache@v4
-        with:
-          path: orblit/packages/orblit_filament/darwin/third_party
-          key: filament-${{ runner.os }}-${{ hashFiles('orblit/packages/orblit_filament/darwin/setup.sh') }}
+      # The runner context exists in a step and not in a job's env, so the
+      # feed folder is named on each step that reads it.
+      # The packages carry the native core only if it is built before they are
+      # packed.
+      - name: Build the engine natives
+        shell: bash
+        working-directory: orblit
+        run: tool/build_native.sh
 
-      # Fetches the Filament SDK and compiles the materials into the C
-      # arrays the renderer includes. This runs from the podspec's
-      # prepare_command under CocoaPods, and Swift Package Manager has no
-      # equivalent hook — a package plugin runs sandboxed, with no network —
-      # so on the SPM path, which is now Flutter's default for macOS, nothing
-      # runs it and the build fails on a missing generated header. It is
-      # idempotent, so calling it here is free when the cache is warm.
-      - name: Fetch Filament and compile materials
-        run: bash orblit/packages/orblit_filament/darwin/setup.sh
+      - name: Pack the engine
+        shell: bash
+        working-directory: orblit
+        env:
+          ORBLIT_FEED: ${{ runner.temp }}/feed
+        run: tool/pack_local.sh
 
-      - name: Analyze and test
+      - name: Check
+        shell: bash
         working-directory: orblit-editor
-        run: ./tool/check.sh
-
-      # Building is a separate claim from analyzing, and the one that catches
-      # a renderer change the editor has not caught up with: analysis reads
-      # Dart, and the thing that breaks is the native side being linked in.
-      - name: Build
-        working-directory: orblit-editor
-        run: flutter build macos --debug
-
-      # No frame smoke here, unlike the viewport. The editor opens on its
-      # launcher — a project list, not a scene — so nothing draws until
-      # somebody opens a project or an example, and a check that waits for a
-      # frame here would wait forever. The renderer's runtime behaviour is
-      # smoked where it does draw on launch, in the engine repository.
+        env:
+          ORBLIT_FEED: ${{ runner.temp }}/feed
+        run: tool/check_dotnet.sh
 
   # Checks each commit on a pull request against commitlint.config.mjs.
   # Pull requests only, since a push to main has no range to check. It
