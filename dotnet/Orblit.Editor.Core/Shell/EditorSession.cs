@@ -51,6 +51,7 @@ public sealed partial class EditorSession
         Terrains = new TerrainBench(history, workspace.ProjectDirectory, problem => Say(problem, SayLevel.Error));
         Terrains.Changed += OnTerrainsChanged;
         history.Changed += OnHistoryChanged;
+        workspace.Changed += StopPlayingAnotherScene;
     }
 
     /// <summary>Something said to the person at the keyboard, such as a file that could not be written.</summary>

@@ -34,6 +34,19 @@ public static class SceneCameras
     }
 
     /// <summary>
+    /// The camera the game looks through: the scene's first shown one, or null when it has none.
+    /// <para>
+    /// The first rather than a chosen one. A scene with two cameras has not said which is the
+    /// player's, and the one nearest the top of the tree is at least a rule somebody can see the
+    /// effect of.
+    /// </para>
+    /// </summary>
+    public static RenderCamera? GameCamera(EditorScene scene) =>
+        scene.Objects.FirstOrDefault(one => one.Kind == ObjectKind.Camera && scene.IsShown(one.Id)) is { } first
+            ? CameraOf(scene, first)
+            : null;
+
+    /// <summary>
     /// What <paramref name="cutscene"/> looks through <paramref name="at"/> seconds in, on
     /// <paramref name="scene"/>: its shots' cameras blended by how much each has to say, as the game
     /// blends them. Null between shots, or when no shot's camera is in the scene.

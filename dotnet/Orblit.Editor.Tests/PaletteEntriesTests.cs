@@ -138,6 +138,31 @@ public sealed class PaletteEntriesTests : IDisposable
     }
 
     [Fact]
+    public void PlayStartsTheSceneAndNamesItselfPauseWhileItRuns()
+    {
+        var session = Session();
+        Assert.Equal("Play", Entry(session, "Play").Label);
+
+        Entry(session, "Play").OnRun();
+
+        Assert.True(session.Playing);
+        Assert.Equal("Pause", Entry(session, "Pause").Label);
+        Assert.DoesNotContain(PaletteEntries.For(session, HostPlatform.MacOS), one => one.Label == "Play");
+    }
+
+    [Fact]
+    public void StopThrowsAwayTheScenePlaying()
+    {
+        var session = Session();
+        Entry(session, "Play").OnRun();
+
+        Entry(session, "Stop").OnRun();
+
+        Assert.False(session.Playing);
+        Assert.Null(session.Playback);
+    }
+
+    [Fact]
     public void EveryShapeAndKindCanBeAddedByName()
     {
         var session = Session();

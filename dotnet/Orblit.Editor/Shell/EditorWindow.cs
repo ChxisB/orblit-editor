@@ -46,6 +46,8 @@ public sealed class EditorWindow : Window
     private readonly EditorMenu _menu;
     private readonly TerrainToolShelf _shelf;
     private readonly CinematicsShelf _cinematics;
+    private readonly PlayPill _pill;
+    private readonly PlaybackClock _clock;
     private CookStatusIndex? _cooks;
     private TerrainBrushPanel? _brush;
 
@@ -126,6 +128,8 @@ public sealed class EditorWindow : Window
 
         _shelf = new TerrainToolShelf(_session.Terrains);
         _cinematics = new CinematicsShelf(_session.Cutscenes, _session.NewCutscene, _session.AddShot, UseThisView);
+        _pill = new PlayPill(_session);
+        _clock = new PlaybackClock(_session, this);
         _dock = new DockHost(_session.VisibleLayout, PanelFor);
         _dock.LayoutChanged += layout =>
         {
@@ -155,6 +159,7 @@ public sealed class EditorWindow : Window
             _session.Said -= Say;
             _session.NameWanted -= AskSceneName;
             _session.Assets.Changed -= CookShaders;
+            _clock.Detach();
             // The session made the tree, and the window is what outlives its file watcher.
             _session.Assets.Dispose();
             _session.Surfaces.Dispose();
@@ -174,10 +179,12 @@ public sealed class EditorWindow : Window
 
     private Grid Frame()
     {
-        var top = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), Background = OrblitColors.Surface };
+        var top = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto"), Background = OrblitColors.Surface };
         top.Children.Add(_menu);
         _title[Grid.ColumnProperty] = 1;
         top.Children.Add(_title);
+        _pill[Grid.ColumnProperty] = 2;
+        top.Children.Add(_pill);
         var search = new Button
         {
             Name = "search_button",
@@ -186,7 +193,7 @@ public sealed class EditorWindow : Window
             Margin = new Thickness(Space.Xs),
         };
         search.Click += (_, _) => OpenPalette();
-        search[Grid.ColumnProperty] = 2;
+        search[Grid.ColumnProperty] = 3;
         top.Children.Add(search);
 
         var rail = new StackPanel { Name = "rail", Margin = new Thickness(Space.Sm), Spacing = Space.Xs };
@@ -249,6 +256,7 @@ public sealed class EditorWindow : Window
         [PanelKind.Profile] = () => new ProfilePanel(_profiler),
         [PanelKind.Timeline] = Timeline,
         [PanelKind.CutsceneTimeline] = CutsceneTimeline,
+        [PanelKind.Game] = () => new GameViewPanel(_session, _renderer),
         [PanelKind.ShotPreview] = () => new ShotPreviewPanel(_session, _renderer),
         [PanelKind.ShotList] = () => new ShotListPanel(_session),
         [PanelKind.BlendGraph] = BlendGraph,

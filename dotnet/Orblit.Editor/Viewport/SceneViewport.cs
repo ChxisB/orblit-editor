@@ -660,17 +660,7 @@ public sealed class SceneViewport : Border
         };
     }
 
-    private SceneRenderOptions Options()
-    {
-        var workspace = _session.Workspace;
-        return new SceneRenderOptions
-        {
-            ProjectRoot = workspace.ProjectDirectory,
-            Shared = workspace.Shared,
-            GeometryOf = _geometry.PathFor,
-            SurfaceOf = _session.Surfaces.SurfaceFor,
-        };
-    }
+    private SceneRenderOptions Options() => SessionRenderOptions.Of(_session, _session.Workspace, _geometry);
 
     private void RefreshChips()
     {

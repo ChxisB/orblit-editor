@@ -12,6 +12,7 @@ internal static class AssetIcons
     public const string EyeOff = Eye + "M4 4l16 16";
     public const string Pause = "M8 5v14M16 5v14";
     public const string Play = "M7 4l13 8-13 8z";
+    public const string Stop = "M6 6h12v12H6z";
     public const string Refresh = "M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7";
 
     private const string File = "M6 3h8l4 4v14H6zM14 3v4h4";

@@ -17,8 +17,8 @@ using Orblit.Filament;
 /// nothing of the editor drawn over it.
 /// </summary>
 /// <remarks>
-/// shortcut: this draws the scene and not the game's interface or sound. A game view with a Play button
-/// would draw all of that, and does not exist in C# yet.
+/// shortcut: this draws the scene and not the game's interface or sound. The game view has a Play
+/// button and draws the scene the same way, so it has the same two gaps.
 /// </remarks>
 internal sealed class ShotPreviewPanel : Border
 {
@@ -152,14 +152,7 @@ internal sealed class ShotPreviewPanel : Border
         }
 
         _dirty = false;
-        var workspace = _session.Workspace;
-        var options = new SceneRenderOptions
-        {
-            ProjectRoot = workspace.ProjectDirectory,
-            Shared = workspace.Shared,
-            GeometryOf = _geometry.PathFor,
-            SurfaceOf = _session.Surfaces.SurfaceFor,
-        };
+        var options = SessionRenderOptions.Of(_session, _session.Workspace, _geometry);
         _renderer.Frame(scene.ToRenderScene(camera, options), (now - _origin.Value).TotalSeconds);
     }
 }

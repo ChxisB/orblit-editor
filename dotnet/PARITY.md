@@ -188,7 +188,7 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | `ui_responsive_test.dart` | none | 16 | 16 | 0 | 0 | dropped by decision 96 on 2026-10-29, with the Interface workspace |
 | `interface_strings_test.dart` | none | 11 | 11 | 0 | 0 | dropped by decision 96 on 2026-10-29, with the Interface workspace |
 | `editor_shell_data_test.dart` | `EditorWindowDataTests`, `EditorSessionDataTests`, `EditorWindowConsoleTests` | 22 | 22 | 16 | 1: a data object's panel kept through a change elsewhere | done. The six cases of the "an interface on a scene" group are dropped by decision 96. The refusal on the console tab is `ARefusalIsKeptThere`, a real drop of a png with nothing selected. The other drop cases call `AttachData`, which is what a drop does. `EditorWindowDropTests` drops each kind for real. A data object is made through the browser's `MakeNew` and selected through the session. Saving after an attach is a session test. The console shares the bottom group with the project browser, so "folded under the view" is "behind the project tab" |
-| `editor_shell_motion_test.dart` | `EditorSessionClipsTests` | 4 | 4 | 3 | 0 | partial. Waiting: Play in four views, which needs the game view. No row owns the game view yet |
+| `editor_shell_motion_test.dart` | `EditorSessionClipsTests`, `EditorWindowPlaybackTests` | 4 | 4 | 4 | 0 | done. "Play in four views" is `PlayPreviewsUnsavedAnimationWithoutChangingTheScene`. The preview is the game view tab and not a four views layout, and Play, Pause and Stop sit in the top bar |
 | none | `OutlinerModelTests` | 0 | 0 | 0 | 15: the rows and their depth, the folds, a scene row with a filter, an unloaded scene, where a drop lands and what a drop refuses | added |
 | none | `EditorSessionObjectsTests` | 0 | 0 | 0 | 26: selecting, adding and naming, ids, deleting, moving, duplicating, the clipboard labels and a clipboard that cannot be reached | added |
 | none | `OutlinerPanelTests` | 0 | 0 | 0 | 18: the rows and the count, the selection drawn, a scene row, the filter message, a fold, the remove button, the edit keys with and without a text box, the Add menu, the Edit menu waiting for a selection and a drop, how an unloaded scene says to load it, the mark on a scene never written, a click that only selects, discarding in the leave dialog, the hover close button, no close on the shared row, and New scene from the menu and from the key | added |
@@ -281,6 +281,20 @@ The rain and snow colour is a double-precision lerp of the two sRGB tints.
 | `rebuild_scope_test.dart` | `EditorWindowRebuildTests` | 5 | 5 | 5 | 0 | done. Flutter's same widget is the same row control here |
 | `frame_cost_test.dart` | none | 1 | 1 | 0 | 0 | dropped. It prints timings and asserts nothing, and a bench project would be a new package. The Profile panel and the frame rate show frame times live |
 | `drag_bench_test.dart` | none | 1 | 1 | 0 | 0 | dropped, for the same reason as `frame_cost_test.dart` |
+| none | `EditorSessionPlaybackTests` | 0 | 0 | 0 | 17: Play running a copy of the scene and showing the game view, time passing only in the copy and only while playing, pausing and going on, Stop and starting over, Play stopping the timeline, nothing to play with no scene, another scene stopping the play, an open clip or cutscene played as it is now and not as last saved, a clip or cutscene that is broken or missing said and the rest still played, a clip outside the project or in a folder beside it not followed, a project folder named with an ending separator, the cutscenes offered by name, and two with one name said | added |
+| none | `EditorWindowPlaybackTests` | 0 | 0 | 0 | 9: Play, Pause and Stop in the top bar and which are on, nothing to play with no scene, the game view with nothing over the picture, a scene with no camera saying so and Add camera making one, no Add camera while playing or paused, a step for each frame the window draws, no frames asked while paused, a long pause not jumping the scene on at Play, and the clock ending with the window | added |
+| none | `PlaybackClockTests` | 0 | 0 | 0 | 3: the first frame taking no time, a later frame taking the time since the last, and a stall cut to a tenth of a second | added |
+| none | `GameCameraTests` | 0 | 0 | 0 | 4: no camera, the first camera, a hidden camera skipped and a camera in a hidden group skipped | added |
+| none | `PaletteEntriesTests`, `EditorWindowPanelsTests` | 0 | 0 | 0 | 3: the Play entry turning into Pause while it runs, the Stop entry, and the game panel opening as its own control. The test that only showed the panel's name is gone | added |
+
+The game view (decision 90) shows the scene through its first shown camera,
+on a copy while it plays and as edited when it is stopped. It draws no
+interface, because decision 96 dropped the interface canvas, and no sound.
+Terrain is not drawn in a C# viewport yet, so it is missing from the game view
+as it is from the scene view. An edit made while the scene plays does not show
+until Stop and Play again. The clock lives in the window, so a scene goes on
+playing when the game tab is not showing. The game view and the clock have run
+headless only. The renderer has not drawn the game view in a real window.
 
 Gap in row 5: a picture dropped on a set is a real drop of the file path a browser tile carries. Headless cannot start a
 drag, so the tile's own drag has not run. The decoder (part 5e) reads a picture with SkiaSharp 3.119.4,

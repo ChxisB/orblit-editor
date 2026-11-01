@@ -7,8 +7,8 @@ using Orblit.Mesh;
 /// objects in the scene.
 /// </summary>
 /// <remarks>
-/// shortcut: only the commands the session can do so far. Play, export and the kit store join
-/// them with the panels that need them (task 16).
+/// shortcut: only the commands the session can do so far. Export and the kit store join them with
+/// the panels that need them (task 16).
 /// </remarks>
 public static class PaletteEntries
 {
@@ -60,6 +60,8 @@ public static class PaletteEntries
     private static PaletteEntry[] Views(EditorSession session) =>
     [
         .. session.Modes.All.Select(mode => Command($"Go to {mode.Label}", mode.Icon, () => session.EnterMode(mode), meta: "Workspace")),
+        Command(session.Playing ? "Pause" : "Play", session.Playing ? "pause" : "play_arrow", session.TogglePlayback),
+        Command("Stop", "stop", session.StopPlayback),
         Command(session.IsFocused ? "Show panels" : "Focus view", "fullscreen", session.ToggleFocus),
         Command("Reset panels", "view_quilt_outlined", session.ResetPanels),
         Command("Toggle stats", "speed", session.ToggleStats),

@@ -36,6 +36,7 @@ public sealed class EditorWindowPanelsTests : IDisposable
     [InlineData("profile", typeof(ProfilePanel))]
     [InlineData("timeline", typeof(TimelinePanel))]
     [InlineData("cutsceneTimeline", typeof(TimelinePanel))]
+    [InlineData("game", typeof(GameViewPanel))]
     [InlineData("shotPreview", typeof(ShotPreviewPanel))]
     [InlineData("shots", typeof(ShotListPanel))]
     [InlineData("blendGraph", typeof(BlendGraphPanel))]
@@ -50,20 +51,6 @@ public sealed class EditorWindowPanelsTests : IDisposable
         Headless.Render();
 
         Assert.Contains(Headless.All<Control>(window), one => one.GetType() == control && one.IsEffectivelyVisible);
-        Assert.False(session.Log.HasErrors);
-        window.Close();
-    });
-
-    // Decision 90 has not said what the game view is, so it shows its name.
-    [Fact]
-    public Task TheGameViewShowsItsName() => Headless.Run(() =>
-    {
-        var (session, window) = OpenWithTheCharacterSelected();
-
-        session.OpenPanel(PanelKind.Game);
-        Headless.Render();
-
-        Assert.Contains(Headless.All<TextBlock>(window), one => one.Text == PanelKind.Game.Label && one.IsEffectivelyVisible);
         Assert.False(session.Log.HasErrors);
         window.Close();
     });
