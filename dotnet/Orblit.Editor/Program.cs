@@ -16,8 +16,7 @@ internal static class Program
             .StartWithClassicDesktopLifetime(args);
     }
 
-    // shortcut: the recents list is kept under the user's config folder, not where the Dart editor keeps
-    // its own, so the two editors do not share it. Share it when a project is opened in both.
+    // The recents list is kept under the user's config folder.
     private static string RecentsFile() => Path.Combine(HostPaths.SupportFolder(), "recent.json");
 
     private static LauncherWindow Launch()

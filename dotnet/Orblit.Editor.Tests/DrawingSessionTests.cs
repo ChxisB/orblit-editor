@@ -4,8 +4,8 @@ using Orblit.Editor.Core;
 using Orblit.Mesh;
 using Orblit.VectorMath;
 
-// Drawing a shape and cutting one, as the session does it. The Dart puts the points down through
-// the viewport's callback and finishes through another. Here they are the session's own methods.
+// Drawing a shape and cutting one, as the session does it. The points go down and the shape is finished
+// through the session's own methods.
 public sealed class DrawingSessionTests : IDisposable
 {
     private static readonly Vector3 Up = new(0, 1, 0);

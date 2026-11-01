@@ -75,7 +75,7 @@ public sealed class ViewportProjection
     /// </remarks>
     public double HandleLength(Vector3 pivot) => Math.Max((pivot - Eye).Length * 0.16, 0.05);
 
-    // vector_math's makePerspectiveMatrix, so a projected point is the same number as in Dart.
+    // The perspective matrix the pick fixture was made with, so a projected point is the same number.
     private static Matrix4 PerspectiveMatrix(double fovYRadians, double aspectRatio, double zNear, double zFar)
     {
         var height = Math.Tan(fovYRadians * 0.5);
@@ -90,7 +90,7 @@ public sealed class ViewportProjection
         return matrix;
     }
 
-    // vector_math's makeViewMatrix.
+    // The look-at view matrix the pick fixture was made with.
     private static Matrix4 ViewMatrix(Vector3 cameraPosition, Vector3 cameraFocusPosition, Vector3 upDirection)
     {
         var z = (cameraPosition - cameraFocusPosition).Normalized();

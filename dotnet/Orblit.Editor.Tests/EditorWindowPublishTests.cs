@@ -7,8 +7,8 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/editor_shell_publish_test.dart. The ways into the publish dialog: the File menu,
-// which Dart called Scene, and the command palette. The store's way in from the File menu is added in C#.
+// The ways into the publish dialog: the File menu and the command palette. The store's way in from the File
+// menu is covered too.
 public sealed class EditorWindowPublishTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_window_publish");

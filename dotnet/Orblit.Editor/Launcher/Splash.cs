@@ -12,8 +12,8 @@ namespace Orblit.Editor;
 /// it has faded it stops covering the content, so it cannot take a click meant for what is under it.
 /// </summary>
 /// <remarks>
-/// shortcut: the mark and a wordmark are drawn in code. The Dart editor shows a 622 KB logo picture.
-/// Bundling a binary asset is a choice for Chris, so it waits (decision 84 covers the font beside it).
+/// shortcut: the mark and a wordmark are drawn in code, not from a logo picture. Bundling a binary asset is a
+/// choice for Chris, so it waits (decision 84 covers the font beside it).
 /// </remarks>
 public sealed class Splash : Grid
 {

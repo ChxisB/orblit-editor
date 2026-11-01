@@ -4,7 +4,7 @@ using Orblit.Editor.Core;
 using Orblit.Editor.Panels;
 using Orblit.Light;
 
-// Added in C#. Dart reaches these only through the inspector widget tests.
+// The light model, tested apart from the inspector.
 public sealed class LightModelTests
 {
     [Fact]

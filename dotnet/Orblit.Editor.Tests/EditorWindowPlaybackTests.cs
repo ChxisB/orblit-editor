@@ -86,8 +86,8 @@ public sealed class EditorWindowPlaybackTests : IDisposable
         window.Close();
     });
 
-    // Dart: orblit-editor/test/editor_shell_motion_test.dart, "Play in four views previews unsaved
-    // animation without changing the scene". The preview is the game view tab and not a four views layout.
+    // Play in four views previews unsaved animation without changing the scene. The preview is the game view
+    // tab and not a four views layout.
     [Fact]
     public Task PlayPreviewsUnsavedAnimationWithoutChangingTheScene() => Headless.Run(() =>
     {

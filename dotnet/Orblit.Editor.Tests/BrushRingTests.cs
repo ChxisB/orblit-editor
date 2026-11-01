@@ -5,7 +5,7 @@ using Orblit.Terrain;
 using Orblit.VectorMath;
 using Ground = Orblit.Terrain.Terrain;
 
-// Added in C#: the Dart ring is drawn in the view and has no test of its own.
+// The ring is drawn in the view, so it is tested here on its own.
 public sealed class BrushRingTests
 {
     private static Ground Flat()

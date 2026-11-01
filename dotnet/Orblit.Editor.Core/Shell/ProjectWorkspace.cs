@@ -61,8 +61,8 @@ public static class ProjectWorkspace
         return (EditorScene.Starter(), null, false);
     }
 
-    // shortcut: sorted by name so the list is the same on every machine, where Dart lists them in
-    // whatever order the folder gives. Revisit if somebody wants them in the order they were made.
+    // shortcut: sorted by name so the list is the same on every machine, not in whatever order the folder
+    // gives. Revisit if somebody wants them in the order they were made.
     private static void ListSiblings(Workspace workspace, string directory)
     {
         var folder = Path.Combine(directory, "scenes");

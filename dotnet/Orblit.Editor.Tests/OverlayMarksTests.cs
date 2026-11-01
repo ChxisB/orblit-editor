@@ -5,8 +5,7 @@ using Orblit.Editor.Viewport;
 using Orblit.Mesh;
 using Orblit.VectorMath;
 
-// Added in C#: the Dart painters draw straight to a canvas and have no test of their own. These check
-// the marks they would have drawn.
+// These check the marks the overlay draws.
 public sealed class OverlayMarksTests
 {
     private static readonly Size Surface = new(800, 600);

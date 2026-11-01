@@ -4,9 +4,8 @@ using Orblit.Editor.Core;
 using Orblit.Terrain;
 using Doc = Orblit.Scene;
 
-// Terrain in the editor: made from the Add menu, found for the brush, saved with everything else.
-// The first three follow editor_shell_terrain_test. The rest are added in C#, since the Dart shell
-// has no test for finding the target or for the mode's arrangement.
+// Terrain in the editor: made from the Add menu, found for the brush, saved with everything else. Cases also
+// cover finding the target and the mode's arrangement.
 public sealed class EditorSessionTerrainTests : IDisposable
 {
     private const string Made = "terrain/terrain/terrain.oterrain";

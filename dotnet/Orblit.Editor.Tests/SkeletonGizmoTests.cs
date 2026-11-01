@@ -6,10 +6,9 @@ using Orblit.Motion;
 using Orblit.Sequence;
 using Orblit.VectorMath;
 
-// Dart: orblit-editor/test/skeleton_gizmo_test.dart, the gizmo group. A model's bones drawn over the scene,
-// posed by the open clip and ghosted either side of the playhead. The strokes are read as the gizmo hands
-// them to the view, where the Dart read them back off the canvas. The Dart's reading of a model's skeleton
-// is in ModelSkeletonsTests.
+// The gizmo group. A model's bones drawn over the scene, posed by the open clip and ghosted either side of
+// the playhead. The strokes are read as the gizmo hands them to the view. Reading a model's skeleton is in
+// ModelSkeletonsTests.
 public sealed class SkeletonGizmoTests : IDisposable
 {
     private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory("orblit_skeleton");

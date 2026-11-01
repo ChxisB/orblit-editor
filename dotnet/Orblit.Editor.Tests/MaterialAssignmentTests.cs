@@ -4,7 +4,6 @@ using Orblit.Editor.Core;
 using Orblit.Editor.Viewport;
 using Orblit.Filament;
 
-// Dart: orblit-editor/test/material_assignment_test.dart.
 public sealed class MaterialAssignmentTests
 {
     private static RenderScene Drawn(EditorScene scene) =>

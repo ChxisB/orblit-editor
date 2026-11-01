@@ -10,8 +10,7 @@ using Orblit.Mesh;
 using Orblit.VectorMath;
 using Offset = Orblit.Editor.Viewport.Offset;
 
-// Added in C#: the Dart shell takes these through widget callbacks that its tests call directly, so a
-// click, a box or a handle drag in a real view never met the shell's undo stack in a test.
+// These cover a click, a box or a handle drag in a real view meeting the shell's undo stack.
 public sealed class ElementEditsTests
 {
     private static ElementSelection Faces(params int[] faces) => new(faces: [.. faces]);

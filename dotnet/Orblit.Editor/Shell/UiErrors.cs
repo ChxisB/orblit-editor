@@ -13,8 +13,7 @@ internal static class UiErrors
     /// the editor it writes into is how a closed editor keeps reporting.
     /// </summary>
     /// <remarks>
-    /// Marked handled, so the editor carries on as the Dart one does after a widget throws, and what is
-    /// open can still be saved.
+    /// Marked handled, so the editor carries on after a control throws, and what is open can still be saved.
     /// </remarks>
     public static void ToLog(EditorLog log, Window window)
     {

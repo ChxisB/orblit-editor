@@ -510,7 +510,7 @@ public sealed class AssetsTests : IDisposable
     }
 
     [Fact]
-    public void ANewDataObjectIsTheTextTheDartEditorWrites()
+    public void ANewDataObjectIsTheFixedText()
     {
         var made = new AssetTree(_root).Create(_root, NewAsset.DataObject, "stats");
 

@@ -18,10 +18,9 @@ using ViewSize = Orblit.Editor.Viewport.Size;
 /// drawn, the box being dragged and the orientation gizmo.
 /// </summary>
 /// <remarks>
-/// Ordinary visuals over the frame rather than a pass in the renderer, for the same reason as the
-/// Dart view: an overlay needs no depth buffer and no second draw of the scene, and it is always on
-/// top where a handle has to be to be grabbed. It takes no pointer, so a drag that starts here
-/// still reaches the view.
+/// Ordinary visuals over the frame rather than a pass in the renderer, because an overlay needs no depth
+/// buffer and no second draw of the scene, and it is always on top where a handle has to be to be grabbed. It
+/// takes no pointer, so a drag that starts here still reaches the view.
 /// </remarks>
 internal sealed partial class ViewportOverlay : Control
 {

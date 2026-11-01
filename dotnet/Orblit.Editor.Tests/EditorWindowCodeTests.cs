@@ -7,10 +7,9 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Dart: the menu entries and _openInCode, _reveal and _buildScript in editor_shell_documents.dart, which
-// had no window tests. Added in C#, over fake programs, so nothing is started. A build is asked of the
-// window directly, because the tile's menu that asks for it opens in a popup no helper reaches. That
-// the menu offers Build is in AssetBrowserTests.
+// The menu entries, and the open in code, reveal and build actions, over fake programs, so nothing is
+// started. A build is asked of the window directly, because the tile's menu that asks for it opens in a popup
+// no helper reaches. That the menu offers Build is in AssetBrowserTests.
 public sealed class EditorWindowCodeTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_window_code");

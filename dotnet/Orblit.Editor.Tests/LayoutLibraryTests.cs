@@ -2,8 +2,7 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Added in C#: the Dart library has no test of its own. The shell tests reach it through the View
-// menu, and this reaches it without a window.
+// The shell tests reach the library through the View menu. These reach it without a window.
 public sealed class LayoutLibraryTests : IDisposable
 {
     private readonly string _directory = Directory.CreateTempSubdirectory("orblit_layouts").FullName;
@@ -76,9 +75,9 @@ public sealed class LayoutLibraryTests : IDisposable
     }
 
     [Fact]
-    public void AFileInTheShapeDartWritesIsRead()
+    public void AFileInTheStoredShapeIsRead()
     {
-        // jsonEncode of a library with one saved arrangement, compact and with no revision field.
+        // A library with one saved arrangement, compact and with no revision field.
         Directory.CreateDirectory(Path.GetDirectoryName(File)!); // The test just named the directory.
         System.IO.File.WriteAllText(
             File,

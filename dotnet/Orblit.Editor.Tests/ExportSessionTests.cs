@@ -3,7 +3,7 @@ namespace Orblit.Editor.Tests;
 using Orblit.Asset;
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/export_session_test.dart. The cook and the folder are a fake, so nothing cooks.
+// The cook and the folder are a fake, so nothing cooks.
 public sealed class ExportSessionTests
 {
     private readonly FakeExports _exports = new();
@@ -249,8 +249,7 @@ public sealed class ExportSessionTests
         Assert.Same(answer, session.Contents);
     }
 
-    // Added in C#. Dart caught the broken chain whichever pack was shown. The slow-read case only had a
-    // read that worked.
+    // A broken chain is caught whichever pack was shown, so a slow read for an earlier pack shows nothing.
     [Fact]
     public async Task ASlowBrokenReadForAnEarlierPackDoesNotShowItsProblem()
     {
@@ -268,7 +267,7 @@ public sealed class ExportSessionTests
         Assert.NotNull(session.Contents);
     }
 
-    // Dart only showed that nothing threw. Here the session is listened to, so it shows nobody is told.
+    // The session is listened to, so this shows nobody is told, and not only that nothing threw.
     [Fact]
     public async Task AReadThatLandsAfterDisposeTellsNobody()
     {

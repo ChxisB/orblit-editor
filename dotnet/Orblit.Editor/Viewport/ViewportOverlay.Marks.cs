@@ -38,8 +38,8 @@ internal sealed partial class ViewportOverlay
 
     private static Pen Line(uint argb, double width) => new(Tone(argb), width);
 
-    // shortcut: the wire is rebuilt from the faces on every paint, as the Dart painter did. Cache it on
-    // the mesh when a modelled mesh with thousands of faces drags.
+    // shortcut: the wire is rebuilt from the faces on every paint. Cache it on the mesh when a modelled mesh
+    // with thousands of faces drags.
     private void DrawMarks(DrawingContext context)
     {
         var projection = new ViewportProjection(_state.Camera, new ViewSize(Bounds.Width, Bounds.Height));

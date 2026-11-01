@@ -5,9 +5,8 @@ using Orblit.Editor.Viewport;
 using Orblit.Mesh;
 using Orblit.VectorMath;
 
-// Dart: orblit-editor/test/drag_stability_test.dart. A snapped drag that fed its own snapped place back
-// into the snapping made a still pointer flicker between two lines. The cube stands off the grid, as
-// anything placed by hand does.
+// A snapped drag that fed its own snapped place back into the snapping made a still pointer flicker between
+// two lines. The cube stands off the grid, as anything placed by hand does.
 public sealed class DragStabilityTests
 {
     private const double Step = 0.5;

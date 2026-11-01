@@ -2,7 +2,7 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/renderer_support_test.dart. Dart overrode the platform. Here it is an argument.
+// The platform is an argument.
 public sealed class RendererSupportTests
 {
     [Fact]

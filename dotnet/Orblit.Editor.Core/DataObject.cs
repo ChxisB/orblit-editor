@@ -183,7 +183,7 @@ public sealed partial record DataObject(string Name, IReadOnlyList<DataField> Fi
             map.GetValueOrDefault("note") as string ?? "");
     }
 
-    /// <summary>The file's text, which the Dart editor reads as it reads its own.</summary>
+    /// <summary>The file's text, as it is written to disk.</summary>
     public string ToText()
     {
         var json = new OrderedDictionary<string, object?>
@@ -242,7 +242,7 @@ public sealed partial record DataObject(string Name, IReadOnlyList<DataField> Fi
         return string.Join('\n', lines);
     }
 
-    // The words the Dart editor writes, so either editor leaves a binding as it found it.
+    // The header is fixed text, so writing a binding again leaves it as it was found.
     private string[] Header(string importName) =>
     [
         $"// Written by the editor from {importName}{Extension}. Do not edit.",

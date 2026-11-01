@@ -11,8 +11,8 @@ using Orblit.Motion;
 using Orblit.Sequence;
 using Orblit.VectorMath;
 
-// Dart: orblit-editor/test/editor_shell_cinematics_test.dart. A cutscene made and cut in the window,
-// from the shelf and the shot list, and a camera steered from the scene view.
+// A cutscene made and cut in the window, from the shelf and the shot list, and a camera steered from the
+// scene view.
 public sealed class EditorWindowCinematicsTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_window_cinematics");

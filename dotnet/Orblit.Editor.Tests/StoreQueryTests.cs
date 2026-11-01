@@ -13,7 +13,7 @@ public sealed class StoreQueryTests
         Row("old", from: "0.10.0", to: "0.20.0", updated: "2026-10-09"),
     ];
 
-    // F2: the fields a case sets, each named at the call, as the Dart helper has them.
+    // F2: the fields a case sets, each named at the call.
     private static KitRow Row(
         string slug,
         string name = "",

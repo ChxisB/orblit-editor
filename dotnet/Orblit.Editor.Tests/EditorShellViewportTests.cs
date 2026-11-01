@@ -8,8 +8,7 @@ namespace Orblit.Editor.Tests;
 using Orblit.Editor.Core;
 using Orblit.Editor.Viewport;
 
-// Dart: orblit-editor/test/editor_shell_viewport_test.dart. The viewport driven from the shell: flying,
-// the camera preview and the trackpad.
+// The viewport driven from the shell: flying, the camera preview and the trackpad.
 public sealed class EditorShellViewportTests
 {
     private static readonly TimeSpan Frame = TimeSpan.FromMilliseconds(100);

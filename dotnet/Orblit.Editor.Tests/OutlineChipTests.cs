@@ -2,9 +2,7 @@ using Avalonia.VisualTree;
 
 namespace Orblit.Editor.Tests;
 
-// Dart: orblit-editor/test/outline_chip_test.dart. The Dart view was told whether to outline and told
-// the shell when its chip was pressed. The C# view keeps the choice itself, so a press is read off what
-// the overlay draws.
+// The view keeps the outline choice itself, so a press is read off what the overlay draws.
 public sealed class OutlineChipTests
 {
     private static ViewportRig Choosing()

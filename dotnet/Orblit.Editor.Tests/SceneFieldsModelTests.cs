@@ -4,7 +4,7 @@ using Orblit.Editor.Core;
 using Orblit.Editor.Panels;
 using Orblit.Weather;
 
-// Added in C#. Dart reaches these through the inspector widget tests, which come with the panel.
+// The scene fields' model, tested apart from the panel.
 public sealed class SceneFieldsModelTests
 {
     [Fact]

@@ -5,8 +5,8 @@ using Orblit.Editor.Viewport;
 using Orblit.Mesh;
 using Orblit.VectorMath;
 
-// Where a click puts a point while a tool is drawing, and what else the view stops doing. The Dart
-// does this through a widget, with the pointer's events. Here they go straight to the state.
+// Where a click puts a point while a tool is drawing, and what else the view stops doing. The pointer's
+// events go straight to the state.
 public sealed class DrawingInputTests
 {
     private static readonly Size Surface = new(800, 600);

@@ -43,7 +43,7 @@ public sealed class PublishSessionTests : IDisposable
     [Fact]
     public async Task RefusesAFolderOutsideTheProject()
     {
-        // A whole path is refused even when it leads into the project, as the Dart editor refuses it.
+        // A whole path is refused even when it leads into the project.
         foreach (var folder in new[] { "", ".", "..", "../elsewhere", "/tmp", "a/../..", InProject("assets/kits/crates") })
         {
             var made = await RunAsync(folder);

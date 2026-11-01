@@ -7,7 +7,7 @@ using Orblit.Editor.Panels;
 using Orblit.Terrain;
 using Ground = Orblit.Terrain.Terrain;
 
-// Added in C#. Dart has no test for the panel on its own, so what it shows and what a click does are held here.
+// What the panel shows and what a click does are held here.
 public sealed class TerrainBrushPanelTests : IDisposable
 {
     private const string File = "terrain/hills/hills.oterrain";

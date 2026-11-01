@@ -1,6 +1,6 @@
 namespace Orblit.Editor.Tests;
 
-// The words on the chips over the view. Added tests, the Dart view has no counterpart.
+// The words on the chips over the view.
 public sealed class ViewportChipsTests
 {
     [Theory]

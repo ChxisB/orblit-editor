@@ -18,8 +18,8 @@ public enum SayLevel
 /// actions that change them. A window draws this and calls it. Keeping it here means a test can drive
 /// the editor without a window, and the window cannot get ahead of what is saved.
 /// <para>
-/// Layouts are files with the project, one for each mode, in the names the Dart editor uses, so a
-/// project opens in either editor with its panels where they were left.
+/// Layouts are files with the project, one for each mode, so a project opens with its panels where they were
+/// left.
 /// </para>
 /// </remarks>
 public sealed partial class EditorSession
@@ -346,8 +346,8 @@ public sealed partial class EditorSession
     /// <summary>
     /// Gives the open scene a file in the project's scenes folder and writes it.
     /// <para>
-    /// The scene keeps the file it had when the write fails. Dart keeps the new path, so a later save
-    /// quietly tries the same failing file.
+    /// The scene keeps the file it had when the write fails. A later save does not quietly try the same
+    /// failing file.
     /// </para>
     /// </summary>
     public void SaveAs(string name)

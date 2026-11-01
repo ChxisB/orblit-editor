@@ -5,8 +5,8 @@ namespace Orblit.Editor.Tests;
 using Orblit.Editor.Core;
 using Orblit.VectorMath;
 
-// Dart: orblit-editor/test/rebuild_scope_test.dart. A drag runs a move every frame, and the outliner shows
-// nothing a move changes. Flutter's same widget is the same row control here.
+// A drag runs a move every frame, and the outliner shows nothing a move changes. The row control stays the
+// same one.
 public sealed class EditorWindowRebuildTests : IDisposable
 {
     private readonly DirectoryInfo _temp = Directory.CreateTempSubdirectory("orblit_rebuild");

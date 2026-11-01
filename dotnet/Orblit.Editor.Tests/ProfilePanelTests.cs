@@ -7,9 +7,8 @@ namespace Orblit.Editor.Tests;
 using Orblit.Editor.Core;
 using Orblit.Profile;
 
-// Dart: orblit-editor/test/profile_panel_test.dart. What the panel says about a profiler, with a clock
-// the test winds by hand. The case that hands a shown panel another profiler is not ported, since the
-// window builds the panel once over its own.
+// What the panel says about a profiler, with a clock the test winds by hand. The case that hands a shown
+// panel another profiler is not ported, since the window builds the panel once over its own.
 public sealed class ProfilePanelTests
 {
     private long _micros;

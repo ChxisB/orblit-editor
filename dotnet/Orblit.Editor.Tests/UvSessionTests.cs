@@ -4,8 +4,7 @@ using Orblit.Editor.Core;
 using Orblit.Mesh;
 using Orblit.VectorMath;
 
-// The Dart reaches these through the panel's callbacks. Here they are the session's own methods,
-// and UvPanelTests presses the buttons.
+// These are the session's own methods. UvPanelTests presses the buttons.
 public sealed class UvSessionTests : IDisposable
 {
     private readonly UvRig _rig = new();

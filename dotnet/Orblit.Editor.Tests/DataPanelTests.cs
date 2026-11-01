@@ -5,8 +5,7 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Added in C#. The Dart data panel has no tests of its own beyond the shell's data objects group,
-// which is EditorWindowDataTests.
+// The shell's data objects group is EditorWindowDataTests.
 public sealed class DataPanelTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_data_panel");

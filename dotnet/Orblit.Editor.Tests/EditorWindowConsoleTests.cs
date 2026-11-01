@@ -7,10 +7,10 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/editor_shell_data_test.dart, the console group. The console shares the
-// bottom group with the project browser here, so "folded under the view" is "behind the project tab".
-// A png is let go over the scene view as a real drop of what a browser tile's drag carries. Gone from the
-// status bar is a later message taking the status bar's place, since there is no snack bar timer to run out.
+// The console group. The console shares the bottom group with the project browser here, so "folded under the
+// view" is "behind the project tab". A png is let go over the scene view as a real drop of what a browser
+// tile's drag carries. Gone from the status bar is a later message taking the status bar's place, since there
+// is no snack bar timer to run out.
 public sealed class EditorWindowConsoleTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_window_console");

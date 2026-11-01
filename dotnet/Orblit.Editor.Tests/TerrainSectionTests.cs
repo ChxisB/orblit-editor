@@ -12,8 +12,7 @@ using static Orblit.Editor.Tests.InspectorRig;
 using Doc = Orblit.Scene;
 using Ground = Orblit.Terrain.Terrain;
 
-// Added in C#. Dart has no test for the terrain section on its own, so what it shows and what each
-// control changes are held here.
+// What the terrain section shows and what each control changes are held here.
 public sealed class TerrainSectionTests : IDisposable
 {
     private const string File = "terrain/hills/hills.oterrain";

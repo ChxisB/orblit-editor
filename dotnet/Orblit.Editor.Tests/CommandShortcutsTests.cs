@@ -67,8 +67,7 @@ public sealed class CommandShortcutsTests
         Assert.Equal("Ctrl+Shift+S", HostPlatform.Windows.CommandShortcutLabel("S", shift: true));
     }
 
-    // The Dart tests hold the key down in a live keyboard binding. The model only needs to know which
-    // keys are down, so these pass them in.
+    // The model only needs to know which keys are down, so these pass them in.
     [Fact]
     public void IsCommandModifierPressedReadsMetaOnMacOs()
     {

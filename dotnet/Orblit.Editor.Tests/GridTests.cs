@@ -40,8 +40,7 @@ public sealed class GridTests : IAsyncLifetime
         Assert.True(File.Exists(Path.Combine(_root.FullName, ".orblit", "grid.png")));
     }
 
-    // Added in C#: the Dart test only checks that the file is there, and the PNG is encoded here
-    // rather than by the platform.
+    // The PNG is encoded here rather than by the platform, so the lines are read back to check the tile.
     [Fact]
     public void TheLinesReadBackAsTheTileTheGridDraws()
     {

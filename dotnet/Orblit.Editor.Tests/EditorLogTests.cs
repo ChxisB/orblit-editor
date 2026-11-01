@@ -5,10 +5,9 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/console_test.dart. The level is the session's SayLevel, and an entry has
-// no source, because nothing in the Dart editor reads one. "What Flutter throws" is what the UI thread
-// throws here. A closed log dropping what it is told is not ported: the Dart guard stops a disposed
-// ChangeNotifier throwing, and a C# event has nothing to throw.
+// The level is the session's SayLevel, and an entry has no source, because nothing reads one. What the UI
+// thread throws is caught into the log. A closed log dropping what it is told has no case, since a C# event
+// has nothing to throw.
 public sealed class EditorLogTests
 {
     private readonly EditorLog _log = new(limit: 5);
@@ -162,8 +161,8 @@ public sealed class EditorLogTests
     [Fact]
     public Task ClosingTheWindowGivesTheHandlerBack() => Headless.Run(() =>
     {
-        // What happened in Dart: the handler outlived the log it wrote into, and a closed editor kept
-        // reporting. Here the window it was caught for lets it go.
+        // A handler that outlives the log it writes into keeps a closed editor reporting. The window it was
+        // caught for lets it go.
         var window = new Window();
         window.Show();
         UiErrors.ToLog(_log, window);

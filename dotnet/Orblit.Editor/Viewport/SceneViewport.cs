@@ -369,7 +369,7 @@ public sealed class SceneViewport : Border
     private void OnCaptureLost(object? sender, PointerCaptureLostEventArgs e) => Abandon();
 
     // A gesture that ends without finishing: the pointer was taken away or the view left the window.
-    // A release of any button ends a flight, whichever way it began, as the Dart view does.
+    // A release of any button ends a flight, whichever way it began.
     private void Abandon()
     {
         if (_dragging)

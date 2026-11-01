@@ -5,8 +5,7 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/publish_dialog_test.dart. The publish dialog over a real temporary project. The
-// clock is the test's own.
+// The publish dialog over a real temporary project. The clock is the test's own.
 public sealed class PublishDialogTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_publish_dialog_");
@@ -94,8 +93,8 @@ public sealed class PublishDialogTests : IDisposable
         Assert.False(Directory.Exists(InProject("exports")));
     });
 
-    // Dart checked the dialog fit the smallest editor window. Here the dialog is a window of its own, so the
-    // check is that its buttons stay in view through a problem and then a pack.
+    // The dialog is a window of its own, so the check is that its buttons stay in view through a problem and
+    // then a pack.
     [Fact]
     public Task KeepsItsButtonsInViewThroughAProblemAndAPack() => Headless.Run(() =>
     {
@@ -111,8 +110,8 @@ public sealed class PublishDialogTests : IDisposable
         Assert.True(Inside(dialog, "close"));
     });
 
-    // Dart's twelve problems overflowed a dialog inside the editor window. The C# dialog has more room, so
-    // it takes forty, a line each, to be taller than the dialog.
+    // The dialog has room for a good many problems, so it takes forty, a line each, to be taller than the
+    // dialog.
     [Fact]
     public Task KeepsTheButtonInViewWhenAKitHasManyProblems() => Headless.Run(() =>
     {

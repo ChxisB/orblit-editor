@@ -5,7 +5,7 @@ using Orblit.Editor.Panels;
 using Orblit.Mesh;
 using Orblit.VectorMath;
 
-// Added in C#. Dart does this sum in the middle of a canvas widget's pan callback.
+// The sum a pan works out, apart from any control.
 public sealed class UvDragTests : IDisposable
 {
     private static readonly Vector2 Middle = new(0.5, 0.5);

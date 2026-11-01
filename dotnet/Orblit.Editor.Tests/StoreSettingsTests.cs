@@ -111,7 +111,7 @@ public sealed class StoreSettingsTests : IDisposable
     }
 
     [Fact]
-    public void ReadsAFileInTheShapeDartWrites()
+    public void ReadsAFileInTheStoredShape()
     {
         Directory.CreateDirectory(Path.GetDirectoryName(_file)!);
         File.WriteAllText(_file, "{\"repositories\":[\"https://kits.example/shop/\"],\"showIncompatible\":true}");
@@ -123,7 +123,7 @@ public sealed class StoreSettingsTests : IDisposable
     }
 
     [Fact]
-    public void WritesTheShapeDartReads()
+    public void WritesTheStoredShape()
     {
         var settings = new StoreSettings(_file);
         settings.AddRepository("https://kits.example/shop");

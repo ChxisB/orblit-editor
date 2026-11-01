@@ -48,7 +48,7 @@ internal sealed class StoreFixture
         }
 
         Write(Path.Combine(source, "shots", "a.png"), PngBytes);
-        // One line, byte for byte what Dart's jsonEncode writes, so both editors pack the same kit.
+        // One compact line of JSON, so the kit packs to the same bytes as the frozen lock file.
         Write(
             Path.Combine(source, "kit.json"),
             System.Text.Encoding.UTF8.GetBytes(

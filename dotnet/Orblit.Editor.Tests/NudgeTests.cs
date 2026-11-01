@@ -3,8 +3,8 @@ namespace Orblit.Editor.Tests;
 using Orblit.Editor.Core;
 using Orblit.VectorMath;
 
-// Ported from nudge_test.dart. The Dart tests press the arrow keys. The session takes the distance
-// already worked out, since the grid step belongs to the window, so these check what it does with it.
+// The session takes the distance already worked out, since the grid step belongs to the window, so these
+// check what it does with it. EditorWindowKeysTests presses the keys.
 public sealed class NudgeTests
 {
     private static SceneObject Shape(ModellingRig rig) => rig.Session.ChosenShape!;

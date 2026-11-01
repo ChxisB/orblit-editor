@@ -61,7 +61,7 @@ public sealed class EditorSessionDataTests : IDisposable
         Assert.Null(session.DataAsset);
     }
 
-    // Added in C#. Dart leaves the data object showing, though the scene row was touched last.
+    // The data object does not stay showing when the scene row was touched last.
     [Fact]
     public void SelectingASceneRowPutsTheInspectorBack()
     {

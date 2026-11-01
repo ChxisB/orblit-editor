@@ -19,8 +19,7 @@ using Orblit.Mesh;
 /// they pass through. A tool used fifty times in a row should not be four scrolls down a list of
 /// somebody's transform and light.
 /// <para>
-/// shortcut: buttons are words only, where the Dart panel draws an icon beside each, until the icon
-/// pass (decision 84).
+/// shortcut: buttons are words only, with no icon beside each, until the icon pass (decision 84).
 /// </para>
 /// </remarks>
 internal sealed class ModellingPanel : UserControl

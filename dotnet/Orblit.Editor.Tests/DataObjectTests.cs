@@ -2,8 +2,7 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/data_object_test.dart. The C++ binding checked against the text Dart
-// writes is added, since it has no Dart test. The script binding's cases are dropped by decision 94.
+// The C++ binding is checked against a fixed text. The editor has no script binding.
 public sealed class DataObjectTests : IDisposable
 {
     private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory("orblit_data");
@@ -94,9 +93,9 @@ public sealed class DataObjectTests : IDisposable
         ],
         "How it behaves");
 
-    // The text Dart's toCpp wrote for Probe on 2026-10-28. It has no Dart test of its own.
+    // The C++ text written for Probe on 2026-10-28, kept as a fixed string.
     [Fact]
-    public void TheCppIsTheTextTheDartEditorWrites() => Assert.Equal(
+    public void TheCppMatchesTheFixedText() => Assert.Equal(
         "// Written by the editor from data/ball.odata. Do not edit.\n"
         + "//\n"
         + "// Ball settings \u2014 How it behaves\n"

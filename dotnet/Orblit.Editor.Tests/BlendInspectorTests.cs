@@ -8,9 +8,8 @@ using Orblit.Editor.Panels;
 using Orblit.Motion;
 using Orblit.Sequence;
 
-// Dart: orblit-editor/test/blend_inspector_test.dart, six tests, and the condition and state fields it
-// reaches through them. The rest is added in C#: a number that is refused, a point that moves in a line
-// while its box is still being typed in, and the plural of change.
+// The condition and state fields. Also covered: a number that is refused, a point that moves in a line while
+// its box is still being typed in, and the plural of change.
 public sealed class BlendInspectorTests
 {
     private const string MovesPath = "/project/moves.oblend";

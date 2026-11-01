@@ -551,7 +551,7 @@ public sealed class LauncherWindowTests : IDisposable
     [InlineData("D", ProjectTemplate.ThirdPerson)]
     [InlineData("Runner", ProjectTemplate.ThirdPerson)]
     [InlineData("The Quick Brown Fox Jumps Over", ProjectTemplate.Scene)]
-    public void ANameDrawsTheSamePictureDartDrawsForIt(string name, ProjectTemplate same) =>
+    public void ANameDrawsTheSamePictureAsTheTemplateItHashesTo(string name, ProjectTemplate same) =>
         Assert.Equal(SceneArt.ForTemplate(same), SceneArt.ForName(name));
 
     private static ProjectTemplate[] ChosenTemplates(Control root) =>

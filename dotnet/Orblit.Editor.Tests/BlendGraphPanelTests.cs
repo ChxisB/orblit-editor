@@ -7,9 +7,8 @@ using Orblit.Editor.Core;
 using Orblit.Editor.Panels;
 using Orblit.Motion;
 
-// Dart: orblit-editor/test/editor_shell_blends_test.dart, the tests of the panel opened empty and of the
-// tab marked until it is saved, here on the panel alone. The rest is added in C#: the tabs themselves,
-// and the fields going under the graph when the panel is narrow.
+// The tests of the panel opened empty and of the tab marked until it is saved, here on the panel alone. Also
+// covered: the tabs themselves, and the fields going under the graph when the panel is narrow.
 public sealed class BlendGraphPanelTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_blend_panel");

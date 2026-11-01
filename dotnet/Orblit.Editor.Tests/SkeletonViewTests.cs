@@ -6,8 +6,7 @@ using Orblit.Motion;
 using Orblit.Sequence;
 using Orblit.VectorMath;
 
-// Dart: orblit-editor/test/skeleton_view_test.dart. What the view draws of a skeleton and of the poses
-// round the playhead, worked out without a view.
+// What the view draws of a skeleton and of the poses round the playhead, worked out without a view.
 public sealed class SkeletonViewTests
 {
     private static readonly SkeletonSettings On = new(Onion: true, Before: 2, After: 2, Stride: 1);

@@ -4,9 +4,8 @@ using Orblit.Editor.Core;
 using Orblit.Terrain;
 using Ground = Orblit.Terrain.Terrain;
 
-// Added in C#: the Dart bench decodes inside a private method that has no test of its own. The
-// decoder is a fake here. Each picture file holds one byte, which the fake repeats as the pixels, so
-// a test can tell which picture it was handed.
+// The decoder is a fake here. Each picture file holds one byte, which the fake repeats as the pixels, so a
+// test can tell which picture it was handed.
 public sealed class TerrainPicturesTests : IDisposable
 {
     private const string File = "terrain/hills/hills.oterrain";

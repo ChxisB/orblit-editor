@@ -180,9 +180,9 @@ public sealed class NewAsset
     /// <summary>What a new file of this kind called <paramref name="stem"/> says the moment it is made.</summary>
     public string Contents(string stem) => _contents(stem);
 
-    // The C++ pair refer to each other by name, and a placeholder somebody has to find and replace
-    // is a placeholder that ships. Line endings are normalised because a raw string takes the
-    // source file's, and the Dart editor writes a bare newline on every host.
+    // The C++ pair refer to each other by name, and a placeholder somebody has to find and replace is a
+    // placeholder that ships. Line endings are normalised because a raw string takes the source file's, and
+    // the file holds a bare newline on every host.
     private static Func<string, string> Starter(string text) =>
         stem => text.ReplaceLineEndings("\n").Replace("NAME", stem, StringComparison.Ordinal) + "\n";
 }

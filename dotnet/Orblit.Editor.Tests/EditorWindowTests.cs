@@ -458,7 +458,7 @@ public sealed class EditorWindowTests : IDisposable
         Headless.Render();
     }
 
-    // The two save as cases of Dart's editor_shell_scenes_test.dart.
+    // The two save as cases.
     [Fact]
     public Task SaveAsWritesASecondSceneAndKeepsTheFirst() => Headless.Run(() =>
     {

@@ -4,8 +4,7 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Added in C#. The Dart console panel has no tests of its own beyond the shell's console group, which
-// is EditorWindowConsoleTests.
+// The shell's console group is EditorWindowConsoleTests.
 public sealed class ConsolePanelTests
 {
     private readonly EditorLog _log = new(clock: new FixedClock(new DateTime(2026, 10, 28, 14, 5, 9)));

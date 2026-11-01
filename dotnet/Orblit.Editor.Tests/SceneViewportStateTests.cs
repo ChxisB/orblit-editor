@@ -5,8 +5,8 @@ using Orblit.Editor.Viewport;
 using Orblit.Mesh;
 using Orblit.VectorMath;
 
-// What a scene view keeps between events: flying, the wheel, a trackpad, a turn and the numbers a
-// drag reports. The Dart covers these through the whole shell, so these are added tests.
+// What a scene view keeps between events: flying, the wheel, a trackpad, a turn and the numbers a drag
+// reports.
 public sealed class SceneViewportStateTests
 {
     private static readonly Size Surface = new(800, 600);

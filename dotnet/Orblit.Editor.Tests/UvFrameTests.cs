@@ -4,7 +4,7 @@ using Orblit.Editor.Panels;
 using Orblit.Mesh;
 using Orblit.VectorMath;
 
-// Added in C#. Dart keeps this arithmetic inside its canvas widget, where only a drag could reach it.
+// The frame arithmetic, apart from any control.
 public sealed class UvFrameTests
 {
     private static (Mesh Mesh, List<Face> Faces) FittedFace()

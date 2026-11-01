@@ -7,8 +7,8 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/editor_shell_export_test.dart. The ways into the export dialog: the File menu,
-// which Dart called Scene, and the command palette. The project has no exports folder, so nothing cooks.
+// The ways into the export dialog: the File menu and the command palette. The project has no exports folder,
+// so nothing cooks.
 public sealed class EditorWindowExportTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_window_export");

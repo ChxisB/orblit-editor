@@ -7,7 +7,7 @@ using Orblit.Weather;
 using Orblit.VectorMath;
 using Doc = Orblit.Scene;
 
-// Added in C#. Dart exercises these commands only through widget tests.
+// These commands are tested without a control.
 public sealed class ObjectCommandTests
 {
     private static (History History, EditorScene Scene) Rig()

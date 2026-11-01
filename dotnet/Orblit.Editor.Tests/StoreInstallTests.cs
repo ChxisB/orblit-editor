@@ -239,20 +239,20 @@ public sealed class StoreInstallTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task WritesTheLockTheDartEditorWritesForTheSameKit()
+    public async Task WritesTheLockTheFrozenFileHoldsForTheSameKit()
     {
         var project = Path.Combine(_scratch.FullName, "parity");
         Directory.CreateDirectory(project);
         await using var bytes = new FilePackBytes(Path.Combine(_scratch.FullName, "crates.opack"));
         var kit = await Kit.OpenAsync(await AssetPack.OpenAsync(bytes));
 
-        // The two steps tool/parity/kits_lock_test.dart takes.
+        // The two installs that made the frozen lock file.
         await KitInstall.InstallAsync(kit, project, Into, only: new HashSet<AssetId> { Id("scripts/spin.js") });
         await KitInstall.InstallAsync(
             kit, project, Into, only: new HashSet<AssetId> { Id("models/crate.obj"), Id("shots/a.png") });
 
-        var dart = Path.Combine(AppContext.BaseDirectory, "Fixtures", "dart", "kits.lock");
-        Assert.Equal(File.ReadAllBytes(dart), File.ReadAllBytes(Path.Combine(project, KitRules.LockName)));
+        var frozen = Path.Combine(AppContext.BaseDirectory, "Fixtures", "frozen", "kits.lock");
+        Assert.Equal(File.ReadAllBytes(frozen), File.ReadAllBytes(Path.Combine(project, KitRules.LockName)));
     }
 
     private static AssetId Id(string name) => AssetId.Parse(name);

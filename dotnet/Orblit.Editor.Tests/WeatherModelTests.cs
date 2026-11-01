@@ -5,7 +5,7 @@ using Orblit.Editor.Panels;
 using Orblit.Editor.Viewport;
 using Orblit.Weather;
 
-// Added in C#. Dart reaches these through the inspector widget tests, which come with the panel.
+// The weather model, tested apart from the panel.
 public sealed class WeatherModelTests
 {
     [Fact]

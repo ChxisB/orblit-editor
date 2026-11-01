@@ -5,8 +5,8 @@ using Orblit.Motion;
 using Orblit.Sequence;
 using Orblit.VectorMath;
 
-// Dart: orblit-editor/test/limb_posing_test.dart. A limb reached for with two keyed turns: which limbs a
-// model has, and the clip that puts the tip of one where it was asked.
+// A limb reached for with two keyed turns: which limbs a model has, and the clip that puts the tip of one
+// where it was asked.
 public sealed class LimbPosingTests : IDisposable
 {
     private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory("orblit_limb");

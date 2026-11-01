@@ -5,7 +5,7 @@ using Orblit.Editor.Viewport;
 using Orblit.Mesh;
 using Orblit.VectorMath;
 
-// Added tests: the Dart checks the store only for its cost, in the frame cost test.
+// What the store holds and returns, apart from its cost.
 public sealed class GeometryStoreTests : IDisposable
 {
     private readonly string _root = Directory.CreateTempSubdirectory("orblit_geometry").FullName;

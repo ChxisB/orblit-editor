@@ -73,8 +73,9 @@ public static class CommandPalette
         ];
     }
 
-    // shortcut: lower-cases one character at a time, so a label holding a capital dotted I lights up
-    // a different span from Dart. Only the highlight moves, never which entries match.
+    // shortcut: lower-cases one character at a time, so a label holding a capital dotted I can light up a
+    // different span from a lower-case of the whole label. Only the highlight moves, never which entries
+    // match.
     private static PaletteMatch? Match(PaletteEntry entry, string[] words)
     {
         if (words.Length == 0)

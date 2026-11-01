@@ -9,8 +9,8 @@ namespace Orblit.Editor.Tests;
 using Orblit.Editor.Core;
 using Orblit.Motion;
 
-// Dart: orblit-editor/test/editor_shell_blends_test.dart. A blend opened from the Project panel in the
-// window, chosen from, changed through the undo stack and written back as the file a game reads.
+// A blend opened from the Project panel in the window, chosen from, changed through the undo stack and
+// written back as the file a game reads.
 public sealed class EditorWindowBlendsTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_window_blends");
@@ -19,7 +19,7 @@ public sealed class EditorWindowBlendsTests : IDisposable
 
     private string PathOf(string name) => Path.Combine(_project.FullName, name);
 
-    // Goes from idle to move once speed is above a tenth, as the Dart tests' moves.oblend does.
+    // Goes from idle to move once speed is above a tenth.
     private string WriteMoves()
     {
         Directory.CreateDirectory(PathOf("blends"));

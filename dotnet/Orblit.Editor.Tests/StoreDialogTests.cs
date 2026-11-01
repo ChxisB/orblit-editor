@@ -6,8 +6,7 @@ namespace Orblit.Editor.Tests;
 using Orblit.Asset;
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/store_dialog_test.dart. The store and install dialogs on a fake network and a
-// real temporary project.
+// The store and install dialogs on a fake network and a real temporary project.
 public sealed class StoreDialogTests : IAsyncLifetime
 {
     private const string Into = "assets/kits/crates";
@@ -167,8 +166,7 @@ public sealed class StoreDialogTests : IAsyncLifetime
         Assert.Contains("Crates", Words(dialog));
     });
 
-    // Dart checked the dialog fit an editor window this small. Here the dialog is a window of its own, so the
-    // check is that its buttons stay in view over a kit.
+    // The dialog is a window of its own, so the check is that its buttons stay in view over a kit.
     [Theory]
     [InlineData(960, 620)]
     [InlineData(800, 600)]

@@ -221,8 +221,8 @@ public sealed class SceneClipboard
         }
     }
 
-    // The system clipboard is anybody's to write, so a world is kept only when it is sixteen numbers
-    // for an object that came with it. Dart takes the others and throws on the paste.
+    // The system clipboard is anybody's to write, so a world is kept only when it is sixteen numbers for an
+    // object that came with it. The others are not kept, so a paste cannot throw on them.
     private static Dictionary<string, Matrix4> ReadWorlds(object? worlds, List<SceneObject> objects)
     {
         var read = new Dictionary<string, Matrix4>();

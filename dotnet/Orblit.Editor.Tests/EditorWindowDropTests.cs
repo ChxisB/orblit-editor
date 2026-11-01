@@ -7,10 +7,10 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/editor_shell_drop_test.dart. A file is let go over the scene view as a real drop
-// of what a browser tile's drag carries. The drag itself is the system's, and the headless platform has
-// no way to start one, so the tile's half is not run here. F is in EditorWindowKeysTests. The cases after
-// the Dart ones cover the kinds the session routes elsewhere and the ones it refuses.
+// A file is let go over the scene view as a real drop of what a browser tile's drag carries. The drag itself
+// is the system's, and the headless platform has no way to start one, so the tile's half is not run here. F
+// is in EditorWindowKeysTests. The later cases cover the kinds the session routes elsewhere and the ones it
+// refuses.
 public sealed class EditorWindowDropTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_window_drops");

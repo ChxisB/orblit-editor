@@ -4,8 +4,8 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// A layout that says what is already drawn must not rebuild its panels, because the window offers its
-// layout on every change to the scene. Added tests, the Dart dock has no counterpart.
+// A layout that says what is already drawn must not rebuild its panels, because the window offers its layout
+// on every change to the scene.
 public sealed class DockHostTests
 {
     [Fact]

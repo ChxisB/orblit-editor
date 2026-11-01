@@ -3,10 +3,9 @@ namespace Orblit.Editor.Tests;
 using Orblit.Editor.Core;
 using Orblit.Native;
 
-// Dart: orblit-editor/test/cpp_binding_test.dart, the cases that compile. They compile real C++ against
-// the real engine headers, which is slower than the rest and the only way to know that what the editor
-// writes builds. The cases that read the generated text are DataObjectTests, and the one about which
-// files offer a build is AssetsTests.
+// The cases that compile. They compile real C++ against the real engine headers, which is slower than the
+// rest and the only way to know that what the editor writes builds. The cases that read the generated text
+// are DataObjectTests, and the one about which files offer a build is AssetsTests.
 public sealed class ScriptBuilderTests : IDisposable
 {
     private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory("orblit_cpp");

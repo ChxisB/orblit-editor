@@ -2,8 +2,7 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Added in C#. The Dart CodeEditor ran its processes directly and had no tests. Here the programs are a
-// fake, so what is asked and what is started can be read back.
+// The programs are a fake, so what is asked and what is started can be read back.
 public sealed class CodeEditorTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_code");
@@ -71,7 +70,7 @@ public sealed class CodeEditorTests : IDisposable
         Assert.Equal([$"code {Folder} --goto {file}"], _programs.Started);
     }
 
-    // Dart passed --goto to every command, and Sublime Text and Zed have no such option.
+    // Sublime Text and Zed have no --goto option, so it is not passed to every command.
     [Theory]
     [InlineData("subl")]
     [InlineData("zed")]

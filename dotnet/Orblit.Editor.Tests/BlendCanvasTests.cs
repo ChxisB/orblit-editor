@@ -12,9 +12,9 @@ using Orblit.Editor.Panels;
 using Orblit.Motion;
 using Orblit.Sequence;
 
-// Dart: orblit-editor/test/editor_shell_blends_test.dart, the tests that press a state or an arrow and
-// drag a link, here on the canvas alone. The rest is added in C#: the arrow label's plural, a link let
-// go on nothing, a link pressed and let go, the drop target being marked, and the chosen arrow's colour.
+// The tests that press a state or an arrow and drag a link, here on the canvas alone. Also covered: the arrow
+// label's plural, a link let go on nothing, a link pressed and let go, the drop target being marked, and the
+// chosen arrow's colour.
 public sealed class BlendCanvasTests
 {
     private const string MovesPath = "/project/moves.oblend";

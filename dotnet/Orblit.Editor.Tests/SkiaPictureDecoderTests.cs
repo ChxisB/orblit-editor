@@ -2,8 +2,8 @@ namespace Orblit.Editor.Tests;
 
 using SkiaSharp;
 
-// Added in C#: Dart decodes with Flutter's codec, and the C# editor decodes with Skia directly.
-// The renderer reads alpha as height and roughness, so what these hold is that it is never premultiplied.
+// The editor decodes with Skia directly. The renderer reads alpha as height and roughness, so what these hold
+// is that it is never premultiplied.
 public sealed class SkiaPictureDecoderTests
 {
     private const int Side = 8;

@@ -176,7 +176,7 @@ public sealed class ProjectTests : IDisposable
     }
 
     [Fact]
-    public void ATimeIsWrittenTheWayDartWritesIt()
+    public void ATimeIsWrittenToTheMillisecondOrTheMicrosecond()
     {
         var plain = new Project("A", "/a", new DateTime(2026, 10, 24, 10, 20, 30, 123));
         var fine = new Project("A", "/a", new DateTime(2026, 10, 24, 10, 20, 30, 123).AddTicks(450));
@@ -188,7 +188,7 @@ public sealed class ProjectTests : IDisposable
     }
 
     [Fact]
-    public void AProjectFileFromDartOpens()
+    public void AProjectFileWithAFractionalSecondOpens()
     {
         File.WriteAllText(
             Path.Combine(_temp.FullName, Project.FileName),
@@ -201,7 +201,7 @@ public sealed class ProjectTests : IDisposable
     }
 
     [Fact]
-    public void AProjectFileWithGapsIsReadWithWhatDartFillsIn()
+    public void AProjectFileWithGapsIsReadWithDefaults()
     {
         File.WriteAllText(Path.Combine(_temp.FullName, Project.FileName), "{}");
 

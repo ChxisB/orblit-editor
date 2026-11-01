@@ -11,9 +11,8 @@ using Orblit.Editor.Viewport;
 using Orblit.Mesh;
 using Orblit.VectorMath;
 
-// Ported from nudge_test.dart, the G key cases of editor_shell_geometry_test.dart and the F key case of
-// editor_shell_drop_test.dart. The distance is the window's own grid step, so these press the keys.
-// NudgeTests holds what the session does with it.
+// The nudge keys, the G key and the F key. The distance is the window's own grid step, so these press the
+// keys. NudgeTests holds what the session does with it.
 public sealed class EditorWindowKeysTests
 {
     // The click gives the keyboard somewhere to be. With nothing focused the toolkit spends the first arrow

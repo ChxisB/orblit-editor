@@ -2,8 +2,7 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Viewport;
 
-// Dart: orblit-editor/test/frame_rate_test.dart. The scene view hands each drawn frame in, so there is no
-// engine callback to start or stop, and Dart's case for starting and stopping twice has no counterpart.
+// The scene view hands each drawn frame in, so there is no engine callback to start or stop.
 public sealed class FrameRateTests
 {
     // A frame every reading apart, so each one is read and the reading is the whole window.

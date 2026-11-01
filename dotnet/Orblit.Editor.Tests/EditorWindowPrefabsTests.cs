@@ -9,12 +9,12 @@ namespace Orblit.Editor.Tests;
 using Orblit.Editor.Core;
 using Doc = Orblit.Scene;
 
-// Dart: orblit-editor/test/editor_shell_prefabs_test.dart. An object is dropped on the browser and on an
-// outliner row as a real drop of what the outliner's drag carries, since the drag that starts it is the
-// system's. A prefab is placed through the session: the scene view takes a dropped file in 13f. Keys are
-// the session's verbs, which EditorWindowKeysTests binds. Counts are read off the scene, because this
-// outliner names how many scenes are open and not how many objects. The browser's menu is the one its
-// right click opens, read without opening it, and an answered prompt is MakeNew.
+// An object is dropped on the browser and on an outliner row as a real drop of what the outliner's drag
+// carries, since the drag that starts it is the system's. A prefab is placed through the session: the scene
+// view takes a dropped file in 13f. Keys are the session's verbs, which EditorWindowKeysTests binds. Counts
+// are read off the scene, because this outliner names how many scenes are open and not how many objects. The
+// browser's menu is the one its right click opens, read without opening it, and an answered prompt is
+// MakeNew.
 public sealed class EditorWindowPrefabsTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_window_prefabs");
@@ -402,7 +402,7 @@ public sealed class EditorWindowPrefabsTests : IDisposable
         Assert.NotEmpty(Group(menu, "Script").Items);
     });
 
-    // Not in the Dart. What the cases above leave unseen: where things go, what is written, and ids that change.
+    // What the cases above leave unseen: where things go, what is written, and ids that change.
 
     private string MadeFrom(EditorSession session, string name)
     {

@@ -10,8 +10,8 @@ using Orblit.Editor.Core;
 using Orblit.Terrain;
 using static Orblit.Editor.Tests.InspectorRig;
 
-// The shell's terrain tests in editor_shell_terrain_test, driven through the window. The Dart test
-// for a set added in the inspector is here too, on the window's own inspector.
+// The shell's terrain tests, driven through the window. The case for a set added in the inspector is here
+// too, on the window's own inspector.
 public sealed class EditorWindowTerrainTests
 {
     private const string Made = "terrain/terrain/terrain.oterrain";

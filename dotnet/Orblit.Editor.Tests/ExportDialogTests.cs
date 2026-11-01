@@ -8,8 +8,8 @@ namespace Orblit.Editor.Tests;
 using Orblit.Asset;
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/export_dialog_test.dart. The dialog on a fake cook and a fake folder, so what is
-// checked is what it draws and what it asks for, and no cook starts.
+// The dialog on a fake cook and a fake folder, so what is checked is what it draws and what it asks for, and
+// no cook starts.
 public sealed class ExportDialogTests
 {
     private readonly FakeExports _exports = new();
@@ -186,7 +186,7 @@ public sealed class ExportDialogTests
         Assert.False(Headless.Find<Button>(dialog, "close").IsEnabled);
         Assert.False(Headless.Find<Button>(dialog, "export").IsEnabled);
         Assert.Single(Words(dialog), word => word.StartsWith("Cooking and packing", StringComparison.Ordinal));
-        // Added in C#: the window's own close is refused too, which Dart's PopScope did for the back gesture.
+        // The window's own close is refused too.
         dialog.Close();
         Headless.Render();
         Assert.True(dialog.IsVisible);
@@ -265,8 +265,8 @@ public sealed class ExportDialogTests
         Assert.Equal(["/project/exports"], _revealed);
     });
 
-    // Dart checked the dialog fit an editor window this small. Here the dialog is a window of its own, so
-    // the check is that a long folder and three failures scroll and leave its buttons in view.
+    // The dialog is a window of its own, so the check is that a long folder and three failures scroll and
+    // leave its buttons in view.
     [Theory]
     [InlineData(960, 620)]
     [InlineData(800, 600)]

@@ -16,8 +16,8 @@ public readonly record struct AssetMade(string? Problem, string? Path);
 /// beats a list that is a frame behind. <see cref="Changed"/> is what tells the browser a read is
 /// worth doing again.
 /// <para>
-/// A link is not listed, as in the Dart editor. A project that keeps a folder of assets elsewhere
-/// and links it in will not see it here.
+/// A link is not listed. A project that keeps a folder of assets elsewhere and links it in will not see it
+/// here.
 /// </para>
 /// </remarks>
 public sealed class AssetTree : IDisposable

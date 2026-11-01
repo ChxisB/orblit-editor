@@ -132,8 +132,7 @@ public sealed record Project(string Name, string Directory, DateTime LastOpened,
         ["lastOpened"] = IsoText(LastOpened),
     };
 
-    // Written the way Dart writes a time, so a file from either editor reads in the other: the
-    // milliseconds always, the microseconds only when there are some, and a Z for UTC.
+    // Written to the millisecond always, to the microsecond only when there are some, and with a Z for UTC.
     private static string IsoText(DateTime at)
     {
         var micro = at.Ticks % TimeSpan.TicksPerMillisecond / 10;
@@ -142,8 +141,8 @@ public sealed record Project(string Name, string Directory, DateTime LastOpened,
             + (at.Kind == DateTimeKind.Utc ? "Z" : "");
     }
 
-    // shortcut: .NET also reads a few loose dates that Dart refuses, which only matters for a file
-    // somebody edited by hand.
+    // shortcut: .NET also reads a few loose dates that the format does not allow, which only matters for a
+    // file somebody edited by hand.
     private static DateTime ReadTime(string text) =>
         DateTime.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var at)
             ? at

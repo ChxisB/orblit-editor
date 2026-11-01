@@ -10,8 +10,7 @@ namespace Orblit.Editor.Tests;
 using Orblit.Editor.Core;
 using Orblit.Editor.Viewport;
 
-// What the control does with a pointer and a window, which the state alone cannot say. Added tests,
-// the Dart view has no counterpart.
+// What the control does with a pointer and a window, which the state alone cannot say.
 public sealed class SceneViewportTests
 {
     private static SceneViewport[] Views(ViewportRig rig) => [.. rig.Window.GetLogicalDescendants().OfType<SceneViewport>()];

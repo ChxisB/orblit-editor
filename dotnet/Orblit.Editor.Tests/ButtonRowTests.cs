@@ -3,9 +3,9 @@ using Avalonia.Layout;
 
 namespace Orblit.Editor.Tests;
 
-// Dart: orblit-editor/test/controls_test.dart. C# buttons carry words and no icons, so the case for one
-// button giving up its icon is not ported, and the row's case keeps only when it stacks. The widths come
-// from the word "Draw shape" as this font draws it, two pixels either side of where it would be cut.
+// Buttons carry words and no icons, so there is no case for one button giving up its icon, and the row's case
+// keeps only when it stacks. The widths come from the word "Draw shape" as this font draws it, two pixels
+// either side of where it would be cut.
 public sealed class ButtonRowTests
 {
     private sealed record Shown(ButtonRow Row, Button Draw, Button Cut) : IDisposable

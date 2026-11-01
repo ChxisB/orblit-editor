@@ -3,7 +3,7 @@ namespace Orblit.Editor.Tests;
 using Orblit.Asset;
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/pack_export_test.dart. Each case cooks and packs a real folder.
+// Each case cooks and packs a real folder.
 public sealed class PackExportTests : IDisposable
 {
     private readonly string _project = Directory.CreateTempSubdirectory("orblit_export").FullName;
@@ -153,8 +153,8 @@ public sealed class PackExportTests : IDisposable
         Assert.True(File.Exists(At("exports", $"game.macos.{firstHash[..12]}.opack")));
     }
 
-    // Added in C#. File.Move refuses a name that is taken, where Dart's rename replaced it. A pack that
-    // comes back to an earlier state is set aside under a hash that was set aside before.
+    // File.Move refuses a name that is taken. A pack that comes back to an earlier state is set aside under a
+    // hash that was set aside before.
     [Fact]
     public async Task APackSetAsideASecondTimeReplacesTheFirst()
     {
@@ -171,8 +171,8 @@ public sealed class PackExportTests : IDisposable
         Assert.Equal(3, Exported().Length);
     }
 
-    // Added in C#. A whole pack that comes back to an earlier state leaves two files with one hash, the
-    // pack set aside and the current one. Dart's map kept one of them, where ToDictionary threw.
+    // A whole pack that comes back to an earlier state leaves two files with one hash, the pack set aside and
+    // the current one. ToDictionary would throw on them, so the map keeps one.
     [Fact]
     public async Task APatchStandsOnAPackThatTwoFilesHold()
     {
@@ -317,7 +317,7 @@ public sealed class PackExportTests : IDisposable
         Assert.StartsWith("notes.opack", Assert.Single(listing.Unreadable), StringComparison.Ordinal);
     }
 
-    // Added in C#. Dart's case listed one pack, which says nothing of the order.
+    // Lists more than one pack, so the order is checked.
     [Fact]
     public async Task TheFolderListsTheNewestPackFirst()
     {

@@ -5,9 +5,8 @@ using Orblit.Motion;
 using Orblit.Sequence;
 using Orblit.VectorMath;
 
-// Dart: orblit-editor/test/retarget_model_test.dart. What the retarget table says of a pair of skeletons,
-// without a dialog. The test of a draft keeping what it was not told to change is not ported: a record's
-// with does that.
+// What the retarget table says of a pair of skeletons, without a dialog. The test of a draft keeping what it
+// was not told to change is not ported: a record's with does that.
 public sealed class RetargetModelTests
 {
     // Each bone the child of the one before and a metre above it.

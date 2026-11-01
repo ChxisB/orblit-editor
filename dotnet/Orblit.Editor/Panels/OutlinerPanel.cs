@@ -284,8 +284,8 @@ internal sealed class OutlinerPanel : UserControl
         Margin = new Thickness(0, 0, Space.Xs, 0),
     };
 
-    // The shared set is never closed, so its row has none. The Dart editor offers one there that
-    // forgets the set's undo steps and does nothing else.
+    // The shared set is never closed, so its row has none. A close there would only forget the set's undo
+    // steps.
     private Button? RemoveButton(OutlinerRow row, string name)
     {
         if (row.Item is { } item)

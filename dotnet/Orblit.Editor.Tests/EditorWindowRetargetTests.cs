@@ -8,8 +8,8 @@ using Orblit.Motion;
 using Orblit.Sequence;
 using Orblit.VectorMath;
 
-// Dart: orblit-editor/test/editor_shell_clips_test.dart, the retargeting group. A clip shown on the
-// timeline made to move another model, through the clip menu and the dialog.
+// The retargeting group. A clip shown on the timeline made to move another model, through the clip menu and
+// the dialog.
 public sealed class EditorWindowRetargetTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_window_retarget");

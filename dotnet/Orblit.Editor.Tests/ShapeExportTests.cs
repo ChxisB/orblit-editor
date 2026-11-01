@@ -3,8 +3,7 @@ namespace Orblit.Editor.Tests;
 using Orblit.Editor.Core;
 using Orblit.Mesh;
 
-// Ported from the exporting group of uv_editor_test.dart. The Dart tests go through the panel and its
-// prompt. These check what the session writes and says, and ModellingPanelTests drives the prompt.
+// These check what the session writes and says. ModellingPanelTests drives the prompt.
 public sealed class ShapeExportTests
 {
     private static string Exports(ModellingRig rig) => Path.Combine(rig.Session.Workspace.ProjectDirectory, "exports");

@@ -38,7 +38,7 @@ public readonly record struct Colour(uint Argb)
     /// something they recognise.
     /// </summary>
     /// <remarks>
-    /// Dart reads a sign in front of the digits. A sign here is not hex, so it falls back.
+    /// A sign in front of the digits is not hex, so it falls back.
     /// </remarks>
     public static Colour FromHex(string hex, Colour? fallback = null)
     {

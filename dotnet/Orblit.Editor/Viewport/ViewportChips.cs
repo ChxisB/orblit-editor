@@ -90,7 +90,7 @@ internal static class ViewportChips
         return chip;
     }
 
-    // Away from zero at the half, as the Dart view rounds.
+    // Away from zero at the half.
     private static string Rounded(double value) =>
         Math.Round(value, MidpointRounding.AwayFromZero).ToString("0", CultureInfo.InvariantCulture);
 }

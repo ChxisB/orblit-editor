@@ -6,9 +6,8 @@ using Orblit.Motion;
 using Orblit.Sequence;
 using Orblit.VectorMath;
 
-// Dart: orblit-editor/test/limb_gizmo_test.dart. The hands and feet of a posed model, drawn as handles over
-// the view and dragged to key the limb where they are put. The rings are read as the strokes the gizmo
-// hands the view, where the Dart read them back off the canvas.
+// The hands and feet of a posed model, drawn as handles over the view and dragged to key the limb where they
+// are put. The rings are read as the strokes the gizmo hands the view.
 public sealed class LimbGizmoTests : IDisposable
 {
     private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory("orblit_limb_gizmo");

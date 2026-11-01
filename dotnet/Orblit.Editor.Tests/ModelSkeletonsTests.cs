@@ -5,8 +5,7 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Added in C#. The Dart ModelSkeletons was only tested through the gizmos and the retarget files, which
-// left the .gltf buffers and the choice between skins unread.
+// These read the .gltf buffers and the choice between skins, which the gizmo and retarget tests leave unread.
 public sealed class ModelSkeletonsTests : IDisposable
 {
     private readonly string _root = Directory.CreateTempSubdirectory("orblit_skeletons").FullName;
@@ -124,8 +123,7 @@ public sealed class ModelSkeletonsTests : IDisposable
         Assert.Equal(["hips", "spine"], _models.OfAsset("hero.glb")!.Names);
     }
 
-    // Dart: skeleton_gizmo_test.dart "is read once". The C# reads a file again when it changes on disk,
-    // where the Dart waited to be told to forget it.
+    // A skeleton is read once, and read again when its file changes on disk.
     [Fact]
     public void AFileIsReadOnceUntilItChanges()
     {

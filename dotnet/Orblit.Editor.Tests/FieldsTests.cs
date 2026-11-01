@@ -9,7 +9,7 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Added in C#. Dart reaches its field widgets through the inspector tests, and those come with row 2c.
+// The field controls, tested apart from the inspector.
 public sealed class FieldsTests
 {
     /// <summary>A window with one panel of fields, built again the way the inspector builds again.</summary>

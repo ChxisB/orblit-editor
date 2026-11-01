@@ -5,8 +5,7 @@ using Orblit.Editor.Panels;
 using Orblit.Terrain;
 using Ground = Orblit.Terrain.Terrain;
 
-// Added in C#. Dart has no test for what the terrain section decides apart from its widgets, so the
-// settings it builds and the words it says are held here.
+// The settings the terrain section builds and the words it says are held here.
 public sealed class TerrainSectionModelTests
 {
     private static TerrainSettings Three(AutoCover? cover = null) => new(

@@ -9,9 +9,8 @@ using Orblit.Motion;
 using Orblit.Sequence;
 using Orblit.VectorMath;
 
-// Dart: orblit-editor/test/retarget_dialog_test.dart. The dialog that makes a clip for another model, with
-// models and maps from a fake project. A menu is opened and clicked as a hand would, and the dialog is read
-// from its words and the names of its buttons.
+// The dialog that makes a clip for another model, with models and maps from a fake project. A menu is opened
+// and clicked as a hand would, and the dialog is read from its words and the names of its buttons.
 public sealed class RetargetDialogTests
 {
     private static ClipChannel<Quaternion> Turn(string bone) => new(

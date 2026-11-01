@@ -92,8 +92,8 @@ public static class ExportRun
         return done;
     }
 
-    // Dart ran each target in an isolate, which also kept a cook that ran out of memory from taking the
-    // editor down. A task keeps the window drawing but shares the editor's process, so it does not.
+    // Each target runs on the thread pool. That keeps the window drawing, but it shares the editor's process,
+    // so a cook that runs out of memory takes the editor down with it.
     private static Task<TargetExport> OnThePool(ExportRequest request, string target) =>
         Task.Run(() => ExportTargetAsync(request, target));
 

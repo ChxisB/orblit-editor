@@ -76,7 +76,7 @@ public sealed class ProjectWorkspaceTests : IDisposable
 
         var opened = ProjectWorkspace.Open(_temp.FullName);
 
-        // The damaged file still shows in the list, as Dart lists it, so it can be found and fixed.
+        // The damaged file still shows in the list, so it can be found and fixed.
         var entry = opened.Workspace.Entries[0];
         Assert.Null(entry.Path);
         Assert.True(entry.IsLoaded);

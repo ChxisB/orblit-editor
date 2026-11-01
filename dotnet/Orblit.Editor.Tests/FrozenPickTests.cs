@@ -8,20 +8,19 @@ using Orblit.Mesh;
 using Orblit.VectorMath;
 
 /// <summary>
-/// Asks the view what the Dart view was asked: the ray through a grid of pixels, the object it meets
-/// and the handle under it. The answers must be the same ones.
+/// Asks the view what the frozen fixture asks: the ray through a grid of pixels, the object it meets
+/// and the handle under it. The answers must be the recorded ones.
 /// </summary>
 /// <remarks>
-/// The fixture comes from <c>tool/parity/pick_test.dart</c> in the editor repository. A ray and a
-/// projection are compared to a billionth, because both sides do the same sums in the same order and
-/// a larger gap is a different formula. An object or a handle is compared exactly.
+/// A ray and a projection are compared to a billionth, because the fixture was made with the same sums
+/// in the same order and a larger gap is a different formula. An object or a handle is compared exactly.
 /// </remarks>
-public sealed class DartPickTests
+public sealed class FrozenPickTests
 {
     private const double Tolerance = 1e-9;
 
     private static readonly JsonElement Fixture = JsonDocument.Parse(
-        File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "dart", "pick.json"))).RootElement;
+        File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "Fixtures", "frozen", "pick.json"))).RootElement;
 
     private static SceneObject Cube(string id, Vector3 at, Vector3? scale = null, Vector3? rotation = null) =>
         new(id, id, ObjectKind.Shape, position: at, scale: scale, rotation: rotation, shape: Shape.Of(ShapeKind.Cube));
@@ -52,7 +51,7 @@ public sealed class DartPickTests
     [InlineData(0)]
     [InlineData(1)]
     [InlineData(2)]
-    public void TheViewAnswersAGridOfPixelsAsDartDoes(int which)
+    public void TheViewsAnswersToAGridOfPixelsMatchTheFixture(int which)
     {
         var size = Numbers(Fixture.GetProperty("size"));
         var entry = Fixture.GetProperty("cameras")[which];

@@ -5,8 +5,8 @@ using Orblit.Editor.Viewport;
 using Orblit.Mesh;
 using Orblit.VectorMath;
 
-// Dragging the handles of a mesh's corners, and drawing a box round them. The Dart does this
-// through a widget with a surface margin. Here the pointer events go straight to the state.
+// Dragging the handles of a mesh's corners, and drawing a box round them. The pointer events go straight to
+// the state.
 public sealed class ElementDragTests
 {
     private static readonly Size Surface = new(800, 600);

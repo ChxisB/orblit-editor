@@ -4,10 +4,10 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
 
-// Dart: orblit-editor/test/editor_shell_data_test.dart, the data objects group. One is made through
-// the browser's MakeNew rather than its menu, and attached through the session rather than a drop,
-// since the drag is not ported. Saving after an attach is asked of the session in
-// EditorSessionDataTests. An object is selected through the session rather than its outliner row.
+// The data objects group. One is made through the browser's MakeNew rather than its menu, and attached
+// through the session rather than a drop, since the drag is not tested here. Saving after an attach is asked
+// of the session in EditorSessionDataTests. An object is selected through the session rather than its
+// outliner row.
 public sealed class EditorWindowDataTests : IDisposable
 {
     private readonly DirectoryInfo _project = Directory.CreateTempSubdirectory("orblit_window_data");

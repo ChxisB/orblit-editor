@@ -5,7 +5,7 @@ using Orblit.Editor.Panels;
 using Orblit.Terrain;
 using Ground = Orblit.Terrain.Terrain;
 
-// Added in C#. No Dart test reaches the brush panel's words, so they are held here.
+// The brush panel's words are held here.
 public sealed class BrushPanelModelTests
 {
     private static Ground Regions(int count, int regionSize = 32, double spacing = 1)
