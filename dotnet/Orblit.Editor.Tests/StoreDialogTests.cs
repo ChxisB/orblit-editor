@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 
@@ -284,13 +285,14 @@ public sealed class StoreDialogTests : IAsyncLifetime
     public Task ReadsANewFolderOnlyAfterAPauseInTheTyping() => Headless.Run(() =>
     {
         var dialog = OpenInstall();
+        var typed = Stopwatch.StartNew();
         Headless.Find<TextBox>(dialog, "folder").Text = "assets/other";
-        // A third of the pause, so a slow machine does not reach its end. A read that started at once
-        // would have finished.
-        Headless.Wait(100);
-        Assert.False(Installable(dialog));
 
         Assert.True(Headless.Until(() => Installable(dialog)));
+        // Timed on the clock because a slow machine can run a fixed number of render passes past the
+        // whole pause. Two thirds of it, so a timer that fires a little early does not fail the test. A
+        // read that started at once would have finished within a few milliseconds.
+        Assert.True(typed.Elapsed >= TimeSpan.FromMilliseconds(200));
         Assert.False(Shows(dialog, "replaces your file"));
     });
 

@@ -5,6 +5,7 @@ namespace Orblit.Editor.Tests;
 
 using Orblit.Asset;
 using Orblit.Editor.Core;
+using Orblit.Interop;
 
 /// <summary>What the preview beside the browser shows for the file picked, over a real folder.</summary>
 public sealed class AssetPreviewTests : IDisposable
@@ -165,17 +166,24 @@ public sealed class AssetPreviewTests : IDisposable
     });
 
     [Fact]
-    public Task AModelIsHandedToTheRendererWhereThereIsOne() => Headless.Run(() =>
+    public Task AModelIsHandedToTheRendererWhereThereIsOne()
     {
-        Write("barrel.gltf", Gltf);
-        var window = Show(renderer: true);
+        // The editor's CI restores an engine packed without its native libraries.
+        Assert.SkipUnless(
+            NativeLoader.SearchPaths("orblit_filament", AppContext.BaseDirectory).Any(File.Exists),
+            "The renderer library is not built. Run tool/build_native.sh in orblit.");
+        return Headless.Run(() =>
+        {
+            Write("barrel.gltf", Gltf);
+            var window = Show(renderer: true);
 
-        Pick(window, "barrel.gltf");
-        Assert.NotNull(Preview(window).Renderer);
+            Pick(window, "barrel.gltf");
+            Assert.NotNull(Preview(window).Renderer);
 
-        Headless.Click(window, "browser_preview");
-        Headless.Wait(100);
+            Headless.Click(window, "browser_preview");
+            Headless.Wait(100);
 
-        Assert.Empty(Headless.All<AssetPreviewPanel>(window));
-    });
+            Assert.Empty(Headless.All<AssetPreviewPanel>(window));
+        });
+    }
 }
