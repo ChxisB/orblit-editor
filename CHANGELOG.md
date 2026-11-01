@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add a device bar to the Game view. The scene shows in a Desktop, Tablet or
+  Mobile frame, held upright or on its side. The picture has the shape of the
+  device and is never drawn larger than it. A phone shades the strips a game
+  keeps clear of. The choice is kept in `.orblit/device.json` and is not part
+  of the scene. `Orblit.Editor.Core` holds `DeviceFrame` and
+  `DevicePreference`.
 - Fix the editor on Windows. An install now closes the kit's file after each
   step, so the downloads folder can be cleaned while the dialog is open. A
   rename that only changes case goes through a spare name. The editor
