@@ -14,7 +14,7 @@ public sealed class EditorWindowDataTests : IDisposable
 
     public void Dispose() => _project.Delete(recursive: true);
 
-    private string PathOf(string name) => Path.Combine(_project.FullName, name);
+    private string PathOf(string name) => TestPaths.In(_project, name);
 
     private DataObject Read(string name) => DataObject.Read(File.ReadAllText(PathOf(name)))!;
 

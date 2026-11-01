@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fix the editor on Windows. An install now closes the kit's file after each
+  step, so the downloads folder can be cleaned while the dialog is open. A
+  rename that only changes case goes through a spare name. The editor
+  packages `Orblit.Asset` 0.26.0 and `Orblit.Native` 0.1.1.
 - Remove the Dart and Flutter editor. `lib/`, `test/`, the platform folders,
   `pubspec.yaml`, `tool/check.sh`, the exporters in `tool/parity/` and the
   Flutter release workflow are gone. The last commit that has them is tagged

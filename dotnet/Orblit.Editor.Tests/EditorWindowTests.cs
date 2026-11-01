@@ -189,7 +189,7 @@ public sealed class EditorWindowTests : IDisposable
 
         window.KeyPressQwerty(PhysicalKey.S, RawInputModifiers.Meta);
         Assert.True(File.Exists(Path.Combine(_temp.FullName, "scenes", "main.oscene")));
-        Assert.Equal("Saved scenes/main.oscene", Find<TextBlock>(window, "status").Text);
+        Assert.Equal($"Saved {Path.Combine("scenes", "main.oscene")}", Find<TextBlock>(window, "status").Text);
         Assert.DoesNotContain("•", Find<TextBlock>(window, "title").Text);
         window.Close();
     });
@@ -426,7 +426,7 @@ public sealed class EditorWindowTests : IDisposable
         Headless.Render();
 
         Assert.True(File.Exists(Path.Combine(_temp.FullName, "scenes", "copy.oscene")));
-        Assert.Equal("Saved scenes/copy.oscene", Find<TextBlock>(window, "status").Text);
+        Assert.Equal($"Saved {Path.Combine("scenes", "copy.oscene")}", Find<TextBlock>(window, "status").Text);
         Assert.Equal("copy", session.Workspace.Loaded!.Title);
         window.Close();
     });

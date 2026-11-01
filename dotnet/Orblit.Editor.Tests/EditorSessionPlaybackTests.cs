@@ -27,7 +27,7 @@ public sealed class EditorSessionPlaybackTests : IDisposable
         }
     }
 
-    private string PathOf(string name) => Path.Combine(_project.FullName, name);
+    private string PathOf(string name) => TestPaths.In(_project, name);
 
     private static ClipDocument Bounce() => new(
         "Bounce",

@@ -81,9 +81,10 @@ public sealed class InstallSession : IDisposable
         Problem = null;
         Progress = null;
         Tell();
+        AssetPack? pack = null;
         try
         {
-            var pack = await new PackFolder(Downloads).DownloadAsync(
+            pack = await new PackFolder(Downloads).DownloadAsync(
                 Release.Offer,
                 _transport,
                 Release.Origin,
@@ -109,13 +110,26 @@ public sealed class InstallSession : IDisposable
             // A kit comes from a server somebody else runs, so whatever goes wrong is said, not thrown.
             Problem = error.Message;
         }
+        finally
+        {
+            await ReleaseFileAsync(pack);
+        }
 
         Tell();
     }
 
     /// <summary>The files <paramref name="only"/> would replace under <paramref name="into"/> in the project.</summary>
-    public Task<IReadOnlyList<AssetId>> ConflictsAsync(string into = "", IReadOnlySet<AssetId>? only = null) =>
-        Opened.ConflictsInAsync(new DirectoryAssetSource(ProjectDirectory), into, only);
+    public async Task<IReadOnlyList<AssetId>> ConflictsAsync(string into = "", IReadOnlySet<AssetId>? only = null)
+    {
+        try
+        {
+            return await Opened.ConflictsInAsync(new DirectoryAssetSource(ProjectDirectory), into, only);
+        }
+        finally
+        {
+            await ReleaseFileAsync(_kit?.Pack);
+        }
+    }
 
     /// <summary>Writes the kit. A failure leaves the person where they were, with <see cref="Problem"/> saying why.</summary>
     public async Task InstallAsync(string into = "", IReadOnlySet<AssetId>? only = null, IReadOnlySet<AssetId>? replacing = null)
@@ -141,6 +155,10 @@ public sealed class InstallSession : IDisposable
             Problem = error.Message;
             Stage = InstallStage.Choosing;
         }
+        finally
+        {
+            await ReleaseFileAsync(_kit?.Pack);
+        }
 
         Tell();
     }
@@ -150,6 +168,10 @@ public sealed class InstallSession : IDisposable
         _disposed = true;
         _transport.Dispose();
     }
+
+    // Windows will not delete a kit, or the folder it sits in, while its file is open. A later read opens the
+    // file again, so the pack is let go after each step that reads it, not held until the session ends.
+    private static Task ReleaseFileAsync(AssetPack? pack) => pack?.CloseAsync() ?? Task.CompletedTask;
 
     // A pack whose manifest names another kit than the one listed was not the one the store promised,
     // whatever its hash.

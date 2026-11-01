@@ -19,7 +19,7 @@ public sealed class EditorWindowCinematicsTests : IDisposable
 
     public void Dispose() => _project.Delete(recursive: true);
 
-    private string PathOf(string name) => Path.Combine(_project.FullName, name);
+    private string PathOf(string name) => TestPaths.In(_project, name);
 
     private (EditorSession Session, EditorWindow Window) Open()
     {

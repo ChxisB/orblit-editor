@@ -162,7 +162,8 @@ public sealed class BlendCanvasTests
         var middle = rig.Centre("change_0");
 
         // The arrow runs from the right edge of idle, at 184, to the left edge of move, at 276, at the height of the boxes' middles.
-        Assert.Equal(230, middle.X, 1);
+        // Text is measured to a whole pixel, and the systems' fonts round a half pixel either way.
+        Assert.Equal(230, middle.X, 1.0);
         Assert.Equal(54, middle.Y, 1);
     });
 

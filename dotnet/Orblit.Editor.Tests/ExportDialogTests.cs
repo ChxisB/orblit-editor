@@ -262,7 +262,7 @@ public sealed class ExportDialogTests
 
         Click(dialog, "reveal");
 
-        Assert.Equal(["/project/exports"], _revealed);
+        Assert.Equal([Path.Join("/project", "exports")], _revealed);
     });
 
     // The dialog is a window of its own, so the check is that a long folder and three failures scroll and

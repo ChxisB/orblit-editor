@@ -15,7 +15,7 @@ public sealed class PublishDialogTests : IDisposable
 
     public void Dispose() => _project.Delete(recursive: true);
 
-    private string InProject(string name) => Path.Combine(_project.FullName, name);
+    private string InProject(string name) => TestPaths.In(_project, name);
 
     private PublishDialog Open()
     {

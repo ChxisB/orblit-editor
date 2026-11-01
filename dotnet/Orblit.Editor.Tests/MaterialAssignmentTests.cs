@@ -19,7 +19,7 @@ public sealed class MaterialAssignmentTests
 
         var drawn = Drawn(scene);
 
-        var material = Assert.Single(drawn.Materials, one => one.BaseColourMap?.Path == "/proj/assets/colormap.png");
+        var material = Assert.Single(drawn.Materials, one => one.BaseColourMap?.Path == Path.Combine("/proj", "assets/colormap.png"));
         Assert.Equal(material.Key, Assert.Single(drawn.Objects, one => one.Key == cube.RenderKey).Material);
     }
 

@@ -235,20 +235,19 @@ public sealed class AssetTree : IDisposable
         }
 
         var target = IoPath.Join(IoPath.GetDirectoryName(path), trimmed);
-        if (SamePath(target, path))
+        if (SamePath(target, path, StringComparison.Ordinal))
         {
             return null;
         }
 
         // Case-only renames look like a collision on a case-insensitive disk, and are the one case
         // where the destination existing is fine.
-        var sameFileDifferentCase = string.Equals(target, path, StringComparison.OrdinalIgnoreCase);
-        if (!sameFileDifferentCase && Exists(target))
+        if (string.Equals(target, path, StringComparison.OrdinalIgnoreCase))
         {
-            return $"There is already something called \"{trimmed}\" here.";
+            return MovedByCase(path, target);
         }
 
-        return Moved(path, target);
+        return Exists(target) ? $"There is already something called \"{trimmed}\" here." : Moved(path, target);
     }
 
     /// <summary>A path inside <paramref name="directory"/> that nothing is using yet, numbered after the name if it is taken.</summary>
@@ -409,6 +408,26 @@ public sealed class AssetTree : IDisposable
         }
     }
 
+    // Windows takes a move whose two names differ only in case for a move onto itself and refuses it. Going
+    // through a name nothing is using gets round that, and puts the file back if the second move fails.
+    private static string? MovedByCase(string path, string target)
+    {
+        var aside = Available(IoPath.GetDirectoryName(path)!, IoPath.GetFileName(path) + ".moving");
+        var problem = Moved(path, aside);
+        if (problem is not null)
+        {
+            return problem;
+        }
+
+        problem = Moved(aside, target);
+        if (problem is not null)
+        {
+            Moved(aside, path);
+        }
+
+        return problem;
+    }
+
     private static bool Exists(string path) => IoFile.Exists(path) || IoDirectory.Exists(path);
 
     // Both separators, because Windows takes a forward slash for one too.
@@ -416,10 +435,13 @@ public sealed class AssetTree : IDisposable
         name.IndexOfAny([IoPath.DirectorySeparatorChar, IoPath.AltDirectorySeparatorChar]) >= 0;
 
     private static bool SamePath(string a, string b) =>
+        SamePath(a, b, OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+
+    private static bool SamePath(string a, string b, StringComparison how) =>
         string.Equals(
             IoPath.TrimEndingDirectorySeparator(IoPath.GetFullPath(a)),
             IoPath.TrimEndingDirectorySeparator(IoPath.GetFullPath(b)),
-            OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+            how);
 
     private bool Holds(string directory) => SamePath(directory, Root) || IsWithin(Root, directory);
 

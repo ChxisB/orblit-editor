@@ -13,7 +13,7 @@ public sealed class EditorWindowInspectorTests : IDisposable
 
     public void Dispose() => _project.Delete(recursive: true);
 
-    private string PathOf(string name) => Path.Combine(_project.FullName, name);
+    private string PathOf(string name) => TestPaths.In(_project, name);
 
     // One triangle, from (-1, 0, -1) to (1, 4, 1).
     private (EditorSession Session, EditorWindow Window) Selecting(string id)
@@ -96,6 +96,7 @@ public sealed class EditorWindowInspectorTests : IDisposable
 
         Press(window, "button_add_body");
 
+        Assert.True(Headless.Until(() => session.Workspace.Loaded!.Scene!["crate"]!.Components.Count > 0));
         Assert.Equal(new Vector3(2, 4, 2), BodyOf(session, "crate").Size);
         Assert.Equal(new Vector3(0, 2, 0), BodyOf(session, "crate").Centre);
         window.Close();

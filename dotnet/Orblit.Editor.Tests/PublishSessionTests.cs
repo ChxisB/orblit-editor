@@ -91,7 +91,7 @@ public sealed class PublishSessionTests : IDisposable
         Assert.Throws<InvalidOperationException>(() => made.EntryText);
     }
 
-    private string InProject(string name) => Path.Combine(_project.FullName, name);
+    private string InProject(string name) => TestPaths.In(_project, name);
 
     private PublishSession Session() => new(_project.FullName, new FixedClock(new DateTime(2026, 10, 19, 23, 30, 0)));
 

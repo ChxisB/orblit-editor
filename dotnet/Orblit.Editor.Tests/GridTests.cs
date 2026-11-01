@@ -137,7 +137,11 @@ public sealed class GridTests : IAsyncLifetime
     [Fact]
     public async Task AProjectFolderItCannotWriteToIsAProjectWithNoGrid()
     {
-        var missing = new GridStore("/definitely/not/a/place");
+        // A folder cannot be made under a file, on any system. A made-up path would be writable on a Windows
+        // drive that has it.
+        var file = Path.Combine(_root.FullName, "not-a-folder");
+        await File.WriteAllTextAsync(file, "", TestContext.Current.CancellationToken);
+        var missing = new GridStore(Path.Combine(file, "project"));
         await missing.PrepareAsync();
         Assert.Null(missing.PlanFor(new Snapping(), Vector3.Zero()));
     }
