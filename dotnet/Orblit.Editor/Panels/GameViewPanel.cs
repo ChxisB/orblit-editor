@@ -46,6 +46,10 @@ internal sealed class GameViewPanel : Border
         HorizontalAlignment = HorizontalAlignment.Center,
     };
 
+    private readonly GameViewBar _bar;
+    private readonly DeviceFrameHost _host = new() { Name = "game_view_frame" };
+    private readonly UnsafeEdgesOverlay _edges = new();
+
     private bool _dirty = true;
     private bool _requested;
     private int _loop;
@@ -63,34 +67,42 @@ internal sealed class GameViewPanel : Border
         CornerRadius = Radii.Card;
         ClipToBounds = true;
         _addCamera.Click += (_, _) => _session.Add(ObjectKind.Camera);
-        var stack = new Grid();
-        if (renderer)
-        {
-            _renderer = new RendererViewport();
-            stack.Children.Add(_renderer);
-        }
-        else
-        {
-            stack.Children.Add(new ViewportPlaceholder());
-        }
-
-        stack.Children.Add(new StackPanel
-        {
-            VerticalAlignment = VerticalAlignment.Center,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            Spacing = Space.Sm,
-            Children = { _note, _addCamera },
-        });
-        Child = stack;
-        Show();
+        _renderer = renderer ? new RendererViewport() : null;
+        _bar = new GameViewBar(session.Device);
+        _host.Child = Screen();
+        _host.Fitted += OnFitted;
+        var body = new Grid { Children = { _host, Words() } };
+        var column = new Grid { RowDefinitions = new RowDefinitions("Auto,*") };
+        Grid.SetRow(body, 1);
+        column.Children.Add(_bar);
+        column.Children.Add(body);
+        Child = column;
+        SyncFrame();
     }
 
     /// <summary>The words over the picture, or null when the picture is showing. Read by tests.</summary>
     internal string? Saying => _note.IsVisible ? _note.Text : null;
 
+    // What the frame holds: the renderer, or a plain grid where there is none, and the unsafe edges over it.
+    private Grid Screen() => new()
+    {
+        Background = OrblitColors.Ground,
+        ClipToBounds = true,
+        Children = { (Control?)_renderer ?? new ViewportPlaceholder(), _edges },
+    };
+
+    private StackPanel Words() => new()
+    {
+        VerticalAlignment = VerticalAlignment.Center,
+        HorizontalAlignment = HorizontalAlignment.Center,
+        Spacing = Space.Sm,
+        Children = { _note, _addCamera },
+    };
+
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+        _session.Device.Changed += SyncFrame;
         _session.PlaybackChanged += MarkDirty;
         _session.History.Changed += MarkDirty;
         _session.Workspace.Changed += MarkDirty;
@@ -101,6 +113,7 @@ internal sealed class GameViewPanel : Border
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
+        _session.Device.Changed -= SyncFrame;
         _session.PlaybackChanged -= MarkDirty;
         _session.History.Changed -= MarkDirty;
         _session.Workspace.Changed -= MarkDirty;
@@ -116,6 +129,22 @@ internal sealed class GameViewPanel : Border
     private Workspace Subject => _session.Playback?.Workspace ?? _session.Workspace;
 
     private RenderCamera? CameraOf(EditorScene scene) => _session.Playback?.Camera ?? SceneCameras.GameCamera(scene);
+
+    // A new shape redraws the picture, because the renderer sizes itself to the frame.
+    private void SyncFrame()
+    {
+        var frame = _session.Device.Frame;
+        _host.Show(frame);
+        _edges.Show(frame);
+        _bar.Refresh();
+        MarkDirty();
+    }
+
+    private void OnFitted()
+    {
+        _bar.Zoom(_host.Scale);
+        MarkDirty();
+    }
 
     private void MarkDirty()
     {
