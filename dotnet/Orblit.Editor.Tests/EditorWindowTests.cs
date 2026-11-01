@@ -470,7 +470,7 @@ public sealed class EditorWindowTests : IDisposable
 
         Assert.True(File.Exists(Path.Combine(_temp.FullName, "scenes", "second.oscene")));
         Assert.True(File.Exists(Path.Combine(_temp.FullName, "scenes", "main.oscene")));
-        Assert.Contains("scenes/second.oscene", Find<TextBlock>(window, "status").Text, StringComparison.Ordinal);
+        Assert.Contains(Path.Combine("scenes", "second.oscene"), Find<TextBlock>(window, "status").Text, StringComparison.Ordinal);
         window.Close();
     });
 

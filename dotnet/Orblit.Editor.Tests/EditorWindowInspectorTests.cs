@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 
 namespace Orblit.Editor.Tests;
 
@@ -40,9 +41,11 @@ public sealed class EditorWindowInspectorTests : IDisposable
     private static Doc.BodyComponent BodyOf(EditorSession session, string id) =>
         PhysicsComponents.PhysicsBodyOf(session.Workspace.Loaded!.Scene![id]!)!;
 
+    // The click is raised on the button and not made with the pointer. Windows text is taller, which can
+    // push a button below the inspector's visible part, where a pointer press lands on nothing.
     private static void Press(Window window, string name)
     {
-        Headless.Click(window, name);
+        Headless.Find<Button>(window, name).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
         Headless.Render();
     }
 
