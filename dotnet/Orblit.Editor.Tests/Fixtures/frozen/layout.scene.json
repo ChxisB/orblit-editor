@@ -1,0 +1,75 @@
+{
+  "kind": "orblit.layout",
+  "formatVersion": 1,
+  "locked": false,
+  "revision": 2,
+  "root": {
+    "id": "root",
+    "split": "row",
+    "weights": [
+      0.2,
+      0.58,
+      0.22
+    ],
+    "children": [
+      {
+        "id": "left",
+        "active": 0,
+        "panels": [
+          {
+            "id": "outliner",
+            "kind": "outliner"
+          }
+        ]
+      },
+      {
+        "id": "middle",
+        "split": "column",
+        "weights": [
+          0.72,
+          0.28
+        ],
+        "children": [
+          {
+            "id": "centre",
+            "active": 0,
+            "panels": [
+              {
+                "id": "scene",
+                "kind": "viewport"
+              },
+              {
+                "id": "game",
+                "kind": "game"
+              }
+            ]
+          },
+          {
+            "id": "bottom",
+            "active": 0,
+            "panels": [
+              {
+                "id": "project",
+                "kind": "project"
+              },
+              {
+                "id": "console",
+                "kind": "console"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "right",
+        "active": 0,
+        "panels": [
+          {
+            "id": "inspector",
+            "kind": "inspector"
+          }
+        ]
+      }
+    ]
+  }
+}

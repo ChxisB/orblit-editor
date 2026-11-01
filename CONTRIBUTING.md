@@ -12,7 +12,10 @@ the longer version of this.
 ## Checking your work
 
 ```sh
-./tool/check.sh
+git clone https://github.com/ChxisB/orblit.git       # beside this one
+orblit/tool/build_native.sh
+orblit/tool/pack_local.sh
+./tool/check_dotnet.sh
 ```
 
 The editor links the renderer, so a change here can build fine and still

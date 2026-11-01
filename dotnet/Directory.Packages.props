@@ -1,0 +1,33 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <!-- The Orblit packages are the versions the engine had on 2026-10-25. VectorMath is the one Filament and Asset need since 2026-10-29. -->
+  <ItemGroup>
+    <PackageVersion Include="xunit.v3" Version="4.0.2" />
+    <PackageVersion Include="Avalonia" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Desktop" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Headless" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Skia" Version="12.1.4" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.1.4" />
+    <PackageVersion Include="SkiaSharp" Version="3.119.4" />
+    <PackageVersion Include="Orblit.Asset" Version="0.26.0" />
+    <PackageVersion Include="Orblit.Core" Version="0.1.0" />
+    <PackageVersion Include="Orblit.Filament" Version="0.42.0" />
+    <PackageVersion Include="Orblit.Filament.Avalonia" Version="0.1.0" />
+    <PackageVersion Include="Orblit.HeadlessSupport" Version="0.1.0" />
+    <PackageVersion Include="Orblit.Json" Version="0.4.0" />
+    <PackageVersion Include="Orblit.Light" Version="0.3.0" />
+    <PackageVersion Include="Orblit.Mesh" Version="0.6.0" />
+    <PackageVersion Include="Orblit.Motion" Version="0.10.0" />
+    <PackageVersion Include="Orblit.Native" Version="0.1.1" />
+    <PackageVersion Include="Orblit.Scene" Version="0.24.0" />
+    <PackageVersion Include="Orblit.Sequence" Version="0.2.1" />
+    <PackageVersion Include="Orblit.Sprite" Version="0.4.0" />
+    <PackageVersion Include="Orblit.Stage" Version="0.5.0" />
+    <PackageVersion Include="Orblit.Terrain" Version="0.5.0" />
+    <PackageVersion Include="Orblit.VectorMath" Version="0.20.0" />
+    <PackageVersion Include="Orblit.Weather" Version="0.1.0" />
+  </ItemGroup>
+</Project>

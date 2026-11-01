@@ -1,0 +1,12 @@
+{
+  "formatVersion": 5,
+  "name": "Scene",
+  "sky": "#1A2029",
+  "ambient": 28000.0,
+  "time": {
+    "hour": 10.0,
+    "cycle": false,
+    "hoursPerSecond": 0.5
+  },
+  "entities": []
+}

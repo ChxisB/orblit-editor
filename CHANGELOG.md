@@ -1,5 +1,432 @@
 # Changelog
 
+## Unreleased
+
+- Fix the editor on Windows. An install now closes the kit's file after each
+  step, so the downloads folder can be cleaned while the dialog is open. A
+  rename that only changes case goes through a spare name. The editor
+  packages `Orblit.Asset` 0.26.0 and `Orblit.Native` 0.1.1.
+- Remove the Dart and Flutter editor. `lib/`, `test/`, the platform folders,
+  `pubspec.yaml`, `tool/check.sh`, the exporters in `tool/parity/` and the
+  Flutter release workflow are gone. The last commit that has them is tagged
+  `dart-final`. The files the exporters wrote are kept in
+  `dotnet/Orblit.Editor.Tests/Fixtures/frozen/`, and `FrozenFilesTests` and
+  `FrozenPickTests` read them. CI builds the engine natives, packs the engine
+  and runs `tool/check_dotnet.sh` on Ubuntu, macOS and Windows. The C# editor
+  has no release workflow yet.
+- Add a C# port of the editor shell in `dotnet/`. `Orblit.Editor.Core` 0.1.0
+  holds the scene document, commands and history, the dock layout, projects,
+  the key map and the palette, with no widget. `Orblit.Editor` 0.1.0 is the
+  Avalonia app: a window, a dock host of our own, the command palette and
+  the launcher. The Dart editor stays until the migration ends.
+- Remove the Examples page from the launcher, in both editors. The worked
+  examples are in the `orblit-examples` repository, and the editor no longer
+  depends on `orblit_examples`.
+- Add `Orblit.Editor.Viewport` 0.1.0, the viewport's arithmetic with no
+  widget: the orbit and fly cameras, the view ray and projection, the gizmo
+  maths, the input order, the selection outline, snapping, the grid, and the
+  scene as the renderer takes it, with its sky, fog, rain and cloud, and the
+  joint, body and sound gizmos as lines in the view.
+- In the C# library a `GizmoType` returns strokes and a tone, where the Dart
+  one returns a widget. A stroke is a set of lines in the view and a tone is
+  a name for a theme colour. The window will paint them, so the line maths
+  can be tested without a control. The skeleton and limb gizmos are not in
+  this package, because they need the animation panel.
+- The C# editor draws the scene view. A `SceneViewport` holds the renderer
+  surface from `Orblit.Filament.Avalonia`, the gizmo overlay, the tool strip
+  and the chips. It orbits, flies, picks, drags the handles and snaps, as the
+  Dart view does. The window keeps one view for each panel across a layout
+  change, and the dock host skips a layout whose text has not changed.
+- A pick made by the Dart editor and the C# one match. The exporter
+  `tool/parity/pick_test.dart` writes the ray, the object and the handle for a
+  grid of pixels from three cameras, and `DartPickTests` reads them back.
+- Two finger scroll on a trackpad only zooms in C#. Avalonia gives no scroll
+  phases, so the view cannot orbit or pan from it as Flutter's pan and zoom
+  does. The state class has both, so they need only the event. The hint chip
+  in the view says what works. A pinch zooms.
+- A click in the view ends a flight begun with the backtick, because any
+  pointer going up ends flying in the Dart view and the state class keeps that.
+- The C# scene gets its material and surface keys from FNV-1a. Dart used
+  `Object.hash`, which promises no value, so the keys differ and nothing
+  reads them. The rain and snow colour is a double lerp of the two tints.
+- The grid tile is encoded by `Orblit.Sprite`, so its bytes differ from
+  Flutter's. The lines it draws read back the same.
+- A project, scene, layout and layout library written by the Dart editor
+  read back in C# and write the same bytes. `tool/parity/dart_files_test.dart`
+  writes the fixtures.
+- What is not ported yet: the skeleton and limb gizmos, mesh editing, every
+  panel body, the terrain, cinematics and interface modes, the camera preview
+  window, panel drag, and closing a project back to the
+  launcher. Panels other than the scene view show their name.
+- No icon set or font is bundled, because that is a decision for Chris. The
+  mode rail, the tabs and the palette rows are words. The 622 KB logo
+  picture is not bundled, so the splash is drawn in code.
+- The C# editor keeps its recent projects in `Orblit/recent.json` under the
+  application data folder. The Dart editor keeps `recent_projects.json` in
+  its own support folder, so the two lists are separate.
+- Differences from the Dart editor:
+  - A folder argument that holds no `orblit.project.json` shows the launcher
+    in both editors. Dart also prints a line saying so, and C# does not.
+  - The palette search lower-cases one character at a time. A label with a
+    capital dotted I lights a different span from Dart.
+  - Sibling scenes in a project are sorted by name. Dart used folder order.
+  - `ProjectStore.Forget` works with no recents folder. Dart threw.
+  - .NET reads a few loose dates that Dart refuses.
+  - A Save as that cannot write leaves the scene on the file it had. Dart
+    keeps the new path.
+  - `PanelKind.Icon` and `PaletteEntry.Icon` are names, where Dart held an
+    `IconData`.
+  - Text on the system clipboard keeps the held copy when a world in it is
+    not sixteen numbers or names no copied object. Dart clears the copy
+    first and throws on the next paste.
+- Faults the C# port copied from the Dart editor, for decision 80:
+  - `displayPath` shortens a folder that only shares a prefix with the home
+    folder, so `/Users/chrisfoo` shows as `~foo` for the home `/Users/chris`.
+  - Opening a closed panel is not saved with the layout until the layout
+    next changes.
+  - Undo and redo drop every selected id that the changed scene does not
+    hold, so undoing a step in one scene clears a selection made in another.
+  - A main scene that cannot be read opens as an empty starter with no path.
+    The same file is also listed as an unloaded sibling.
+- Add `Orblit.Editor.Panels` 0.1.0, the state of the panels with no widget.
+  It holds the hierarchy first: the rows of every open scene, the filter,
+  the folds and where a drop lands.
+- The C# editor has a hierarchy panel. A click selects, command-click adds
+  to the selection and shift-click takes everything between. Filter by
+  name, fold a parent, remove an object from its row, and drag a row to
+  move it. The plus button opens the palette on the add commands.
+- Cut, copy, paste, duplicate and delete are in the Edit menu and on keys.
+  A copy leaves text on the system clipboard, so another window or editor
+  can paste it. A copy that cannot reach the clipboard says so in the status
+  line. The Add menu makes an object of each kind and each shape.
+- The edit keys are left to a text box while one has the keyboard. A click on
+  a row takes the keyboard back from it.
+- A message can be a warning, drawn in the warning colour. Adding with no
+  scene loaded says so as a warning.
+- A new object's id is `o`, the time in microseconds, an underscore and a
+  counter. The C# `OutlinerRow` calls the object it holds `Item`, because
+  the analyser rejects `Object` as a name.
+- Double-click a scene row to load it, and close it from the button that
+  shows when the pointer is over the row. A scene with changes asks first:
+  Save, Discard or Cancel. A scene that has no file yet asks for a name
+  before it is saved. File, New scene and the command and N key start an
+  empty scene named Untitled. The view's camera starts again when a
+  different scene takes the place of the loaded one.
+- Differences from the Dart editor:
+  - The shared row has no close button. Dart draws one that only forgets
+    the shared set's undo steps.
+  - Closing any scene clears the selection, as Dart does, and loading one
+    clears the selected scene row.
+- Faults copied from the Dart editor, for decision 80: a scene file that is
+  gone loads as the starter scene at that path and is marked as written.
+- Not ported yet with the scene row: `_preview.forget()`, the cleared
+  report notes and the bench change, which belong to rows 4 and later. The
+  window does not ask about unsaved scenes when it closes.
+- The inspector sits in the dock. It shows what is selected, or the scene
+  itself when nothing is. A heading says what kind of thing it is, and a
+  click on a section's title folds it. A vector's three numbers wear the
+  letters X, Y and Z.
+- Sections for the transform, the mesh, the light, the weather and the
+  scene's own settings, then sound, particles, vehicle, wheel, zone, body
+  and joint. A section is offered where it means something. A zone is for a
+  body that stays put and a wheel is for the child of a car. A file that
+  already holds one on something else still shows it, so it can be taken
+  off. A body is fitted to what is drawn when it is added. A compound body
+  has its own parts, and a part can be a hull. A joint has a row for each
+  way its kind may move, and a spring and a drive where they apply.
+- One drag through a number is one undo step. Choosing what is already
+  chosen is not a step.
+- Differences from the Dart editor:
+  - A path with no points asks for the next one past the origin. The Dart
+    reads the last point of an empty list and throws.
+- Not wired in the window yet: the data, interface and prefab buttons, the
+  size of a mesh and the model collision button. The inspector takes them
+  as callbacks from the shell port, so those rows are absent until then.
+  The shader, terrain and blend sections, and the key button for an
+  animation, come with rows 3, 4, 5 and 7.
+- Add the asset model to `Orblit.Editor.Core`. `AssetTree` reads a project
+  folder, lists its folders, and renames, deletes and makes files. It tells
+  the browser when the folder changes, and joins a burst of changes into one
+  call. `NewAsset` holds every kind the browser makes, each with a starter
+  that works the moment it is written. A C++ source is written with its
+  header. `AssetKind` and `SizeLabel` say what a file is and how big.
+  `DataObject` is only as big as a new file needs. Row 10 fills it in.
+- Differences from the Dart editor:
+  - A rename to a name that differs only in case is refused when a
+    different file already has that name on a case-sensitive disk. Dart's
+    rename replaced that file.
+  - A new C++ pair keeps a header that is already there. Dart wrote over it.
+  - A name with a `/` is refused on Windows too. Dart refused only the
+    host's own separator.
+  - The folder watch asks for a fresh read when it fails. Dart's stopped
+    quietly.
+  - A new folder inside a folder that has been deleted makes the parents.
+    Dart reported an error.
+- Faults copied from the Dart editor, for decision 80: a linked file or
+  folder is left out of the browser, so a project that links in a shared
+  folder does not show it.
+- Add `CookStatusIndex`. It asks the cook where each asset stands without
+  cooking any of them, through a `CookProject` over the project's assets
+  folder and the machine's own cache. The work runs on the pool. Two asks at
+  once make one more pass, not two. `CookStateLook` gives a state its label,
+  its reason and the colour of its dot. The colour is a name, `CookMark`,
+  and the window picks the brush.
+- A cook that fails reads as the exception's message. Dart printed the type
+  name before it.
+- Add the shader cook and the shader section. `ShaderCook` stages the
+  project's `.oshader` files and what they include, cooks only those, and
+  keeps each good package in `.orblit/shaders/packages` so a failed save
+  leaves the last one on disk. `SurfaceCooks` holds the last good cook of
+  each shader, cooks again only when a shader file has changed, and tells
+  each new complaint once. The inspector's Shader section offers the
+  uniforms an author marked `instance`: a swatch row for `source_color`, a
+  slider for `hint_range`, a drag for the rest. The window fills
+  `InspectorLinks.Surfaces` with the shell, so the section is not on
+  screen yet.
+- Differences from the Dart editor:
+  - A colour uniform is the editor's swatch row. Dart opened a free colour
+    row.
+  - The cook runs on the thread pool. Dart ran it in an isolate.
+  - A failed cook with no error reads "<shader> did not cook.".
+- `SurfaceCooks` is driven from the interface thread. `CookStatusIndex`
+  can raise `Changed` from the pool.
+- Add the asset browser and the asset preview to the dock's Project panel.
+  The browser lists the project's folders and files. Each file has a mark
+  for where it stands with the cook, the header counts what is left to do,
+  and a filter keeps the files whose name has what was typed. A texture's
+  tile shows the picture, and any other file shows an icon. A right click
+  offers what can be made or done to a file. A narrow panel puts the
+  folders over the files and drops the filter. A double click opens a
+  folder, or a scene.
+- The preview sits beside the files where the panel is 560 wide or more. A
+  model is drawn by the renderer from the file on disk, framed by the size
+  the file declares and turning slowly. A drag moves the camera round it
+  and a scroll moves it in and out. A texture is shown as itself over a
+  chequer. Any other file is named by its kind. A button in the header
+  shuts the preview and frees the renderer.
+- Differences from the Dart editor:
+  - A model that is stopped stays where it is. Dart took back the turn it
+    had made and the model jumped.
+  - The extent of a model shows where there is no renderer too.
+  - A texture is shown from a copy decoded to 480 pixels wide, through the
+    cache the tiles use. Dart showed the file at full size.
+  - Deleting or renaming the file that is shown clears the selection and
+    the preview. Dart left the preview on the old path.
+  - Selecting a folder in the grid tells the editor that nothing is
+    selected.
+  - Icons are drawn from path data, because no icon font is bundled
+    (decision 84). The menu rows have none and the cook summary has no
+    warning mark.
+  - Thumbnails decode on the pool, and the cache keeps a fixed number. Any
+    file that will not decode keeps its icon.
+  - The menu follows `NewAssetGroup.Loose`, and an object dropped on a
+    folder passes the object's id.
+  - A write under a folder whose name starts with a dot, such as `.git` or
+    `.orblit`, does not make the browser read again. Dart reread for every
+    write, and a shader cook writes under `.orblit`.
+  - `AssetTree.Write` refuses a name that holds a separator or is `.` or
+    `..`. Dart wrote wherever the name led.
+- Not in the browser yet: dragging a file out of it. The window wires only
+  opening a scene or a clip and the line that says a file operation failed.
+  Opening the other kinds, Build, making a prefab and the data object come
+  with rows 5 to 13.
+- Add the timeline to the dock. A bar plays, steps and sets the length, the
+  rate and what happens at the end. A ruler, the marks and a cutscene's
+  shots sit over the tracks, and Keys and Curves chips swap the dope sheet
+  for the curve view. A key button follows each transform field and a
+  light's power. The animation section in the inspector links clips to an
+  object and picks the one that plays on start. Opening a clip from the
+  browser, or making one with an object chosen, shows it on the timeline.
+  Saving writes the scene as it rests, with the pose lifted off first, and
+  the clips with changes beside it. The File menu shows a dot while a scene
+  or a clip has changes that are not on disk.
+- Differences from the Dart editor in the timeline:
+  - A clip with a length that is not a number is turned away. Dart let it
+    through.
+  - A clip that cannot be made is said at the error level. Dart said it at
+    the default.
+  - Scrolling is not carried between the Keys and Curves views. Dart shares
+    one controller.
+  - A press that moves under 4 px is a tap. Dart leaves that to its gesture
+    arena.
+  - Not in the timeline yet: playing the scene with Play, Stop and the game
+    view, which no row owns, and the retarget dialog, which comes with row
+    7.
+- Add the terrain mode to the C# editor window. Add > Terrain makes the
+  ground and a scene object that names it. In the terrain mode a shelf of
+  brush tools sits over the view, the brush panel sits beside the inspector,
+  and a drag in the view shapes the ground as one undo step. A ring on the
+  ground shows where the brush lands. The title shows unsaved terrain.
+- Read the pictures of a terrain set in the C# editor with SkiaSharp 3.119.4.
+  A picture is read off the UI thread at 512 by 512 with straight alpha, four
+  at a time, and a source over 8192 pixels a side is refused. One that cannot
+  be read is said once, the ground stays plain, and the next change to the
+  sets tries it again.
+- Not in the terrain mode yet: dropping a picture on a set, which needs a
+  drag source in the project browser.
+- Add the selection model of the C# modelling workspace: the vertices, edges
+  and faces chosen in one mesh, the picker that finds what a click or a box
+  over the view landed on, and the size an imported model says it is. There
+  is no panel or tool on it yet.
+- Add the list of mesh actions to the C# modelling workspace: twenty-five
+  things to do to faces, edges, vertices and whole shapes, each with its
+  words, its icon name, the modes it appears in and how many elements it
+  needs. The selection keeps the order things were picked in, which is the
+  order a bridge is wound in. There is no panel on it yet.
+- Add editing by part to the C# viewport. With a shape in Edit, the pointer
+  lights the face, edge or vertex under it, a click picks it, a box takes
+  everything inside it, and the handles move or turn what is selected.
+  Shift on a face extrudes it first. A drag is one undo step. There is no
+  panel or session on it yet.
+- Add drawing a shape and cutting a face to the C# editor. A click puts a
+  point on the ground or on the face under the pointer, and the first
+  point fixes the plane. Enter or a click back on the first point makes
+  the shape. A cut needs two points on the edge of a face. Backspace
+  takes a point back and escape gives up. There are no tool buttons or
+  painter on it yet.
+- Add the UVs panel to the C# editor. It draws where the texture of the
+  selected faces sits on the texture's own square. A drag in it moves,
+  scales or turns the texture, and is one undo step. Buttons freeze the
+  rule into coordinates, put it back, fit it and project it. A single
+  face that follows a rule shows the rule's numbers. Parts now start in
+  face mode, as they do in Dart.
+- Add the modelling panel to the C# editor, in the modelling workspace. It
+  holds the grid and snapping, the drawing tools, the mesh actions in
+  groups with the number under the button that uses it, the materials and
+  an Export section. The inspector gets a shape section with each kind's own
+  numbers, and a button that goes to the modelling workspace. The buttons are
+  words only, where the Dart panel draws an icon beside each.
+- Draw the edited mesh over the C# viewport: the wire, the chosen and lit
+  parts, the outline being drawn and the selection box. A click, a box or a
+  drag on parts goes to the session, and a drag is one undo step.
+- Add keys to the C# editor. The arrows move the selection by one grid
+  square, shift moves it up and down, and alt does ten squares. Each press is
+  its own undo step. G goes into the geometry and then round vertex, edge
+  and face. The bracket keys change the grid and switch it on. A focused
+  text box keeps all of them. The shift in a parent's frame is one function
+  in `SceneMath`, shared by the viewport and the nudge.
+- With nothing focused, Avalonia spends the first arrow key on moving focus
+  into the window, so the first arrow after a fresh start does not nudge.
+  A click in the view puts the keyboard there. The editor does not take the
+  arrow back, because that would break keyboard navigation.
+- Add export of a shape to the C# editor. A format choice (OBJ, glTF binary,
+  STL, PLY) and a name prompt write the file into `exports/` in the project.
+  An OBJ with materials brings its `.mtl`, and the message names both files.
+- The C# modelling workspace fixes seven faults that the Dart one has.
+  Choosing another object clears the selected parts, which were numbers on
+  the first mesh. The Cut tool opens the geometry, where faces are found.
+  A drawing that has its plane takes no point from a ray that misses it.
+  Turning and scaling in the UVs panel hold the middle of the faces still.
+  The UV view holds the unit square and the faces together. Shift on a
+  face handle extrudes it. Live surface, outline and boundary edits fold
+  into one undo step.
+- Add the blend graph to the C# editor, in the animation workspace. A blend
+  opened from the project panel is drawn as a box for each state and an
+  arrow for each change, with the fields beside it, or under it in a narrow
+  panel. Each open blend is a tab, and a tab with changes is marked until it
+  is saved. Drag from a state onto another to make a change. The fields
+  edit a state, a change, its conditions, a fade and the inputs, and each
+  edit is one undo step.
+- Add Retarget to the clip menu of the C# timeline. A dialog asks which model
+  the clip was made for and which one it should move, shows the target's
+  bones with what moves each, and takes a pairing by hand, by name or by the
+  parts of a person. A bone map is saved under `retargets/` and loaded
+  again. The made clip is written into `clips/` as `name (model)` and never
+  over another. It goes on the chosen object only when that object wears the
+  model the clip moves. A model's bones are read again each time the dialog opens.
+- The C# blend graph fixes two faults that the Dart one has. Moving a change
+  in a blend with no change answers the same blend, where Dart throws. A
+  blend with one change reads "1 change", where Dart reads "1 changes".
+- Add the cinematics mode to the C# editor. A shot list shows one card for
+  each shot of the open cutscene, with its camera, start and length, and a
+  way to look through the camera or delete the shot. A shelf makes a cutscene
+  and cuts to the selected camera, or to the scene view with Use this view. A
+  preview draws the scene through the shot at the playhead. Looking through a
+  camera flies the scene view to it and steers it from the view, until
+  something else stops it. The preview draws the scene only, with no
+  interface or sound, because the game view is not in C# yet.
+- The C# shot list keeps a card where it is while its start is typed, and
+  re-sorts the cards when the box lets go. The Dart one moves the card as
+  soon as the start is typed. A card whose shot an undo has taken back does nothing when
+  typed in.
+- Add the Interface workspace to the C# editor. An interface opens from
+  Project, from the inspector of the scene's canvas or as a new one. It is
+  laid out at the size of the device previewed, held either way. A tree
+  lists the elements. The design side adds an element, edits the one
+  selected, splits a container into columns, picks a language, and sets the
+  canvas size, fit and grid. A drag snaps to the columns and is one undo
+  step. The top bar names the interface by its place in the project.
+- The C# scene view draws the interface its canvas names, and a chip puts
+  it aside without changing the scene. The Dart view paints an opaque
+  ground and dark bars under it, which hide the scene. The C# view draws
+  the interface alone.
+- The C# Interface workspace differs from the Dart one in small ways. The
+  top bar has no Saved status, object count or frame rate. The fit chips
+  wrap. The grid count has a full stop where Dart has a dash. The Interface
+  chip belongs to each scene view, not to the shell. An interface cannot be
+  dropped onto the scene view yet. With a button or text selected, Add puts
+  the new element after it, where Dart puts it inside. A drag in a stack
+  away from the page edge snaps to the grid on the page, where Dart snaps
+  it from the stack's edge.
+- Add the console to the C# editor. It shares the bottom group with the
+  project browser. It keeps what the editor said, what the UI thread
+  threw, and a run of the same message as one entry with a count. Each
+  level has a filter with its count, and an entry opens to its detail.
+- Add data objects to the C# editor. One is made from Project with a
+  value of each kind, edited in the inspector and attached to the
+  selection as one undo step. Each edit writes the file and the
+  TypeScript and C++ bindings beside it.
+- Add the profile panel to the C# editor. It reads the frames the scene
+  view draws, the gauges, the counts and the memory, and says how fast a
+  growing heap grows.
+- The C# editor opens a script, a style or a data file in the code editor
+  it finds, from Project, the File menu or the palette. Show in Finder
+  shows the project folder. Build compiles a C++ script with the engine's
+  own compiler and headers and shows what the compiler said.
+- The C# data objects, profile panel and code editor differ from the
+  Dart ones in small ways. Sublime Text and Zed are handed a script
+  without `--goto`, which they do not take. A new data object's kind is picked from a menu, not a
+  dialog. A number that is not finite is refused. Selecting a scene row
+  puts the inspector back. The profile panel times no spans, and a gauge
+  reads "12" where Dart reads "12.0".
+- Add the export dialog to the C# editor. File › Export… and the
+  palette open it. It cooks a pack for each chosen target, or a patch
+  on a pack already exported, and shows each target as it lands. It
+  lists what the exports folder holds and what a pack serves, and it
+  cannot be closed while a cook runs.
+- The C# export differs from the Dart one in small ways. Each target
+  cooks on a task, not an isolate, so a cook that runs out of memory
+  takes the editor with it. The progress line has no spinner.
+- Add the kit store to the C# editor. File › Kit store… and the palette
+  open it. It browses a store's kits with search, sort and filters, shows
+  a kit's releases, notes and files, and installs the files chosen into a
+  folder of the project. The `kits.lock` it writes is the one the Dart
+  editor writes for the same kit, byte for byte.
+- Add the publish dialog to the C# editor. File › Publish kit… and the
+  palette open it. It packs a folder of the project as a kit and shows
+  the store entry to copy. Nothing is uploaded.
+- The C# store differs from the Dart one in small ways. A kit is packed
+  on a task, not an isolate, and a pack cannot be cancelled. The store's
+  settings and downloads sit in the C# editor's own support folder, so a
+  kit the Dart editor downloaded is fetched again.
+- Drop files from Project on the C# scene view. A mesh or a prefab goes in
+  the scene, a texture or a shader goes on the selection, a scene opens,
+  and a data object or an interface goes where it belongs. A picture drops
+  on a terrain set. F frames the selection.
+- Make, place, apply, revert and unpack prefabs in the C# editor.
+- With Bones on, the C# scene view shows the skeleton and onion skin of
+  the selected model, and a ring on each hand and foot poses the limb. A
+  selected camera shows what it sees in a card at the bottom left of the
+  view. The stats chip shows the frame rate.
+- The C# outliner keeps its rows while an edit only moves things, because
+  a row shows no position and a drag moves things every frame.
+- The C# shell differs from the Dart one in small ways. A model file is
+  read again when it changes on disk. A row of buttons carries words only.
+- The C# editor cooks the project's shaders when it opens and when one is
+  saved. The inspector shows a shader's section, and fits a body or a
+  collider to an imported model. The scene view picks a model by the size
+  in its file, and the views draw the cooked shaders.
+
 ## 1.26.0+27
 
 - Size an `.obj` from its points. The asset preview frames it, and a model
