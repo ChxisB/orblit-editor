@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Remove the Dart and Flutter editor. `lib/`, `test/`, the platform folders,
+  `pubspec.yaml`, `tool/check.sh`, the exporters in `tool/parity/` and the
+  Flutter release workflow are gone. The last commit that has them is tagged
+  `dart-final`. The files the exporters wrote are kept in
+  `dotnet/Orblit.Editor.Tests/Fixtures/frozen/`, and `FrozenFilesTests` and
+  `FrozenPickTests` read them. CI builds the engine natives, packs the engine
+  and runs `tool/check_dotnet.sh` on Ubuntu, macOS and Windows. The C# editor
+  has no release workflow yet.
 - Add a C# port of the editor shell in `dotnet/`. `Orblit.Editor.Core` 0.1.0
   holds the scene document, commands and history, the dock layout, projects,
   the key map and the palette, with no widget. `Orblit.Editor` 0.1.0 is the

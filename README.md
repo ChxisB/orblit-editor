@@ -1,10 +1,15 @@
 # orblit-editor
 
-The [Orblit](https://github.com/ChxisB/orblit) editor.
+The [Orblit](https://github.com/ChxisB/orblit) editor, an Avalonia app on .NET 10.
 
 ```sh
-flutter run -d macos
+git clone https://github.com/ChxisB/orblit.git       # beside this one
+orblit/tool/build_native.sh                            # the engine's native core
+orblit/tool/pack_local.sh                              # packs the engine into ~/.orblit/feed
+dotnet run --project dotnet/Orblit.Editor
 ```
+
+It needs the .NET 10 SDK and CMake. `ORBLIT_FEED` names another feed folder.
 
 It opens a launcher rather than an empty editor. An editor with no project has
 nothing honest to show: every panel would be an empty state, and a screen full
@@ -45,7 +50,7 @@ right now, because an interface where everything is highlighted has highlighted
 nothing. Spacing is on a four-point scale, because editors go wrong when each
 panel picks its own padding.
 
-`lib/src/theme/orblit_theme.dart` is the whole system.
+`dotnet/Orblit.Editor/Theme/OrblitTheme.cs` is the whole system.
 
 ## Licence
 

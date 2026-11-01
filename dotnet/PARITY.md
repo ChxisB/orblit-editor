@@ -1,5 +1,10 @@
 # Parity
 
+The port is finished. The Dart editor is no longer in this repository. The last
+commit that has it is tagged `dart-final`, and the Dart test files named below
+are read at that tag. The fixtures its exporters wrote are in
+`Orblit.Editor.Tests/Fixtures/frozen/`.
+
 One row per Dart test file that has been ported. A row is added when the file
 is built.
 
@@ -150,7 +155,7 @@ examples live in the `orblit-examples` repository, and the editor does not show 
 | none | `ViewportChipsTests` | 0 | 0 | 0 | 14 cases in 3 tests: the chips the control shows and the grid label | added |
 | none | `DockHostTests` | 0 | 0 | 0 | 2: a layout with the same text is not drawn again, and one with other text is | added |
 | none | `GeometryStoreTests` | 0 | 0 | 0 | 8: a shape is written inside the project for the renderer, when it is stale and when it is forgotten | added |
-| `tool/parity/pick_test.dart` (an exporter, not a test) | `DartPickTests` | 0 | 0 | 0 | 4: three cameras and a grid of pixels each, the same ray, the same object and the same handle as Dart, and a check that the grid is not empty | added |
+| `tool/parity/pick_test.dart` (an exporter, not a test) | `FrozenPickTests` | 0 | 0 | 0 | 4: three cameras and a grid of pixels each, the same ray, the same object and the same handle as Dart, and a check that the grid is not empty | added |
 
 The air and the sky in `SceneAir` use FNV-1a keys for materials and surfaces,
 where the Dart uses `Object.hash`. The key values are not part of the parity.
@@ -356,19 +361,15 @@ pointer gesture is not.
 
 | Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| `tool/parity/dart_files_test.dart` (an exporter, not a test) | `DartFilesTests` | 0 | 0 | 0 | 10: a project file, three template scenes, four layouts, the layouts the code builds, and a layout library | added |
+| `tool/parity/dart_files_test.dart` (an exporter, not a test) | `FrozenFilesTests` | 0 | 0 | 0 | 10: a project file, three template scenes, four layouts, the layouts the code builds, and a layout library | added |
 | `tool/parity/kits_lock_test.dart` (an exporter, not a test) | `StoreInstallTests` | 0 | 0 | 0 | 1: the `kits.lock` the Dart editor writes for a kit, written byte for byte by the C# install of the same kit | added |
 
-The exporter writes the files the Dart editor saves into
-`dotnet/Orblit.Editor.Tests/Fixtures/dart`. Each C# test reads one and writes
+The exporters wrote the files the Dart editor saved into
+`dotnet/Orblit.Editor.Tests/Fixtures/frozen`. Each C# test reads one and writes
 it again, and the two texts must be equal byte for byte. That proves a Dart
 project opens in the C# editor and, because the C# text is the Dart text, the
 reverse. The reverse was not run in the Dart editor.
 
-To rebuild the fixtures, run this from the Dart `orblit-editor` package, where
-the packages are resolved:
-
-```
-ORBLIT_PARITY_OUT=<worktree>/dotnet/Orblit.Editor.Tests/Fixtures/dart \
-  flutter test <worktree>/tool/parity/dart_files_test.dart
-```
+The exporters are gone from the working tree and the fixtures are frozen. To see
+how one was made, check out the `dart-final` tag and read `tool/parity/`. Change
+a fixture only when the file format changes.
