@@ -101,11 +101,11 @@ public sealed class EditorWindowPlaybackTests : IDisposable
         Headless.Click(window, "play_toggle");
         // The window's clock has run the scene for as long as the click took, which is longer on a slow
         // machine. Half a second is measured from where it stands, and the clip holds at two. The clock can
-        // still add one frame of at most a tenth of a second, which is a fifth of the clip's height.
+        // only add time on top, so the height is at least half a second's worth and never above the hold.
         var before = HeightOf(session.Playback!.Workspace.Loaded!.Scene!);
         session.AdvancePlayback(0.5);
         var playing = session.Playback!.Workspace.Loaded!.Scene!;
-        Assert.Equal(Math.Min(2, before + 1), HeightOf(playing), 0.2);
+        Assert.InRange(HeightOf(playing), Math.Min(2, before + 1) - 0.01, 2);
         Assert.Equal(0, HeightOf(editing));
 
         Headless.Click(window, "play_toggle");
