@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Add portrait and landscape layouts to the scene. The top bar has a Layout
+  switch with Base, Portrait and Landscape. An edit made in a layout is saved
+  as a difference from the base. Adding and deleting objects waits for Base,
+  and so do the prefab steps. A clip posed on the timeline is taken off before
+  a layout is shown, so the pose is never kept in the base or in a layout. The
+  inspector names what the shown layout sets on the selected object and offers
+  Reset to base. A scene with a layout is saved as format 6, and an older
+  editor will not open it. A scene with no layout is still written as format
+  5. The editor packages `Orblit.Scene` 0.26.0, `Orblit.Motion` 0.11.0 and
+  `Orblit.Stage` 0.6.0.
 - Add a device bar to the Game view. The scene shows in a Desktop, Tablet or
   Mobile frame, held upright or on its side. The picture has the shape of the
   device and is never drawn larger than it. A phone shades the strips a game

@@ -115,6 +115,7 @@ public sealed class SceneViewport : Border
         _stack.Children.Add(_overlay);
         _stack.Children.Add(TopRow());
         _stack.Children.Add(HintChip());
+        _stack.Children.Add(new LayoutBar(session));
         _preview = new CameraPreview(renderer);
         _stack.Children.Add(_preview);
         AttachInput();

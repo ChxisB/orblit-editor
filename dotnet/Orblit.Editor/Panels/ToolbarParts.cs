@@ -55,6 +55,7 @@ internal sealed class ToolbarAction : Button
 internal sealed class ToolbarChip : Button
 {
     private readonly TextBlock _text = new() { FontSize = 11 };
+    private bool _on;
 
     public ToolbarChip(string name, string label, string? tip, Action tap)
     {
@@ -72,8 +73,10 @@ internal sealed class ToolbarChip : Button
 
     public bool On
     {
+        get => _on;
         set
         {
+            _on = value;
             Background = value ? OrblitColors.Raised : Brushes.Transparent;
             BorderBrush = value ? OrblitColors.Line : Brushes.Transparent;
             _text.Foreground = value ? OrblitColors.Ink : OrblitColors.InkDim;

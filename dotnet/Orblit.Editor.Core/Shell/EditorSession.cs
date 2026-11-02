@@ -52,6 +52,7 @@ public sealed partial class EditorSession
         Terrains = new TerrainBench(history, workspace.ProjectDirectory, problem => Say(problem, SayLevel.Error));
         Terrains.Changed += OnTerrainsChanged;
         history.Changed += OnHistoryChanged;
+        history.Refused += command => Say(LayoutRefusal(command.Label), SayLevel.Info);
         workspace.Changed += StopPlayingAnotherScene;
     }
 
@@ -302,15 +303,26 @@ public sealed partial class EditorSession
     public void Undo()
     {
         var sceneId = History.UndoSceneId;
-        History.Undo();
+        Step(History.UndoNeedsRest, History.Undo);
         Reveal(sceneId);
     }
 
     public void Redo()
     {
         var sceneId = History.RedoSceneId;
-        History.Redo();
+        Step(History.RedoNeedsRest, History.Redo);
         Reveal(sceneId);
+    }
+
+    private void Step(bool atRest, Action step)
+    {
+        if (atRest)
+        {
+            AtRest(step);
+            return;
+        }
+
+        step();
     }
 
     /// <summary>

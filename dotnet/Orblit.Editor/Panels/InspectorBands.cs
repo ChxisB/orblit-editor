@@ -74,6 +74,44 @@ internal static class InspectorBands
         };
     }
 
+    /// <summary>
+    /// Says the layout being edited sets some of this object's fields, and offers to take them back. Above
+    /// the fields because a value shown here is the layout's and not the base's, and nothing in the field
+    /// itself says so.
+    /// </summary>
+    /// <param name="shape">The layout on show.</param>
+    /// <param name="fields">The words for the fields it sets.</param>
+    /// <param name="onReset">Puts the object back to the base.</param>
+    public static Control Layout(Orblit.Scene.LayoutShape shape, IReadOnlyList<string> fields, Action onReset)
+    {
+        var reset = new Button
+        {
+            Name = "layout_reset",
+            Content = "Reset to base",
+            FontSize = OrblitText.Label,
+            Margin = new Thickness(0, Space.Sm, 0, 0),
+        };
+        ToolTip.SetTip(reset, "Throw away what the layout sets on this object. It takes the base's values again.");
+        reset.Click += (_, _) => onReset();
+        var overrides = new TextBlock
+        {
+            Name = "layout_overrides",
+            Text = $"Set by the {shape} layout: {string.Join(", ", fields)}",
+            FontSize = OrblitText.Label,
+            Foreground = OrblitColors.Ember,
+            TextWrapping = TextWrapping.Wrap,
+        };
+        return new Border
+        {
+            Name = "layout_band",
+            Padding = new Thickness(Space.Lg, Space.Sm),
+            Background = OrblitColors.EmberWash,
+            BorderBrush = OrblitColors.LineSoft,
+            BorderThickness = new Thickness(0, 0, 0, 1),
+            Child = new StackPanel { Children = { overrides, reset } },
+        };
+    }
+
     /// <summary>Says that the fields below belong to one of several selected things.</summary>
     public static Control Multiple(int count, string name) => new Border
     {
