@@ -15,6 +15,7 @@ using Doc = Orblit.Scene;
 public sealed class ScenePlayback
 {
     private readonly List<PlayingClip> _clips = [];
+    private readonly List<Followed> _followed = [];
     private PlayingCutscene? _cutscene;
 
     public ScenePlayback(
@@ -30,10 +31,12 @@ public sealed class ScenePlayback
             var scene = Copy(original);
             Workspace.Add(new SceneEntry("preview", scene.Name, scene: scene));
             Load(scene, read);
+            _followed.Add(new Followed(original, scene));
         }
 
         Workspace.SharedEntry.Scene = Copy(editing.Shared);
         Load(Workspace.Shared, read);
+        _followed.Add(new Followed(editing.Shared, Workspace.Shared));
         Advance(0);
     }
 
@@ -52,6 +55,22 @@ public sealed class ScenePlayback
         _cutscene is { } running && Workspace.Loaded?.Scene is { } scene
             ? SceneCameras.CutsceneCamera(scene, running.Cutscene, running.Player.At)
             : null;
+
+    /// <summary>
+    /// Brings the copy in line with the edits made to the scenes it was copied from since the last
+    /// look.
+    /// </summary>
+    /// <remarks>
+    /// Only what the edits changed is written. A field a clip or cutscene is moving is not in the
+    /// edits, so it stays where the playback put it, and the copy keeps its own state.
+    /// </remarks>
+    public void Follow()
+    {
+        foreach (var pair in _followed)
+        {
+            pair.Look();
+        }
+    }
 
     public void Advance(double seconds)
     {
@@ -133,6 +152,28 @@ public sealed class ScenePlayback
         if (running.Player.WhenDone == WhenDone.Release)
         {
             running.Preview.Lift(scene);
+        }
+    }
+
+    // The document of a copy of the scene. A document made straight from a scene holds the rows' own
+    // vectors, so a move made later would change a look taken earlier and the difference would be lost.
+    private static Doc.SceneDocument Snapshot(EditorScene scene) => SceneDocument.DocumentOf(Copy(scene));
+
+    // A scene being edited and its copy, with the edited scene as it was at the last look. The change
+    // between that and now is applied to the copy the way an undo applies one to the scene.
+    private sealed class Followed(EditorScene source, EditorScene copy)
+    {
+        private Doc.SceneDocument _seen = Snapshot(source);
+
+        public void Look()
+        {
+            var now = Snapshot(source);
+            var diff = Doc.SceneDiff.Between(_seen, now);
+            _seen = now;
+            if (diff is { IsEmpty: false })
+            {
+                SceneDocument.Reconcile(copy, diff.ApplyTo(SceneDocument.DocumentOf(copy)));
+            }
         }
     }
 
