@@ -1,6 +1,7 @@
 namespace Orblit.Editor.Core;
 
 using Orblit.Scene;
+using Doc = Orblit.Scene;
 
 // Which way up the scene is being shown while it is edited.
 
@@ -34,6 +35,53 @@ public sealed class SwitchLayout(string sceneId, LayoutShape? from, LayoutShape?
         if (host.SceneFor(SceneId) is { } scene)
         {
             scene.Layouts.Switch(scene, shape);
+        }
+    }
+}
+
+/// <summary>Puts one object back to how the base has it, in the layout being edited.</summary>
+/// <remarks>
+/// Holds the layout before and after as documents and not as a list of fields, because a layout may
+/// set something the rows have no field for, and a reset has to take that back too.
+/// </remarks>
+public sealed class ResetToBase(string sceneId, string objectId, string objectName) : EditorCommand
+{
+    private Doc.SceneDocument? _before;
+    private Doc.SceneDocument? _after;
+
+    public override string SceneId { get; } = sceneId;
+
+    public string ObjectId { get; } = objectId;
+
+    public override string Label => $"Reset {objectName} to base";
+
+    public override bool FitsLayout => true;
+
+    public override void Apply(ISceneHost host)
+    {
+        if (host.SceneFor(SceneId) is not { } scene)
+        {
+            return;
+        }
+
+        _before ??= scene.Layouts.Edited(scene);
+        _after ??= scene.Layouts.WithoutOverrides(scene, ObjectId);
+        Install(scene, _after);
+    }
+
+    public override void Revert(ISceneHost host)
+    {
+        if (host.SceneFor(SceneId) is { } scene)
+        {
+            Install(scene, _before);
+        }
+    }
+
+    private static void Install(EditorScene scene, Doc.SceneDocument? layout)
+    {
+        if (layout is not null)
+        {
+            scene.Layouts.Install(scene, layout);
         }
     }
 }

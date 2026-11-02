@@ -381,6 +381,140 @@ public sealed class EditorLayoutTests
         Assert.Empty(load.Problems);
     }
 
+    [Fact]
+    public void AMovedObjectNamesWhatTheLayoutOverrides()
+    {
+        var (scene, history) = Open();
+        Show(history, scene, LayoutShape.Portrait);
+        Move(history, scene, "crate", Raised);
+
+        Assert.Equal(["Position"], scene.Layouts.Overrides(scene, "crate"));
+    }
+
+    [Fact]
+    public void AHiddenObjectNamesVisibleAsWhatTheLayoutOverrides()
+    {
+        var (scene, history) = Open();
+        Show(history, scene, LayoutShape.Portrait);
+        history.Run(new SetVisible("a", "crate", "Crate", false));
+
+        Assert.Equal(["Visible"], scene.Layouts.Overrides(scene, "crate"));
+    }
+
+    [Fact]
+    public void AnObjectTheLayoutLeavesAloneOverridesNothing()
+    {
+        var (scene, history) = Open();
+        Show(history, scene, LayoutShape.Portrait);
+        Move(history, scene, "crate", Raised);
+
+        Assert.Empty(scene.Layouts.Overrides(scene, "camera"));
+    }
+
+    [Fact]
+    public void TheBaseOverridesNothing()
+    {
+        var (scene, history) = Open();
+        Show(history, scene, LayoutShape.Portrait);
+        Move(history, scene, "crate", Raised);
+        Show(history, scene, null);
+
+        Assert.Empty(scene.Layouts.Overrides(scene, "crate"));
+    }
+
+    [Fact]
+    public void AValueMovedBackToTheBaseIsNoOverride()
+    {
+        var (scene, history) = Open();
+        var home = scene["crate"]!.Position;
+        Show(history, scene, LayoutShape.Portrait);
+        Move(history, scene, "crate", Raised);
+        Move(history, scene, "crate", home);
+
+        Assert.Empty(scene.Layouts.Overrides(scene, "crate"));
+    }
+
+    [Fact]
+    public void AnEditWrittenByHandIsNamedInWords()
+    {
+        var scene = WithPortraitLens(70);
+        var (_, history) = Open(scene);
+        Show(history, scene, LayoutShape.Portrait);
+
+        Assert.Equal(["Field of view"], scene.Layouts.Overrides(scene, "camera"));
+    }
+
+    [Fact]
+    public void ResettingAnObjectPutsItBackToTheBaseInTheLayout()
+    {
+        var (scene, history) = Open();
+        var home = scene["crate"]!.Position;
+        Show(history, scene, LayoutShape.Portrait);
+        Move(history, scene, "crate", Raised);
+
+        history.Run(new ResetToBase("a", "crate", "Crate"));
+
+        Assert.Equal(home, scene["crate"]!.Position);
+        Assert.Empty(scene.Layouts.Overrides(scene, "crate"));
+    }
+
+    [Fact]
+    public void ResettingOneObjectKeepsWhatTheLayoutDoesToAnother()
+    {
+        var (scene, history) = Open();
+        Show(history, scene, LayoutShape.Portrait);
+        Move(history, scene, "crate", Raised);
+        Move(history, scene, "camera", new Vector3(0, 9, 9));
+
+        history.Run(new ResetToBase("a", "crate", "Crate"));
+
+        Assert.Equal(["Position"], scene.Layouts.Overrides(scene, "camera"));
+        Assert.Equal(9, scene["camera"]!.Position.Y);
+    }
+
+    [Fact]
+    public void ResettingAnObjectDropsAnEditWrittenByHandToo()
+    {
+        var scene = WithPortraitLens(70);
+        var (_, history) = Open(scene);
+        Show(history, scene, LayoutShape.Portrait);
+
+        history.Run(new ResetToBase("a", "camera", "Camera"));
+
+        Assert.Empty(scene.Layouts.Overrides(scene, "camera"));
+        Assert.True(Stored(scene).Layouts.IsEmpty);
+    }
+
+    [Fact]
+    public void UndoPutsTheOverridesBackAndRedoDropsThemAgain()
+    {
+        var (scene, history) = Open();
+        var home = scene["crate"]!.Position;
+        Show(history, scene, LayoutShape.Portrait);
+        Move(history, scene, "crate", Raised);
+        history.Run(new ResetToBase("a", "crate", "Crate"));
+
+        history.Undo();
+        Assert.Equal(1, scene["crate"]!.Position.Y);
+        Assert.Equal(["Position"], scene.Layouts.Overrides(scene, "crate"));
+
+        history.Redo();
+        Assert.Equal(home, scene["crate"]!.Position);
+        Assert.Empty(scene.Layouts.Overrides(scene, "crate"));
+    }
+
+    [Fact]
+    public void ResettingChangesWhatIsSaved()
+    {
+        var (scene, history) = Open();
+        Show(history, scene, LayoutShape.Portrait);
+        Move(history, scene, "crate", Raised);
+        history.Run(new ResetToBase("a", "crate", "Crate"));
+
+        Assert.True(Stored(scene).Layouts.IsEmpty);
+        Assert.Equal("Reset Crate to base", history.UndoLabel);
+    }
+
     // Says it fits a layout and then renames the object, which a layout has no way to write down.
     private sealed class RenameWithoutAsking(string sceneId, string id, string to) : EditorCommand
     {

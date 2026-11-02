@@ -29,6 +29,24 @@ public sealed partial class EditorSession
         }
     }
 
+    /// <summary>What the layout on show sets on an object, for the inspector to say. Empty in the base.</summary>
+    public IReadOnlyList<string> LayoutOverrides(string objectId) =>
+        Workspace.Loaded?.Scene is { } scene ? scene.Layouts.Overrides(scene, objectId) : [];
+
+    /// <summary>
+    /// Takes everything the layout on show sets on an object back to how the base has it. A step on
+    /// the undo stack, and none when there is nothing to take back.
+    /// </summary>
+    public void ResetToBase(string objectId)
+    {
+        if (Workspace.Loaded is not { Scene: { } scene } open || scene.Layouts.Overrides(scene, objectId).Count == 0)
+        {
+            return;
+        }
+
+        Run(new ResetToBase(open.Id, objectId, scene[objectId]?.Name ?? objectId));
+    }
+
     // What a command a layout cannot hold is told, whichever way it was run.
     private static string LayoutRefusal(string what) => $"{what} cannot be made in a layout. Switch to Base to make it.";
 }

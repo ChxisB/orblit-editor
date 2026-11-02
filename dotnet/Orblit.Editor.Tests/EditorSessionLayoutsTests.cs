@@ -175,6 +175,54 @@ public sealed class EditorSessionLayoutsTests : IDisposable
     }
 
     [Fact]
+    public void ResettingAnObjectToTheBasePutsItBackAsOneStep()
+    {
+        var session = Open();
+        var home = SceneOf(session)["crate"]!.Position.Y;
+        session.ShowLayout(LayoutShape.Portrait);
+        MoveCrate(session, Raised);
+
+        session.ResetToBase("crate");
+
+        Assert.Equal(home, SceneOf(session)["crate"]!.Position.Y);
+        Assert.Equal("Reset Crate to base", session.History.UndoLabel);
+        session.Undo();
+        Assert.Equal(1, SceneOf(session)["crate"]!.Position.Y);
+    }
+
+    [Fact]
+    public void ResettingAnObjectTheLayoutLeavesAloneAddsNoStep()
+    {
+        var session = Open();
+        session.ShowLayout(LayoutShape.Portrait);
+
+        session.ResetToBase("crate");
+
+        Assert.Equal("Switch to Portrait", session.History.UndoLabel);
+    }
+
+    [Fact]
+    public void ResettingInTheBaseAddsNoStep()
+    {
+        var session = Open();
+
+        session.ResetToBase("crate");
+
+        Assert.False(session.History.CanUndo);
+    }
+
+    [Fact]
+    public void TheOverridesOfAnObjectAreWhatTheLayoutOnShowSetsOnIt()
+    {
+        var session = Open();
+        session.ShowLayout(LayoutShape.Landscape);
+        MoveCrate(session, Raised);
+
+        Assert.Equal(["Position"], session.LayoutOverrides("crate"));
+        Assert.Empty(session.LayoutOverrides("camera"));
+    }
+
+    [Fact]
     public void LeavingALayoutWithNothingLostSaysNothing()
     {
         var session = Open();
