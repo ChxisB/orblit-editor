@@ -335,6 +335,7 @@ public sealed partial class EditorSession
         var layout = Layout;
         FollowMotion();
         LetGoOfAMissingCamera();
+        FollowEditsWhilePlaying();
         var flipped = ClipsUnsaved != _clipsUnsaved;
         _clipsUnsaved = ClipsUnsaved;
         if (flipped || !ReferenceEquals(layout, Layout))

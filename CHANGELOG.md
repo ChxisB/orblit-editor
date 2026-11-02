@@ -18,6 +18,11 @@
   keeps clear of. The choice is kept in `.orblit/device.json` and is not part
   of the scene. `Orblit.Editor.Core` holds `DeviceFrame` and
   `DevicePreference`.
+- Make Play follow edits. A move, a rename, an added or deleted object and
+  an undo now show in the game view while the scene plays or sits paused.
+  Before, they showed only after Stop and Play. A field a clip is moving is
+  not in the edit, so the clip keeps its place. A new clip or Autoplay name
+  still starts on the next Play.
 - Fix the editor on Windows. An install now closes the kit's file after each
   step, so the downloads folder can be cleaned while the dialog is open. A
   rename that only changes case goes through a spare name. The editor

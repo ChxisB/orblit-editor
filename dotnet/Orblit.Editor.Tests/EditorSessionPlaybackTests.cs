@@ -183,6 +183,92 @@ public sealed class EditorSessionPlaybackTests : IDisposable
         Assert.False(session.Playing);
     }
 
+    private static double CameraX(EditorScene scene) => scene["camera"]!.Position.X;
+
+    [Fact]
+    public void AnEditMadeWhilePlayingShowsInTheCopyAndUndoTakesItBack()
+    {
+        File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
+        var session = Open();
+        session.TogglePlayback();
+        var copy = session.Playback!.Workspace.Loaded!.Scene!;
+        var start = CameraX(copy);
+        var told = 0;
+        session.PlaybackChanged += () => told++;
+
+        session.Select(["camera"]);
+        session.Nudge(new Vector3(2, 0, 0));
+        Assert.Equal(start + 2, CameraX(copy));
+        Assert.Equal(1, told);
+
+        session.Undo();
+        Assert.Equal(start, CameraX(copy));
+        Assert.Equal(2, told);
+    }
+
+    [Fact]
+    public void AnEditMadeWhilePausedShowsInTheCopyToo()
+    {
+        File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
+        var session = Open();
+        session.TogglePlayback();
+        session.TogglePlayback();
+        Assert.False(session.Playing);
+        var start = CameraX(session.Playback!.Workspace.Loaded!.Scene!);
+
+        session.Select(["camera"]);
+        session.Nudge(new Vector3(2, 0, 0));
+
+        Assert.Equal(start + 2, CameraX(session.Playback!.Workspace.Loaded!.Scene!));
+    }
+
+    [Fact]
+    public void AnObjectTheClipMovesKeepsItsPlaceWhenAnotherObjectIsEdited()
+    {
+        File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
+        var session = Open();
+        session.TogglePlayback();
+        session.AdvancePlayback(1);
+        var copy = session.Playback!.Workspace.Loaded!.Scene!;
+
+        session.Select(["camera"]);
+        session.Nudge(new Vector3(2, 0, 0));
+
+        Assert.Equal(2, HeightOf(copy), 1e-9);
+        Assert.Equal(0, HeightOf(session.Workspace.Loaded!.Scene!));
+    }
+
+    [Fact]
+    public void WithNothingPlayingAnEditRaisesNothing()
+    {
+        File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
+        var session = Open();
+        var told = 0;
+        session.PlaybackChanged += () => told++;
+
+        session.Select(["camera"]);
+        session.Nudge(new Vector3(2, 0, 0));
+
+        Assert.Equal(0, told);
+        Assert.Null(session.Playback);
+    }
+
+    [Fact]
+    public async Task AfterAnotherSceneStopsThePlaybackAnEditRaisesNothing()
+    {
+        File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
+        var session = Open();
+        session.TogglePlayback();
+        await session.NewSceneAsync();
+        var told = 0;
+        session.PlaybackChanged += () => told++;
+
+        session.Select(["camera"]);
+        session.Nudge(new Vector3(2, 0, 0));
+
+        Assert.Equal(0, told);
+    }
+
     [Fact]
     public void AClipOpenOnTheTimelinePlaysAsItIsNowAndNotAsLastSaved()
     {
