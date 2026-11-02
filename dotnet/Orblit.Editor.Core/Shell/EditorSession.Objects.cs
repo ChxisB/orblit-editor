@@ -304,8 +304,8 @@ public sealed partial class EditorSession
         }
     }
 
-    // Answers whether the command ran, so what follows an add or a delete is not done to a scene that
-    // never changed.
+    // F5: runs the command and answers whether it ran. A separate query would repeat the refusal test
+    // and the catch below. What follows an add or a delete is then not done to a scene that never changed.
     private bool Run(EditorCommand command)
     {
         var refused = History.Refuses(command);

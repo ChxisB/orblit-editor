@@ -210,6 +210,22 @@ public sealed class EditorLayoutTests
     }
 
     [Fact]
+    public void TheSceneCannotBeRenamedInALayoutSoTheSavedNameIsTheOneItHad()
+    {
+        var (scene, history) = Open();
+        var name = scene.Name;
+        Show(history, scene, LayoutShape.Portrait);
+        var refused = new List<string>();
+        history.Refused += command => refused.Add(command.Label);
+
+        history.Run(new RenameScene("a", name, "Level 2"));
+
+        Assert.Equal(name, scene.Name);
+        Assert.Single(refused);
+        Assert.Equal(name, Stored(scene).Name);
+    }
+
+    [Fact]
     public void AnObjectCannotBeRenamedInALayout()
     {
         var (scene, history) = Open();
