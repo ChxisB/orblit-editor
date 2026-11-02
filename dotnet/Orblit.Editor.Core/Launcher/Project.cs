@@ -102,6 +102,11 @@ public static class ProjectTemplates
 /// What a project looks like on disk: one file at the root, named so a folder is recognisably a
 /// project without opening it, and versioned so an editor that meets a newer one can say so rather
 /// than misread it.
+/// <para>
+/// The optional <c>game</c> field names the C# project that holds the game. <see cref="FormatVersion"/>
+/// stays 1 because the field is optional, an editor that does not know it skips it, and the editor writes
+/// the file only when it makes a project.
+/// </para>
 /// </remarks>
 public sealed record Project(string Name, string Directory, DateTime LastOpened, string EngineVersion = "0.1.0")
 {
@@ -109,14 +114,31 @@ public sealed record Project(string Name, string Directory, DateTime LastOpened,
 
     public const int FormatVersion = 1;
 
+    /// <summary>The game this project runs, or null when the file names none or names one that cannot be used.</summary>
+    public GameEntry? Game { get; init; }
+
+    /// <summary>
+    /// Why the file's <c>game</c> field was not used, or null when there was nothing wrong. The project
+    /// still opens, so Play can say why it cannot run.
+    /// </summary>
+    public string? GameProblem { get; init; }
+
     /// <summary>Whether the folder is still where it was last seen.</summary>
     public bool Exists => IoFile.Exists(Path.Combine(Directory, FileName));
 
-    public static Project FromJson(IReadOnlyDictionary<string, object?> json, string directory) => new(
-        json.GetValueOrDefault("name") as string ?? Path.GetFileName(Path.TrimEndingDirectorySeparator(directory)),
-        directory,
-        ReadTime(json.GetValueOrDefault("lastOpened") as string ?? ""),
-        json.GetValueOrDefault("engine") as string ?? "unknown");
+    public static Project FromJson(IReadOnlyDictionary<string, object?> json, string directory)
+    {
+        var (game, problem) = GameEntry.Read(json.GetValueOrDefault("game"));
+        return new Project(
+            json.GetValueOrDefault("name") as string ?? Path.GetFileName(Path.TrimEndingDirectorySeparator(directory)),
+            directory,
+            ReadTime(json.GetValueOrDefault("lastOpened") as string ?? ""),
+            json.GetValueOrDefault("engine") as string ?? "unknown")
+        {
+            Game = game,
+            GameProblem = problem,
+        };
+    }
 
     /// <summary>The path with the home folder as a tilde, for a list that has to fit on a line.</summary>
     public string DisplayPath(string? home) =>
@@ -124,13 +146,22 @@ public sealed record Project(string Name, string Directory, DateTime LastOpened,
             ? $"~{Directory[home.Length..]}"
             : Directory;
 
-    public OrderedDictionary<string, object?> ToJson() => new()
+    public OrderedDictionary<string, object?> ToJson()
     {
-        ["formatVersion"] = (long)FormatVersion,
-        ["name"] = Name,
-        ["engine"] = EngineVersion,
-        ["lastOpened"] = IsoText(LastOpened),
-    };
+        var json = new OrderedDictionary<string, object?>
+        {
+            ["formatVersion"] = (long)FormatVersion,
+            ["name"] = Name,
+            ["engine"] = EngineVersion,
+            ["lastOpened"] = IsoText(LastOpened),
+        };
+        if (Game is not null)
+        {
+            json["game"] = new OrderedDictionary<string, object?> { ["project"] = Game.Project, ["type"] = Game.Type };
+        }
+
+        return json;
+    }
 
     // Written to the millisecond always, to the microsecond only when there are some, and with a Z for UTC.
     private static string IsoText(DateTime at)

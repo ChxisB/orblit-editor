@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Let a project name its game. `orblit.project.json` takes an optional
+  `game` field, `{ "project": "game/Game.csproj", "type": "Scape.Game.ScapeGame" }`,
+  and `Project.Game` reads it. A path that is absolute or leaves the project
+  folder, or an empty type, leaves `Game` null and sets `Project.GameProblem`.
+  The project still opens. `FormatVersion` stays 1. Nothing builds or runs
+  the game yet.
 - Add portrait and landscape layouts to the scene. The top bar has a Layout
   switch with Base, Portrait and Landscape. An edit made in a layout is saved
   as a difference from the base. Adding and deleting objects waits for Base,
