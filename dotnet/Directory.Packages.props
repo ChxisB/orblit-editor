@@ -16,13 +16,15 @@
     <PackageVersion Include="Orblit.Core" Version="0.1.0" />
     <PackageVersion Include="Orblit.Filament" Version="0.42.0" />
     <PackageVersion Include="Orblit.Filament.Avalonia" Version="0.1.0" />
+    <PackageVersion Include="Orblit.Game" Version="0.1.0" />
+    <PackageVersion Include="Orblit.Game.Avalonia" Version="0.1.0" />
     <PackageVersion Include="Orblit.HeadlessSupport" Version="0.1.0" />
     <PackageVersion Include="Orblit.Json" Version="0.4.0" />
     <PackageVersion Include="Orblit.Light" Version="0.3.0" />
     <PackageVersion Include="Orblit.Mesh" Version="0.6.0" />
     <PackageVersion Include="Orblit.Motion" Version="0.11.0" />
     <PackageVersion Include="Orblit.Native" Version="0.1.1" />
-    <PackageVersion Include="Orblit.Scene" Version="0.26.0" />
+    <PackageVersion Include="Orblit.Scene" Version="0.28.0" />
     <PackageVersion Include="Orblit.Sequence" Version="0.2.1" />
     <PackageVersion Include="Orblit.Sprite" Version="0.4.0" />
     <PackageVersion Include="Orblit.Stage" Version="0.6.0" />

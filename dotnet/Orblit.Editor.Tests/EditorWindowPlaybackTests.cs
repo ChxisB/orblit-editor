@@ -225,21 +225,21 @@ public sealed class EditorWindowPlaybackTests : IDisposable
     });
 
     [Fact]
-    public Task APauseLongerThanAFrameDoesNotJumpTheSceneOnWhenPlayGoesOn() => Headless.Run(() =>
+    public Task APauseLongerThanAFrameDoesNotJumpTheSceneOnWhenPlayGoesOn() => Headless.Run(async () =>
     {
         var clip = Path.Combine(_project.FullName, "bounce.oclip");
         File.WriteAllText(clip, Bounce().Encode());
         var (session, window) = Open(BouncingCube("bounce.oclip"));
         var steps = 0;
         session.PlaybackChanged += () => steps++;
-        session.TogglePlayback();
+        await session.TogglePlayback();
         Assert.True(Headless.Until(() => steps >= 4), $"The scene took {steps} steps.");
-        session.TogglePlayback();
+        await session.TogglePlayback();
         var copy = session.Playback!.Workspace.Loaded!.Scene!;
         var paused = HeightOf(copy);
 
         Thread.Sleep(300);
-        session.TogglePlayback();
+        await session.TogglePlayback();
         Headless.Render();
 
         // A render may run a frame or two, each a few milliseconds. The jump from a stale time is a tenth of a second, which is 0.2 high.
@@ -248,7 +248,7 @@ public sealed class EditorWindowPlaybackTests : IDisposable
     });
 
     [Fact]
-    public Task ClosingTheWindowEndsTheClock() => Headless.Run(() =>
+    public Task ClosingTheWindowEndsTheClock() => Headless.Run(async () =>
     {
         var (session, window) = Open(EditorScene.Starter());
         window.Close();
@@ -256,7 +256,7 @@ public sealed class EditorWindowPlaybackTests : IDisposable
         var steps = 0;
         session.PlaybackChanged += () => steps++;
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
         Headless.Wait(150);
 
         Assert.Equal(1, steps);

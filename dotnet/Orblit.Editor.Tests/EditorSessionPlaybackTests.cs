@@ -63,13 +63,13 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     private static double HeightOf(EditorScene scene) => scene["cube"]!.Position.Y;
 
     [Fact]
-    public void PlayRunsACopyOfTheLoadedSceneAndShowsTheGameView()
+    public async Task PlayRunsACopyOfTheLoadedSceneAndShowsTheGameView()
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         var session = Open();
         session.OpenPanel(PanelKind.Viewport);
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
 
         Assert.True(session.Playing);
         Assert.NotSame(session.Workspace.Loaded!.Scene, session.Playback!.Workspace.Loaded!.Scene);
@@ -77,36 +77,36 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     }
 
     [Fact]
-    public void TimePassesOnlyInTheCopyAndOnlyWhilePlaying()
+    public async Task TimePassesOnlyInTheCopyAndOnlyWhilePlaying()
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         var session = Open();
-        session.TogglePlayback();
+        await session.TogglePlayback();
         var copy = session.Playback!.Workspace.Loaded!.Scene!;
 
         session.AdvancePlayback(0.5);
         Assert.Equal(1, HeightOf(copy), 1e-9);
         Assert.Equal(0, HeightOf(session.Workspace.Loaded!.Scene!));
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
         session.AdvancePlayback(0.5);
         Assert.Equal(1, HeightOf(copy), 1e-9);
     }
 
     [Fact]
-    public void PausingKeepsTheCopyAndPlayGoesOnFromThere()
+    public async Task PausingKeepsTheCopyAndPlayGoesOnFromThere()
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         var session = Open();
-        session.TogglePlayback();
+        await session.TogglePlayback();
         var running = session.Playback;
         session.AdvancePlayback(0.25);
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
         Assert.False(session.Playing);
         Assert.Same(running, session.Playback);
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
         session.AdvancePlayback(0.25);
         Assert.True(session.Playing);
         Assert.Same(running, session.Playback);
@@ -114,11 +114,11 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     }
 
     [Fact]
-    public void StopThrowsTheCopyAwayAndPlayStartsOverFromTheScene()
+    public async Task StopThrowsTheCopyAwayAndPlayStartsOverFromTheScene()
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         var session = Open();
-        session.TogglePlayback();
+        await session.TogglePlayback();
         session.AdvancePlayback(1);
         var told = 0;
         session.PlaybackChanged += () => told++;
@@ -130,12 +130,12 @@ public sealed class EditorSessionPlaybackTests : IDisposable
         Assert.False(session.Playing);
         Assert.Equal(1, told);
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
         Assert.Equal(0, HeightOf(session.Playback!.Workspace.Loaded!.Scene!));
     }
 
     [Fact]
-    public void PlayingStopsAnyClipOrCutsceneThatTheTimelineWasPlaying()
+    public async Task PlayingStopsAnyClipOrCutsceneThatTheTimelineWasPlaying()
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         var session = Open();
@@ -149,21 +149,21 @@ public sealed class EditorSessionPlaybackTests : IDisposable
         Assert.True(session.Clips.Playing);
         Assert.True(session.Cutscenes.Playing);
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
 
         Assert.False(session.Clips.Playing);
         Assert.False(session.Cutscenes.Playing);
     }
 
     [Fact]
-    public void ThereIsNothingToPlayWithoutAScene()
+    public async Task ThereIsNothingToPlayWithoutAScene()
     {
         var empty = new Workspace(_project.FullName);
         var session = new EditorSession(empty, new History(empty), EditorModes.Standard(), PanelTypes.BuiltIn());
         var told = 0;
         session.PlaybackChanged += () => told++;
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
 
         Assert.False(session.Playing);
         Assert.Null(session.Playback);
@@ -175,7 +175,7 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         var session = Open();
-        session.TogglePlayback();
+        await session.TogglePlayback();
 
         await session.NewSceneAsync();
 
@@ -186,11 +186,11 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     private static double CameraX(EditorScene scene) => scene["camera"]!.Position.X;
 
     [Fact]
-    public void AnEditMadeWhilePlayingShowsInTheCopyAndUndoTakesItBack()
+    public async Task AnEditMadeWhilePlayingShowsInTheCopyAndUndoTakesItBack()
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         var session = Open();
-        session.TogglePlayback();
+        await session.TogglePlayback();
         var copy = session.Playback!.Workspace.Loaded!.Scene!;
         var start = CameraX(copy);
         var told = 0;
@@ -207,12 +207,12 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     }
 
     [Fact]
-    public void AnEditMadeWhilePausedShowsInTheCopyToo()
+    public async Task AnEditMadeWhilePausedShowsInTheCopyToo()
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         var session = Open();
-        session.TogglePlayback();
-        session.TogglePlayback();
+        await session.TogglePlayback();
+        await session.TogglePlayback();
         Assert.False(session.Playing);
         var start = CameraX(session.Playback!.Workspace.Loaded!.Scene!);
 
@@ -223,11 +223,11 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     }
 
     [Fact]
-    public void AnObjectTheClipMovesKeepsItsPlaceWhenAnotherObjectIsEdited()
+    public async Task AnObjectTheClipMovesKeepsItsPlaceWhenAnotherObjectIsEdited()
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         var session = Open();
-        session.TogglePlayback();
+        await session.TogglePlayback();
         session.AdvancePlayback(1);
         var copy = session.Playback!.Workspace.Loaded!.Scene!;
 
@@ -258,7 +258,7 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         var session = Open();
-        session.TogglePlayback();
+        await session.TogglePlayback();
         await session.NewSceneAsync();
         var told = 0;
         session.PlaybackChanged += () => told++;
@@ -270,7 +270,7 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     }
 
     [Fact]
-    public void AClipOpenOnTheTimelinePlaysAsItIsNowAndNotAsLastSaved()
+    public async Task AClipOpenOnTheTimelinePlaysAsItIsNowAndNotAsLastSaved()
     {
         var path = PathOf("bounce.oclip");
         File.WriteAllText(path, Bounce().Encode());
@@ -278,7 +278,7 @@ public sealed class EditorSessionPlaybackTests : IDisposable
         session.Clips.OpenFile(path);
         File.Delete(path);
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
         session.AdvancePlayback(0.5);
 
         Assert.Equal(1, HeightOf(session.Playback!.Workspace.Loaded!.Scene!), 1e-9);
@@ -286,12 +286,12 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     }
 
     [Fact]
-    public void AClipThatIsNotAClipIsSaidAndTheSceneStillPlays()
+    public async Task AClipThatIsNotAClipIsSaidAndTheSceneStillPlays()
     {
         File.WriteAllText(PathOf("bounce.oclip"), "not a clip");
         var session = Open();
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
         session.AdvancePlayback(0.5);
 
         Assert.True(session.Playing);
@@ -301,18 +301,18 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     }
 
     [Fact]
-    public void AClipThatCannotBeFoundIsSaidAndTheSceneStillPlays()
+    public async Task AClipThatCannotBeFoundIsSaidAndTheSceneStillPlays()
     {
         var session = Open();
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
 
         Assert.True(session.Playing);
         Assert.StartsWith("bounce.oclip could not be read", session.Last!.Value.Text);
     }
 
     [Fact]
-    public void AClipOutsideTheProjectIsNotFollowed()
+    public async Task AClipOutsideTheProjectIsNotFollowed()
     {
         var name = $"orblit_outside_{Guid.NewGuid():N}.oclip";
         var outside = Path.Combine(Path.GetDirectoryName(_project.FullName)!, name);
@@ -320,7 +320,7 @@ public sealed class EditorSessionPlaybackTests : IDisposable
         _outside.Add(outside);
         var session = Open($"../{name}");
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
         session.AdvancePlayback(0.5);
 
         Assert.Equal(0, HeightOf(session.Playback!.Workspace.Loaded!.Scene!));
@@ -329,12 +329,12 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     }
 
     [Fact]
-    public void AProjectFolderNamedWithAnEndingSeparatorStillPlaysItsClips()
+    public async Task AProjectFolderNamedWithAnEndingSeparatorStillPlaysItsClips()
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         var session = Open(ending: Path.DirectorySeparatorChar.ToString());
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
         session.AdvancePlayback(0.5);
 
         Assert.Equal(1, HeightOf(session.Playback!.Workspace.Loaded!.Scene!), 1e-9);
@@ -342,7 +342,7 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     }
 
     [Fact]
-    public void AFolderBesideTheProjectThatStartsWithItsNameIsOutsideToo()
+    public async Task AFolderBesideTheProjectThatStartsWithItsNameIsOutsideToo()
     {
         var beside = _project.FullName + "_beside";
         Directory.CreateDirectory(beside);
@@ -351,7 +351,7 @@ public sealed class EditorSessionPlaybackTests : IDisposable
         var relative = $"../{Path.GetFileName(beside)}/bounce.oclip";
         var session = Open(relative);
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
         session.AdvancePlayback(0.5);
 
         Assert.Equal(0, HeightOf(session.Playback!.Workspace.Loaded!.Scene!));
@@ -359,7 +359,7 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     }
 
     [Fact]
-    public void TheProjectsCutscenesAreOfferedByName()
+    public async Task TheProjectsCutscenesAreOfferedByName()
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         Directory.CreateDirectory(PathOf("cutscenes"));
@@ -368,13 +368,13 @@ public sealed class EditorSessionPlaybackTests : IDisposable
         File.WriteAllText(PathOf("cutscenes/notes.txt"), "not a cutscene");
         var session = Open();
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
 
         Assert.Equal(["first", "second"], session.Playback!.Cutscenes.Keys.Order());
     }
 
     [Fact]
-    public void TwoCutscenesWithOneNameAreSaidBecauseTheGameWillNotLoadBoth()
+    public async Task TwoCutscenesWithOneNameAreSaidBecauseTheGameWillNotLoadBoth()
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         Directory.CreateDirectory(PathOf("cutscenes"));
@@ -382,7 +382,7 @@ public sealed class EditorSessionPlaybackTests : IDisposable
         File.WriteAllText(PathOf("cutscenes/b.ocutscene"), new CutsceneDocument(new ClipDocument("intro", 2), []).Encode());
         var session = Open();
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
 
         Assert.Equal("Two cutscenes are called intro. The game will not load both, so rename one.", session.Last!.Value.Text);
         Assert.Equal(SayLevel.Warning, session.Last!.Value.Level);
@@ -390,7 +390,7 @@ public sealed class EditorSessionPlaybackTests : IDisposable
     }
 
     [Fact]
-    public void ACutsceneOpenOnTheBenchIsOfferedAsItIsNowAndNotAsLastSaved()
+    public async Task ACutsceneOpenOnTheBenchIsOfferedAsItIsNowAndNotAsLastSaved()
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         Directory.CreateDirectory(PathOf("cutscenes"));
@@ -400,13 +400,13 @@ public sealed class EditorSessionPlaybackTests : IDisposable
         session.Cutscenes.OpenFile(path);
         File.WriteAllText(path, new CutsceneDocument(new ClipDocument("saved-over", 1), []).Encode());
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
 
         Assert.Equal(["intro"], session.Playback!.Cutscenes.Keys);
     }
 
     [Fact]
-    public void ABrokenCutsceneIsSaidAndTheRestAreStillOffered()
+    public async Task ABrokenCutsceneIsSaidAndTheRestAreStillOffered()
     {
         File.WriteAllText(PathOf("bounce.oclip"), Bounce().Encode());
         Directory.CreateDirectory(PathOf("cutscenes"));
@@ -414,7 +414,7 @@ public sealed class EditorSessionPlaybackTests : IDisposable
         File.WriteAllText(PathOf("cutscenes/b.ocutscene"), new CutsceneDocument(new ClipDocument("fine", 1), []).Encode());
         var session = Open();
 
-        session.TogglePlayback();
+        await session.TogglePlayback();
 
         Assert.Equal(["fine"], session.Playback!.Cutscenes.Keys);
         Assert.StartsWith("a.ocutscene is not a cutscene", session.Last!.Value.Text);

@@ -31,7 +31,7 @@ public sealed class ScenePlayback
             var scene = Copy(original);
             Workspace.Add(new SceneEntry("preview", scene.Name, scene: scene));
             Load(scene, read);
-            _followed.Add(new Followed(original, scene));
+            _followed.Add(new Followed(original, scene, HandOn));
         }
 
         Workspace.SharedEntry.Scene = Copy(editing.Shared);
@@ -39,6 +39,12 @@ public sealed class ScenePlayback
         _followed.Add(new Followed(editing.Shared, Workspace.Shared));
         Advance(0);
     }
+
+    /// <summary>
+    /// Raised with each edit to the loaded scene as it is brought into the copy, for whatever plays in
+    /// the copy to take too. The shared scene's edits are not raised, because no game plays in it.
+    /// </summary>
+    public event Action<Doc.SceneDiff>? Edited;
 
     public EditorScene? Source { get; }
 
@@ -72,6 +78,19 @@ public sealed class ScenePlayback
         }
     }
 
+    /// <summary>
+    /// Makes a change to the loaded scene of the copy, such as one the game makes. It touches the rows it
+    /// names, so a clip that poses another row goes on posing it.
+    /// </summary>
+    public void Apply(Doc.SceneDiff diff)
+    {
+        ArgumentNullException.ThrowIfNull(diff);
+        if (Workspace.Loaded?.Scene is { } scene)
+        {
+            SceneDocument.Apply(scene, diff);
+        }
+    }
+
     public void Advance(double seconds)
     {
         var marks = new List<Mark>();
@@ -85,6 +104,8 @@ public sealed class ScenePlayback
     }
 
     private static EditorScene Copy(EditorScene scene) => SceneDocument.Decode(SceneDocument.Encode(scene)).Scene;
+
+    private void HandOn(Doc.SceneDiff diff) => Edited?.Invoke(diff);
 
     private void Load(EditorScene scene, Func<string, ClipDocument?> read)
     {
@@ -160,8 +181,9 @@ public sealed class ScenePlayback
     private static Doc.SceneDocument Snapshot(EditorScene scene) => SceneDocument.DocumentOf(Copy(scene));
 
     // A scene being edited and its copy, with the edited scene as it was at the last look. The change
-    // between that and now is applied to the copy the way an undo applies one to the scene.
-    private sealed class Followed(EditorScene source, EditorScene copy)
+    // between that and now is applied to the copy the way an undo applies one to the scene, and handed
+    // to whoever asked to hear of it.
+    private sealed class Followed(EditorScene source, EditorScene copy, Action<Doc.SceneDiff>? edited = null)
     {
         private Doc.SceneDocument _seen = Snapshot(source);
 
@@ -172,7 +194,8 @@ public sealed class ScenePlayback
             _seen = now;
             if (diff is { IsEmpty: false })
             {
-                SceneDocument.Reconcile(copy, diff.ApplyTo(SceneDocument.DocumentOf(copy)));
+                SceneDocument.Apply(copy, diff);
+                edited?.Invoke(diff);
             }
         }
     }

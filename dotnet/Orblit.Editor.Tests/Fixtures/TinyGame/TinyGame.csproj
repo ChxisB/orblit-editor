@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Built by GameLoaderTests with the editor's own build command. It sits under dotnet/, so it restores from the same feed and pins as the editor. -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <!-- IGame names its method Stop, and a game that overrides it meets the same rule the contract already answers. -->
+    <NoWarn>$(NoWarn);CA1716</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Orblit.Game" />
+    <PackageReference Include="Orblit.Game.Avalonia" />
+    <ProjectReference Include="..\TinyPart\TinyPart.csproj" />
+  </ItemGroup>
+</Project>

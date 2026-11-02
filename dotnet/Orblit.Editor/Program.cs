@@ -19,6 +19,9 @@ internal static class Program
     // The recents list is kept under the user's config folder.
     private static string RecentsFile() => Path.Combine(HostPaths.SupportFolder(), "recent.json");
 
+    // The projects trusted to run their code. Never inside a project, which could then ship its own trust.
+    private static string TrustFile() => Path.Combine(HostPaths.SupportFolder(), "trusted-projects.json");
+
     private static LauncherWindow Launch()
     {
         var session = new LauncherSession(new ProjectStore(RecentsFile()), HostPaths.HomeDirectory());
@@ -42,6 +45,7 @@ internal static class Program
             Prefabs = prefabs,
             TextClipboard = clipboard,
             PictureDecoder = new SkiaPictureDecoder(),
+            Trust = new ProjectTrust(TrustFile()),
         };
         session.Report(opened.Problems);
         var window = new EditorWindow(session, renderer: HostPlatforms.Current.HasRenderer());

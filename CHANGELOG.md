@@ -2,6 +2,60 @@
 
 ## Unreleased
 
+- Give a playing game the keys and the pointer. While Play runs, the game
+  view reads the keys held over it and the pointer, and the game gets them as
+  a `GameInput` on each update. Play gives the view the focus. A key pressed
+  in the view is the game's, so the tool keys and Delete do nothing in the
+  editor until Play is paused or stopped. Escape goes to the game too, so
+  stop with the Stop button or the palette. A click made before Play is not
+  carried into the game. A scene with no camera gives the game its keys and
+  no pointer. `EditorSession.InputFeed` is where the view says what is held.
+- Show the control of an interface game. A game that implements
+  `IInterfaceGame` is asked for its control once, when it starts. The control
+  sits over the picture while the game plays. At Stop it is let go with its
+  data context, so the game's assembly can unload. A game whose
+  `CreateInterface` throws stops Play and the log keeps the stack. A control
+  made from XAML loads, and an `avares://` address in it reaches the game's
+  own assembly. Adds the `Orblit.Game.Avalonia` 0.1.0 pin.
+- Ask before a project's game runs. The first Play on a project with a game
+  opens a dialog that says the code runs on this computer. Cancel is the
+  default, so a stray Enter starts nothing. "Trust and Play" builds the game
+  and remembers the folder in `trusted-projects.json`, beside the recent
+  projects and never inside a project, which could then ship its own trust.
+  Trust is for the folder and not for one version of it. Stop trusting this
+  project, in the File menu and the palette, takes it back, stops a game that
+  is running and makes the next Play ask again. A trust file that is missing or damaged trusts nothing.
+  `ProjectTrust` is the store. `IProjectTrust` gains `Grant` and `Revoke`, and
+  `EditorSession.AskToTrust` is the question, which answers no until a window
+  sets it. Opening a project still never builds or runs anything.
+- Play runs a project's game. When `orblit.project.json` names a game, Play
+  builds it, loads it and runs it in the playing copy of the scene. Stop, or
+  closing the window, lets the game go and unloads its assembly. The scene
+  being edited is never changed. A game that throws stops Play, and the log
+  keeps the stack. `EditorSession.TogglePlayback` is now a task, because a
+  build takes a while. `EditorSession.Building` is true until it ends, the
+  Play button reads "Building the game", and Stop cancels the build. Nothing
+  builds until the project is trusted, which the entry above covers. A
+  project with no game plays its scene as before.
+- Let a change reach the scene a game plays in. `ScenePlayback.Apply` takes
+  a `SceneDiff` and changes the playing copy. It writes only the rows the
+  diff names, so an object it leaves alone is the same object and a clip that
+  poses it carries on. `ScenePlayback.Edited` is raised with each edit made
+  to the scene being edited, for the game to take. The game's own changes are
+  not raised back.
+- Build and load a game. `GameBuilder` runs `dotnet build` on the game's
+  project into `<project>/.orblit/game`, with a five minute limit. `GameLoader`
+  reads the built assembly into a collectible load context and makes the
+  named `IGame`. The editor's own `Orblit.Game` and `Orblit.Scene` are the
+  ones the game uses, never the copies beside it. A game built for another
+  minor version of `Orblit.Game` is refused. Disposing a `LoadedGame` unloads
+  the context. Adds the `Orblit.Game` 0.1.0 pin.
+- Let a project name its game. `orblit.project.json` takes an optional
+  `game` field, `{ "project": "game/Game.csproj", "type": "Scape.Game.ScapeGame" }`,
+  and `Project.Game` reads it. A path that is absolute or leaves the project
+  folder, or an empty type, leaves `Game` null and sets `Project.GameProblem`.
+  The project still opens. `FormatVersion` stays 1. Nothing builds or runs
+  the game yet.
 - Add portrait and landscape layouts to the scene. The top bar has a Layout
   switch with Base, Portrait and Landscape. An edit made in a layout is saved
   as a difference from the base. Adding and deleting objects waits for Base,

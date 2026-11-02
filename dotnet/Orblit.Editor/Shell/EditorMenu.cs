@@ -54,9 +54,10 @@ internal sealed class EditorMenu : Menu
         var store = Item("menu_kit_store", "Kit store…", project.Store);
         var publish = Item("menu_publish_kit", "Publish kit…", project.Publish);
         var openInCode = Item("menu_open_in_code", $"Open project in {project.Editor ?? "VS Code"}", project.OpenInCode);
+        var stopTrusting = Item("menu_stop_trusting", "Stop trusting this project", session.StopTrusting);
         var reveal = Item("menu_reveal", platform == HostPlatform.MacOS ? "Show in Finder" : "Show project folder", project.Reveal);
 
-        _file = Menu("File", newScene, _save, saveAs, new Separator(), export, store, publish, openInCode, reveal);
+        _file = Menu("File", newScene, _save, saveAs, new Separator(), export, store, publish, openInCode, reveal, new Separator(), stopTrusting);
         Items.Add(_file);
         Items.Add(Menu("Edit", _undo, _redo, new Separator(), _cut, _copy, _paste, _duplicate, _delete));
         Items.Add(AddItems());

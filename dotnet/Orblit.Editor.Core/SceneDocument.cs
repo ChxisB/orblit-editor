@@ -262,6 +262,34 @@ public static class SceneDocument
         scene.ReplaceAll(
             [.. document.Entities.Select(entity => ObjectOf(entity, keys.TryGetValue(entity.Id, out var key) ? key : null))]);
 
+        WriteSettings(scene, document);
+    }
+
+    /// <summary>
+    /// Makes <paramref name="diff"/> to <paramref name="scene"/>, in place, and writes only the rows it
+    /// names.
+    /// </summary>
+    /// <remarks>
+    /// A row the diff leaves alone is the same object afterwards, so whatever holds it carries on. A
+    /// clip that is posing it is one. The diff is worked out on the rows as they are now, which is why
+    /// a field somebody has moved since the scene was opened is not put back.
+    /// </remarks>
+    public static void Apply(EditorScene scene, Doc.SceneDiff diff)
+    {
+        var rows = scene.Objects.ToDictionary(one => one.Id);
+        var before = DocumentOf(scene);
+        var after = diff.ApplyTo(before);
+
+        scene.ReplaceAll(
+            [.. after.Entities.Select(entity => ReferenceEquals(before[entity.Id], entity)
+                ? rows[entity.Id]
+                : ObjectOf(entity, rows.TryGetValue(entity.Id, out var was) ? was.RenderKey : null))]);
+
+        WriteSettings(scene, after);
+    }
+
+    private static void WriteSettings(EditorScene scene, Doc.SceneDocument document)
+    {
         var settings = document.Settings;
         scene.Name = document.Name;
         scene.SkyColour = Colour.FromTint(settings.Sky);

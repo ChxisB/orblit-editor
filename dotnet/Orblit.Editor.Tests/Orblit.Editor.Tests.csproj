@@ -15,5 +15,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Fixtures\**" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The games under Fixtures are built by a test, as game projects of their own. They are not part of the tests. -->
+    <Compile Remove="Fixtures\**" />
+    <!-- Avalonia gathers every .axaml by glob, and a game's XAML is compiled by the game's own project. -->
+    <AvaloniaXaml Remove="Fixtures\**" />
+    <!-- Avalonia's targets also drop every .axaml from None, so the game's XAML is copied as content. -->
+    <Content Include="Fixtures\**\*.axaml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

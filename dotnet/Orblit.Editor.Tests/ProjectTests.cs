@@ -212,6 +212,131 @@ public sealed class ProjectTests : IDisposable
         Assert.Equal(DateTime.UnixEpoch, project.LastOpened);
     }
 
+    private Project OpenedWith(object? game)
+    {
+        var json = new OrderedDictionary<string, object?> { ["name"] = "My Game" };
+        if (game is not null)
+        {
+            json["game"] = game;
+        }
+
+        File.WriteAllText(Path.Combine(_temp.FullName, Project.FileName), JsonText.Encode(json));
+        return ProjectStore.Open(_temp.FullName)!;
+    }
+
+    private static OrderedDictionary<string, object?> GameJson(object? project, object? type) =>
+        new() { ["project"] = project, ["type"] = type };
+
+    [Fact]
+    public void AProjectFileNamingAGameReadsToTheEntry()
+    {
+        var project = OpenedWith(GameJson("game/Game.csproj", "Scape.Game.ScapeGame"));
+
+        Assert.Equal(new GameEntry("game/Game.csproj", "Scape.Game.ScapeGame"), project.Game);
+        Assert.Null(project.GameProblem);
+    }
+
+    [Fact]
+    public void AProjectFileWithoutAGameHasNoGameAndNoProblem()
+    {
+        var project = OpenedWith(null);
+
+        Assert.Null(project.Game);
+        Assert.Null(project.GameProblem);
+    }
+
+    [Theory]
+    [InlineData("/etc/x.csproj")]
+    [InlineData("../x.csproj")]
+    [InlineData("game/../../x.csproj")]
+    [InlineData("game\\..\\x.csproj")]
+    [InlineData("\\game\\x.csproj")]
+    [InlineData("C:/game/x.csproj")]
+    [InlineData("x.cs")]
+    [InlineData("game/")]
+    [InlineData("")]
+    public void AGameProjectThatLeavesTheFolderOrIsNotAProjectIsAProblemAndNotAGame(string path)
+    {
+        var project = OpenedWith(GameJson(path, "Scape.Game.ScapeGame"));
+
+        Assert.Null(project.Game);
+        Assert.Contains("project", project.GameProblem);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void AGameWithoutATypeNameIsAProblemAndNotAGame(string type)
+    {
+        var project = OpenedWith(GameJson("game/Game.csproj", type));
+
+        Assert.Null(project.Game);
+        Assert.Contains("type", project.GameProblem);
+    }
+
+    [Fact]
+    public void AGameOfTheWrongShapeIsAProblemAndNotAGame()
+    {
+        var shapes = new object?[]
+        {
+            "game/Game.csproj",
+            new OrderedDictionary<string, object?> { ["type"] = "Scape.Game.ScapeGame" },
+            new OrderedDictionary<string, object?> { ["project"] = "game/Game.csproj" },
+            GameJson(7L, "Scape.Game.ScapeGame"),
+            GameJson("game/Game.csproj", true),
+        };
+
+        foreach (var shape in shapes)
+        {
+            var project = OpenedWith(shape);
+
+            Assert.Null(project.Game);
+            Assert.NotNull(project.GameProblem);
+        }
+    }
+
+    [Fact]
+    public void AProjectWithABadGameStillOpensWithItsName()
+    {
+        // Play can say why it cannot run, which it cannot do for a project that did not open.
+        var project = OpenedWith(GameJson("../x.csproj", "Scape.Game.ScapeGame"));
+
+        Assert.Equal("My Game", project.Name);
+        Assert.True(project.Exists);
+    }
+
+    [Fact]
+    public void AGameEntryRefusesWhatItCouldNotRun()
+    {
+        Assert.Throws<ArgumentException>(() => new GameEntry("../x.csproj", "Scape.Game.ScapeGame"));
+        Assert.Throws<ArgumentException>(() => new GameEntry("game/Game.csproj", ""));
+    }
+
+    [Fact]
+    public void AGameSurvivesWritingAndReadingTheProjectFile()
+    {
+        var entry = new GameEntry("game/Game.csproj", "Scape.Game.ScapeGame");
+        var written = new Project("My Game", "/a", Day) { Game = entry };
+
+        var decoded = (IReadOnlyDictionary<string, object?>)JsonText.Decode(JsonText.Encode(written.ToJson()))!;
+
+        Assert.Equal(entry, Project.FromJson(decoded, "/a").Game);
+    }
+
+    [Fact]
+    public void AProjectWithoutAGameWritesNoGameField() =>
+        Assert.False(new Project("My Game", "/a", Day).ToJson().ContainsKey("game"));
+
+    [Fact]
+    public void AProjectWithAGameIsStillListedInTheRecents()
+    {
+        var entry = new GameEntry("game/Game.csproj", "Scape.Game.ScapeGame");
+
+        _store.Remember(new Project("My Game", Folder("my-game"), Day) { Game = entry });
+
+        Assert.Equal(entry, Assert.Single(_store.Recents()).Game);
+    }
+
     [Fact]
     public void TheDestinationIsTheFolderTheNameBecomes()
     {
