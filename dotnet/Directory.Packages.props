@@ -20,9 +20,9 @@
     <PackageVersion Include="Orblit.Json" Version="0.4.0" />
     <PackageVersion Include="Orblit.Light" Version="0.3.0" />
     <PackageVersion Include="Orblit.Mesh" Version="0.6.0" />
-    <PackageVersion Include="Orblit.Motion" Version="0.10.0" />
+    <PackageVersion Include="Orblit.Motion" Version="0.11.0" />
     <PackageVersion Include="Orblit.Native" Version="0.1.1" />
-    <PackageVersion Include="Orblit.Scene" Version="0.25.0" />
+    <PackageVersion Include="Orblit.Scene" Version="0.26.0" />
     <PackageVersion Include="Orblit.Sequence" Version="0.2.1" />
     <PackageVersion Include="Orblit.Sprite" Version="0.4.0" />
     <PackageVersion Include="Orblit.Stage" Version="0.6.0" />
