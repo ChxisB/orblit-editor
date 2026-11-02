@@ -26,6 +26,9 @@ public sealed class SwitchLayout(string sceneId, LayoutShape? from, LayoutShape?
 
     public override bool ChangesScene => false;
 
+    // Showing a layout takes the rows as its base, so a posed clip would be kept in the base.
+    public override bool NeedsRest => true;
+
     public override void Apply(ISceneHost host) => Show(host, To);
 
     public override void Revert(ISceneHost host) => Show(host, From);

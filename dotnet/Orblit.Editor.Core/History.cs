@@ -86,6 +86,13 @@ public abstract class EditorCommand
     public virtual bool ChangesScene => true;
 
     /// <summary>
+    /// Whether this reads the scene as a whole while it runs, so a clip posed on the timeline must be
+    /// taken off first. False by default: an edit to one field is made over the pose, and shows until
+    /// the playhead moves.
+    /// </summary>
+    public virtual bool NeedsRest => false;
+
+    /// <summary>
     /// Set by the history each time this command is run or absorbs another. What lets "has anything
     /// changed since the last save" be answered exactly. Depth alone cannot: a merged drag leaves the
     /// stack the same length while changing what it means.
@@ -161,6 +168,11 @@ public sealed class History(ISceneHost host)
     public string? UndoLabel => _done.Count == 0 ? null : _done[^1].Label;
 
     public string? RedoLabel => _undone.Count == 0 ? null : _undone[^1].Label;
+
+    /// <summary>Whether the next undo reads the whole scene, which a posed clip would change.</summary>
+    public bool UndoNeedsRest => _done.Count > 0 && _done[^1].NeedsRest;
+
+    public bool RedoNeedsRest => _undone.Count > 0 && _undone[^1].NeedsRest;
 
     /// <summary>The scene the next undo would change, so the shell can select it.</summary>
     public string? UndoSceneId => _done.Count == 0 ? null : _done[^1].SceneId;

@@ -299,15 +299,26 @@ public sealed partial class EditorSession
     public void Undo()
     {
         var sceneId = History.UndoSceneId;
-        History.Undo();
+        Step(History.UndoNeedsRest, History.Undo);
         Reveal(sceneId);
     }
 
     public void Redo()
     {
         var sceneId = History.RedoSceneId;
-        History.Redo();
+        Step(History.RedoNeedsRest, History.Redo);
         Reveal(sceneId);
+    }
+
+    private void Step(bool atRest, Action step)
+    {
+        if (atRest)
+        {
+            AtRest(step);
+            return;
+        }
+
+        step();
     }
 
     /// <summary>

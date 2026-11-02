@@ -1,7 +1,9 @@
 namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
+using Orblit.Motion;
 using Orblit.Scene;
+using Orblit.Sequence;
 using Orblit.VectorMath;
 using Doc = Orblit.Scene;
 using SceneDocument = Orblit.Editor.Core.SceneDocument;
@@ -35,6 +37,19 @@ public sealed class EditorSessionLayoutsTests : IDisposable
         var crate = SceneOf(session)["crate"]!;
         session.History.Run(new SetTransform(session.Workspace.Loaded!.Id, "crate", TransformField.Position, crate.Name, crate.Position, to));
     }
+
+    private static ClipDocument Rising() => new(
+        "Rising",
+        1,
+        WhenDone.Hold,
+        channels:
+        [
+            new ClipChannel<Vector3>(
+                "",
+                "transform.position",
+                ChannelKind.Vector,
+                [new Key<Vector3>(0, Vector3.Zero()), new Key<Vector3>(1, new Vector3(0, 2, 0))]),
+        ]);
 
     [Fact]
     public void TheBaseIsShownUntilALayoutIsChosen()
@@ -232,5 +247,65 @@ public sealed class EditorSessionLayoutsTests : IDisposable
         session.ShowLayout(null);
 
         Assert.Empty(_said);
+    }
+
+    // The crate rests at the returned height and the timeline poses it above that.
+    private double PosedCrate(EditorSession session)
+    {
+        var path = TestPaths.In(_project, "rising.oclip");
+        File.WriteAllText(path, Rising().Encode());
+        var home = SceneOf(session)["crate"]!.Position.Y;
+        session.Clips.OpenFile(path);
+        session.Clips.Owner = "crate";
+        session.Clips.At = 0.5;
+        Assert.NotEqual(home, SceneOf(session)["crate"]!.Position.Y);
+        return home;
+    }
+
+    private void AssertSavedAtRest(double home)
+    {
+        var written = Doc.SceneDocument.Decode(File.ReadAllText(Scene)).Document;
+        var stored = (TransformComponent)written["crate"]![SceneComponents.Transform]!;
+        Assert.Equal(home, stored.Position.Y);
+        Assert.True(written.Layouts.Portrait.IsEmpty);
+    }
+
+    [Fact]
+    public void AClipPosedOnTheTimelineIsNotSavedAsWhatTheLayoutSets()
+    {
+        var session = Open();
+        var home = PosedCrate(session);
+
+        session.ShowLayout(LayoutShape.Portrait);
+        session.Save();
+
+        AssertSavedAtRest(home);
+    }
+
+    [Fact]
+    public void UndoingTheSwitchWhileAClipIsPosedKeepsThePoseOutOfTheLayout()
+    {
+        var session = Open();
+        session.ShowLayout(LayoutShape.Portrait);
+        var home = PosedCrate(session);
+
+        session.Undo();
+        session.Save();
+
+        AssertSavedAtRest(home);
+    }
+
+    [Fact]
+    public void RedoingTheSwitchWhileAClipIsPosedKeepsThePoseOutOfTheBase()
+    {
+        var session = Open();
+        session.ShowLayout(LayoutShape.Portrait);
+        session.Undo();
+        var home = PosedCrate(session);
+
+        session.Redo();
+        session.Save();
+
+        AssertSavedAtRest(home);
     }
 }

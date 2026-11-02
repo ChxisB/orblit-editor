@@ -19,14 +19,18 @@ public sealed partial class EditorSession
             return;
         }
 
-        // Counted before the switch, since leaving is what lets them go.
-        var left = scene.Layouts.Active;
-        var lost = scene.Layouts.CountLost(scene);
-        Run(new SwitchLayout(open.Id, left, shape));
-        if (lost > 0)
+        // At rest, so a clip posed on the timeline is not taken for the base or for an edit of the layout.
+        AtRest(() =>
         {
-            Say($"{lost} {(lost == 1 ? "edit" : "edits")} made in {left} could not be kept. A layout holds how things look.", SayLevel.Warning);
-        }
+            // Counted before the switch, since leaving is what lets them go.
+            var left = scene.Layouts.Active;
+            var lost = scene.Layouts.CountLost(scene);
+            Run(new SwitchLayout(open.Id, left, shape));
+            if (lost > 0)
+            {
+                Say($"{lost} {(lost == 1 ? "edit" : "edits")} made in {left} could not be kept. A layout holds how things look.", SayLevel.Warning);
+            }
+        });
     }
 
     /// <summary>What the layout on show sets on an object, for the inspector to say. Empty in the base.</summary>
