@@ -37,6 +37,7 @@ public sealed partial class EditorSession
         _library = new LayoutLibrary(Path.Combine(workspace.ProjectDirectory, ".orblit", "layouts.json"), panels.Kinds());
         Mode = modes.All[0];
         Layout = LayoutOf(Mode);
+        Device = new DevicePreference(Path.Combine(workspace.ProjectDirectory, ".orblit", "device.json"));
         Assets = new AssetTree(workspace.ProjectDirectory);
         Data = new DataStore(workspace.ProjectDirectory);
         Skeletons = new ModelSkeletons(workspace.ProjectDirectory);
@@ -71,6 +72,9 @@ public sealed partial class EditorSession
     public EditorLog Log { get; } = new();
 
     public Workspace Workspace { get; }
+
+    /// <summary>The device the game view shows. It is kept with the project and never with a scene.</summary>
+    public DevicePreference Device { get; }
 
     public History History { get; }
 

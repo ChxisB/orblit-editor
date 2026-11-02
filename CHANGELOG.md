@@ -12,6 +12,12 @@
   editor will not open it. A scene with no layout is still written as format
   5. The editor packages `Orblit.Scene` 0.26.0, `Orblit.Motion` 0.11.0 and
   `Orblit.Stage` 0.6.0.
+- Add a device bar to the Game view. The scene shows in a Desktop, Tablet or
+  Mobile frame, held upright or on its side. The picture has the shape of the
+  device and is never drawn larger than it. A phone shades the strips a game
+  keeps clear of. The choice is kept in `.orblit/device.json` and is not part
+  of the scene. `Orblit.Editor.Core` holds `DeviceFrame` and
+  `DevicePreference`.
 - Make Play follow edits. A move, a rename, an added or deleted object and
   an undo now show in the game view while the scene plays or sits paused.
   Before, they showed only after Stop and Play. A field a clip is moving is
