@@ -11,7 +11,7 @@ using Orblit.Input;
 /// </remarks>
 internal sealed class RunningGame : IDisposable
 {
-    // The viewport forwards the keys and the pointer in a later step. Until then the game sees none.
+    // A game with no view to read from sees nothing held and no pointer.
     private static readonly GameInput NoInput = new(new FrameControls());
 
     private readonly LoadedGame _loaded;
@@ -37,7 +37,21 @@ internal sealed class RunningGame : IDisposable
         _host.Start();
     }
 
-    public void Update(double seconds) => _host.Update(NoInput, seconds);
+    /// <summary>The game itself, for a host that asks whether it has a control to show.</summary>
+    public IGame Game => _loaded.Game;
+
+    /// <summary>
+    /// Runs the game for one frame, with what <paramref name="input"/> reads. The frame ends after the
+    /// update, and the host catches a throw, so the frame ends either way.
+    /// </summary>
+    public void Update(double seconds, IGameInputFeed? input)
+    {
+        _host.Update(input?.Read() ?? NoInput, seconds);
+        input?.EndFrame();
+    }
+
+    /// <summary>Runs code of the game's that is not an update, and ends the game if it throws.</summary>
+    public void Guard(string name, Action call) => _host.Guard(name, call);
 
     public void Dispose()
     {

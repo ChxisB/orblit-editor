@@ -7,6 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Orblit.Game" />
+    <PackageReference Include="Orblit.Game.Avalonia" />
     <ProjectReference Include="..\TinyPart\TinyPart.csproj" />
   </ItemGroup>
 </Project>

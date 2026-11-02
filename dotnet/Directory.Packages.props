@@ -17,6 +17,7 @@
     <PackageVersion Include="Orblit.Filament" Version="0.42.0" />
     <PackageVersion Include="Orblit.Filament.Avalonia" Version="0.1.0" />
     <PackageVersion Include="Orblit.Game" Version="0.1.0" />
+    <PackageVersion Include="Orblit.Game.Avalonia" Version="0.1.0" />
     <PackageVersion Include="Orblit.HeadlessSupport" Version="0.1.0" />
     <PackageVersion Include="Orblit.Json" Version="0.4.0" />
     <PackageVersion Include="Orblit.Light" Version="0.3.0" />

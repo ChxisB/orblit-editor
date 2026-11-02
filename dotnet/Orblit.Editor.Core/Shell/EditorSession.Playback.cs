@@ -75,7 +75,7 @@ public sealed partial class EditorSession
             return;
         }
 
-        _game?.Update(seconds);
+        _game?.Update(seconds, InputFeed);
         if (_game?.Fault is not null)
         {
             StopPlayback();

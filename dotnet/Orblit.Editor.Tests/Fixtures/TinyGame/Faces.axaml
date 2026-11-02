@@ -1,0 +1,8 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TinyGame.Faces">
+  <UserControl.Styles>
+    <StyleInclude Source="avares://TinyGame/Palette.axaml" />
+  </UserControl.Styles>
+  <TextBlock Name="game_xaml_label" Classes="crate" Text="From XAML" />
+</UserControl>

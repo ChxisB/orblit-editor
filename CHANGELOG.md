@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Give a playing game the keys and the pointer. While Play runs, the game
+  view reads the keys held over it and the pointer, and the game gets them as
+  a `GameInput` on each update. Play gives the view the focus. A key pressed
+  in the view is the game's, so the tool keys and Delete do nothing in the
+  editor until Play is paused or stopped. Escape goes to the game too, so
+  stop with the Stop button or the palette. A click made before Play is not
+  carried into the game. A scene with no camera gives the game its keys and
+  no pointer. `EditorSession.InputFeed` is where the view says what is held.
+- Show the control of an interface game. A game that implements
+  `IInterfaceGame` is asked for its control once, when it starts. The control
+  sits over the picture while the game plays. At Stop it is let go with its
+  data context, so the game's assembly can unload. A game whose
+  `CreateInterface` throws stops Play and the log keeps the stack. A control
+  made from XAML loads, and an `avares://` address in it reaches the game's
+  own assembly. Adds the `Orblit.Game.Avalonia` 0.1.0 pin.
 - Ask before a project's game runs. The first Play on a project with a game
   opens a dialog that says the code runs on this computer. Cancel is the
   default, so a stray Enter starts nothing. "Trust and Play" builds the game

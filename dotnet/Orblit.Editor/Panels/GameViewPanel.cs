@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
@@ -11,14 +12,19 @@ namespace Orblit.Editor;
 using Orblit.Editor.Core;
 using Orblit.Editor.Viewport;
 using Orblit.Filament;
+using Orblit.Game.Avalonia;
 
 /// <summary>
 /// The scene as the game shows it: through the scene's first camera, with nothing of the editor drawn
 /// over it. While the scene plays it shows the playing copy, and at rest it shows the scene as edited.
 /// </summary>
 /// <remarks>
-/// shortcut: this draws the scene and not the game's interface or sound. Terrain is not drawn in a C#
-/// viewport yet, so it is missing here as it is in the scene view.
+/// While a scene plays the picture gives the game the keys and the pointer, and the game's own control is
+/// shown over it. A key pressed in the view is the game's and never reaches the editor's shortcuts.
+/// <para>
+/// shortcut: this draws the scene and not the game's sound. Terrain is not drawn in a C# viewport yet, so
+/// it is missing here as it is in the scene view.
+/// </para>
 /// </remarks>
 internal sealed class GameViewPanel : Border
 {
@@ -50,16 +56,26 @@ internal sealed class GameViewPanel : Border
     private readonly DeviceFrameHost _host = new() { Name = "game_view_frame" };
     private readonly UnsafeEdgesOverlay _edges = new();
 
+    // The control of an interface game sits over the picture and beside it, so a click on the game's own
+    // button is not a click on the world.
+    private readonly Border _picture;
+    private readonly Grid _interfaceHost = new() { Name = "game_view_interface" };
+    private readonly GameInterface _interface;
+    private readonly GameViewInput _input;
+
     private bool _dirty = true;
+    private bool _wasPlaying;
     private bool _requested;
     private int _loop;
     private TimeSpan? _origin;
 
     /// <param name="session">What is open, and what is playing.</param>
+    /// <param name="gameInterface">The control the playing game made, if it made one.</param>
     /// <param name="renderer">Whether to draw with the renderer. Off, a plain grid takes its place, which is what a test wants.</param>
-    public GameViewPanel(EditorSession session, bool renderer = true)
+    public GameViewPanel(EditorSession session, GameInterface gameInterface, bool renderer = true)
     {
         _session = session;
+        _interface = gameInterface;
         _geometry = new GeometryStore(session.Workspace.ProjectDirectory);
         Name = "game_view";
         Margin = new Thickness(Space.Sm);
@@ -68,8 +84,17 @@ internal sealed class GameViewPanel : Border
         ClipToBounds = true;
         _addCamera.Click += (_, _) => _session.Add(ObjectKind.Camera);
         _renderer = renderer ? new RendererViewport() : null;
+        _picture = new Border
+        {
+            Name = "game_view_picture",
+            Background = Brushes.Transparent,
+            Child = (Control?)_renderer ?? new ViewportPlaceholder(),
+        };
+        _input = new GameViewInput(new GameInputSource(_picture), () => Subject.Loaded?.Scene is { } scene ? CameraOf(scene) : null);
         _bar = new GameViewBar(session.Device);
-        _host.Child = Screen();
+        var screen = Screen();
+        screen.KeyDown += TakeKey;
+        _host.Child = screen;
         _host.Fitted += OnFitted;
         var body = new Grid { Children = { _host, Words() } };
         var column = new Grid { RowDefinitions = new RowDefinitions("Auto,*") };
@@ -83,12 +108,12 @@ internal sealed class GameViewPanel : Border
     /// <summary>The words over the picture, or null when the picture is showing. Read by tests.</summary>
     internal string? Saying => _note.IsVisible ? _note.Text : null;
 
-    // What the frame holds: the renderer, or a plain grid where there is none, and the unsafe edges over it.
+    // What the frame holds: the picture, the game's own control over it, and the unsafe edges over both.
     private Grid Screen() => new()
     {
         Background = OrblitColors.Ground,
         ClipToBounds = true,
-        Children = { (Control?)_renderer ?? new ViewportPlaceholder(), _edges },
+        Children = { _picture, _interfaceHost, _edges },
     };
 
     private StackPanel Words() => new()
@@ -108,6 +133,10 @@ internal sealed class GameViewPanel : Border
         _session.Workspace.Changed += MarkDirty;
         _session.Changed += MarkDirty;
         _session.Surfaces.Changed += MarkDirty;
+        _session.PlaybackChanged += TakeFocusOnPlay;
+        _interface.Changed += ShowInterface;
+        _session.InputFeed = _input;
+        ShowInterface();
         MarkDirty();
     }
 
@@ -119,6 +148,16 @@ internal sealed class GameViewPanel : Border
         _session.Workspace.Changed -= MarkDirty;
         _session.Changed -= MarkDirty;
         _session.Surfaces.Changed -= MarkDirty;
+        _session.PlaybackChanged -= TakeFocusOnPlay;
+        _interface.Changed -= ShowInterface;
+        if (ReferenceEquals(_session.InputFeed, _input))
+        {
+            _session.InputFeed = null;
+        }
+
+        _interfaceHost.Children.Clear();
+        // Opened again while the game plays, the view takes the keys on its first frame.
+        _wasPlaying = false;
         // A frame already asked for belongs to the loop that ended here.
         _loop++;
         _requested = false;
@@ -129,6 +168,38 @@ internal sealed class GameViewPanel : Border
     private Workspace Subject => _session.Playback?.Workspace ?? _session.Workspace;
 
     private RenderCamera? CameraOf(EditorScene scene) => _session.Playback?.Camera ?? SceneCameras.GameCamera(scene);
+
+    // Pressing Play means the person wants to play, so the keys go to the picture. A click or a press made
+    // before Play is not carried into the game.
+    private void TakeFocusOnPlay()
+    {
+        if (_session.Playing && !_wasPlaying)
+        {
+            _input.EndFrame();
+            _picture.Focus();
+        }
+
+        _wasPlaying = _session.Playing;
+    }
+
+    // While the scene plays, a key pressed in the view is the game's. The picture and the game's control
+    // both bubble to here, after the game's own control has had its say.
+    private void TakeKey(object? sender, KeyEventArgs press)
+    {
+        if (_session.Playing)
+        {
+            press.Handled = true;
+        }
+    }
+
+    private void ShowInterface()
+    {
+        _interfaceHost.Children.Clear();
+        if (_interface.Control is { } control)
+        {
+            _interfaceHost.Children.Add(control);
+        }
+    }
 
     // A new shape redraws the picture, because the renderer sizes itself to the frame.
     private void SyncFrame()

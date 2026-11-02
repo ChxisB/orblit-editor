@@ -18,6 +18,15 @@ public sealed partial class EditorSession
     /// </summary>
     public Func<string, Task<bool>> AskToTrust { get; set; } = _ => Task.FromResult(false);
 
+    /// <summary>
+    /// Where the playing game reads the keys and the pointer. The game view sets it while it is open. Without
+    /// one the game sees nothing held.
+    /// </summary>
+    public IGameInputFeed? InputFeed { get; set; }
+
+    /// <summary>The game that is running, or null when none is. A window asks it whether it has a control to show.</summary>
+    public IGame? PlayingGame => _game?.Game;
+
     public GameBuilder Builder { get; init; } = new(new DotnetBuild());
 
     public GameLoader Loader { get; init; } = new();
@@ -44,6 +53,19 @@ public sealed partial class EditorSession
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
             Say("The trust in this project could not be taken back.", SayLevel.Error, error.Message);
+        }
+    }
+
+    /// <summary>
+    /// Runs code of the playing game's that is not an update, such as asking an interface game for its
+    /// control. A throw ends Play, as one from an update does. Does nothing when no game is running.
+    /// </summary>
+    public void GuardGame(string name, Action call)
+    {
+        _game?.Guard(name, call);
+        if (_game?.Fault is not null)
+        {
+            StopPlayback();
         }
     }
 

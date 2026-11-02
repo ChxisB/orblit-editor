@@ -49,6 +49,7 @@ public sealed class EditorWindow : Window
     private readonly PlayPill _pill;
     private readonly LayoutPill _layouts;
     private readonly PlaybackClock _clock;
+    private readonly GameInterface _gameInterface;
     private CookStatusIndex? _cooks;
     private TerrainBrushPanel? _brush;
 
@@ -132,6 +133,7 @@ public sealed class EditorWindow : Window
         _pill = new PlayPill(_session);
         _layouts = new LayoutPill(_session);
         _clock = new PlaybackClock(_session, this);
+        _gameInterface = new GameInterface(_session);
         _dock = new DockHost(_session.VisibleLayout, PanelFor);
         _dock.LayoutChanged += layout =>
         {
@@ -163,6 +165,7 @@ public sealed class EditorWindow : Window
             _session.NameWanted -= AskSceneName;
             _session.Assets.Changed -= CookShaders;
             _clock.Detach();
+            _gameInterface.Detach();
             // A game that is playing, or being built, would outlive the window it plays in.
             _session.StopPlayback();
             // The session made the tree, and the window is what outlives its file watcher.
@@ -263,7 +266,7 @@ public sealed class EditorWindow : Window
         [PanelKind.Profile] = () => new ProfilePanel(_profiler),
         [PanelKind.Timeline] = Timeline,
         [PanelKind.CutsceneTimeline] = CutsceneTimeline,
-        [PanelKind.Game] = () => new GameViewPanel(_session, _renderer),
+        [PanelKind.Game] = () => new GameViewPanel(_session, _gameInterface, _renderer),
         [PanelKind.ShotPreview] = () => new ShotPreviewPanel(_session, _renderer),
         [PanelKind.ShotList] = () => new ShotListPanel(_session),
         [PanelKind.BlendGraph] = BlendGraph,
