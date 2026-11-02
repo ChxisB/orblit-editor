@@ -11,12 +11,41 @@ public sealed partial class EditorSession
     /// <summary>Whether the project may build and run its game. Nothing is trusted until the editor is given an answer.</summary>
     public IProjectTrust Trust { get; init; } = new NoProjectTrust();
 
+    /// <summary>
+    /// Asked with the project folder when Play is pressed on a game that is not trusted yet. A window sets
+    /// it to a dialog. Without one the answer is no, so a session with nobody to ask never runs a
+    /// project's code.
+    /// </summary>
+    public Func<string, Task<bool>> AskToTrust { get; set; } = _ => Task.FromResult(false);
+
     public GameBuilder Builder { get; init; } = new(new DotnetBuild());
 
     public GameLoader Loader { get; init; } = new();
 
     /// <summary>Whether the game is being built. Play waits for the build, and Stop cancels it.</summary>
     public bool Building => _building is not null;
+
+    /// <summary>
+    /// Takes back the trust given to this project. Its game stops if it is running, because code that is
+    /// no longer trusted should not go on running. The next Play asks again.
+    /// </summary>
+    public void StopTrusting()
+    {
+        if (_game is not null)
+        {
+            StopPlayback();
+        }
+
+        try
+        {
+            Trust.Revoke(ProjectFolder);
+            Say("This project is no longer trusted to run its code.", SayLevel.Info);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            Say("The trust in this project could not be taken back.", SayLevel.Error, error.Message);
+        }
+    }
 
     // The project's game, or the reason it cannot be played. Nothing of the game's runs before the
     // person has trusted the project.
@@ -28,13 +57,19 @@ public sealed partial class EditorSession
             return;
         }
 
-        if (!Trust.IsTrusted(ProjectFolder))
+        var folder = ProjectFolder;
+        if (!Trust.IsTrusted(folder))
         {
-            Say(
-                "The game did not start. This project has not been trusted to run its code.",
-                SayLevel.Warning,
-                "Opening a project never builds or runs it. Trust the project to play its game.");
-            return;
+            if (!await AskToTrust(folder))
+            {
+                Say(
+                    "The game did not start. This project has not been trusted to run its code.",
+                    SayLevel.Warning,
+                    "Opening a project never builds or runs it. Trust the project to play its game.");
+                return;
+            }
+
+            GrantTrust(folder);
         }
 
         try
@@ -47,6 +82,20 @@ public sealed partial class EditorSession
         catch (Exception error) when (error is not OperationCanceledException)
         {
             Say("Play stopped before the game started.", SayLevel.Error, error.ToString());
+        }
+    }
+
+    // The person said yes, so this run goes ahead even when the answer cannot be written down. Only the
+    // next run asks again.
+    private void GrantTrust(string folder)
+    {
+        try
+        {
+            Trust.Grant(folder);
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            Say("The choice to trust this project could not be kept, so Play will ask again.", SayLevel.Warning, error.Message);
         }
     }
 

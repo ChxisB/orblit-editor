@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Ask before a project's game runs. The first Play on a project with a game
+  opens a dialog that says the code runs on this computer. Cancel is the
+  default, so a stray Enter starts nothing. "Trust and Play" builds the game
+  and remembers the folder in `trusted-projects.json`, beside the recent
+  projects and never inside a project, which could then ship its own trust.
+  Trust is for the folder and not for one version of it. Stop trusting this
+  project, in the File menu and the palette, takes it back, stops a game that
+  is running and makes the next Play ask again. A trust file that is missing or damaged trusts nothing.
+  `ProjectTrust` is the store. `IProjectTrust` gains `Grant` and `Revoke`, and
+  `EditorSession.AskToTrust` is the question, which answers no until a window
+  sets it. Opening a project still never builds or runs anything.
 - Play runs a project's game. When `orblit.project.json` names a game, Play
   builds it, loads it and runs it in the playing copy of the scene. Stop, or
   closing the window, lets the game go and unloads its assembly. The scene
@@ -9,9 +20,8 @@
   keeps the stack. `EditorSession.TogglePlayback` is now a task, because a
   build takes a while. `EditorSession.Building` is true until it ends, the
   Play button reads "Building the game", and Stop cancels the build. Nothing
-  builds until the project is trusted. `EditorSession.Trust` answers no until
-  the editor is given an answer, so Play says why and does nothing. A project
-  with no game plays its scene as before.
+  builds until the project is trusted, which the entry above covers. A
+  project with no game plays its scene as before.
 - Let a change reach the scene a game plays in. `ScenePlayback.Apply` takes
   a `SceneDiff` and changes the playing copy. It writes only the rows the
   diff names, so an object it leaves alone is the same object and a clip that

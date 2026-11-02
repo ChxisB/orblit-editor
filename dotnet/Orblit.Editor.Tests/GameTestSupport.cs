@@ -6,6 +6,14 @@ using Orblit.Editor.Core;
 internal sealed class AllowAll : IProjectTrust
 {
     public bool IsTrusted(string projectFolder) => true;
+
+    public void Grant(string projectFolder)
+    {
+    }
+
+    public void Revoke(string projectFolder)
+    {
+    }
 }
 
 /// <summary>A build that runs the given step in place of the compiler, and counts how often it was asked.</summary>

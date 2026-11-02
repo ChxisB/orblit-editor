@@ -36,6 +36,7 @@ public static class PaletteEntries
         Command("New scene", "note_add_outlined", session.NewScene, platform.CommandShortcutLabel("N")),
         Command("Save", "save_outlined", session.Save, platform.CommandShortcutLabel("S")),
         Command("Save as", "save_as_outlined", session.AskForName, platform.CommandShortcutLabel("S", shift: true)),
+        Command("Stop trusting this project", "shield_outlined", session.StopTrusting),
     ];
 
     private static PaletteEntry[] Edits(EditorSession session, HostPlatform platform) =>

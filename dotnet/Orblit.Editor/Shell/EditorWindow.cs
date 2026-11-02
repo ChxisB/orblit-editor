@@ -152,6 +152,7 @@ public sealed class EditorWindow : Window
         _session.NameWanted += AskSceneName;
         _session.Assets.Changed += CookShaders;
         _session.ConfirmLeaving = entry => LeaveDialog.Ask(this, entry);
+        _session.AskToTrust = folder => TrustDialog.Ask(this, folder);
         Closed += (_, _) =>
         {
             _session.Changed -= Refresh;
