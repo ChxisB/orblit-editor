@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Build and load a game. `GameBuilder` runs `dotnet build` on the game's
+  project into `<project>/.orblit/game`, with a five minute limit. `GameLoader`
+  reads the built assembly into a collectible load context and makes the
+  named `IGame`. The editor's own `Orblit.Game` and `Orblit.Scene` are the
+  ones the game uses, never the copies beside it. A game built for another
+  minor version of `Orblit.Game` is refused. Disposing a `LoadedGame` unloads
+  the context. Nothing calls this yet. Adds the `Orblit.Game` 0.1.0 pin.
 - Let a project name its game. `orblit.project.json` takes an optional
   `game` field, `{ "project": "game/Game.csproj", "type": "Scape.Game.ScapeGame" }`,
   and `Project.Game` reads it. A path that is absolute or leaves the project

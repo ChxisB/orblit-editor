@@ -6,6 +6,7 @@
   <ItemGroup>
     <PackageReference Include="Orblit.Asset" />
     <PackageReference Include="Orblit.Filament" />
+    <PackageReference Include="Orblit.Game" />
     <PackageReference Include="Orblit.Json" />
     <PackageReference Include="Orblit.Light" />
     <PackageReference Include="Orblit.Mesh" />
