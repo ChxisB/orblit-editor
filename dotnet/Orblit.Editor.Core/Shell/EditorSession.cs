@@ -65,6 +65,13 @@ public sealed partial class EditorSession
     /// <summary>Raised when the mode, the arrangement, the focus or the selection changes.</summary>
     public event Action? Changed;
 
+    /// <summary>
+    /// True while <see cref="Changed"/> is raised for a new selection and nothing else. A view that
+    /// only shows what is selected can restyle and skip a rebuild. A handler does not change the
+    /// session, so nothing else can be raised inside it.
+    /// </summary>
+    public bool OnlySelectionChanged { get; private set; }
+
     /// <summary>What was said last, for a window that opens after something was already said.</summary>
     public (string Text, SayLevel Level)? Last { get; private set; }
 
@@ -285,7 +292,20 @@ public sealed partial class EditorSession
         }
 
         FollowMotion();
-        Changed?.Invoke();
+        RaiseSelectionChanged();
+    }
+
+    private void RaiseSelectionChanged()
+    {
+        OnlySelectionChanged = true;
+        try
+        {
+            Changed?.Invoke();
+        }
+        finally
+        {
+            OnlySelectionChanged = false;
+        }
     }
 
     // A face number means something only on the mesh it was picked from. Kept across to another

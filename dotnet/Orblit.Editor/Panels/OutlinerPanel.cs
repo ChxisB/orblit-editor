@@ -57,11 +57,12 @@ internal sealed class OutlinerPanel : UserControl
         Margin = new Thickness(Space.Md, Space.Xs),
     };
 
-    // A press waits here until the pointer has moved far enough to be a drag. Selecting on the press
-    // rebuilds the rows, so the row that was pressed is gone by then and cannot carry the drag.
+    // A press waits here until the pointer has moved far enough to be a drag, because the drag is
+    // started from the press.
     private (string Id, PointerPressedEventArgs Press, Point At)? _pending;
 
     private IReadOnlyList<OutlinerRow> _all = [];
+    private readonly List<(OutlinerRow Row, Border View)> _shown = [];
     private RowWindow _built;
 
     /// <param name="session">What is selected and changed.</param>
@@ -120,7 +121,7 @@ internal sealed class OutlinerPanel : UserControl
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
-        _session.Changed += Rebuild;
+        _session.Changed += OnSessionChanged;
         _session.History.Changed += OnHistoryChanged;
         _session.Workspace.Changed += Rebuild;
         Rebuild();
@@ -128,7 +129,7 @@ internal sealed class OutlinerPanel : UserControl
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
-        _session.Changed -= Rebuild;
+        _session.Changed -= OnSessionChanged;
         _session.History.Changed -= OnHistoryChanged;
         _session.Workspace.Changed -= Rebuild;
         base.OnDetachedFromVisualTree(e);
@@ -140,6 +141,28 @@ internal sealed class OutlinerPanel : UserControl
         if (!_session.History.LastOnlyMoved)
         {
             Rebuild();
+        }
+    }
+
+    // A new selection changes which rows are lit and no row's text, so the rows in view are restyled
+    // where they stand.
+    private void OnSessionChanged()
+    {
+        if (_session.OnlySelectionChanged)
+        {
+            Restyle();
+        }
+        else
+        {
+            Rebuild();
+        }
+    }
+
+    private void Restyle()
+    {
+        foreach (var (row, view) in _shown)
+        {
+            view.Background = SelectionBrush(row);
         }
     }
 
@@ -170,11 +193,14 @@ internal sealed class OutlinerPanel : UserControl
     {
         _built = WindowInView();
         _rows.Children.Clear();
+        _shown.Clear();
         _before.Height = _built.First * RowHeight;
         _rows.Children.Add(_before);
         foreach (var row in _all.Skip(_built.First).Take(_built.Count))
         {
-            _rows.Children.Add(RowView(row));
+            var view = RowView(row);
+            _shown.Add((row, view));
+            _rows.Children.Add(view);
         }
 
         _after.Height = (_all.Count - _built.First - _built.Count) * RowHeight;
@@ -204,7 +230,7 @@ internal sealed class OutlinerPanel : UserControl
             Height = RowHeight,
             Padding = new Thickness(Space.Xs + (row.Depth * Indent), 0, Space.Xs, 0),
             CornerRadius = Radii.Control,
-            Background = IsSelected(row) ? OrblitColors.EmberWash : Brushes.Transparent,
+            Background = SelectionBrush(row),
             Child = line,
         };
         line.Children.Add(Tail(row, name, view));
@@ -352,6 +378,8 @@ internal sealed class OutlinerPanel : UserControl
         button.Click += (_, _) => run();
         return button;
     }
+
+    private IBrush SelectionBrush(OutlinerRow row) => IsSelected(row) ? OrblitColors.EmberWash : Brushes.Transparent;
 
     private bool IsSelected(OutlinerRow row) => row.Item is { } one
         ? _session.Selected.Contains(one.Id)

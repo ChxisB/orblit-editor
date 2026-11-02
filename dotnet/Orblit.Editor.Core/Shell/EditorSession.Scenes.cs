@@ -47,7 +47,7 @@ public sealed partial class EditorSession
         SelectedScene = sceneId;
         DataAsset = null;
         FollowMotion();
-        Changed?.Invoke();
+        RaiseSelectionChanged();
     }
 
     /// <summary>Starts a new scene for a menu or a key.</summary>

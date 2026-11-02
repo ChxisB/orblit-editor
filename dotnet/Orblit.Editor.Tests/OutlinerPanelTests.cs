@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Controls.Documents;
 using Avalonia.LogicalTree;
+using Avalonia.Media;
 using Avalonia.VisualTree;
 
 namespace Orblit.Editor.Tests;
@@ -621,6 +622,37 @@ public sealed class OutlinerPanelTests : IDisposable
 
         Headless.Render();
         Assert.All(RowControls(window), row => Assert.Equal(24, row.Bounds.Height));
+        window.Close();
+    });
+
+    [Fact]
+    public Task SelectingBuildsNoRowControl() => Headless.Run(() =>
+    {
+        var (_, window) = Open();
+        var before = RowControls(window);
+
+        Click(window, "row_crate");
+
+        Assert.Equal(before, RowControls(window));
+        Assert.All(before, row => Assert.Equal(row.Name == "row_crate" ? OrblitColors.EmberWash : Brushes.Transparent, row.Background));
+        window.Close();
+    });
+
+    [Fact]
+    public Task SelectingAnotherRowUnlightsTheLastAndASceneRowUnlightsThemAll() => Headless.Run(() =>
+    {
+        var (_, window) = Open();
+
+        Click(window, "row_crate");
+        Click(window, "row_sun");
+
+        Assert.Equal(OrblitColors.EmberWash, Find<Border>(window, "row_sun").Background);
+        Assert.Equal(Brushes.Transparent, Find<Border>(window, "row_crate").Background);
+
+        Click(window, "row_scene0");
+
+        Assert.Equal(OrblitColors.EmberWash, Find<Border>(window, "row_scene0").Background);
+        Assert.Equal(Brushes.Transparent, Find<Border>(window, "row_sun").Background);
         window.Close();
     });
 }
