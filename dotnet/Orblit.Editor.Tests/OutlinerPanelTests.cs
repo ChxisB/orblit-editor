@@ -5,6 +5,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Controls.Documents;
 using Avalonia.LogicalTree;
+using Avalonia.VisualTree;
 
 namespace Orblit.Editor.Tests;
 
@@ -17,9 +18,18 @@ public sealed class OutlinerPanelTests : IDisposable
 
     public void Dispose() => _temp.Delete(recursive: true);
 
-    // With props, a second scene is listed beside the loaded one and is not loaded.
-    private (EditorSession Session, EditorWindow Window) Open(bool props = false)
+    // With props, a second scene is listed beside the loaded one and is not loaded. With many, the main
+    // scene holds that many loose objects, o0 onwards, and nothing else.
+    private (EditorSession Session, EditorWindow Window) Open(bool props = false, int many = 0)
     {
+        if (many > 0)
+        {
+            Directory.CreateDirectory(Path.Combine(_temp.FullName, "scenes"));
+            File.WriteAllText(
+                Path.Combine(_temp.FullName, "scenes", "main" + Orblit.Scene.SceneDocument.SceneExtension),
+                SceneDocument.Encode(new EditorScene([.. Enumerable.Range(0, many).Select(i => new SceneObject(id: $"o{i}", name: $"Object {i}", kind: ObjectKind.Mesh))])));
+        }
+
         if (props)
         {
             Directory.CreateDirectory(Path.Combine(_temp.FullName, "scenes"));
@@ -42,6 +52,18 @@ public sealed class OutlinerPanelTests : IDisposable
         where T : Control => All<T>(root).First(one => one.Name == name);
 
     private static bool Has(Control root, string name) => All<Control>(root).Any(one => one.Name == name);
+
+    private static List<Border> RowControls(Control root) =>
+        [.. All<Border>(root).Where(one => one.Name?.StartsWith("row_", StringComparison.Ordinal) == true)];
+
+    private static ScrollViewer ListOf(Control root) => Find<Control>(root, "outliner_rows").FindAncestorOfType<ScrollViewer>()!;
+
+    private static void ScrollTo(Window window, double offset)
+    {
+        ListOf(window).Offset = new Vector(0, offset);
+        Headless.Render();
+        Headless.Render();
+    }
 
     private static Point Centre(Window window, string name)
     {
@@ -535,6 +557,70 @@ public sealed class OutlinerPanelTests : IDisposable
         Headless.Render();
 
         Assert.Equal("Untitled", session.Workspace.Loaded!.Title);
+        window.Close();
+    });
+
+    [Fact]
+    public Task ALongListBuildsTheRowsInViewAndStandsInForTheRest() => Headless.Run(() =>
+    {
+        var (_, window) = Open(many: 5000);
+
+        var built = RowControls(window);
+
+        Assert.InRange(built.Count, 10, 100);
+        Assert.True(Has(window, "row_o0"));
+        Assert.False(Has(window, "row_o4999"));
+
+        // The shared set's row and the scene's own row come before the 5,000 objects.
+        var standIn = Find<Border>(window, "outliner_before").Height + Find<Border>(window, "outliner_after").Height;
+        Assert.Equal(5002 * built[0].Height, standIn + (built.Count * built[0].Height));
+        window.Close();
+    });
+
+    [Fact]
+    public Task AFarRowCanBeReachedByScrollingAndClicked() => Headless.Run(() =>
+    {
+        var (session, window) = Open(many: 5000);
+        var list = ListOf(window);
+
+        ScrollTo(window, list.Extent.Height - list.Viewport.Height);
+
+        Assert.True(Has(window, "row_o4999"));
+        Assert.False(Has(window, "row_o0"));
+        Click(window, "row_o4999");
+        Assert.Equal(["o4999"], session.Selected);
+        window.Close();
+    });
+
+    [Fact]
+    public Task AScrollThatLeavesTheSameRowsInViewBuildsNoNewRow() => Headless.Run(() =>
+    {
+        var (_, window) = Open(many: 5000);
+        var before = Find<Border>(window, "row_o10");
+
+        // Half of the part of the last row that is not yet showing. Any more and that row comes into
+        // view and is a row the window has to build.
+        var hidden = (Math.Ceiling(ListOf(window).Viewport.Height / 24) * 24) - ListOf(window).Viewport.Height;
+        Assert.True(hidden > 0, "The view is a whole number of rows, so no scroll leaves the same rows in it.");
+        ScrollTo(window, hidden / 2);
+
+        Assert.Same(before, Find<Border>(window, "row_o10"));
+        window.Close();
+    });
+
+    [Fact]
+    public Task EveryRowIsTheSameHeightWhetherOrNotItsButtonShows() => Headless.Run(() =>
+    {
+        var (_, window) = Open();
+        Assert.All(RowControls(window), row => Assert.Equal(24, row.Bounds.Height));
+
+        foreach (var button in All<Button>(Find<Control>(window, "outliner_rows")))
+        {
+            button.IsVisible = true;
+        }
+
+        Headless.Render();
+        Assert.All(RowControls(window), row => Assert.Equal(24, row.Bounds.Height));
         window.Close();
     });
 }

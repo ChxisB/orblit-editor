@@ -22,11 +22,23 @@ internal sealed class OutlinerPanel : UserControl
     private const double DragStart = 4;
     private const double Indent = 14;
 
+    // Every row is this tall, the fold glyph and the hover button included, so where a row sits is
+    // arithmetic and the rows that are not in view need no control.
+    private const double RowHeight = 24;
+
+    // How tall the list is taken to be before it has been laid out once.
+    private const double FirstView = 900;
+
     private readonly EditorSession _session;
     private readonly OutlinerModel _model;
     private readonly KeyModifiers _command;
     private readonly Action _openAdd;
     private readonly StackPanel _rows = new() { Name = "outliner_rows", Margin = new Thickness(6, 0, 6, 8) };
+    private readonly ScrollViewer _scroll;
+
+    // Stand in for the rows above and below the built ones, so the scroll bar is as long as the list.
+    private readonly Border _before = new() { Name = "outliner_before" };
+    private readonly Border _after = new() { Name = "outliner_after" };
     private readonly TextBlock _nothing = new()
     {
         Name = "outliner_nothing",
@@ -48,6 +60,9 @@ internal sealed class OutlinerPanel : UserControl
     // A press waits here until the pointer has moved far enough to be a drag. Selecting on the press
     // rebuilds the rows, so the row that was pressed is gone by then and cannot carry the drag.
     private (string Id, PointerPressedEventArgs Press, Point At)? _pending;
+
+    private IReadOnlyList<OutlinerRow> _all = [];
+    private RowWindow _built;
 
     /// <param name="session">What is selected and changed.</param>
     /// <param name="platform">The host's keys, for which modifier adds to a selection.</param>
@@ -74,12 +89,13 @@ internal sealed class OutlinerPanel : UserControl
         head.Children.Add(filter);
         head.Children.Add(add);
 
-        var list = new ScrollViewer { Content = new StackPanel { Children = { _rows, _nothing } } };
-        list[Grid.RowProperty] = 1;
+        _scroll = new ScrollViewer { Content = new StackPanel { Children = { _rows, _nothing } } };
+        _scroll.ScrollChanged += (_, _) => Scrolled();
+        _scroll[Grid.RowProperty] = 1;
         _count[Grid.RowProperty] = 2;
         var frame = new Grid { RowDefinitions = new RowDefinitions("Auto,*,Auto") };
         frame.Children.Add(head);
-        frame.Children.Add(list);
+        frame.Children.Add(_scroll);
         frame.Children.Add(_count);
         Content = frame;
 
@@ -129,16 +145,40 @@ internal sealed class OutlinerPanel : UserControl
 
     private void Rebuild()
     {
-        var rows = _model.Rows();
+        _all = _model.Rows();
+        Fill();
+        _nothing.IsVisible = _all.Count == 0;
+        var scenes = _model.SceneCount;
+        _count.Text = $"{scenes} scene{(scenes == 1 ? "" : "s")} open";
+    }
+
+    // A scroll or a resize that leaves the same rows in view builds nothing.
+    private void Scrolled()
+    {
+        if (WindowInView() != _built)
+        {
+            Fill();
+        }
+    }
+
+    private RowWindow WindowInView() =>
+        RowWindow.Of(_all.Count, _scroll.Offset.Y, _scroll.Viewport.Height > 0 ? _scroll.Viewport.Height : FirstView, RowHeight);
+
+    // Controls for the rows in view and nothing for the rest. A list of a hundred thousand costs what a
+    // list of a hundred does.
+    private void Fill()
+    {
+        _built = WindowInView();
         _rows.Children.Clear();
-        foreach (var row in rows)
+        _before.Height = _built.First * RowHeight;
+        _rows.Children.Add(_before);
+        foreach (var row in _all.Skip(_built.First).Take(_built.Count))
         {
             _rows.Children.Add(RowView(row));
         }
 
-        _nothing.IsVisible = rows.Count == 0;
-        var scenes = _model.SceneCount;
-        _count.Text = $"{scenes} scene{(scenes == 1 ? "" : "s")} open";
+        _after.Height = (_all.Count - _built.First - _built.Count) * RowHeight;
+        _rows.Children.Add(_after);
     }
 
     private Border RowView(OutlinerRow row)
@@ -153,7 +193,7 @@ internal sealed class OutlinerPanel : UserControl
             VerticalAlignment = VerticalAlignment.Center,
             TextTrimming = TextTrimming.CharacterEllipsis,
         };
-        var line = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto") };
+        var line = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto"), VerticalAlignment = VerticalAlignment.Center };
         line.Children.Add(Fold(row));
         label[Grid.ColumnProperty] = 1;
         line.Children.Add(label);
@@ -161,7 +201,8 @@ internal sealed class OutlinerPanel : UserControl
         var view = new Border
         {
             Name = $"row_{row.Key}",
-            Padding = new Thickness(Space.Xs + (row.Depth * Indent), 3, Space.Xs, 3),
+            Height = RowHeight,
+            Padding = new Thickness(Space.Xs + (row.Depth * Indent), 0, Space.Xs, 0),
             CornerRadius = Radii.Control,
             Background = IsSelected(row) ? OrblitColors.EmberWash : Brushes.Transparent,
             Child = line,
