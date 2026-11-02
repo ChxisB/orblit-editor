@@ -75,6 +75,17 @@ public sealed partial class EditorSession
         }
     }
 
+    // An edit made while the scene plays, or sits paused, shows in the copy. Otherwise the game view
+    // goes on showing the scene as it was when Play was pressed.
+    private void FollowEditsWhilePlaying()
+    {
+        if (Playback is { } running && ReferenceEquals(running.Source, Workspace.Loaded?.Scene))
+        {
+            running.Follow();
+            PlaybackChanged?.Invoke();
+        }
+    }
+
     // A copy of another scene is not what is being edited, so it stops when the loaded scene changes.
     private void StopPlayingAnotherScene()
     {
