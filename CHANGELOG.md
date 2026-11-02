@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Let a change reach the scene a game plays in. `ScenePlayback.Apply` takes
+  a `SceneDiff` and changes the playing copy. It writes only the rows the
+  diff names, so an object it leaves alone is the same object and a clip that
+  poses it carries on. `ScenePlayback.Edited` is raised with each edit made
+  to the scene being edited, for the game to take. The game's own changes are
+  not raised back. Nothing calls either yet.
 - Build and load a game. `GameBuilder` runs `dotnet build` on the game's
   project into `<project>/.orblit/game`, with a five minute limit. `GameLoader`
   reads the built assembly into a collectible load context and makes the
