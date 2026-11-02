@@ -125,16 +125,13 @@ public sealed class OutlinerModel(Workspace workspace)
             return [];
         }
 
-        // Grouped once here. Asking the scene for each object's children scans every object, which is
-        // a scan per row and seconds of work once a scene holds tens of thousands.
-        var children = scene?.Objects.ToLookup(one => one.ParentId);
-        var rows = new List<OutlinerRow> { new(entry, null, 0, children is not null && children[null].Any()) };
+        var rows = new List<OutlinerRow> { new(entry, null, 0, scene is not null && scene.SiblingsOf(null).Count > 0) };
 
         // An unloaded scene has no objects to show. Listing children it does not hold would suggest
         // they could be edited, and they cannot.
-        if (children is not null && (kept is not null || !_collapsed.Contains(entry.Id)))
+        if (scene is not null && (kept is not null || !_collapsed.Contains(entry.Id)))
         {
-            var pass = new Pass(entry, children, kept, rows);
+            var pass = new Pass(entry, scene, kept, rows);
             Walk(pass, ShownUnder(pass, null), 1);
         }
 
@@ -159,7 +156,7 @@ public sealed class OutlinerModel(Workspace workspace)
     }
 
     private static List<SceneObject> ShownUnder(Pass pass, string? parentId) =>
-        [.. pass.Children[parentId].Where(one => pass.Kept is null || pass.Kept.Contains(one.Id))];
+        [.. pass.Scene.SiblingsOf(parentId).Where(one => pass.Kept is null || pass.Kept.Contains(one.Id))];
 
     // The objects whose names hold the query, and every parent above them, so a match shows where it
     // sits in the tree and not loose.
@@ -181,7 +178,7 @@ public sealed class OutlinerModel(Workspace workspace)
     // What one scene's walk shares: where the rows go, who is whose child, and what a filter kept.
     private sealed record Pass(
         SceneEntry Entry,
-        ILookup<string?, SceneObject> Children,
+        EditorScene Scene,
         HashSet<string>? Kept,
         List<OutlinerRow> Rows);
 }

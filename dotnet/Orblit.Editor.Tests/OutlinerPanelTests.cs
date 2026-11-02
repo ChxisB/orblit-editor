@@ -610,6 +610,22 @@ public sealed class OutlinerPanelTests : IDisposable
     });
 
     [Fact]
+    public Task AListThatShrinksUnderAScrolledViewDrawsItsRowsAgain() => Headless.Run(() =>
+    {
+        var (session, window) = Open(many: 5000);
+        var list = ListOf(window);
+        ScrollTo(window, list.Extent.Height - list.Viewport.Height);
+
+        // The offset left behind is far past the end of what is left.
+        session.History.Run(new DeleteObjects(session.Workspace.Loaded!.Id, [.. Enumerable.Range(5, 4995).Select(i => $"o{i}")], "most"));
+        Headless.Render();
+        Headless.Render();
+
+        Assert.Equal(5, RowControls(window).Count(row => row.Name!.StartsWith("row_o", StringComparison.Ordinal)));
+        window.Close();
+    });
+
+    [Fact]
     public Task EveryRowIsTheSameHeightWhetherOrNotItsButtonShows() => Headless.Run(() =>
     {
         var (_, window) = Open();
