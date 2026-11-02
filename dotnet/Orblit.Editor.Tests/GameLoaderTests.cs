@@ -149,7 +149,8 @@ public sealed class GameLoaderTests(TinyGameBuild fixture) : IClassFixture<TinyG
     {
         var refusal = Assert.Throws<GameLoadException>(() => new GameLoader(new Version(0, 9, 0)).Load(Dll, "TinyGame.Tiny"));
 
-        Assert.Contains("0.1.0", refusal.Message);
+        // The fixture is built against the contract this test project references.
+        Assert.Contains((typeof(IGame).Assembly.GetName().Version ?? new Version()).ToString(3), refusal.Message);
         Assert.Contains("0.9.0", refusal.Message);
     }
 

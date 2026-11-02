@@ -11,6 +11,8 @@
     <PackageReference Include="Orblit.Light" />
     <PackageReference Include="Orblit.Mesh" />
     <PackageReference Include="Orblit.Motion" />
+    <PackageReference Include="Orblit.Net" />
+    <PackageReference Include="Orblit.Net.Game" />
     <PackageReference Include="Orblit.Scene" />
     <PackageReference Include="Orblit.Sequence" />
     <PackageReference Include="Orblit.Stage" />

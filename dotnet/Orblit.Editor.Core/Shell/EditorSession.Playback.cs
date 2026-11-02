@@ -56,8 +56,9 @@ public sealed partial class EditorSession
             return;
         }
 
-        _game?.Dispose();
-        _game = null;
+        _games?.Dispose();
+        _games = null;
+        ShownPlayer = 0;
         Playback = null;
         Playing = false;
         PlaybackChanged?.Invoke();
@@ -75,14 +76,19 @@ public sealed partial class EditorSession
             return;
         }
 
-        _game?.Update(seconds, InputFeed);
-        if (_game?.Fault is not null)
+        _games?.Update(seconds, ShownPlayer, InputFeed);
+        if (_games?.Fault is not null)
         {
             StopPlayback();
             return;
         }
 
-        running.Advance(seconds);
+        IEnumerable<ScenePlayback> copies = _games?.Playbacks ?? [running];
+        foreach (var copy in copies)
+        {
+            copy.Advance(seconds);
+        }
+
         PlaybackChanged?.Invoke();
     }
 
