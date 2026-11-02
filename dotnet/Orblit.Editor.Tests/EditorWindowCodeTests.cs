@@ -21,6 +21,21 @@ public sealed class EditorWindowCodeTests : IDisposable
 
     private string Folder => _project.FullName;
 
+    // A real compile on a cold CI machine takes longer than one Headless.Until, which waits about three
+    // seconds. Giving up early also leaves the compiler holding a file in the folder Dispose deletes.
+    private static bool UntilBuilt(Func<bool> done)
+    {
+        for (var waits = 0; waits < 10; waits++)
+        {
+            if (Headless.Until(done))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private (EditorSession Session, EditorWindow Window) Open()
     {
         var opened = ProjectWorkspace.Open(Folder);
@@ -126,7 +141,7 @@ public sealed class EditorWindowCodeTests : IDisposable
 
         window.BuildScript(new Asset("broken.cpp", path, AssetKind.Native));
 
-        Assert.True(Headless.Until(() => window.OwnedWindows.Count == 1));
+        Assert.True(UntilBuilt(() => window.OwnedWindows.Count == 1));
         var dialog = Assert.IsType<BuildDialog>(window.OwnedWindows[0]);
         Assert.Equal("broken.cpp did not build", dialog.Title);
         Assert.NotEqual("The compiler said nothing.", Headless.All<SelectableTextBlock>(dialog).Single(block => block.Name == "build_output").Text);
@@ -167,7 +182,7 @@ public sealed class EditorWindowCodeTests : IDisposable
 
         window.BuildScript(new Asset("tuned.cpp", path, AssetKind.Native));
 
-        Assert.True(Headless.Until(() => window.OwnedWindows.Count == 1));
+        Assert.True(UntilBuilt(() => window.OwnedWindows.Count == 1));
         var dialog = Assert.IsType<BuildDialog>(window.OwnedWindows[0]);
         Assert.Equal("tuned.cpp built, with warnings", dialog.Title);
         Assert.Contains("tune this", Headless.All<SelectableTextBlock>(dialog).Single(block => block.Name == "build_output").Text, StringComparison.Ordinal);
