@@ -1,6 +1,7 @@
 namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
+using Orblit.Motion;
 using Orblit.VectorMath;
 
 /// <summary>Play in a project that has a game: it builds, loads, runs in the playing copy and is let go on Stop.</summary>
@@ -196,5 +197,49 @@ public sealed class EditorSessionGameTests(TinyGameBuild fixture) : IClassFixtur
         Assert.False(session.Building);
         Assert.Null(session.Playback);
         Assert.False(GameTestSupport.AnyGameContext());
+    }
+
+    // The assembly is loaded before the playing copy is made, so a scene closed during the build is
+    // found out after the load. The loaded assembly must not be left behind.
+    [Fact(Timeout = 20_000)]
+    public async Task ASceneClosedDuringTheBuildEndsPlayAndLetsTheLoadedGameGo()
+    {
+        var started = new TaskCompletionSource();
+        var finish = new TaskCompletionSource();
+        var copying = Copying();
+        var session = Open("TinyGame.Mover", new FakeBuild(async (output, cancel) =>
+        {
+            started.SetResult();
+            await finish.Task.WaitAsync(cancel);
+            return await copying.RunAsync(string.Empty, output, cancel);
+        }));
+
+        var playing = session.TogglePlayback();
+        await started.Task.WaitAsync(TestContext.Current.CancellationToken);
+        await session.CloseSceneAsync(session.Workspace.Loaded!);
+        finish.SetResult();
+        await playing.WaitAsync(TestContext.Current.CancellationToken);
+
+        Assert.Null(session.Playback);
+        Assert.False(session.Playing);
+        Assert.True(GameLoaderTests.Until(() => !GameTestSupport.AnyGameContext()));
+        Assert.Equal(SayLevel.Error, session.Log.Entries[^1].Level);
+    }
+
+    [Fact]
+    public async Task AGameThatCannotBeLoadedLeavesTheTimelinesAlone()
+    {
+        var session = Open("TinyGame.Missing", Copying());
+        var clip = Path.Combine(_project.FullName, "idle.oclip");
+        File.WriteAllText(clip, new ClipDocument("idle", 1).Encode());
+        session.Clips.OpenFile(clip);
+        session.Clips.Playing = true;
+        Assert.True(session.Clips.Playing);
+
+        await session.TogglePlayback();
+
+        Assert.Null(session.Playback);
+        Assert.True(session.Clips.Playing);
+        Assert.Contains("could not be loaded", session.Log.Entries[^1].Message);
     }
 }

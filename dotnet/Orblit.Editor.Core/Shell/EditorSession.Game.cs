@@ -7,6 +7,7 @@ public sealed partial class EditorSession
 {
     private CancellationTokenSource? _building;
     private RunningGame? _game;
+    private bool _starting;
 
     /// <summary>Whether the project may build and run its game. Nothing is trusted until the editor is given an answer.</summary>
     public IProjectTrust Trust { get; init; } = new NoProjectTrust();
@@ -82,7 +83,8 @@ public sealed partial class EditorSession
         }
 
         // The question is inside the try, because a dialog that throws should end Play with a message and
-        // not escape from the press that started it.
+        // not escape from the press that started it. Until it ends, another press has nothing to start.
+        _starting = true;
         try
         {
             if (await ObtainTrust() && await BuildGame(entry) is { AssemblyPath: { } assembly })
@@ -93,6 +95,10 @@ public sealed partial class EditorSession
         catch (Exception error) when (error is not OperationCanceledException)
         {
             Say("Play stopped before the game started.", SayLevel.Error, error.ToString());
+        }
+        finally
+        {
+            _starting = false;
         }
     }
 
@@ -165,8 +171,6 @@ public sealed partial class EditorSession
 
     private void StartGame(string assembly, string type)
     {
-        PauseTimelines();
-        var playback = NewPlayback();
         LoadedGame loaded;
         try
         {
@@ -178,7 +182,22 @@ public sealed partial class EditorSession
             return;
         }
 
-        var game = new RunningGame(loaded, playback, ProjectFolder, new GameLog(this));
+        // The scene may have been closed while the game built. Until a running game owns the loaded
+        // assembly, a throw here must let it go.
+        ScenePlayback playback;
+        RunningGame game;
+        try
+        {
+            PauseTimelines();
+            playback = NewPlayback();
+            game = new RunningGame(loaded, playback, ProjectFolder, new GameLog(this));
+        }
+        catch
+        {
+            loaded.Dispose();
+            throw;
+        }
+
         game.Start();
         if (game.Fault is not null)
         {

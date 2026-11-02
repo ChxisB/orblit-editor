@@ -18,15 +18,23 @@ public sealed class GameBuilder(IBuildCommand command)
         var projectFile = Path.GetFullPath(Path.Combine(projectFolder, entry.Project.Replace('\\', '/')));
         var output = OutputFolder(projectFolder);
 
+        // The assembly takes the project file's name unless the project says otherwise. Say what was
+        // looked for when it is not there, since a person has to rename one or the other.
+        var assembly = Path.Combine(output, Path.GetFileNameWithoutExtension(projectFile) + ".dll");
+
+        // One an earlier build left would pass for this build's when the project names its assembly
+        // another way, so only an assembly made by this build counts.
+        if (File.Exists(assembly))
+        {
+            File.Delete(assembly);
+        }
+
         var result = await command.RunAsync(projectFile, output, cancel);
         if (!result.Succeeded)
         {
             return new GameBuild(null, result.Text);
         }
 
-        // The assembly takes the project file's name unless the project says otherwise. Say what was
-        // looked for when it is not there, since a person has to rename one or the other.
-        var assembly = Path.Combine(output, Path.GetFileNameWithoutExtension(projectFile) + ".dll");
         return File.Exists(assembly)
             ? new GameBuild(assembly, result.Text)
             : new GameBuild(null, $"{result.Text}\nThe build made no {Path.GetFileName(assembly)} in {output}.");

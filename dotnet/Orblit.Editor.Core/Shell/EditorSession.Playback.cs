@@ -29,7 +29,7 @@ public sealed partial class EditorSession
     /// <summary>
     /// Pauses what is playing, or starts the loaded scene and shows the game view. A project with a
     /// game builds it first, which is why this is a task. Does nothing when no scene is loaded or a
-    /// build is already running.
+    /// game is already being started, whether it is waiting on the trust question or on the build.
     /// </summary>
     public async Task TogglePlayback()
     {
@@ -38,7 +38,7 @@ public sealed partial class EditorSession
             Playing = false;
             PlaybackChanged?.Invoke();
         }
-        else if (!Building && Workspace.Loaded?.Scene is not null)
+        else if (!_starting && Workspace.Loaded?.Scene is not null)
         {
             await Play();
         }

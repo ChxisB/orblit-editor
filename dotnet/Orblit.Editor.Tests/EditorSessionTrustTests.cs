@@ -185,6 +185,30 @@ public sealed class EditorSessionTrustTests(TinyGameBuild fixture) : IClassFixtu
         Assert.Contains("The dialog has no window.", entry.Detail);
     }
 
+    // The question is open and nothing is building yet, so a second press has to be turned away here.
+    [Fact(Timeout = 20_000)]
+    public async Task APressWhileTheQuestionIsOpenIsIgnored()
+    {
+        var answer = new TaskCompletionSource<bool>();
+        var asks = 0;
+        var build = GameTestSupport.Copying(fixture.Build);
+        var session = Open(build, Trusted());
+        session.AskToTrust = _ =>
+        {
+            asks++;
+            return answer.Task;
+        };
+
+        var first = session.TogglePlayback();
+        var second = session.TogglePlayback();
+        answer.SetResult(true);
+        await Task.WhenAll(first, second).WaitAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, asks);
+        Assert.Equal(1, build.Runs);
+        Assert.True(session.Playing);
+    }
+
     [Fact]
     public async Task AProjectFileThatCannotBeReadSaysSoAndPlaysNothing()
     {

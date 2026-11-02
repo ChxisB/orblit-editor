@@ -64,6 +64,19 @@ public sealed class GameBuilderTests : IDisposable
         Assert.Contains("Build succeeded.", build.Output);
     }
 
+    // A project that names its assembly differently would otherwise be passed by the one an earlier build left.
+    [Fact]
+    public async Task AnAssemblyLeftByAnEarlierBuildIsNotMistakenForThisBuildsOwn()
+    {
+        Directory.CreateDirectory(Output);
+        File.WriteAllBytes(Path.Combine(Output, "Game.dll"), []);
+
+        var build = await new GameBuilder(new FakeBuild(new BuildOutput(true, "Build succeeded."))).BuildAsync(_temp.FullName, Entry, TestContext.Current.CancellationToken);
+
+        Assert.False(build.Succeeded);
+        Assert.Null(build.AssemblyPath);
+    }
+
     [Fact]
     public async Task TheCallersCancellationReachesTheBuild()
     {

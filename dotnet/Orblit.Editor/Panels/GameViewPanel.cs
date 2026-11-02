@@ -30,6 +30,7 @@ internal sealed class GameViewPanel : Border
 {
     private const string NoScene = "No scene is open.";
     private const string NoCamera = "This scene has no camera, so the game has nothing to look through.";
+    private const KeyModifiers EditorKeys = KeyModifiers.Control | KeyModifiers.Meta | KeyModifiers.Alt;
 
     private readonly EditorSession _session;
     private readonly GeometryStore _geometry;
@@ -183,10 +184,12 @@ internal sealed class GameViewPanel : Border
     }
 
     // While the scene plays, a key pressed in the view is the game's. The picture and the game's control
-    // both bubble to here, after the game's own control has had its say.
+    // both bubble to here, after the game's own control has had its say. A key held with the command,
+    // control or alt key is a command of the editor's, such as the palette, and Tab is how the keyboard
+    // leaves the view, so neither is taken. The game still reads them from its own feed.
     private void TakeKey(object? sender, KeyEventArgs press)
     {
-        if (_session.Playing)
+        if (_session.Playing && press.Key != Key.Tab && (press.KeyModifiers & EditorKeys) == KeyModifiers.None)
         {
             press.Handled = true;
         }

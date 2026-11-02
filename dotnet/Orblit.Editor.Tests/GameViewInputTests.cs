@@ -103,6 +103,35 @@ public sealed class GameViewInputTests(TinyGameBuild fixture) : IClassFixture<Ti
         window.Close();
     });
 
+    // The palette is the way to Stop and everything else without the mouse, so a game must not eat it.
+    [Fact]
+    public Task AKeyWithTheCommandKeyHeldIsTheEditorsWhileAGamePlays() => Headless.Run(() =>
+    {
+        var (_, window) = Play("TinyGame.KeyReader");
+
+        window.KeyPressQwerty(PhysicalKey.K, RawInputModifiers.Meta);
+        Headless.Render();
+
+        var palette = Assert.IsType<PaletteDialog>(Assert.Single(window.OwnedWindows));
+        palette.Close();
+        window.Close();
+    });
+
+    // Tab is how a keyboard user leaves the view. The game still sees the press.
+    [Fact]
+    public Task TabLeavesTheViewWhileAGamePlays() => Headless.Run(() =>
+    {
+        var (_, window) = Play("TinyGame.KeyReader");
+        Assert.True(Picture(window).IsFocused);
+
+        Press(window, PhysicalKey.Tab);
+        Release(window, PhysicalKey.Tab);
+        Headless.Render();
+
+        Assert.False(Picture(window).IsFocused);
+        window.Close();
+    });
+
     [Fact]
     public Task PausedTheSameKeyIsTheEditorsAgain() => Headless.Run(() =>
     {
