@@ -67,8 +67,8 @@ public sealed partial class EditorSession
 
     /// <summary>
     /// True while <see cref="Changed"/> is raised for a new selection and nothing else. A view that
-    /// only shows what is selected can restyle and skip a rebuild. A handler does not change the
-    /// session, so nothing else can be raised inside it.
+    /// only shows what is selected can restyle and skip a rebuild. A change that a handler makes while
+    /// it runs is raised in full, so it clears this for the handlers after it as well.
     /// </summary>
     public bool OnlySelectionChanged { get; private set; }
 
@@ -161,7 +161,7 @@ public sealed partial class EditorSession
 
         FollowMotion(force: true);
         OnClipsChanged();
-        Changed?.Invoke();
+        RaiseChanged();
     }
 
     /// <summary>Switches to the mode called <paramref name="name"/>, when something registered one.</summary>
@@ -179,7 +179,7 @@ public sealed partial class EditorSession
         _focused.Remove(Mode.Name);
         Layout = layout;
         WriteLayout(Mode, layout);
-        Changed?.Invoke();
+        RaiseChanged();
     }
 
     /// <summary>Says what could not be read, as one line however many things there were.</summary>
@@ -204,7 +204,7 @@ public sealed partial class EditorSession
         }
 
         Layout = Layout.Add(type.Panel);
-        Changed?.Invoke();
+        RaiseChanged();
     }
 
     /// <summary>Puts back the arrangement the mode opens with, keeping the lock.</summary>
@@ -217,13 +217,13 @@ public sealed partial class EditorSession
             _focused.Add(Mode.Name);
         }
 
-        Changed?.Invoke();
+        RaiseChanged();
     }
 
     public void ToggleStats()
     {
         ShowStats = !ShowStats;
-        Changed?.Invoke();
+        RaiseChanged();
     }
 
     public void SaveLayout(string name)
@@ -243,7 +243,7 @@ public sealed partial class EditorSession
             return;
         }
 
-        Changed?.Invoke();
+        RaiseChanged();
     }
 
     public void LoadLayout(string name)
@@ -269,7 +269,7 @@ public sealed partial class EditorSession
             return;
         }
 
-        Changed?.Invoke();
+        RaiseChanged();
     }
 
     public void Select(IReadOnlyList<string> ids)
@@ -306,6 +306,14 @@ public sealed partial class EditorSession
         {
             OnlySelectionChanged = false;
         }
+    }
+
+    // The flag is cleared here because a handler running for a selection can raise this too, and the
+    // handlers after it must not take that for a selection.
+    private void RaiseChanged()
+    {
+        OnlySelectionChanged = false;
+        Changed?.Invoke();
     }
 
     // A face number means something only on the mesh it was picked from. Kept across to another
@@ -503,7 +511,7 @@ public sealed partial class EditorSession
             ForgetParts();
         }
 
-        Changed?.Invoke();
+        RaiseChanged();
     }
 
     /// <summary>
