@@ -47,6 +47,7 @@ public sealed class EditorWindow : Window
     private readonly TerrainToolShelf _shelf;
     private readonly CinematicsShelf _cinematics;
     private readonly PlayPill _pill;
+    private readonly LayoutPill _layouts;
     private readonly PlaybackClock _clock;
     private CookStatusIndex? _cooks;
     private TerrainBrushPanel? _brush;
@@ -129,6 +130,7 @@ public sealed class EditorWindow : Window
         _shelf = new TerrainToolShelf(_session.Terrains);
         _cinematics = new CinematicsShelf(_session.Cutscenes, _session.NewCutscene, _session.AddShot, UseThisView);
         _pill = new PlayPill(_session);
+        _layouts = new LayoutPill(_session);
         _clock = new PlaybackClock(_session, this);
         _dock = new DockHost(_session.VisibleLayout, PanelFor);
         _dock.LayoutChanged += layout =>
@@ -179,11 +181,13 @@ public sealed class EditorWindow : Window
 
     private Grid Frame()
     {
-        var top = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto"), Background = OrblitColors.Surface };
+        var top = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto,Auto"), Background = OrblitColors.Surface };
         top.Children.Add(_menu);
         _title[Grid.ColumnProperty] = 1;
         top.Children.Add(_title);
-        _pill[Grid.ColumnProperty] = 2;
+        _layouts[Grid.ColumnProperty] = 2;
+        top.Children.Add(_layouts);
+        _pill[Grid.ColumnProperty] = 3;
         top.Children.Add(_pill);
         var search = new Button
         {
@@ -193,7 +197,7 @@ public sealed class EditorWindow : Window
             Margin = new Thickness(Space.Xs),
         };
         search.Click += (_, _) => OpenPalette();
-        search[Grid.ColumnProperty] = 3;
+        search[Grid.ColumnProperty] = 4;
         top.Children.Add(search);
 
         var rail = new StackPanel { Name = "rail", Margin = new Thickness(Space.Sm), Spacing = Space.Xs };

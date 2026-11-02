@@ -72,6 +72,8 @@ public sealed class SetTransform : EditorCommand
 
     public override string Label => $"{Field.Verb()} {Name}";
 
+    public override bool FitsLayout => true;
+
     public override object? MergeKey => (Id, Field);
 
     public override void Absorb(EditorCommand later)
@@ -126,6 +128,8 @@ public sealed class PlaceObject : EditorCommand
     public string Name { get; }
 
     public override string Label => $"Steer {Name}";
+
+    public override bool FitsLayout => true;
 
     public override object? MergeKey => (Id, "place");
 
@@ -191,6 +195,8 @@ public sealed class TransformMany : EditorCommand
     public string What { get; }
 
     public override string Label => $"{Field.Verb()} {What}";
+
+    public override bool FitsLayout => true;
 
     /// <summary>
     /// One key for the whole gesture rather than one per object, which is what collapses a drag into

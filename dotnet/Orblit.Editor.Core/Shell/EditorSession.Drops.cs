@@ -81,7 +81,9 @@ public sealed partial class EditorSession
             name: UniqueName(scene, Path.GetFileNameWithoutExtension(path)),
             kind: ObjectKind.Mesh,
             meshAsset: Assets.Relative(path));
-        Run(new AddObject(added, open.Id));
-        SelectObject(added.Id);
+        if (Run(new AddObject(added, open.Id)))
+        {
+            SelectObject(added.Id);
+        }
     }
 }

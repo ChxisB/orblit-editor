@@ -169,6 +169,11 @@ internal sealed class InspectorPanel : UserControl
         {
             _bands.Children.Add(InspectorBands.Prefab(instance, item, _links));
         }
+
+        if (_session.ActiveLayout is { } shape && _session.LayoutOverrides(item.Id) is { Count: > 0 } overrides)
+        {
+            _bands.Children.Add(InspectorBands.Layout(shape, overrides, () => _session.ResetToBase(item.Id)));
+        }
     }
 
     private void Body(InspectorTarget target)
