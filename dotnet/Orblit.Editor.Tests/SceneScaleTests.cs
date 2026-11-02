@@ -120,6 +120,17 @@ public sealed class SceneScaleTests
     }
 
     [Fact]
+    public void RestoringNothingLeavesTheIndexAlone()
+    {
+        var (scene, _) = Branches(1, 3);
+        var handed = scene.SiblingsOf("g0");
+
+        scene.Restore([]);
+
+        Assert.Same(handed, scene.SiblingsOf("g0"));
+    }
+
+    [Fact]
     public void ACopyOfAParentAndItsChildKeepsOnlyTheParentAsATop()
     {
         var (scene, _) = Branches(2, 3);

@@ -597,6 +597,12 @@ public sealed class EditorScene
     /// </summary>
     public void Restore(IReadOnlyList<(SceneObject Object, int Index)> entries)
     {
+        // A delete of ids that were already gone took nothing, and its undo has nothing to merge.
+        if (entries.Count == 0)
+        {
+            return;
+        }
+
         var merged = new List<SceneObject>(_objects.Count + entries.Count);
         var taken = 0;
         foreach (var (restored, index) in entries)
