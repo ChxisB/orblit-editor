@@ -64,7 +64,8 @@ public sealed class SceneClipboard
         Clear();
 
         var wanted = ids.Where(scene.Contains).ToList();
-        var tops = wanted.Where(id => !wanted.Any(other => other != id && scene.IsAncestorOf(other, id)));
+        var among = wanted.ToHashSet();
+        var tops = wanted.Where(id => !scene.HasAncestorAmong(id, among));
 
         foreach (var id in tops)
         {

@@ -25,6 +25,13 @@ public sealed class EditorScene
     private int _cachedGeneration = -1;
     private readonly Dictionary<string, Matrix4> _worldCache = [];
 
+    // Who holds whom, built on the first question after a change. A walk down the tree asks for
+    // the children of every object it meets, and scanning the whole list for each one made a walk
+    // of a large scene take seconds.
+    private int _indexedGeneration = -1;
+    private List<SceneObject> _topLevel = [];
+    private Dictionary<string, List<SceneObject>> _under = [];
+
     // F2: the settings of a scene are data, and every one has a default.
     public EditorScene(
         List<SceneObject> objects,
@@ -244,8 +251,40 @@ public sealed class EditorScene
     }
 
     /// <summary>The objects sharing a parent, in the order they are drawn in the tree.</summary>
-    public IReadOnlyList<SceneObject> SiblingsOf(string? parentId) =>
-        [.. _objects.Where(one => one.ParentId == parentId)];
+    public IReadOnlyList<SceneObject> SiblingsOf(string? parentId)
+    {
+        if (_indexedGeneration != _generation)
+        {
+            Index();
+        }
+
+        return parentId is null ? _topLevel : _under.GetValueOrDefault(parentId) ?? [];
+    }
+
+    // A new list each time rather than an edit of the old one, so a caller still holding the
+    // siblings it was given keeps the answer it asked for.
+    private void Index()
+    {
+        _topLevel = [];
+        _under = [];
+        foreach (var one in _objects)
+        {
+            if (one.ParentId is not { } parentId)
+            {
+                _topLevel.Add(one);
+            }
+            else if (_under.TryGetValue(parentId, out var siblings))
+            {
+                siblings.Add(one);
+            }
+            else
+            {
+                _under[parentId] = [one];
+            }
+        }
+
+        _indexedGeneration = _generation;
+    }
 
     /// <summary>
     /// Moves an object to a new parent at a given position among its siblings. Order is the list's
@@ -275,6 +314,9 @@ public sealed class EditorScene
 
         _objects.Remove(moving);
         moving.ParentId = parentId;
+
+        // The siblings below are read from what the list holds now, not from before the move.
+        Invalidate();
 
         // Placed relative to its new siblings rather than at an absolute position in the flat
         // list, which is what makes the tree read in the right order.
@@ -406,6 +448,29 @@ public sealed class EditorScene
         return false;
     }
 
+    /// <summary>
+    /// Whether any object above <paramref name="id"/> is in <paramref name="among"/>. Asked of each
+    /// of a large selection, it walks up the one chain and never compares the selection with
+    /// itself.
+    /// </summary>
+    public bool HasAncestorAmong(string id, IReadOnlySet<string> among)
+    {
+        var current = _byId.GetValueOrDefault(id)?.ParentId;
+        var steps = 0;
+        while (current is not null && steps < MaxDepth)
+        {
+            if (among.Contains(current))
+            {
+                return true;
+            }
+
+            current = _byId.GetValueOrDefault(current)?.ParentId;
+            steps++;
+        }
+
+        return false;
+    }
+
     /// <summary>Where an object ends up, with every parent applied.</summary>
     public Matrix4 WorldOf(string id)
     {
@@ -452,36 +517,46 @@ public sealed class EditorScene
     /// objects with their positions so an undo can put them back exactly, rather than appending
     /// them to the end where they would silently reorder the outliner.
     /// </summary>
-    public List<(SceneObject Object, int Index)> Remove(string id)
+    public List<(SceneObject Object, int Index)> Remove(string id) => Remove([id]);
+
+    /// <summary>
+    /// Removes each of <paramref name="ids"/> and everything under them in one pass over the list.
+    /// An id that is gone, or sits inside another one in the list, is not an error. The answer is
+    /// in list order, which is the order <see cref="Restore"/> has to replay it in.
+    /// </summary>
+    public List<(SceneObject Object, int Index)> Remove(IReadOnlyList<string> ids)
     {
-        var found = _byId.GetValueOrDefault(id);
-        if (found is null)
+        var gone = new HashSet<SceneObject>();
+        foreach (var found in ids.Select(id => _byId.GetValueOrDefault(id)).OfType<SceneObject>())
         {
-            return [];
+            gone.Add(found);
+            gone.UnionWith(DescendantsOf(found.Id));
         }
 
-        var removed = new List<(SceneObject Object, int Index)>();
-        foreach (var gone in DescendantsOf(id).Prepend(found))
+        var removed = new List<(SceneObject Object, int Index)>(gone.Count);
+        if (gone.Count == 0)
         {
-            var index = _objects.IndexOf(gone);
-            if (index >= 0)
+            return removed;
+        }
+
+        var kept = 0;
+        for (var index = 0; index < _objects.Count; index++)
+        {
+            var one = _objects[index];
+            if (gone.Contains(one))
             {
-                removed.Add((gone, index));
+                removed.Add((one, index));
+                _byId.Remove(one.Id);
+            }
+            else
+            {
+                _objects[kept++] = one;
             }
         }
 
-        // Highest index first, so each removal leaves the earlier indices valid.
-        removed.Sort((a, b) => b.Index.CompareTo(a.Index));
-        foreach (var entry in removed)
-        {
-            _objects.RemoveAt(entry.Index);
-            _byId.Remove(entry.Object.Id);
-        }
-
+        _objects.RemoveRange(kept, _objects.Count - kept);
         Invalidate();
-
-        // Back into insertion order, which is the order an undo has to replay.
-        return [.. removed.AsEnumerable().Reverse()];
+        return removed;
     }
 
     /// <summary>
@@ -515,14 +590,30 @@ public sealed class EditorScene
         Invalidate();
     }
 
+    /// <summary>
+    /// Puts back what <see cref="Remove(IReadOnlyList{string})"/> took out, in the order it gave it:
+    /// by position, lowest first, so each object lands at the index it came from. The list is
+    /// merged in one pass. Inserting one object at a time moved everything after it each time.
+    /// </summary>
     public void Restore(IReadOnlyList<(SceneObject Object, int Index)> entries)
     {
-        foreach (var entry in entries)
+        var merged = new List<SceneObject>(_objects.Count + entries.Count);
+        var taken = 0;
+        foreach (var (restored, index) in entries)
         {
-            _byId[entry.Object.Id] = entry.Object;
-            _objects.Insert(Math.Min(entry.Index, _objects.Count), entry.Object);
+            _byId[restored.Id] = restored;
+            var upTo = Math.Min(index, _objects.Count - taken + merged.Count);
+            while (merged.Count < upTo)
+            {
+                merged.Add(_objects[taken++]);
+            }
+
+            merged.Add(restored);
         }
 
+        merged.AddRange(_objects.Skip(taken));
+        _objects.Clear();
+        _objects.AddRange(merged);
         Invalidate();
     }
 
