@@ -107,8 +107,16 @@ public static class SceneDocument
                 Layouts = new EditedLayouts(document.Layouts),
             },
             document.Name,
-            [.. read.Problems, .. opened?.Problems ?? []]);
+            [.. read.Problems, .. opened?.Problems ?? [], .. Unmatched(document)]);
     }
+
+    // A layout edit for an object the scene lacks changes nothing. Saying so when the scene opens beats
+    // it doing nothing without a word.
+    private static IEnumerable<string> Unmatched(Doc.SceneDocument document) =>
+        Enum.GetValues<Doc.LayoutShape>()
+            .Select(shape => (Shape: shape, Missed: document.Layouts.CountMissed(document, shape)))
+            .Where(entry => entry.Missed > 0)
+            .Select(entry => $"The {entry.Shape.ToString().ToLowerInvariant()} layout has {entry.Missed} {(entry.Missed == 1 ? "edit" : "edits")} for something the scene does not have. It changes nothing.");
 
     /// <summary>
     /// One object as JSON. Shared with the clipboard and with prefabs, so what is copied, what is

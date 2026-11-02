@@ -357,6 +357,30 @@ public sealed class EditorLayoutTests
         Assert.False(copy.Layouts.Held.IsEmpty);
     }
 
+    [Fact]
+    public void ALayoutEditForAnObjectTheSceneLacksIsSaidWhenTheSceneOpens()
+    {
+        var plain = Stored(EditorScene.Starter());
+        var gone = new SetField("gone", SceneComponents.Camera, "fieldOfView", 50.0, 40.0);
+        var text = plain.CopyWith(layouts: SceneLayouts.None.With(LayoutShape.Portrait, new SceneDiff([gone]))).Encode();
+
+        var load = SceneDocument.Decode(text);
+
+        Assert.Equal(["The portrait layout has 1 edit for something the scene does not have. It changes nothing."], load.Problems);
+    }
+
+    [Fact]
+    public void ALayoutWhoseEditsAllLandSaysNothingWhenTheSceneOpens()
+    {
+        var (scene, history) = Open();
+        Show(history, scene, LayoutShape.Portrait);
+        Move(history, scene, "crate", Raised);
+
+        var load = SceneDocument.Decode(SceneDocument.Encode(scene));
+
+        Assert.Empty(load.Problems);
+    }
+
     // Says it fits a layout and then renames the object, which a layout has no way to write down.
     private sealed class RenameWithoutAsking(string sceneId, string id, string to) : EditorCommand
     {
