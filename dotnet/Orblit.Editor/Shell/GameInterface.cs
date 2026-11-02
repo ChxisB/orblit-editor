@@ -7,13 +7,15 @@ using Orblit.Game;
 using Orblit.Game.Avalonia;
 
 /// <summary>
-/// The control an interface game makes. It is asked for once when the game starts, kept for as long as the
-/// game runs and handed to whichever game view is open.
+/// The control an interface game makes. It is asked for when the game is first the one shown, kept for as
+/// long as it stays shown and handed to whichever game view is open.
 /// </summary>
 /// <remarks>
 /// The window owns it and the views only show it, because a view can be closed and opened again while the
-/// game runs, and the game is asked for its control once. When the game stops the control is let go, with
-/// its data context, because anything that still points at it keeps the game's code from unloading.
+/// game runs, and the game is asked for its control once. With more than one player the game shown is the
+/// shown player's. Showing another player lets the control go, and showing the first again asks for a new
+/// one. When the game stops the control is let go, with its data context, because anything that still
+/// points at it keeps the game's code from unloading.
 /// </remarks>
 internal sealed class GameInterface
 {

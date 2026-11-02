@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Play a game as more than one player. The Play pill gains a count menu of
+  one to four players. Play starts one copy of the game for each. The first
+  is the host and runs the server end. The others join it over a loopback
+  link and run a client end. The game view gains a row of player buttons
+  while more than one runs, and the game view, its control and the keys go
+  to the player shown. Entities tagged `net` with owner authority go to the
+  host first, then to each guest in join order, once at Play. A game that
+  adds entities in `Start` should pass `after`, because with none each one
+  goes to the head of the document. A throw in any player stops them all,
+  and the log names the player. Edits made while playing follow the host's
+  copy only. `INetGame` lets a game name its network variables. Adds the
+  `Orblit.Net` 0.10.0 and `Orblit.Net.Game` 0.1.0 pins and raises
+  `Orblit.Game` to 0.2.0, so a game built for 0.1.x is refused.
+- Tag an object for the network. The inspector gains a Network section with
+  buttons that add and remove the `net` component. Authority is a choice of
+  Server or Owner, and Sync is a list of the fields that travel. Each edit
+  is one undoable step. A word that is not Owner reads as Server.
 - Give a playing game the keys and the pointer. While Play runs, the game
   view reads the keys held over it and the pointer, and the game gets them as
   a `GameInput` on each update. Play gives the view the focus. A key pressed
