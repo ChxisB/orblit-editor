@@ -20,7 +20,10 @@ public sealed class TrustDialog : Window
         Background = OrblitColors.Surface;
 
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.Sm, HorizontalAlignment = HorizontalAlignment.Right };
-        buttons.Children.Add(Answer("cancel", "Cancel", false, isDefault: true, isCancel: true));
+        var cancel = Answer("cancel", "Cancel", false);
+        cancel.IsDefault = true;
+        cancel.IsCancel = true;
+        buttons.Children.Add(cancel);
         buttons.Children.Add(Answer("trust", "Trust and Play", true));
 
         var column = new StackPanel { Margin = new Thickness(Space.Lg), Spacing = Space.Md, MaxWidth = 420 };
@@ -51,9 +54,9 @@ public sealed class TrustDialog : Window
         TextWrapping = TextWrapping.Wrap,
     };
 
-    private Button Answer(string name, string text, bool answer, bool isDefault = false, bool isCancel = false)
+    private Button Answer(string name, string text, bool answer)
     {
-        var button = new Button { Name = name, Content = text, IsDefault = isDefault, IsCancel = isCancel };
+        var button = new Button { Name = name, Content = text };
         button.Click += (_, _) => Close(answer);
         return button;
     }

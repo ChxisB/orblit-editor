@@ -147,6 +147,65 @@ public sealed class EditorSessionTrustTests(TinyGameBuild fixture) : IClassFixtu
         Assert.Equal(1, build.Runs);
     }
 
+    // A build that Stop does not cancel would wait for ever, so the test says so after a while.
+    [Fact(Timeout = 20_000)]
+    public async Task StopTrustingDuringABuildCancelsItAndStartsNoGame()
+    {
+        var started = new TaskCompletionSource();
+        var trust = Trusted();
+        trust.Grant(Folder);
+        var session = Open(GameTestSupport.Blocked(started), trust);
+
+        var playing = session.TogglePlayback();
+        await started.Task.WaitAsync(TestContext.Current.CancellationToken);
+
+        session.StopTrusting();
+        await playing.WaitAsync(TestContext.Current.CancellationToken);
+
+        Assert.False(session.Building);
+        Assert.Null(session.Playback);
+        Assert.False(GameTestSupport.AnyGameContext());
+        Assert.False(Trusted().IsTrusted(Folder));
+    }
+
+    [Fact]
+    public async Task AQuestionThatThrowsSaysSoAndStartsNothing()
+    {
+        var build = GameTestSupport.Copying(fixture.Build);
+        var session = Open(build, Trusted());
+        session.AskToTrust = _ => throw new InvalidOperationException("The dialog has no window.");
+
+        await session.TogglePlayback();
+
+        Assert.Equal(0, build.Runs);
+        Assert.Null(session.Playback);
+        var entry = session.Log.Entries[^1];
+        Assert.Equal(SayLevel.Error, entry.Level);
+        Assert.Contains("Play stopped", entry.Message);
+        Assert.Contains("The dialog has no window.", entry.Detail);
+    }
+
+    [Fact]
+    public async Task AProjectFileThatCannotBeReadSaysSoAndPlaysNothing()
+    {
+        var build = GameTestSupport.Copying(fixture.Build);
+        var session = Open(build, Trusted());
+
+        // Holding the file open without sharing makes the read fail on every system.
+        using (new FileStream(Path.Combine(_project.FullName, Project.FileName), FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            await session.TogglePlayback();
+        }
+
+        Assert.Equal(0, build.Runs);
+        Assert.Empty(_asked);
+        Assert.Null(session.Playback);
+        Assert.False(session.Playing);
+        var entry = session.Log.Entries[^1];
+        Assert.Equal(SayLevel.Error, entry.Level);
+        Assert.Contains("project file could not be read", entry.Message);
+    }
+
     [Fact]
     public void StopTrustingThatCannotBeWrittenSaysSo()
     {

@@ -89,7 +89,18 @@ public sealed partial class EditorSession
     // The project's game when it has one, and otherwise the scene alone. A scene that is paused goes on.
     private async Task Play()
     {
-        var project = Playback is null ? ProjectStore.Open(ProjectFolder) : null;
+        Project? project = null;
+        try
+        {
+            project = Playback is null ? ProjectStore.Open(ProjectFolder) : null;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+        {
+            // Playing the scene alone would hide that the project has a game.
+            Say("The project file could not be read, so Play did not start.", SayLevel.Error, error.Message);
+            return;
+        }
+
         if (project is { Game: not null } or { GameProblem: not null })
         {
             await PlayGame(project);

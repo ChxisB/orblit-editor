@@ -35,11 +35,13 @@ public sealed partial class EditorSession
     public bool Building => _building is not null;
 
     /// <summary>
-    /// Takes back the trust given to this project. Its game stops if it is running, because code that is
-    /// no longer trusted should not go on running. The next Play asks again.
+    /// Takes back the trust given to this project. Its game stops if it is running and a build under way
+    /// is cancelled, because code that is no longer trusted should not start or go on running. The next
+    /// Play asks again.
     /// </summary>
     public void StopTrusting()
     {
+        _building?.Cancel();
         if (_game is not null)
         {
             StopPlayback();
@@ -79,24 +81,11 @@ public sealed partial class EditorSession
             return;
         }
 
-        var folder = ProjectFolder;
-        if (!Trust.IsTrusted(folder))
-        {
-            if (!await AskToTrust(folder))
-            {
-                Say(
-                    "The game did not start. This project has not been trusted to run its code.",
-                    SayLevel.Warning,
-                    "Opening a project never builds or runs it. Trust the project to play its game.");
-                return;
-            }
-
-            GrantTrust(folder);
-        }
-
+        // The question is inside the try, because a dialog that throws should end Play with a message and
+        // not escape from the press that started it.
         try
         {
-            if (await BuildGame(entry) is { AssemblyPath: { } assembly })
+            if (await ObtainTrust() && await BuildGame(entry) is { AssemblyPath: { } assembly })
             {
                 StartGame(assembly, entry.Type);
             }
@@ -105,6 +94,28 @@ public sealed partial class EditorSession
         {
             Say("Play stopped before the game started.", SayLevel.Error, error.ToString());
         }
+    }
+
+    // True when the project is trusted already or the person says yes. A no is said in the log.
+    private async Task<bool> ObtainTrust()
+    {
+        var folder = ProjectFolder;
+        if (Trust.IsTrusted(folder))
+        {
+            return true;
+        }
+
+        if (!await AskToTrust(folder))
+        {
+            Say(
+                "The game did not start. This project has not been trusted to run its code.",
+                SayLevel.Warning,
+                "Opening a project never builds or runs it. Trust the project to play its game.");
+            return false;
+        }
+
+        GrantTrust(folder);
+        return true;
     }
 
     // The person said yes, so this run goes ahead even when the answer cannot be written down. Only the
