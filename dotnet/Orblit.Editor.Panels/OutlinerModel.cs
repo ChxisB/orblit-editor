@@ -120,41 +120,46 @@ public sealed class OutlinerModel(Workspace workspace)
     {
         var scene = entry.Scene;
         var kept = scene is null || query.Length == 0 ? null : KeptBy(scene, query);
-        if (query.Length > 0 && !entry.Title.Contains(query, StringComparison.OrdinalIgnoreCase) && kept is not { Count: > 0 })
+        if (!IsListed(entry, query, kept))
         {
             return [];
         }
 
-        var rows = new List<OutlinerRow> { new(entry, null, 0, scene is not null && scene.Roots.Count > 0) };
+        // Grouped once here. Asking the scene for each object's children scans every object, which is
+        // a scan per row and seconds of work once a scene holds tens of thousands.
+        var children = scene?.Objects.ToLookup(one => one.ParentId);
+        var rows = new List<OutlinerRow> { new(entry, null, 0, children is not null && children[null].Any()) };
 
         // An unloaded scene has no objects to show. Listing children it does not hold would suggest
         // they could be edited, and they cannot.
-        if (scene is not null && (kept is not null || !_collapsed.Contains(entry.Id)))
+        if (children is not null && (kept is not null || !_collapsed.Contains(entry.Id)))
         {
-            Walk(entry, scene, kept, scene.Roots, 1, rows);
+            var pass = new Pass(entry, children, kept, rows);
+            Walk(pass, ShownUnder(pass, null), 1);
         }
 
         return rows;
     }
 
-    private void Walk(
-        SceneEntry entry,
-        EditorScene scene,
-        HashSet<string>? kept,
-        IReadOnlyList<SceneObject> objects,
-        int depth,
-        List<OutlinerRow> rows)
+    // A scene is listed when nothing is filtered, or its own name matches, or one of its objects does.
+    private static bool IsListed(SceneEntry entry, string query, HashSet<string>? kept) =>
+        query.Length == 0 || entry.Title.Contains(query, StringComparison.OrdinalIgnoreCase) || kept is { Count: > 0 };
+
+    private void Walk(Pass pass, List<SceneObject> objects, int depth)
     {
-        foreach (var one in objects.Where(one => kept is null || kept.Contains(one.Id)))
+        foreach (var one in objects)
         {
-            var children = scene.ChildrenOf(one.Id).Where(child => kept is null || kept.Contains(child.Id)).ToList();
-            rows.Add(new OutlinerRow(entry, one, depth, children.Count > 0));
-            if (kept is not null || !_collapsed.Contains(one.Id))
+            var children = ShownUnder(pass, one.Id);
+            pass.Rows.Add(new OutlinerRow(pass.Entry, one, depth, children.Count > 0));
+            if (pass.Kept is not null || !_collapsed.Contains(one.Id))
             {
-                Walk(entry, scene, kept, children, depth + 1, rows);
+                Walk(pass, children, depth + 1);
             }
         }
     }
+
+    private static List<SceneObject> ShownUnder(Pass pass, string? parentId) =>
+        [.. pass.Children[parentId].Where(one => pass.Kept is null || pass.Kept.Contains(one.Id))];
 
     // The objects whose names hold the query, and every parent above them, so a match shows where it
     // sits in the tree and not loose.
@@ -172,4 +177,11 @@ public sealed class OutlinerModel(Workspace workspace)
 
         return kept;
     }
+
+    // What one scene's walk shares: where the rows go, who is whose child, and what a filter kept.
+    private sealed record Pass(
+        SceneEntry Entry,
+        ILookup<string?, SceneObject> Children,
+        HashSet<string>? Kept,
+        List<OutlinerRow> Rows);
 }
