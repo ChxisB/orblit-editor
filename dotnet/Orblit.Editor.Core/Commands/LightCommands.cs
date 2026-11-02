@@ -23,6 +23,8 @@ public sealed class SetPower(string sceneId, string id, string name, double from
 
     public override string Label => $"Set {Name} power";
 
+    public override bool FitsLayout => true;
+
     public override object? MergeKey => (Id, "power");
 
     public override void Absorb(EditorCommand later)
@@ -71,6 +73,8 @@ public sealed class SetLightType(
 
     public override string Label => $"Make {Name} a {To.ToString().ToLowerInvariant()}";
 
+    public override bool FitsLayout => true;
+
     public override void Apply(ISceneHost host) => Write(host, To, ToPower);
 
     public override void Revert(ISceneHost host) => Write(host, From, FromPower);
@@ -112,6 +116,8 @@ public sealed class SetLightShape(string sceneId, string id, string name, LightS
     public LightShape To { get; private set; } = to;
 
     public override string Label => $"Shape {Name}";
+
+    public override bool FitsLayout => true;
 
     public override object? MergeKey => (Id, "light shape");
 

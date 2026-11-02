@@ -71,6 +71,8 @@ public sealed class SetCelestialBody(string sceneId, string id, string name, Cel
 
     public override string Label => $"Make {Name} the {To.Label().ToLowerInvariant()}";
 
+    public override bool FitsLayout => true;
+
     public override void Apply(ISceneHost host) => host.SceneFor(SceneId)?[Id]?.Body = To;
 
     public override void Revert(ISceneHost host) => host.SceneFor(SceneId)?[Id]?.Body = From;
@@ -112,6 +114,8 @@ public sealed class SetCloudKind(
     public override string Label => To is { } kind
         ? $"Set the cloud to {kind.Label().ToLowerInvariant()}"
         : "Follow the condition";
+
+    public override bool FitsLayout => true;
 
     public override void Apply(ISceneHost host) => Set(host, To, ToHeight);
 
@@ -159,6 +163,8 @@ public sealed class SetWeatherCondition(
 
     public override string Label => $"Set the weather to {To.Label().ToLowerInvariant()}";
 
+    public override bool FitsLayout => true;
+
     public override void Apply(ISceneHost host) => Change(host, To, ToState);
 
     public override void Revert(ISceneHost host) => Change(host, From, FromState);
@@ -193,6 +199,8 @@ public sealed class SetWeatherValues(string sceneId, string id, WeatherState fro
     public WeatherState To { get; private set; } = to;
 
     public override string Label => "Set the weather";
+
+    public override bool FitsLayout => true;
 
     public override object? MergeKey => (Id, "weather");
 
@@ -239,6 +247,8 @@ public sealed class SetWeatherWind(string sceneId, string id, WindValues from, W
     public WindValues To { get; private set; } = to;
 
     public override string Label => "Set the wind";
+
+    public override bool FitsLayout => true;
 
     public override object? MergeKey => (Id, "wind");
 

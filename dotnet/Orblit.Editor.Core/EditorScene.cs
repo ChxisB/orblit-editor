@@ -91,6 +91,12 @@ public sealed class EditorScene
     public IReadOnlyList<string> LayerNames { get; set; }
 
     /// <summary>
+    /// How the scene looks held each way up, and which of them the rows are showing. Set when the
+    /// scene is read, so the constructor does not take a ninth setting.
+    /// </summary>
+    public EditedLayouts Layouts { get; init; } = new();
+
+    /// <summary>
     /// Seconds since the editor started animating this scene. Not saved and not part of the
     /// document: it is the editor's clock.
     /// </summary>

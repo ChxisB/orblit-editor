@@ -67,6 +67,25 @@ public abstract class EditorCommand
     public virtual bool OnlyMoves => false;
 
     /// <summary>
+    /// Whether this can run while its scene shows a layout. False by default, and deliberately: a
+    /// command that forgets to say it can costs a message nobody needed, and one that wrongly claims
+    /// it can costs an edit that a layout has no way to hold.
+    /// <para>
+    /// True for an edit to how something looks, which a layout writes down as a field, a component
+    /// or shown and hidden. False for anything that changes which things there are or what the whole
+    /// scene is.
+    /// </para>
+    /// </summary>
+    public virtual bool FitsLayout => false;
+
+    /// <summary>
+    /// Whether this is a change to the scene as it is saved, for working out whether the scene has
+    /// changed since it was written. False for a command that only picks what is on show, because
+    /// undo needs it on the stack and the file does not change by it.
+    /// </summary>
+    public virtual bool ChangesScene => true;
+
+    /// <summary>
     /// Set by the history each time this command is run or absorbs another. What lets "has anything
     /// changed since the last save" be answered exactly. Depth alone cannot: a merged drag leaves the
     /// stack the same length while changing what it means.
@@ -118,6 +137,13 @@ public sealed class History(ISceneHost host)
 
     public event Action? Changed;
 
+    /// <summary>
+    /// A command was not run because its scene is showing a layout that cannot hold it. Raised
+    /// rather than thrown, because a panel runs commands straight from an event handler and has
+    /// nowhere to catch.
+    /// </summary>
+    public event Action<EditorCommand>? Refused;
+
     public ISceneHost Host { get; } = host;
 
     /// <summary>
@@ -150,7 +176,12 @@ public sealed class History(ISceneHost host)
     /// scenes since.
     /// </summary>
     public int StampFor(string sceneId) =>
-        _done.LastOrDefault(command => command.Touches.Contains(sceneId))?.Stamp ?? 0;
+        _done.LastOrDefault(command => command.ChangesScene && command.Touches.Contains(sceneId))?.Stamp ?? 0;
+
+    /// <summary>Whether a scene it touches is showing a layout that cannot hold the command.</summary>
+    public bool Refuses(EditorCommand command) =>
+        !command.FitsLayout
+        && command.Touches.Any(id => Host.SceneFor(id)?.Layouts.Active is not null);
 
     /// <summary>Forgets every step belonging to a scene, for when one is closed.</summary>
     public void Forget(string sceneId)
@@ -164,9 +195,16 @@ public sealed class History(ISceneHost host)
     /// <summary>
     /// Applies a command and records it. Throws whatever the command throws, having recorded
     /// nothing: a refused edit must not leave a step on the stack that would undo something else.
+    /// A command a layout cannot hold is not run, and <see cref="Refused"/> says so.
     /// </summary>
     public void Run(EditorCommand command)
     {
+        if (Refuses(command))
+        {
+            Refused?.Invoke(command);
+            return;
+        }
+
         LastOnlyMoved = command.OnlyMoves;
         var key = command.MergeKey;
         if (!_sealed && key is not null && _done.Count > 0 && Equals(_done[^1].MergeKey, key))

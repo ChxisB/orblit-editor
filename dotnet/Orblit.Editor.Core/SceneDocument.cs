@@ -51,14 +51,18 @@ public static class SceneDocument
     /// <paramref name="prefabs"/> hands back for it. That has to be the one it was opened against,
     /// or the difference between two versions of the prefab is saved as a change to every instance.
     /// An instance whose prefab cannot be had is written out whole rather than lost.
+    /// <para>
+    /// Written with its layouts, whichever of them the rows are showing, so saving from inside a
+    /// layout does not write that layout over the base.
+    /// </para>
     /// </remarks>
     public static string Encode(EditorScene scene, string? name = null, PrefabSource? prefabs = null)
     {
-        var document = DocumentOf(scene, name);
+        var document = scene.Layouts.Stored(scene, name);
         return (prefabs is null ? document : Instances.Fold(document, prefabs)).Encode();
     }
 
-    /// <summary>The editor's scene as a document.</summary>
+    /// <summary>The editor's scene as a document: what the rows show, with no layouts of its own.</summary>
     public static Doc.SceneDocument DocumentOf(EditorScene scene, string? name = null) =>
         new(
             name ?? scene.Name,
@@ -98,7 +102,10 @@ public static class SceneDocument
                 settings.TimeOfDay,
                 settings.DayCycle,
                 settings.HoursPerSecond,
-                settings.LayerNames),
+                settings.LayerNames)
+            {
+                Layouts = new EditedLayouts(document.Layouts),
+            },
             document.Name,
             [.. read.Problems, .. opened?.Problems ?? []]);
     }
@@ -129,13 +136,20 @@ public static class SceneDocument
         return SceneEntity.FromJson(migrated) is { } entity ? ObjectOf(entity) : null;
     }
 
-    /// <summary>An outliner row as an entity with components.</summary>
+    /// <summary>
+    /// An outliner row as an entity with components.
+    /// <para>
+    /// Everything a command changes in place is copied. A layout compares the rows now with the rows
+    /// as they were, and a snapshot that shared a position with its row would change as the row did
+    /// and find nothing to compare.
+    /// </para>
+    /// </summary>
     [SuppressMessage("Maintainability", "CA1502", Justification = "F2: a list of components is data.")]
     public static SceneEntity EntityOf(SceneObject target)
     {
         var components = new OrderedDictionary<string, SceneComponent>
         {
-            [SceneComponents.Transform] = new TransformComponent(target.Position, target.Rotation, target.Scale),
+            [SceneComponents.Transform] = new TransformComponent(target.Position.Clone(), target.Rotation.Clone(), target.Scale.Clone()),
         };
 
         if (target.IsDrawable)
@@ -194,7 +208,9 @@ public static class SceneDocument
                 target.MaterialAsset,
                 // Read only when the asset is a shader, so a texture put on after one does not carry
                 // the shader's values into the file.
-                values: target.WearsSurface ? target.MaterialValues : new OrderedDictionary<string, object>());
+                values: target.WearsSurface
+                    ? new OrderedDictionary<string, object>(target.MaterialValues)
+                    : new OrderedDictionary<string, object>());
         }
 
         if (target.Kind == ObjectKind.Canvas || target.InterfaceAsset is not null)
@@ -209,7 +225,7 @@ public static class SceneDocument
 
         if (target.Data.Count > 0)
         {
-            components[SceneComponents.Data] = new DataComponent(target.Data);
+            components[SceneComponents.Data] = new DataComponent([.. target.Data]);
         }
 
         // What the row carries without understanding it. Its own fields win: the row is what the

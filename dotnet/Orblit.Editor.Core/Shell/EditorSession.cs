@@ -51,6 +51,7 @@ public sealed partial class EditorSession
         Terrains = new TerrainBench(history, workspace.ProjectDirectory, problem => Say(problem, SayLevel.Error));
         Terrains.Changed += OnTerrainsChanged;
         history.Changed += OnHistoryChanged;
+        history.Refused += command => Say(LayoutRefusal(command.Label), SayLevel.Info);
         workspace.Changed += StopPlayingAnotherScene;
     }
 

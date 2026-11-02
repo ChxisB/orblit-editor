@@ -29,6 +29,8 @@ public sealed class SetObjectComponent(
 
     public override string Label { get; } = label;
 
+    public override bool FitsLayout => true;
+
     /// <summary>Which component, as it is keyed on the entity.</summary>
     public string Type { get; } = type;
 
