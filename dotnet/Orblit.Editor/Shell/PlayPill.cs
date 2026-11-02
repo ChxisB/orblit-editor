@@ -7,7 +7,10 @@ namespace Orblit.Editor;
 
 using Orblit.Editor.Core;
 
-/// <summary>Play or pause the scene, and stop it. Play waits for a scene, and stop for something playing.</summary>
+/// <summary>
+/// Play or pause the scene, and stop it. Play waits for a scene, and stop for something playing or a
+/// game being built. While the game builds, Play is off and says so.
+/// </summary>
 internal sealed class PlayPill : Border
 {
     private readonly EditorSession _session;
@@ -22,7 +25,7 @@ internal sealed class PlayPill : Border
         VerticalAlignment = VerticalAlignment.Center;
         CornerRadius = Radii.Control;
         Background = OrblitColors.Raised;
-        _play = new ToolbarAction("play_toggle", AssetIcons.Play, "Play", session.TogglePlayback);
+        _play = new ToolbarAction("play_toggle", AssetIcons.Play, "Play", () => _ = session.TogglePlayback());
         _stop = new ToolbarAction("play_stop", AssetIcons.Stop, "Stop", session.StopPlayback);
         Child = new StackPanel { Orientation = Orientation.Horizontal, Children = { _play, _stop } };
         Sync();
@@ -47,8 +50,10 @@ internal sealed class PlayPill : Border
 
     private void Sync()
     {
-        _play.IsEnabled = _session.Playing || _session.Workspace.Loaded?.Scene is not null;
-        _play.Show(_session.Playing ? AssetIcons.Pause : AssetIcons.Play, _session.Playing ? "Pause" : "Play", _session.Playing);
-        _stop.IsEnabled = _session.Playback is not null;
+        var building = _session.Building;
+        var label = building ? "Building the game" : _session.Playing ? "Pause" : "Play";
+        _play.IsEnabled = !building && (_session.Playing || _session.Workspace.Loaded?.Scene is not null);
+        _play.Show(_session.Playing ? AssetIcons.Pause : AssetIcons.Play, label, _session.Playing || building);
+        _stop.IsEnabled = _session.Playback is not null || building;
     }
 }

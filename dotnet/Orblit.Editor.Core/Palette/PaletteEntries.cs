@@ -60,7 +60,7 @@ public static class PaletteEntries
     private static PaletteEntry[] Views(EditorSession session) =>
     [
         .. session.Modes.All.Select(mode => Command($"Go to {mode.Label}", mode.Icon, () => session.EnterMode(mode), meta: "Workspace")),
-        Command(session.Playing ? "Pause" : "Play", session.Playing ? "pause" : "play_arrow", session.TogglePlayback),
+        Command(session.Playing ? "Pause" : "Play", session.Playing ? "pause" : "play_arrow", () => _ = session.TogglePlayback()),
         Command("Stop", "stop", session.StopPlayback),
         Command(session.IsFocused ? "Show panels" : "Focus view", "fullscreen", session.ToggleFocus),
         Command("Reset panels", "view_quilt_outlined", session.ResetPanels),

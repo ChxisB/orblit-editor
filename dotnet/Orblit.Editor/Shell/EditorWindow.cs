@@ -162,6 +162,8 @@ public sealed class EditorWindow : Window
             _session.NameWanted -= AskSceneName;
             _session.Assets.Changed -= CookShaders;
             _clock.Detach();
+            // A game that is playing, or being built, would outlive the window it plays in.
+            _session.StopPlayback();
             // The session made the tree, and the window is what outlives its file watcher.
             _session.Assets.Dispose();
             _session.Surfaces.Dispose();

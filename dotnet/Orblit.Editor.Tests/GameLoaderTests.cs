@@ -9,6 +9,8 @@ using Doc = Orblit.Scene;
 /// <summary>Builds the game under Fixtures/TinyGame once for every test in the class.</summary>
 public sealed class TinyGameBuild : IAsyncLifetime
 {
+    public const string Collection = "game loading";
+
     public GameBuild Build { get; private set; } = new(null, "not built");
 
     public async ValueTask InitializeAsync() => Build = await new GameBuilder(new DotnetBuild()).BuildAsync(
@@ -19,6 +21,8 @@ public sealed class TinyGameBuild : IAsyncLifetime
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }
 
+// The tests that load a game share a collection, so one test's contexts are never counted in another's.
+[Collection(TinyGameBuild.Collection)]
 public sealed class GameLoaderTests(TinyGameBuild fixture) : IClassFixture<TinyGameBuild>
 {
     private string Dll => fixture.Build.AssemblyPath ?? throw new InvalidOperationException(fixture.Build.Output);
@@ -200,7 +204,7 @@ public sealed class GameLoaderTests(TinyGameBuild fixture) : IClassFixture<TinyG
     private static bool IsCollected(WeakReference reference) => Until(() => !reference.IsAlive);
 
     // Unloading finishes on a later collection than the one that finds nothing holding the context.
-    private static bool Until(Func<bool> done)
+    internal static bool Until(Func<bool> done)
     {
         for (var attempt = 0; attempt < 10; attempt++)
         {

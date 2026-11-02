@@ -2,19 +2,29 @@
 
 ## Unreleased
 
+- Play runs a project's game. When `orblit.project.json` names a game, Play
+  builds it, loads it and runs it in the playing copy of the scene. Stop, or
+  closing the window, lets the game go and unloads its assembly. The scene
+  being edited is never changed. A game that throws stops Play, and the log
+  keeps the stack. `EditorSession.TogglePlayback` is now a task, because a
+  build takes a while. `EditorSession.Building` is true until it ends, the
+  Play button reads "Building the game", and Stop cancels the build. Nothing
+  builds until the project is trusted. `EditorSession.Trust` answers no until
+  the editor is given an answer, so Play says why and does nothing. A project
+  with no game plays its scene as before.
 - Let a change reach the scene a game plays in. `ScenePlayback.Apply` takes
   a `SceneDiff` and changes the playing copy. It writes only the rows the
   diff names, so an object it leaves alone is the same object and a clip that
   poses it carries on. `ScenePlayback.Edited` is raised with each edit made
   to the scene being edited, for the game to take. The game's own changes are
-  not raised back. Nothing calls either yet.
+  not raised back.
 - Build and load a game. `GameBuilder` runs `dotnet build` on the game's
   project into `<project>/.orblit/game`, with a five minute limit. `GameLoader`
   reads the built assembly into a collectible load context and makes the
   named `IGame`. The editor's own `Orblit.Game` and `Orblit.Scene` are the
   ones the game uses, never the copies beside it. A game built for another
   minor version of `Orblit.Game` is refused. Disposing a `LoadedGame` unloads
-  the context. Nothing calls this yet. Adds the `Orblit.Game` 0.1.0 pin.
+  the context. Adds the `Orblit.Game` 0.1.0 pin.
 - Let a project name its game. `orblit.project.json` takes an optional
   `game` field, `{ "project": "game/Game.csproj", "type": "Scape.Game.ScapeGame" }`,
   and `Project.Game` reads it. A path that is absolute or leaves the project

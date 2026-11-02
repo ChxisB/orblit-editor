@@ -27,53 +27,96 @@ public sealed partial class EditorSession
     public event Action? PlaybackChanged;
 
     /// <summary>
-    /// Pauses what is playing, or starts the loaded scene and shows the game view. Does nothing when
-    /// no scene is loaded.
+    /// Pauses what is playing, or starts the loaded scene and shows the game view. A project with a
+    /// game builds it first, which is why this is a task. Does nothing when no scene is loaded or a
+    /// build is already running.
     /// </summary>
-    public void TogglePlayback()
+    public async Task TogglePlayback()
     {
         if (Playing)
         {
             Playing = false;
             PlaybackChanged?.Invoke();
-            return;
         }
-
-        if (Workspace.Loaded?.Scene is null)
+        else if (!Building && Workspace.Loaded?.Scene is not null)
         {
-            return;
+            await Play();
         }
-
-        Clips.Playing = false;
-        Cutscenes.Playing = false;
-        Playback ??= AtRest(() => new ScenePlayback(Workspace, ClipForPlayback, CutscenesForPlayback()));
-        Playing = true;
-        OpenPanel(PanelKind.Game);
-        PlaybackChanged?.Invoke();
     }
 
-    /// <summary>Stops the scene and puts the game view back to the scene as it is edited.</summary>
+    /// <summary>
+    /// Stops the scene and its game and puts the game view back to the scene as it is edited. Stops a
+    /// build that is running too.
+    /// </summary>
     public void StopPlayback()
     {
+        _building?.Cancel();
         if (Playback is null)
         {
             return;
         }
 
+        _game?.Dispose();
+        _game = null;
         Playback = null;
         Playing = false;
         PlaybackChanged?.Invoke();
     }
 
-    /// <summary>Lets <paramref name="seconds"/> pass in the scene that is playing. Does nothing while it is paused.</summary>
+    /// <summary>
+    /// Lets <paramref name="seconds"/> pass in the scene that is playing. The game goes first, so a
+    /// clip that poses a field the game also sets keeps it. Does nothing while it is paused. A game
+    /// that throws stops Play.
+    /// </summary>
     public void AdvancePlayback(double seconds)
     {
-        if (Playing && Playback is { } running)
+        if (!Playing || Playback is not { } running)
         {
-            running.Advance(seconds);
-            PlaybackChanged?.Invoke();
+            return;
         }
+
+        _game?.Update(seconds);
+        if (_game?.Fault is not null)
+        {
+            StopPlayback();
+            return;
+        }
+
+        running.Advance(seconds);
+        PlaybackChanged?.Invoke();
     }
+
+    // The project's game when it has one, and otherwise the scene alone. A scene that is paused goes on.
+    private async Task Play()
+    {
+        var project = Playback is null ? ProjectStore.Open(ProjectFolder) : null;
+        if (project is { Game: not null } or { GameProblem: not null })
+        {
+            await PlayGame(project);
+            return;
+        }
+
+        PauseTimelines();
+        Playback ??= NewPlayback();
+        Show();
+    }
+
+    private void Show()
+    {
+        Playing = true;
+        OpenPanel(PanelKind.Game);
+        PlaybackChanged?.Invoke();
+    }
+
+    // What plays leaves the timelines alone, so a clip is not posed by two things at once.
+    private void PauseTimelines()
+    {
+        Clips.Playing = false;
+        Cutscenes.Playing = false;
+    }
+
+    private ScenePlayback NewPlayback() =>
+        AtRest(() => new ScenePlayback(Workspace, ClipForPlayback, CutscenesForPlayback()));
 
     // An edit made while the scene plays, or sits paused, shows in the copy. Otherwise the game view
     // goes on showing the scene as it was when Play was pressed.
