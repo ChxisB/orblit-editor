@@ -56,8 +56,10 @@ public sealed partial class EditorSession
         // hierarchy means by add most of the time.
         var selected = Primary is { } primary ? scene[primary] : null;
         var parent = selected is null ? null : selected.Kind == ObjectKind.Group ? selected.Id : selected.ParentId;
-        Run(new AddObject(added, open.Id, parent));
-        SelectObject(added.Id);
+        if (Run(new AddObject(added, open.Id, parent)))
+        {
+            SelectObject(added.Id);
+        }
     }
 
     /// <summary>
@@ -81,8 +83,10 @@ public sealed partial class EditorSession
             colour: new Colour(0xFF8E99A8));
 
         var selected = Primary is { } primary ? scene[primary] : null;
-        Run(new AddObject(added, open.Id, selected?.Kind == ObjectKind.Group ? selected.Id : null));
-        SelectObject(added.Id);
+        if (Run(new AddObject(added, open.Id, selected?.Kind == ObjectKind.Group ? selected.Id : null)))
+        {
+            SelectObject(added.Id);
+        }
     }
 
     /// <summary>Deletes one object, whatever is selected.</summary>
@@ -93,7 +97,11 @@ public sealed partial class EditorSession
             return;
         }
 
-        Run(new DeleteObjects(open.Id, [id], one.Name));
+        if (!Run(new DeleteObjects(open.Id, [id], one.Name)))
+        {
+            return;
+        }
+
         var rest = Selected.Where(selected => selected != id).ToList();
         Choose(rest, Primary == id ? LastOf(rest) : Primary);
     }
@@ -113,8 +121,10 @@ public sealed partial class EditorSession
         }
 
         var what = ids.Count == 1 ? scene[ids[0]]?.Name ?? "object" : $"{ids.Count} objects";
-        Run(new DeleteObjects(open.Id, ids, what));
-        ClearSelection();
+        if (Run(new DeleteObjects(open.Id, ids, what)))
+        {
+            ClearSelection();
+        }
     }
 
     public void ClearSelection() => Choose([], null);
@@ -275,8 +285,10 @@ public sealed partial class EditorSession
     private void Paste(SceneEntry open, SceneClipboard taken, string? parentId)
     {
         var content = taken.Contents(NextObjectId, parentId);
-        Run(new PasteObjects(open.Id, content.Objects, content.Roots, taken.Description, content.Worlds));
-        Choose(content.Roots, LastOf(content.Roots));
+        if (Run(new PasteObjects(open.Id, content.Objects, content.Roots, taken.Description, content.Worlds)))
+        {
+            Choose(content.Roots, LastOf(content.Roots));
+        }
     }
 
     // Nothing awaits a menu click, so a clipboard that fails is said here and not left unobserved.
@@ -292,8 +304,11 @@ public sealed partial class EditorSession
         }
     }
 
-    private void Run(EditorCommand command)
+    // F5: runs the command and answers whether it ran. A separate query would repeat the refusal test
+    // and the catch below. What follows an add or a delete is then not done to a scene that never changed.
+    private bool Run(EditorCommand command)
     {
+        var refused = History.Refuses(command);
         try
         {
             History.Run(command);
@@ -301,7 +316,10 @@ public sealed partial class EditorSession
         catch (SceneException error)
         {
             Say(error.Message, SayLevel.Error);
+            return false;
         }
+
+        return !refused;
     }
 
     private static string? LastOf(IReadOnlyList<string> ids) => ids.Count == 0 ? null : ids[^1];

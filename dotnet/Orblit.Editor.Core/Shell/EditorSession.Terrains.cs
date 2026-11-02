@@ -48,6 +48,12 @@ public sealed partial class EditorSession
             return;
         }
 
+        if (scene.Layouts.Active is not null)
+        {
+            Say(LayoutRefusal("Add terrain"), SayLevel.Info);
+            return;
+        }
+
         var file = FreeTerrainFile();
         if (Terrains.Create(file, StartingGround()) is { } problem)
         {
@@ -60,9 +66,11 @@ public sealed partial class EditorSession
             name: UniqueName(scene, "Terrain"),
             kind: ObjectKind.Group,
             components: new OrderedDictionary<string, Doc.SceneComponent> { [Doc.SceneComponents.Terrain] = new Doc.TerrainComponent(file) });
-        Run(new AddObject(added, open.Id));
-        SelectObject(added.Id);
-        Say($"Made {file}", SayLevel.Info);
+        if (Run(new AddObject(added, open.Id)))
+        {
+            SelectObject(added.Id);
+            Say($"Made {file}", SayLevel.Info);
+        }
     }
 
     private static Doc.TerrainComponent? TerrainOf(SceneObject item) =>

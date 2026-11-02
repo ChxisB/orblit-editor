@@ -23,6 +23,8 @@ public sealed class SetColour(string sceneId, string id, string name, Colour fro
 
     public override string Label => $"Recolour {Name}";
 
+    public override bool FitsLayout => true;
+
     public override void Apply(ISceneHost host) => host.SceneFor(SceneId)?[Id]?.Colour = To;
 
     public override void Revert(ISceneHost host) => host.SceneFor(SceneId)?[Id]?.Colour = From;
@@ -44,6 +46,8 @@ public sealed class SetSway(string sceneId, string id, string name, double from,
     public double To { get; private set; } = to;
 
     public override string Label => To <= 0 ? $"Stop {Name} swaying" : $"Set {Name} sway";
+
+    public override bool FitsLayout => true;
 
     public override object? MergeKey => (Id, "sway");
 
@@ -75,6 +79,8 @@ public sealed class SetMaterialAsset(string sceneId, string id, string name, str
     public string? To { get; } = to;
 
     public override string Label => To is null ? $"Clear texture on {Name}" : $"Texture {Name}";
+
+    public override bool FitsLayout => true;
 
     public override void Apply(ISceneHost host) => host.SceneFor(SceneId)?[Id]?.MaterialAsset = To;
 
@@ -112,6 +118,8 @@ public sealed class SetMaterialValue(
 
     public override string Label => $"Set {Name} {Uniform}";
 
+    public override bool FitsLayout => true;
+
     public override object? MergeKey => (Id, "materialValue", Uniform);
 
     public override void Absorb(EditorCommand later)
@@ -140,6 +148,8 @@ public sealed class SetVisible(string sceneId, string id, string name, bool to) 
 
     public override string Label => To ? $"Show {Name}" : $"Hide {Name}";
 
+    public override bool FitsLayout => true;
+
     public override void Apply(ISceneHost host) => host.SceneFor(SceneId)?[Id]?.Visible = To;
 
     public override void Revert(ISceneHost host) => host.SceneFor(SceneId)?[Id]?.Visible = !To;
@@ -158,6 +168,8 @@ public sealed class SetCastShadows(string sceneId, string id, string name, bool 
 
     public override string Label => To ? $"Cast shadows from {Name}" : $"Stop {Name} casting";
 
+    public override bool FitsLayout => true;
+
     public override void Apply(ISceneHost host) => host.SceneFor(SceneId)?[Id]?.CastShadows = To;
 
     public override void Revert(ISceneHost host) => host.SceneFor(SceneId)?[Id]?.CastShadows = !To;
@@ -175,6 +187,8 @@ public sealed class SetReceiveShadows(string sceneId, string id, string name, bo
     public bool To { get; } = to;
 
     public override string Label => To ? $"Let shadows fall on {Name}" : $"Keep shadows off {Name}";
+
+    public override bool FitsLayout => true;
 
     public override void Apply(ISceneHost host) => host.SceneFor(SceneId)?[Id]?.ReceiveShadows = To;
 
@@ -214,6 +228,8 @@ public sealed class SetSurfaces(
     public override object? MergeKey => Gesture;
 
     public override string Label => $"{What} on {Name}";
+
+    public override bool FitsLayout => true;
 
     public override void Absorb(EditorCommand later)
     {
@@ -275,6 +291,8 @@ public sealed class SetOutline(string sceneId, string id, string name, PolyShape
     public override object? MergeKey => Gesture;
 
     public override string Label => $"Reshape {Name}";
+
+    public override bool FitsLayout => true;
 
     public override void Absorb(EditorCommand later)
     {

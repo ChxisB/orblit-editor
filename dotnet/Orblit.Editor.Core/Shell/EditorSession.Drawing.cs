@@ -129,7 +129,12 @@ public sealed partial class EditorSession
             outline: new PolyShape([.. Sketch.Points.Select(at => at - middle)], height: 2),
             colour: new Colour(0xFF8E99A8));
 
-        Run(new AddObject(added, open.Id));
+        // The outline is kept when the add is refused, so it can be finished once the base is showing.
+        if (!Run(new AddObject(added, open.Id)))
+        {
+            return;
+        }
+
         Sketch.Clear();
         SelectObject(added.Id);
         Say($"Drew {added.Name}. Its height is in the inspector.", SayLevel.Info);

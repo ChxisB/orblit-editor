@@ -33,6 +33,8 @@ public sealed class SetDataLinks(string sceneId, string id, string name, IReadOn
 
     public override string Label => $"{What} on {Name}";
 
+    public override bool FitsLayout => true;
+
     public override void Apply(ISceneHost host)
     {
         if (host.SceneFor(SceneId) is not { } scene || scene[Id] is not { } target)

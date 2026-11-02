@@ -8,6 +8,9 @@ using Doc = Orblit.Scene;
 // engine. What is here is the editor's side: which file, which scene, what to say, and every change made
 // as one step that can be undone. Each is done at rest, off the clip's pose: a prefab made or applied
 // mid-clip would otherwise keep wherever the playhead was.
+//
+// A prefab step adds, removes or renames objects, which a layout cannot hold. Each is refused up front,
+// because the undo history would refuse the change only after a file was written or a selection moved.
 public sealed partial class EditorSession
 {
     // The outermost instance an id is or is part of, and where it is.
@@ -28,6 +31,12 @@ public sealed partial class EditorSession
         if (made.Kind == ObjectKind.Scene)
         {
             Say("A scene is already a file. Save it instead.", SayLevel.Info);
+            return;
+        }
+
+        if (scene.Layouts.Active is not null)
+        {
+            Say(LayoutRefusal("Make prefab"), SayLevel.Info);
             return;
         }
 
@@ -73,6 +82,12 @@ public sealed partial class EditorSession
             return;
         }
 
+        if (scene.Layouts.Active is not null)
+        {
+            Say(LayoutRefusal("Place prefab"), SayLevel.Info);
+            return;
+        }
+
         var asset = Assets.Relative(path);
         var read = files.Read(asset);
         if (read.Prefab is not { } prefab)
@@ -107,7 +122,7 @@ public sealed partial class EditorSession
     /// </summary>
     public void ApplyPrefab(string id) => AtRest(() =>
     {
-        if (Prefabs is not { } files || InstanceAt(files, id) is not { } instance)
+        if (Prefabs is not { } files || InstanceAt(files, id, "Apply prefab") is not { } instance)
         {
             return;
         }
@@ -178,7 +193,7 @@ public sealed partial class EditorSession
     /// </summary>
     public void RevertPrefab(string id) => AtRest(() =>
     {
-        if (Prefabs is not { } files || InstanceAt(files, id) is not { } instance)
+        if (Prefabs is not { } files || InstanceAt(files, id, "Revert prefab") is not { } instance)
         {
             return;
         }
@@ -194,7 +209,7 @@ public sealed partial class EditorSession
     /// </summary>
     public void UnpackPrefab(string id) => AtRest(() =>
     {
-        if (Prefabs is not { } files || InstanceAt(files, id) is not { } instance)
+        if (Prefabs is not { } files || InstanceAt(files, id, "Unpack prefab") is not { } instance)
         {
             return;
         }
@@ -206,12 +221,19 @@ public sealed partial class EditorSession
 
     // A part answers for the outermost instance it is in: that is the one the scene links to, and a
     // prefab inside another is changed by opening the outer one. An instance whose prefab cannot be read
-    // is only a link until it can be, so that is said and nothing is found.
-    private Instance? InstanceAt(PrefabFiles files, string id)
+    // is only a link until it can be, so that is said and nothing is found. So is a scene showing a layout,
+    // which is told what the step it asked for could not do there.
+    private Instance? InstanceAt(PrefabFiles files, string id, string what)
     {
         if (Workspace.SceneHolding(id) is not { Scene: { } scene } entry
             || scene[Doc.EntityPath.InstanceOf(id) ?? id] is not { Prefab.Asset: { } asset } head)
         {
+            return null;
+        }
+
+        if (scene.Layouts.Active is not null)
+        {
+            Say(LayoutRefusal(what), SayLevel.Info);
             return null;
         }
 

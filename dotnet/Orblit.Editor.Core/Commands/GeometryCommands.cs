@@ -29,6 +29,8 @@ public sealed class SetShape(string sceneId, string id, string name, Shape to) :
 
     public override string Label => $"Change {Name}";
 
+    public override bool FitsLayout => true;
+
     /// <summary>
     /// Dragging a slider produces one of these a frame. They collapse into one step, the way a
     /// dragged transform does.
@@ -99,6 +101,8 @@ public sealed class SetGeometry(
 
     public override string Label => $"{What} {Name}";
 
+    public override bool FitsLayout => true;
+
     public override void Absorb(EditorCommand later)
     {
         // The mesh the drag has reached now, over the one it started from. The one this command is
@@ -155,6 +159,8 @@ public sealed class SetBoundary(string sceneId, string id, string name, Boundary
     public override object? MergeKey => Gesture;
 
     public override string Label => $"Boundary of {Name}";
+
+    public override bool FitsLayout => true;
 
     public override void Absorb(EditorCommand later)
     {

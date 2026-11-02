@@ -75,9 +75,11 @@ public sealed partial class EditorSession
 
         var place = view.Copy();
         var made = new SceneObject(NextObjectId(), UniqueName(scene, "Camera"), ObjectKind.Camera, position: place.Position, rotation: place.Rotation);
-        Run(new AddObject(made, open.Id));
-        SelectObject(made.Id);
-        CutTo(made.Id);
+        if (Run(new AddObject(made, open.Id)))
+        {
+            SelectObject(made.Id);
+            CutTo(made.Id);
+        }
     }
 
     /// <summary>
