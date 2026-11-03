@@ -103,7 +103,9 @@ public sealed class ModeTabsTests : IDisposable
 
         var left = row.TranslatePoint(default, window)!.Value.X;
 
-        Assert.Equal(window.Bounds.Width / 2, left + (row.Bounds.Width / 2), 1);
+        // Within a pixel: layout rounds the row's width to the device grid, and a font that measures
+        // wider on one system leaves the row a half pixel off the middle.
+        Assert.InRange(left + (row.Bounds.Width / 2), (window.Bounds.Width / 2) - 1, (window.Bounds.Width / 2) + 1);
         window.Close();
     });
 
