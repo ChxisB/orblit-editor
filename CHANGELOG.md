@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Open the editor with the tree above the files. The left column is the
+  Hierarchy over the Project panel, half each, in every workspace. The Scene
+  workspace has the Console and the Profile in a bottom strip that starts
+  folded. The side columns are 280 px wide in the default window. Each
+  workspace takes the next arrangement revision, so a layout saved before is
+  set aside once for the new one. A layout saved by name is kept.
 - Play a game as more than one player. The Play pill gains a count menu of
   one to four players. Play starts one copy of the game for each. The first
   is the host and runs the server end. The others join it over a loopback

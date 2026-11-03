@@ -54,7 +54,7 @@ public sealed class EditorSessionCinematicsTests : IDisposable
 
         Assert.Equal(["scene", "modelling", "terrain", "animation", "cinematics"], modes.All.Select(mode => mode.Name));
         Assert.Equal(
-            ["outliner", "scene", "shot", "cutsceneTimeline", "shots", "inspector"],
+            ["outliner", "project", "scene", "shot", "cutsceneTimeline", "shots", "inspector"],
             layout.Panels.Select(panel => panel.Id));
         Assert.Equal(
             [PanelKind.ShotPreview, PanelKind.CutsceneTimeline, PanelKind.ShotList],

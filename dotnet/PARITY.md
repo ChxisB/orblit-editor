@@ -361,7 +361,7 @@ pointer gesture is not.
 
 | Dart test file | C# class | Dart declared | Dart run | C# ported | Added in C# | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| `tool/parity/dart_files_test.dart` (an exporter, not a test) | `FrozenFilesTests` | 0 | 0 | 0 | 10: a project file, three template scenes, four layouts, the layouts the code builds, and a layout library | added |
+| `tool/parity/dart_files_test.dart` (an exporter, not a test) | `FrozenFilesTests` | 0 | 0 | 0 | 9: a project file, three template scenes, four layouts, and a layout library | added |
 | `tool/parity/kits_lock_test.dart` (an exporter, not a test) | `StoreInstallTests` | 0 | 0 | 0 | 1: the `kits.lock` the Dart editor writes for a kit, written byte for byte by the C# install of the same kit | added |
 
 The exporters wrote the files the Dart editor saved into

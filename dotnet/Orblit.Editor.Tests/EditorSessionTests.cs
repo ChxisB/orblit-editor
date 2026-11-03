@@ -227,6 +227,19 @@ public sealed class EditorSessionTests : IDisposable
     }
 
     [Fact]
+    public void ANamedArrangementFromBeforeTheChangeIsStillThere()
+    {
+        var old = DockLayout.Standard().CopyWith(revision: 2).Close("profile");
+        Directory.CreateDirectory(Orblit("x"));
+        File.WriteAllText(Orblit("layouts.json"), "{\"scene\":{\"Old\":" + old.ToText() + "}}");
+        var session = Open();
+
+        session.LoadLayout("Old");
+
+        Assert.Equal(PanelIds(old), PanelIds(session.Layout));
+    }
+
+    [Fact]
     public void LoadingAnArrangementThatIsNotThereSaysSo()
     {
         var session = Open();

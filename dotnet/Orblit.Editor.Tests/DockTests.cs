@@ -91,20 +91,71 @@ public sealed class DockTests
     }
 
     [Fact]
-    public void TheStandardArrangementTheSceneKeepsToTheViewTheInspectorAndTheConsole()
+    public void TheStandardLayoutHasTheTreeAboveTheFiles()
     {
         var layout = DockLayout.Standard();
+        var left = Assert.IsType<DockSplit>(((DockSplit)layout.Root).Children[0]);
 
-        Assert.Equal(["inspector"], PanelsIn(layout.Root, "right"));
+        Assert.Equal(DockAxis.Vertical, left.Axis);
+        Assert.Equal([0.5, 0.5], left.Shares);
         Assert.Equal(["outliner"], PanelsIn(layout.Root, "left"));
-        Assert.Equal(["project", "console"], PanelsIn(layout.Root, "bottom"));
-        Assert.Equal(2, layout.Revision);
+        Assert.Equal(["project"], PanelsIn(layout.Root, "files"));
+        Assert.Equal(["left", "files"], left.Children.Select(child => child.Id));
+        Assert.Equal(["inspector"], PanelsIn(layout.Root, "right"));
+        Assert.Equal(["console", "profile"], PanelsIn(layout.Root, "bottom"));
+        Assert.Equal(3, layout.Revision);
     }
 
     [Fact]
-    public void TheStandardArrangementTheProjectAndTheConsoleAreOpenUnderTheView()
+    public void TheBottomStripStartsFolded()
     {
-        Assert.Equal(new[] { false, false }, MiddleOf(DockLayout.Standard()).Folded);
+        Assert.Equal(new[] { false, true }, MiddleOf(DockLayout.Standard()).Folded);
+    }
+
+    // The window opens 1440 pixels wide. The reference's side docks are 280 pixels, less the gaps.
+    [Fact]
+    public void TheSideColumnsAreTwoHundredAndEightyPixelsWide()
+    {
+        var root = (DockSplit)DockLayout.Standard().Root;
+
+        Assert.InRange(root.Shares[0] * 1440, 276, 284);
+        Assert.InRange(root.Shares[2] * 1440, 276, 284);
+    }
+
+    public static TheoryData<string> Workspaces() =>
+        ["Standard", "Modelling", "Animation", "Terrain", "Cinematics", "FourViews"];
+
+    private static DockLayout Workspace(string name) => name switch
+    {
+        "Standard" => DockLayout.Standard(),
+        "Modelling" => DockLayout.Modelling(),
+        "Animation" => DockLayout.Animation(),
+        "Terrain" => DockLayout.Terrain(),
+        "Cinematics" => DockLayout.Cinematics(),
+        _ => DockLayout.FourViews(),
+    };
+
+    [Theory]
+    [MemberData(nameof(Workspaces))]
+    public void EveryWorkspaceLayoutRoundTrips(string name)
+    {
+        var layout = Workspace(name);
+
+        var again = Reread(layout.ToText());
+
+        Assert.Equal(layout.ToText(), again.ToText());
+        Assert.Equal(layout.Revision, again.Revision);
+    }
+
+    [Theory]
+    [MemberData(nameof(Workspaces))]
+    public void EveryWorkspaceHasTheTreeAboveTheFiles(string name)
+    {
+        var layout = Workspace(name);
+
+        Assert.Equal(["outliner"], PanelsIn(layout.Root, "left"));
+        Assert.Equal(["project"], PanelsIn(layout.Root, "files"));
+        Assert.Equal(DockAxis.Vertical, Assert.IsType<DockSplit>(((DockSplit)layout.Root).Children[0]).Axis);
     }
 
     [Fact]
@@ -179,14 +230,12 @@ public sealed class DockTests
     [Fact]
     public void DockingAGroupLeftEmptyCollapsesAndSoDoesTheSplitAroundIt()
     {
-        var was = Crowded();
-
-        // The outliner is the only panel in its group.
-        var now = was.Dock("outliner", "right", DockSide.Centre);
+        // The outliner and the project are each the only panel in their group.
+        var now = Crowded().Dock("outliner", "right", DockSide.Centre).Dock("project", "right", DockSide.Centre);
 
         Assert.Empty(PanelsIn(now.Root, "left"));
 
-        // The left column held the outliner alone, so with it gone the row is the middle and the
+        // The left column held those two alone, so with both gone the row is the middle and the
         // right rather than three with one of them empty.
         var root = (DockSplit)now.Root;
         Assert.Equal(2, root.Children.Count);
@@ -334,14 +383,23 @@ public sealed class DockTests
     [Fact]
     public void ClosingTakesThePanelOutAndCollapsesWhatItLeaves()
     {
-        // The outliner, which is the panel with a group to itself: closing it leaves the left column
-        // empty, for the row to close up around.
-        var now = Crowded().Close("outliner");
+        // The outliner and the project each have a group to themselves: closing both leaves the left
+        // column empty, for the row to close up around.
+        var now = Crowded().Close("outliner").Close("project");
 
         Assert.False(now.Holds("outliner"));
         var root = (DockSplit)now.Root;
         Assert.Equal(2, root.Children.Count);
         Assert.IsType<DockSplit>(root.Children[0]);
+    }
+
+    [Fact]
+    public void ClosingTheTreeLeavesTheFilesAsTheWholeLeftColumn()
+    {
+        var root = (DockSplit)Crowded().Close("outliner").Root;
+
+        Assert.Equal(3, root.Children.Count);
+        Assert.Equal("files", Assert.IsType<DockGroup>(root.Children[0]).Id);
     }
 
     [Fact]
@@ -457,7 +515,7 @@ public sealed class DockTests
     [Fact]
     public void TheFileKeepsTheRevisionItGrewFrom()
     {
-        Assert.Equal(2, Reread(DockLayout.Standard().ToText()).Revision);
+        Assert.Equal(3, Reread(DockLayout.Standard().ToText()).Revision);
     }
 
     [Fact]

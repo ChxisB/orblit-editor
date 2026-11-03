@@ -62,24 +62,24 @@ public sealed class DockLayout
     /// <summary>
     /// The arrangement the editor opens with, which is the Scene mode's.
     /// <para>
-    /// Three columns, each the height of the window apart from the middle one: what is in the scene on
-    /// the left, the view in the middle with the project and the console open under it, and the
-    /// inspector down the whole right side, because a component with twenty fields is the one thing
-    /// that is always short of height.
+    /// Three columns. What is in the scene is on the left with the project under it at the same
+    /// height, the view is in the middle with the console and the profile folded under it, and the
+    /// inspector is down the whole right side, because a component with twenty fields is the one
+    /// thing that is always short of height.
     /// </para>
     /// <para>
     /// Revision 1 took the modelling, UV and timeline panels out. Each has a mode of its own now, and
     /// a panel for a job nobody is doing is one more thing for a newcomer to wonder about. Revision 2
-    /// moved the project from under the tree to under the view, open, so a mesh is dragged across the
-    /// shortest distance and the tree has the whole column.
+    /// moved the project from under the tree to under the view. Revision 3 put it back under the tree
+    /// in every mode, as the layout people already know from other engines has it, and folded the
+    /// console with the profile beside it so the view has the height.
     /// </para>
     /// </summary>
     public static DockLayout Standard() => Columns(
         new DockGroup("centre", [new DockPanel("scene", PanelKind.Viewport), new DockPanel("game", PanelKind.Game)]),
-        bottom: [new DockPanel("project", PanelKind.Project), new DockPanel("console", PanelKind.Console)],
+        bottom: [new DockPanel("console", PanelKind.Console), new DockPanel("profile", PanelKind.Profile)],
         right: [new DockPanel("inspector", PanelKind.Inspector)],
-        folded: false,
-        revision: 2);
+        revision: 3);
 
     /// <summary>
     /// Shaping one object. The modelling tools come first on the right, and the UVs are open under
@@ -92,7 +92,7 @@ public sealed class DockLayout
         right: [new DockPanel("modelling", PanelKind.Modelling), new DockPanel("inspector", PanelKind.Inspector)],
         folded: false,
         below: 0.3,
-        revision: 1);
+        revision: 2);
 
     /// <summary>
     /// Making things move. The timeline is open under the view and taller than the console would be,
@@ -103,7 +103,8 @@ public sealed class DockLayout
         bottom: [new DockPanel("timeline", PanelKind.Timeline)],
         right: [new DockPanel("inspector", PanelKind.Inspector)],
         folded: false,
-        below: 0.4);
+        below: 0.4,
+        revision: 1);
 
     /// <summary>
     /// Shaping the ground. The brush is in front on the right, since its settings are what is reached
@@ -117,7 +118,7 @@ public sealed class DockLayout
         right: [new DockPanel("brush", PanelKind.TerrainBrush), new DockPanel("inspector", PanelKind.Inspector)],
         folded: false,
         below: 0.14,
-        revision: 1);
+        revision: 2);
 
     /// <summary>
     /// Making cutscenes. The scene view has the finished shot beside it, so a camera is framed against
@@ -136,7 +137,8 @@ public sealed class DockLayout
         bottom: [new DockPanel("cutsceneTimeline", PanelKind.CutsceneTimeline)],
         right: [new DockPanel("shots", PanelKind.ShotList), new DockPanel("inspector", PanelKind.Inspector)],
         folded: false,
-        below: 0.4);
+        below: 0.4,
+        revision: 1);
 
     /// <summary>
     /// Four scene views onto the same world, the way a modelling tool arranges them. The reason the
@@ -148,7 +150,7 @@ public sealed class DockLayout
             DockAxis.Vertical,
             [ViewsRow("viewsTop", "scene", "scene2"), ViewsRow("viewsBottom", "scene3", "scene4")],
             [0.5, 0.5]),
-        bottom: [new DockPanel("project", PanelKind.Project), new DockPanel("console", PanelKind.Console)],
+        bottom: [new DockPanel("console", PanelKind.Console)],
         right: [new DockPanel("inspector", PanelKind.Inspector)]);
 
     /// <summary>
@@ -159,16 +161,20 @@ public sealed class DockLayout
     /// The panels under the view start <paramref name="folded"/> unless a mode says otherwise: the
     /// view is what somebody opens the editor to look at, and the console is a click away when there
     /// is something in it worth reading. <paramref name="below"/> is how much of the middle column
-    /// they take once open. <paramref name="left"/> is the tree, which is the scene's unless a mode
-    /// edits something else.
+    /// they take once open.
+    /// </para>
+    /// <para>
+    /// The left column is the tree over the project, half each, in every mode. A mode that edits
+    /// something else still has files to reach, and moving a panel between modes should not also move
+    /// where the files are. The side columns are 280 pixels each in the 1440 pixel window the editor
+    /// opens at.
     /// </para>
     /// </summary>
-    // F2: the centre, three columns and the three things a mode changes about them.
+    // F2: the centre, the two columns a mode fills and the three things it changes about them.
     public static DockLayout Columns(
         DockNode centre,
         IReadOnlyList<DockPanel> bottom,
         IReadOnlyList<DockPanel> right,
-        IReadOnlyList<DockPanel>? left = null,
         bool folded = true,
         double below = 0.28,
         int revision = 0) =>
@@ -177,7 +183,14 @@ public sealed class DockLayout
                 "root",
                 DockAxis.Horizontal,
                 [
-                    new DockGroup("left", left ?? [new DockPanel("outliner", PanelKind.Outliner)]),
+                    new DockSplit(
+                        "leftColumn",
+                        DockAxis.Vertical,
+                        [
+                            new DockGroup("left", [new DockPanel("outliner", PanelKind.Outliner)]),
+                            new DockGroup("files", [new DockPanel("project", PanelKind.Project)]),
+                        ],
+                        [0.5, 0.5]),
                     new DockSplit(
                         "middle",
                         DockAxis.Vertical,
@@ -185,7 +198,7 @@ public sealed class DockLayout
                         [1 - below, below]),
                     new DockGroup("right", right),
                 ],
-                [0.2, 0.58, 0.22]),
+                [0.195, 0.61, 0.195]),
             revision: revision);
 
     /// <summary>

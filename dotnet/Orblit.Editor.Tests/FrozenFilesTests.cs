@@ -59,15 +59,6 @@ public sealed class FrozenFilesTests
     }
 
     [Fact]
-    public void TheArrangementsCodeBuildsMatchTheFixtures()
-    {
-        Assert.Equal(Text("layout.scene.json"), DockLayout.Standard().ToText());
-        Assert.Equal(Text("layout.modelling.json"), DockLayout.Modelling().ToText());
-        Assert.Equal(Text("layout.animation.json"), DockLayout.Animation().ToText());
-        Assert.Equal(Text("layout.fourViews.json"), DockLayout.FourViews().ToText());
-    }
-
-    [Fact]
     public void TheFrozenLibraryIsFoundByModeAndName()
     {
         var library = new LayoutLibrary(Fixture("layouts.json"), PanelKind.BuiltIn);
