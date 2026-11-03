@@ -559,4 +559,43 @@ public sealed class EditorSessionTests : IDisposable
 
         Assert.Equal(3, count);
     }
+
+    [Fact]
+    public void ChangedSaysWhenOnlyTheSelectionChanged()
+    {
+        var session = Open();
+        var seen = new List<bool>();
+        session.Changed += () => seen.Add(session.OnlySelectionChanged);
+
+        session.Select(["sun"]);
+        session.SelectScene("a");
+        session.ClearSelection();
+        session.ToggleFocus();
+        session.EnterMode("animation");
+
+        Assert.Equal([true, true, true, false, false], seen);
+        Assert.False(session.OnlySelectionChanged);
+    }
+
+    [Fact]
+    public void AChangeRaisedFromInsideASelectionRaiseIsNotOnlyTheSelection()
+    {
+        var session = Open();
+        var seen = new List<bool>();
+        var raised = false;
+        session.Changed += () =>
+        {
+            seen.Add(session.OnlySelectionChanged);
+            if (!raised)
+            {
+                raised = true;
+                session.ToggleStats();
+            }
+        };
+
+        session.Select(["sun"]);
+
+        // The selection first, then the stats toggle that a handler made while it ran.
+        Assert.Equal([true, false], seen);
+    }
 }

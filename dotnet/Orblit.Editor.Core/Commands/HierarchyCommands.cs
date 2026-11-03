@@ -348,10 +348,7 @@ public sealed class PasteObjects(
 
         // Roots only: removing one takes everything under it, and asking for a child that has
         // already gone is not an error worth having.
-        foreach (var root in Roots)
-        {
-            scene.Remove(root);
-        }
+        scene.Remove(Roots);
     }
 }
 
@@ -365,7 +362,7 @@ public sealed class PasteObjects(
 /// </remarks>
 public sealed class DeleteObjects(string sceneId, IReadOnlyList<string> ids, string what) : EditorCommand
 {
-    private readonly List<List<(SceneObject Object, int Index)>> _removed = [];
+    private List<(SceneObject Object, int Index)> _removed = [];
 
     public override string SceneId { get; } = sceneId;
 
@@ -383,14 +380,9 @@ public sealed class DeleteObjects(string sceneId, IReadOnlyList<string> ids, str
             return;
         }
 
-        _removed.Clear();
-        foreach (var id in Ids.Where(scene.Contains))
-        {
-            // Already gone if it was inside something removed a moment ago, which is not a mistake:
-            // the selection simply held a parent and its child. The check runs as each id is
-            // reached, not up front.
-            _removed.Add(scene.Remove(id));
-        }
+        // A selection that held a parent and its child names the child twice, which is not a
+        // mistake: the scene takes it out once.
+        _removed = scene.Remove(Ids);
     }
 
     public override void Revert(ISceneHost host)
@@ -401,11 +393,6 @@ public sealed class DeleteObjects(string sceneId, IReadOnlyList<string> ids, str
             return;
         }
 
-        // Backwards, so each restore puts things back at indices the ones after it have not yet
-        // shifted.
-        for (var i = _removed.Count - 1; i >= 0; i--)
-        {
-            scene.Restore(_removed[i]);
-        }
+        scene.Restore(_removed);
     }
 }

@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace Orblit.Editor.Tests;
 
 using Orblit.Editor.Core;
@@ -241,5 +243,35 @@ public sealed class OutlinerModelTests
 
         Assert.Equal(DropKind.Inside, OutlinerModel.BandAt(row, 0.1));
         Assert.Equal(DropKind.Inside, OutlinerModel.BandAt(row, 0.9));
+    }
+
+    // Nothing in a scene can count how often it is read, so this is a budget and not a count. The scan
+    // per object that Rows() used to make costs seconds at this size, and one pass costs a few
+    // milliseconds, so the budget has room on both sides.
+    [Fact]
+    public void RowsAreBuiltInOnePass()
+    {
+        var objects = new List<SceneObject>();
+        for (var group = 0; group < 200; group++)
+        {
+            objects.Add(new SceneObject(id: $"g{group}", name: $"G{group}", kind: ObjectKind.Group));
+            for (var child = 0; child < 99; child++)
+            {
+                objects.Add(new SceneObject(id: $"g{group}c{child}", name: $"C{child}", kind: ObjectKind.Mesh, parentId: $"g{group}"));
+            }
+        }
+
+        var workspace = new Workspace("/project");
+        workspace.Add(new SceneEntry("a", "A", scene: new EditorScene(objects)));
+        var model = new OutlinerModel(workspace);
+
+        var clock = Stopwatch.StartNew();
+        var rows = model.Rows().Where(row => row.Entry.Id == "a").ToList();
+        clock.Stop();
+
+        Assert.Equal(20_001, rows.Count);
+        Assert.Equal(["a", "g0", "g0c0", "g0c1"], rows.Take(4).Select(row => row.Key));
+        Assert.Equal("g199c98", rows[^1].Key);
+        Assert.True(clock.ElapsedMilliseconds < 400, $"Rows() took {clock.ElapsedMilliseconds} ms for 20,000 objects");
     }
 }

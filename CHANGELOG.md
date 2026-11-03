@@ -19,6 +19,16 @@
   buttons that add and remove the `net` component. Authority is a choice of
   Server or Owner, and Sync is a list of the fields that travel. Each edit
   is one undoable step. A word that is not Owner reads as Server.
+- Open a project of 100,000 objects and work in it. The outliner listed its
+  rows with a scan per object, built a control for every row, and rebuilt
+  them all on each click. A select on a 21,509 object project took 6 to 8 s
+  and the window took 7 to 10 s to show. The outliner now builds only the
+  rows in view, restyles them in place on a select and lists its rows in one
+  pass. The scene keeps an index of children. Copy and delete of a region took
+  10 s on 101,010 objects and now take about 10 ms. Delete takes a list of ids
+  and makes one pass. `EditorSession.OnlySelectionChanged` says that `Changed`
+  was raised for a selection and nothing else. Save and open of a project that
+  size still take 1.7 to 1.8 s, which is in the scene package.
 - Give a playing game the keys and the pointer. While Play runs, the game
   view reads the keys held over it and the pointer, and the game gets them as
   a `GameInput` on each update. Play gives the view the focus. A key pressed
