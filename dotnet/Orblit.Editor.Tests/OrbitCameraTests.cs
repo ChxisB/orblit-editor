@@ -58,6 +58,15 @@ public sealed class OrbitCameraTests
     }
 
     [Fact]
+    public void TheRenderCameraCarriesThePlanesThePickingProjectionUses()
+    {
+        var render = new OrbitCamera().ToRenderCamera();
+
+        Assert.Equal(OrbitCamera.NearPlane, render.Near);
+        Assert.Equal(OrbitCamera.FarPlane, render.Far);
+    }
+
+    [Fact]
     public void FramingAWorldOfAHundredMetresFitsIt()
     {
         var framed = new OrbitCamera().Framing(new Vector3(0, 0, 0), 100);
