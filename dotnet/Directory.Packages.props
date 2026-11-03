@@ -14,7 +14,7 @@
     <PackageVersion Include="SkiaSharp" Version="3.119.4" />
     <PackageVersion Include="Orblit.Asset" Version="0.26.0" />
     <PackageVersion Include="Orblit.Core" Version="0.1.0" />
-    <PackageVersion Include="Orblit.Filament" Version="0.42.1" />
+    <PackageVersion Include="Orblit.Filament" Version="0.43.0" />
     <PackageVersion Include="Orblit.Filament.Avalonia" Version="0.1.0" />
     <PackageVersion Include="Orblit.Game" Version="0.2.0" />
     <PackageVersion Include="Orblit.Game.Avalonia" Version="0.1.0" />
@@ -29,7 +29,7 @@
     <PackageVersion Include="Orblit.Scene" Version="0.28.0" />
     <PackageVersion Include="Orblit.Sequence" Version="0.2.1" />
     <PackageVersion Include="Orblit.Sprite" Version="0.4.0" />
-    <PackageVersion Include="Orblit.Stage" Version="0.6.0" />
+    <PackageVersion Include="Orblit.Stage" Version="0.7.0" />
     <PackageVersion Include="Orblit.Terrain" Version="0.5.0" />
     <PackageVersion Include="Orblit.VectorMath" Version="0.20.0" />
     <PackageVersion Include="Orblit.Weather" Version="0.1.0" />

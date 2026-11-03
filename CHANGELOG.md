@@ -20,8 +20,11 @@
 - Keep the render scene between frames while only the camera moves. A zoom,
   an orbit, a pan or an ease no longer builds the scene again. An edit, an
   undo, a selection or an animated scene still does.
-- Widen the viewport zoom to 0.3 m up to 500 m, and shrink the wheel step to
+- Widen the viewport zoom to 0.3 m up to 2000 m, and shrink the wheel step to
   8 percent a notch.
+- Draw the viewport out to 4000 m. The camera sends its near and far planes,
+  0.1 m and 4000 m, to the renderer, and picking uses the same pair. The far
+  plane was 1000 m. Needs Orblit.Filament 0.43.0 and Orblit.Stage 0.7.0.
 - Ease the viewport camera for a wheel turn and for framing, with a time
   constant of 50 ms. Orbit, pinch, look and fly still cut.
 - Play a game as more than one player. The Play pill gains a count menu of

@@ -18,10 +18,10 @@ public sealed class OrbitCamera
     // the image flipping.
     internal const double PitchLimit = (Math.PI / 2) - 0.02;
 
-    // The planes the renderer draws between. The native camera and the picking projection use the
-    // same pair, so a change has to land in all three.
+    // The planes the renderer draws between. The render camera carries them and the picking
+    // projection reads them, so this is the one pair.
     internal const double NearPlane = 0.1;
-    internal const double FarPlane = 1000;
+    internal const double FarPlane = 4000;
 
     // The closest the eye gets to what it looks at: three times the near plane, so the target is
     // never clipped away. Close enough to look at something a hand across.
@@ -225,6 +225,8 @@ public sealed class OrbitCamera
                 Target.Z + (horizontal * Math.Cos(Yaw))),
             Target = Target.Clone(),
             FieldOfView = FieldOfView,
+            Near = NearPlane,
+            Far = FarPlane,
         };
     }
 
