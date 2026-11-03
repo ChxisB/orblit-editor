@@ -78,6 +78,8 @@ public sealed class StoreDialogTests : IAsyncLifetime
         _ = InstallDialog.Open(owner, InstallFor(_listing.Row, _listing.Release));
         var dialog = Assert.IsType<InstallDialog>(Assert.Single(owner.OwnedWindows));
         Assert.True(Headless.Until(() => Shows(dialog, "replaces your file")));
+        // The text can show a frame before the ticks are laid out, and a click on an unplaced box misses.
+        Headless.Render();
         return dialog;
     }
 
