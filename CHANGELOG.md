@@ -13,6 +13,17 @@
   folded. The side columns are 280 px wide in the default window. Each
   workspace takes the next arrangement revision, so a layout saved before is
   set aside once for the new one. A layout saved by name is kept.
+- Draw the dock as flat cards on a darker strip. A pane has a radius of 4 px,
+  no border and a 3 px gap. The tab strip takes the frame tone and the
+  showing tab joins its pane. A split handle grabs over 8 px and shows a tone
+  under the pointer.
+- Keep the render scene between frames while only the camera moves. A zoom,
+  an orbit, a pan or an ease no longer builds the scene again. An edit, an
+  undo, a selection or an animated scene still does.
+- Widen the viewport zoom to 0.3 m up to 500 m, and shrink the wheel step to
+  8 percent a notch.
+- Ease the viewport camera for a wheel turn and for framing, with a time
+  constant of 50 ms. Orbit, pinch, look and fly still cut.
 - Play a game as more than one player. The Play pill gains a count menu of
   one to four players. Play starts one copy of the game for each. The first
   is the host and runs the server end. The others join it over a loopback
