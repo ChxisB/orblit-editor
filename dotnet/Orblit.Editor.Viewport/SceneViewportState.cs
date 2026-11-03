@@ -390,7 +390,17 @@ public sealed class SceneViewportState
     public void Leave(Offset at) => _order.Leave(at);
 
     /// <summary>Sets where the shown camera goes, and lets the clock take it there.</summary>
-    public void EaseTo(OrbitCamera goal) => _goal = goal;
+    public void EaseTo(OrbitCamera goal)
+    {
+        // The clock stops with the ease that ends, so the frame it last saw says nothing about now. An
+        // ease from rest starts without one.
+        if (!Easing)
+        {
+            _lastEased = null;
+        }
+
+        _goal = goal;
+    }
 
     public void Cancel() => _order.Cancel();
 
@@ -1097,7 +1107,6 @@ public sealed class SceneViewportState
     {
         if (!Easing)
         {
-            _lastEased = null;
             return;
         }
 

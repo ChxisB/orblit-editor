@@ -116,6 +116,27 @@ public sealed class SceneViewportStateTests
     }
 
     [Fact]
+    public void ACameraThatFinishedAnEaseDoesNotLeapOnTheNextOne()
+    {
+        var view = ShellView();
+        view.Wheel(-100);
+        // The shell stops the clock on the tick that ends the ease, so there is no tick after it.
+        for (var frame = 0; view.NeedsClock; frame++)
+        {
+            view.Tick(Ms(frame * 16));
+        }
+
+        view.Wheel(-100);
+        var shown = view.Camera.Distance;
+        view.Tick(Ms(10_000));
+        Assert.Equal(shown, view.Camera.Distance);
+
+        view.Tick(Ms(10_016));
+        var step = shown - view.Camera.Distance;
+        Assert.InRange(step, 1e-6, 0.4 * (shown - view.Goal.Distance));
+    }
+
+    [Fact]
     public void TicksBringTheShownCameraToTheGoalAndTheClockStops()
     {
         var view = ShellView();
