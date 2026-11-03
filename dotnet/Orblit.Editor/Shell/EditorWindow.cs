@@ -15,12 +15,12 @@ using Orblit.Profile;
 using Orblit.VectorMath;
 
 /// <summary>
-/// The editor's window: menus, the rail of modes, the panels and a line of status. It draws what an
+/// The editor's window: menus, the tabs of modes, the panels and a line of status. It draws what an
 /// <see cref="EditorSession"/> holds and calls it. It keeps no state of its own that the session
 /// does not.
 /// </summary>
 /// <remarks>
-/// shortcut: a panel not ported yet shows its name (task 16), and the rail and tabs are words because
+/// shortcut: a panel not ported yet shows its name (task 16), and the tabs are words because
 /// no icon set is bundled yet (decision 84).
 /// </remarks>
 public sealed class EditorWindow : Window
@@ -40,9 +40,9 @@ public sealed class EditorWindow : Window
     private readonly IReadOnlyDictionary<KeyChord, ShortcutAction> _shortcuts;
     private readonly Dictionary<EditorVerb, Action> _verbs;
     private readonly DockHost _dock;
-    private readonly TextBlock _title = new() { Name = "title", HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+    private readonly TextBlock _title = new() { Name = "title", Margin = new Thickness(Space.Md, 0, Space.Sm, 0), VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
     private readonly TextBlock _status = new() { Name = "status", FontSize = OrblitText.Caption };
-    private readonly Dictionary<string, Button> _rail = [];
+    private readonly ModeTabs _modeTabs;
     private readonly EditorMenu _menu;
     private readonly TerrainToolShelf _shelf;
     private readonly CinematicsShelf _cinematics;
@@ -130,6 +130,7 @@ public sealed class EditorWindow : Window
 
         _shelf = new TerrainToolShelf(_session.Terrains);
         _cinematics = new CinematicsShelf(_session.Cutscenes, _session.NewCutscene, _session.AddShot, UseThisView);
+        _modeTabs = new ModeTabs(_session.Modes.All, _session.EnterMode);
         _pill = new PlayPill(_session);
         _layouts = new LayoutPill(_session);
         _clock = new PlaybackClock(_session, this);
@@ -187,56 +188,53 @@ public sealed class EditorWindow : Window
 
     private Grid Frame()
     {
-        var top = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*,Auto,Auto,Auto"), Background = OrblitColors.Surface };
-        top.Children.Add(_menu);
-        _title[Grid.ColumnProperty] = 1;
-        top.Children.Add(_title);
-        _layouts[Grid.ColumnProperty] = 2;
-        top.Children.Add(_layouts);
-        _pill[Grid.ColumnProperty] = 3;
-        top.Children.Add(_pill);
-        var search = new Button
-        {
-            Name = "search_button",
-            Content = $"Search commands and objects  {_platform.CommandShortcutLabel("K")}",
-            FontSize = OrblitText.Caption,
-            Margin = new Thickness(Space.Xs),
-        };
-        search.Click += (_, _) => OpenPalette();
-        search[Grid.ColumnProperty] = 4;
-        top.Children.Add(search);
-
-        var rail = new StackPanel { Name = "rail", Margin = new Thickness(Space.Sm), Spacing = Space.Xs };
-        foreach (var mode in _session.Modes.All)
-        {
-            var button = new Button { Name = $"mode_{mode.Name}", Content = mode.Label, FontSize = OrblitText.Label, HorizontalAlignment = HorizontalAlignment.Stretch };
-            button.Click += (_, _) => _session.EnterMode(mode);
-            _rail[mode.Name] = button;
-            rail.Children.Add(button);
-        }
-
-        // The shelf of brush tools is over the panels and not the rail, and takes no room when it is hidden.
-        var centre = new Grid { RowDefinitions = new RowDefinitions("Auto,*") };
+        // The shelves of brush tools and cutscenes are over the panels, and take no room when hidden.
+        var centre = new Grid { RowDefinitions = new RowDefinitions("Auto,*"), Margin = new Thickness(Space.Xs, 0, Space.Xs, Space.Xs) };
         _dock[Grid.RowProperty] = 1;
-        _dock.Margin = new Thickness(0, 0, Space.Sm, Space.Sm);
         centre.Children.Add(_shelf);
         centre.Children.Add(_cinematics);
         centre.Children.Add(_dock);
 
-        var body = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
-        body.Children.Add(rail);
-        centre[Grid.ColumnProperty] = 1;
-        body.Children.Add(centre);
-
         var bottom = new Border { Background = OrblitColors.Surface, Padding = new Thickness(Space.Md, Space.Xs), Child = _status };
 
         var frame = new Grid { RowDefinitions = new RowDefinitions("Auto,*,Auto") };
-        frame.Children.Add(top);
-        body[Grid.RowProperty] = 1;
-        frame.Children.Add(body);
+        frame.Children.Add(TopBar());
+        centre[Grid.RowProperty] = 1;
+        frame.Children.Add(centre);
         bottom[Grid.RowProperty] = 2;
         frame.Children.Add(bottom);
         return frame;
+    }
+
+    // The menus and the scene's name on the left, the workspaces in the middle and the run controls on the
+    // right. The sides are star columns of one weight, so the middle sits on the window's centre whatever
+    // the sides hold.
+    // shortcut: under about 1100 px the right side is clipped and not folded away. Fold the search into an
+    // icon when narrow windows matter.
+    private Grid TopBar()
+    {
+        var left = new Grid { ColumnDefinitions = new ColumnDefinitions("Auto,*") };
+        left.Children.Add(_menu);
+        _title[Grid.ColumnProperty] = 1;
+        left.Children.Add(_title);
+
+        var search = new Button
+        {
+            Name = "search_button",
+            Content = $"Search  {_platform.CommandShortcutLabel("K")}",
+            FontSize = OrblitText.Caption,
+            Margin = new Thickness(Space.Xs),
+        };
+        search.Click += (_, _) => OpenPalette();
+        var right = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Children = { _layouts, _pill, search } };
+
+        var top = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto,*"), Background = OrblitColors.Ground };
+        top.Children.Add(left);
+        _modeTabs[Grid.ColumnProperty] = 1;
+        top.Children.Add(_modeTabs);
+        right[Grid.ColumnProperty] = 2;
+        top.Children.Add(right);
+        return top;
     }
 
     // A panel is kept for each id and handed to whichever group shows it next. Building a new one on a
@@ -583,13 +581,7 @@ public sealed class EditorWindow : Window
         _dock.Layout = _session.VisibleLayout;
         _shelf.IsVisible = _session.Mode.UsesBrush;
         _cinematics.IsVisible = _session.Mode.UsesCutscenes;
-        foreach (var (name, button) in _rail)
-        {
-            var active = name == _session.Mode.Name;
-            button.Background = active ? OrblitColors.EmberWash : Brushes.Transparent;
-            button.Foreground = active ? OrblitColors.Ember : OrblitColors.InkMid;
-        }
-
+        _modeTabs.Refresh(_session.Mode.Name);
         _menu.Refresh();
         Retitle();
     }

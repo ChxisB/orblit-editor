@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Show the workspaces as tabs in the title bar. Scene, Modelling, Terrain,
+  Animation and Cinematics sit in a row centred on the window, and the rail
+  down the left edge is gone. The left and right arrow keys move along the
+  row. The scene's name moves to the left of the bar, and the search button
+  reads Search and its key. The side columns now measure 280 px.
 - Open the editor with the tree above the files. The left column is the
   Hierarchy over the Project panel, half each, in every workspace. The Scene
   workspace has the Console and the Profile in a bottom strip that starts
