@@ -31,9 +31,6 @@ using ViewSize = Orblit.Editor.Viewport.Size;
 ///
 /// shortcut: a two finger scroll on a trackpad arrives as a wheel and only zooms. Orbit and pan by
 /// trackpad need the scroll phases, which Avalonia has no event for yet.
-///
-/// shortcut: every frame builds the whole render scene, even when only the camera moved. Cache what
-/// comes from the scene when a large one drops frames during an orbit.
 /// </remarks>
 public sealed class SceneViewport : Border
 {
@@ -54,6 +51,7 @@ public sealed class SceneViewport : Border
     private readonly TerrainBrushInput _brush;
     private readonly GridStore _grids;
     private readonly GeometryStore _geometry;
+    private readonly RenderSceneCache _kept = new();
     private readonly Grid _stack = new() { Background = Brushes.Transparent, Focusable = true, ClipToBounds = true };
     private readonly ViewportOverlay _overlay;
     private readonly RendererViewport? _renderer;
@@ -143,7 +141,7 @@ public sealed class SceneViewport : Border
             if (_state.Surface != size)
             {
                 _state.Surface = size;
-                MarkDirty();
+                MarkViewDirty();
             }
         }
 
@@ -162,7 +160,7 @@ public sealed class SceneViewport : Border
         _state.DrawPointed += _session.DrawPoint;
         _state.DrawFinished += _session.FinishDrawing;
         _state.Changed += MarkDirty;
-        _state.Clocked += MarkDirty;
+        _state.Clocked += MarkViewDirty;
         _state.Snapping.Changed += MarkDirty;
         _session.Changed += OnSessionChanged;
         _session.SceneReplaced += OnSceneReplaced;
@@ -193,7 +191,7 @@ public sealed class SceneViewport : Border
         _state.DrawPointed -= _session.DrawPoint;
         _state.DrawFinished -= _session.FinishDrawing;
         _state.Changed -= MarkDirty;
-        _state.Clocked -= MarkDirty;
+        _state.Clocked -= MarkViewDirty;
         _state.Snapping.Changed -= MarkDirty;
         _session.Changed -= OnSessionChanged;
         _session.SceneReplaced -= OnSceneReplaced;
@@ -447,7 +445,7 @@ public sealed class SceneViewport : Border
             _session.Steer(EditorSession.SceneView, CameraViews.PlaceFor(camera, scene, scene[look.Camera]?.ParentId));
         }
 
-        MarkDirty();
+        MarkViewDirty();
     }
 
     // Looking through a camera puts the view where the camera is. After that, moving the view steers
@@ -563,10 +561,20 @@ public sealed class SceneViewport : Border
             return;
         }
 
-        MarkDirty();
+        MarkViewDirty();
     }
 
+    // The scene may have changed, so the next frame builds it again. What every event that is not
+    // known to leave the scene alone calls, so an event nobody thought about is a rebuild and not a
+    // stale frame.
     private void MarkDirty()
+    {
+        _kept.Forget();
+        MarkViewDirty();
+    }
+
+    // The camera or the surface changed and the scene did not.
+    private void MarkViewDirty()
     {
         _dirty = true;
         RequestFrame();
@@ -598,6 +606,9 @@ public sealed class SceneViewport : Border
         if (_state.NeedsClock)
         {
             _state.Tick(elapsed);
+            // The camera may have eased a step. A scene that moves on its own says so itself, so
+            // this redraws and does not build the scene again.
+            _dirty = true;
         }
 
         if (_dirty)
@@ -632,7 +643,7 @@ public sealed class SceneViewport : Border
         // Wait on an event from the renderer once it raises one.
         if (_renderer.Path == ViewportPath.Pending)
         {
-            MarkDirty();
+            MarkViewDirty();
             return;
         }
 
@@ -650,7 +661,7 @@ public sealed class SceneViewport : Border
 
         if (_preview.Waiting)
         {
-            MarkDirty();
+            MarkViewDirty();
             return;
         }
 
@@ -661,13 +672,19 @@ public sealed class SceneViewport : Border
     private TimeSpan GpuTime() =>
         _renderer?.Renderer is { } renderer ? TimeSpan.FromMilliseconds(renderer.GetStats().GpuMilliseconds) : TimeSpan.Zero;
 
-    private RenderScene Build()
+    internal RenderScene Build()
     {
         var workspace = _session.Workspace;
-        var scene = workspace.Loaded?.Scene ?? new EditorScene([]);
-        var built = scene.ToRenderScene(
-            _state.Camera.ToRenderCamera(),
-            Options() with { Grid = _grids.PlanFor(_state.Snapping, _state.Camera.Target) });
+        var scene = workspace.Loaded?.Scene;
+        return _kept.Get(scene, workspace.Shared, () => BuildKept(scene ?? new EditorScene([]), workspace))
+            .SeenFrom(_state.Camera.ToRenderCamera())
+            .WithGrid(_grids.PlanFor(_state.Snapping, _state.Camera.Target));
+    }
+
+    // Everything in the frame that does not follow the camera, which is what the cache keeps.
+    private RenderScene BuildKept(EditorScene scene, Workspace workspace)
+    {
+        var built = scene.ToRenderScene(_state.Camera.ToRenderCamera(), Options());
         return built with
         {
             Outline = _outlineSelection

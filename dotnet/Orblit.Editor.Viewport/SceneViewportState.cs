@@ -98,7 +98,10 @@ public sealed class SceneViewportState
         }
     }
 
-    /// <summary>Something here changed, so whatever draws the view should draw it again.</summary>
+    /// <summary>
+    /// Something here changed, so whatever draws the view should draw it again, scene included. The
+    /// camera moving is not this, because the scene is as it was: the shell sees that for itself.
+    /// </summary>
     public event Action? Changed;
 
     /// <summary>
@@ -545,7 +548,13 @@ public sealed class SceneViewportState
 
         _elapsed = elapsed;
         scene.Clock = Microseconds(elapsed) / 1e6;
-        Changed?.Invoke();
+
+        // A still scene looks the same at any clock, so a tick that only moved the camera tells nobody
+        // the scene changed. The shell redraws for the camera on its own.
+        if (scene.IsAnimated)
+        {
+            Changed?.Invoke();
+        }
 
         if (elapsed - _lastTold >= TellInterval)
         {
@@ -1105,7 +1114,6 @@ public sealed class SceneViewportState
         var seconds = Math.Clamp(Microseconds(elapsed - before) / 1e6, 0, 0.05);
         var next = _shown.Toward(_goal, seconds, EaseSeconds);
         _shown = next.IsNear(_goal) ? _goal : next;
-        Changed?.Invoke();
     }
 
     // Moves the camera for one frame of held keys.
