@@ -57,6 +57,7 @@ public sealed class ModeTabsTests : IDisposable
                 var on = other.Name == mode.Name;
                 Assert.Same(on ? OrblitColors.Surface : Brushes.Transparent, Shape(window, other.Name).Background);
                 Assert.Same(on ? OrblitColors.Ink : OrblitColors.InkDim, Tab(window, other.Name).Foreground);
+                Assert.Equal(on ? "Selected" : string.Empty, AutomationProperties.GetItemStatus(Tab(window, other.Name)));
             }
         }
 

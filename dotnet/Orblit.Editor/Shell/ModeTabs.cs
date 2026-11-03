@@ -55,6 +55,8 @@ internal sealed class ModeTabs : StackPanel
             var on = name == active;
             shape.Background = on ? OrblitColors.Surface : Brushes.Transparent;
             tab.Foreground = on ? OrblitColors.Ink : OrblitColors.InkDim;
+            // The colour is the only other sign of which tab is on, and a screen reader cannot read colour.
+            AutomationProperties.SetItemStatus(tab, on ? "Selected" : string.Empty);
         }
     }
 

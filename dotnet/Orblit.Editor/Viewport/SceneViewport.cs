@@ -674,6 +674,8 @@ public sealed class SceneViewport : Border
 
     internal RenderScene Build()
     {
+        // shortcut: the grid is laid over the kept scene each frame, which copies its two lists of
+        // references. Cache the result by (kept scene, plan) if a scene of 100k objects shows it in a trace.
         var workspace = _session.Workspace;
         var scene = workspace.Loaded?.Scene;
         return _kept.Get(scene, workspace.Shared, () => BuildKept(scene ?? new EditorScene([]), workspace))
