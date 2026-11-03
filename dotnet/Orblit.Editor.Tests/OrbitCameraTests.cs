@@ -110,4 +110,45 @@ public sealed class OrbitCameraTests
         Assert.Equal(camera.Distance, panned.Distance);
         Assert.True((panned.Target - camera.Target).Length > 0);
     }
+
+    private static readonly OrbitCamera EaseStart = new(yaw: 0.6, pitch: 0.3, distance: 10, target: new Vector3(0, 0.5, 0));
+    private static readonly OrbitCamera EaseGoal = new(yaw: 1.0, pitch: -0.2, distance: 40, target: new Vector3(20, 0.5, -10));
+
+    [Fact]
+    public void EasingIsTheSameAtAnyFrameRate()
+    {
+        var once = EaseStart.Toward(EaseGoal, 0.032, 0.05);
+        var twice = EaseStart.Toward(EaseGoal, 0.016, 0.05).Toward(EaseGoal, 0.016, 0.05);
+
+        Assert.Equal(once.Yaw, twice.Yaw, 1e-9);
+        Assert.Equal(once.Pitch, twice.Pitch, 1e-9);
+        Assert.Equal(once.Distance, twice.Distance, 1e-9);
+        Assert.Equal(0, (once.Target - twice.Target).Length, 1e-9);
+    }
+
+    [Fact]
+    public void EasingTakesTheShortWayRoundInYaw()
+    {
+        var eased = new OrbitCamera(yaw: 3.0).Toward(new OrbitCamera(yaw: -3.0), 0.05, 0.05);
+
+        // Three to minus three is 0.28 radians on through the back, not nearly six the other way.
+        Assert.True(eased.Yaw > 3.0);
+    }
+
+    [Fact]
+    public void EasingSettlesInsideTheToleranceInHalfASecond()
+    {
+        var camera = EaseStart;
+        Assert.False(camera.IsNear(EaseGoal));
+
+        camera = camera.Toward(EaseGoal, 1.0 / 60, 0.05);
+        Assert.False(camera.IsNear(EaseGoal));
+
+        for (var frame = 0; frame < 30; frame++)
+        {
+            camera = camera.Toward(EaseGoal, 1.0 / 60, 0.05);
+        }
+
+        Assert.True(camera.IsNear(EaseGoal));
+    }
 }

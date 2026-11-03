@@ -11,6 +11,7 @@ public sealed class SceneViewportStateTests
 {
     private static readonly Size Surface = new(800, 600);
     private readonly List<OrbitCamera> _cameras = [];
+    private readonly List<OrbitCamera> _eased = [];
     private readonly SceneObject _cube = new(
         "a", "A", ObjectKind.Shape, position: new Vector3(0, 0.5, 0), shape: Shape.Of(ShapeKind.Cube));
 
@@ -31,12 +32,122 @@ public sealed class SceneViewportStateTests
         };
         view.SelectMode(mode);
         view.CameraChanged += _cameras.Add;
+        view.CameraEased += _eased.Add;
         return view;
     }
 
     private static TimeSpan Ms(int ms) => TimeSpan.FromMilliseconds(ms);
 
     private double Moved(SceneViewportState view) => (_cameras[^1].Target - view.Camera.Target).Length;
+
+    // A view wired as the shell wires it: a cut is written at once and an ease only moves the goal.
+    private SceneViewportState ShellView()
+    {
+        var view = View();
+        view.CameraChanged += camera => view.Camera = camera;
+        view.CameraEased += view.EaseTo;
+        return view;
+    }
+
+    private static void TickFor(SceneViewportState view, int frames, int fromMs = 0)
+    {
+        for (var frame = 0; frame < frames; frame++)
+        {
+            view.Tick(Ms(fromMs + (frame * 16)));
+        }
+    }
+
+    [Fact]
+    public void AWheelNotchDoesNotMoveTheShownCameraAtOnce()
+    {
+        var view = ShellView();
+        var shown = view.Camera;
+
+        view.Wheel(-100);
+
+        Assert.Same(shown, view.Camera);
+        Assert.True(view.Goal.Distance < shown.Distance);
+        Assert.True(view.NeedsClock);
+        Assert.Empty(_cameras);
+    }
+
+    [Fact]
+    public void TwoNotchesBeforeATickAddUpInTheGoal()
+    {
+        var view = ShellView();
+        var start = view.Camera.Distance;
+
+        view.Wheel(-100);
+        var first = view.Goal.Distance;
+        view.Wheel(-100);
+
+        Assert.Equal(first / start, view.Goal.Distance / first, 1e-9);
+    }
+
+    [Fact]
+    public void ACameraLeftAtRestDoesNotLeapOnItsFirstTick()
+    {
+        var view = ShellView();
+        view.Wheel(-100);
+        var shown = view.Camera.Distance;
+
+        // The clock has been stopped for a while, so the time since the last frame says nothing.
+        view.Tick(Ms(5000));
+        Assert.Equal(shown, view.Camera.Distance);
+
+        view.Tick(Ms(5016));
+        var step = shown - view.Camera.Distance;
+        Assert.InRange(step, 1e-6, 0.4 * (shown - view.Goal.Distance));
+    }
+
+    [Fact]
+    public void TicksBringTheShownCameraToTheGoalAndTheClockStops()
+    {
+        var view = ShellView();
+        view.Wheel(-100);
+        var last = view.Camera.Distance;
+
+        for (var frame = 0; frame < 40; frame++)
+        {
+            view.Tick(Ms(frame * 16));
+            Assert.True(view.Camera.Distance <= last);
+            last = view.Camera.Distance;
+        }
+
+        Assert.Equal(view.Goal.Distance, view.Camera.Distance);
+        Assert.False(view.NeedsClock);
+    }
+
+    [Fact]
+    public void OrbitMovesTheShownCameraOnTheSameEvent()
+    {
+        var view = ShellView();
+        var from = new Offset(700, 80);
+        var yaw = view.Camera.Yaw;
+
+        view.Touch(ViewportPhase.DragStart, from);
+        view.Touch(ViewportPhase.DragUpdate, from + new Offset(20, 0));
+
+        Assert.NotEqual(yaw, view.Camera.Yaw);
+        Assert.Equal(view.Camera.Yaw, view.Goal.Yaw);
+        Assert.False(view.NeedsClock);
+    }
+
+    [Fact]
+    public void AnOrbitDuringAnEaseKeepsWhereTheEaseHadGot()
+    {
+        var view = ShellView();
+        view.Wheel(-100);
+        TickFor(view, 4);
+        var midway = view.Camera.Distance;
+        var from = new Offset(700, 80);
+
+        view.Touch(ViewportPhase.DragStart, from);
+        view.Touch(ViewportPhase.DragUpdate, from + new Offset(20, 0));
+
+        Assert.Equal(midway, view.Camera.Distance);
+        Assert.Equal(midway, view.Goal.Distance);
+    }
 
     [Fact]
     public void BackquoteSwitchesFlyingOnAndOffAndEscapeEndsIt()
@@ -132,12 +243,12 @@ public sealed class SceneViewportStateTests
         var view = View();
 
         view.Wheel(-100);
-        Assert.Single(_cameras);
+        Assert.Single(_eased);
         Assert.Equal(8, view.FlySpeed);
 
         view.Key(ViewportKey.Backquote, true);
         view.Wheel(-100);
-        Assert.Single(_cameras);
+        Assert.Single(_eased);
         Assert.Equal(8 * Math.Exp(0.25), view.FlySpeed, 1e-9);
 
         view.Wheel(100000);

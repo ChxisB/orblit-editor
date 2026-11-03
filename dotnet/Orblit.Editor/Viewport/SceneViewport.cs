@@ -154,6 +154,7 @@ public sealed class SceneViewport : Border
     {
         base.OnAttachedToVisualTree(e);
         _state.CameraChanged += OnCameraChanged;
+        _state.CameraEased += OnCameraEased;
         _state.Picked += OnPicked;
         _state.ElementPicked += _session.PickElements;
         _state.ElementsBoxed += _session.BoxElements;
@@ -184,6 +185,7 @@ public sealed class SceneViewport : Border
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         _state.CameraChanged -= OnCameraChanged;
+        _state.CameraEased -= OnCameraEased;
         _state.Picked -= OnPicked;
         _state.ElementPicked -= _session.PickElements;
         _state.ElementsBoxed -= _session.BoxElements;
@@ -427,6 +429,19 @@ public sealed class SceneViewport : Border
     private void OnCameraChanged(OrbitCamera camera)
     {
         _state.Camera = camera;
+        FollowCamera(camera);
+    }
+
+    private void OnCameraEased(OrbitCamera goal)
+    {
+        _state.EaseTo(goal);
+        FollowCamera(goal);
+    }
+
+    // The camera being looked through goes to where the view is going. That is where the next gesture
+    // builds from, and steering it to a place the view has only half reached would be undone by it.
+    private void FollowCamera(OrbitCamera camera)
+    {
         if (_session.Piloting is { View: EditorSession.SceneView } look && _session.Workspace.Loaded?.Scene is { } scene)
         {
             _session.Steer(EditorSession.SceneView, CameraViews.PlaceFor(camera, scene, scene[look.Camera]?.ParentId));
@@ -436,7 +451,7 @@ public sealed class SceneViewport : Border
     }
 
     // Looking through a camera puts the view where the camera is. After that, moving the view steers
-    // the camera, which OnCameraChanged does. Going there is not a move, so it steers nothing.
+    // the camera, which FollowCamera does. Going there is not a move, so it steers nothing.
     private void FlyToPiloted()
     {
         var camera = _session.Piloting is { View: EditorSession.SceneView } look ? look.Camera : null;
@@ -464,7 +479,7 @@ public sealed class SceneViewport : Border
         }
 
         var (centre, radius) = _session.Primary is { } id && scene[id] is not null ? scene.BoundsOf(id) : scene.BoundsOfEverything();
-        OnCameraChanged(_state.Camera.Framing(centre, radius));
+        OnCameraEased(_state.Goal.Framing(centre, radius));
     }
 
     // Any file is taken, and the session says what it does with one it has no use for. A drop refused

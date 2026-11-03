@@ -41,6 +41,10 @@ public sealed class SceneViewportState
     // change slowly enough to read.
     private static readonly TimeSpan TellInterval = TimeSpan.FromMilliseconds(250);
 
+    // How long the shown camera takes to cover most of the way to its goal. Short enough that a wheel
+    // turn feels answered, long enough that the steps of a notch run together.
+    private const double EaseSeconds = 0.05;
+
     private readonly Workspace _workspace;
     private readonly History? _history;
     private readonly Registry<GizmoType> _gizmos = new();
@@ -60,6 +64,9 @@ public sealed class SceneViewportState
     private TimeSpan _elapsed;
     private TimeSpan _lastFlew;
     private TimeSpan _lastTold;
+    private TimeSpan? _lastEased;
+    private OrbitCamera _shown = new();
+    private OrbitCamera _goal = new();
 
     public SceneViewportState(
         Workspace workspace,
@@ -89,8 +96,17 @@ public sealed class SceneViewportState
     /// <summary>Something here changed, so whatever draws the view should draw it again.</summary>
     public event Action? Changed;
 
-    /// <summary>The camera a drag, a wheel turn or a flight would move to. The shell owns it.</summary>
+    /// <summary>
+    /// The camera a drag, a pinch or a flight would cut to. The shell owns it, and writes it to
+    /// <see cref="Camera"/>.
+    /// </summary>
     public event Action<OrbitCamera>? CameraChanged;
+
+    /// <summary>
+    /// The camera a wheel turn would settle on. The shell hands it to <see cref="EaseTo"/>, and the
+    /// shown camera goes there over the next few frames.
+    /// </summary>
+    public event Action<OrbitCamera>? CameraEased;
 
     /// <summary>
     /// Something in the scene was clicked, or nothing was. The flag is set when a modifier was held,
@@ -123,7 +139,28 @@ public sealed class SceneViewportState
     /// <summary>A few times a second while a scene is animating, so the other panels can keep up.</summary>
     public event Action? Clocked;
 
-    public OrbitCamera Camera { get; set; } = new();
+    /// <summary>
+    /// The camera as it is drawn and picked against this frame. Setting it cuts there, with no ease,
+    /// which is what a drag wants: the view should be under the pointer and not behind it.
+    /// </summary>
+    public OrbitCamera Camera
+    {
+        get => _shown;
+        set
+        {
+            _shown = value;
+            _goal = value;
+        }
+    }
+
+    /// <summary>
+    /// Where the camera is going. The same as <see cref="Camera"/> at rest. Zooming and framing build
+    /// on this and not on the shown camera, so two notches before a frame add up.
+    /// </summary>
+    public OrbitCamera Goal => _goal;
+
+    /// <summary>Whether the shown camera is still on its way to <see cref="Goal"/>.</summary>
+    public bool Easing => !_shown.IsNear(_goal);
 
     /// <summary>
     /// The size of the surface, as laid out. Needed to turn a pointer position into a ray, and only
@@ -220,10 +257,10 @@ public sealed class SceneViewportState
 
     /// <summary>
     /// Whether the view needs a frame every tick: something in the scene moves on its own, or the
-    /// camera moves a little every frame while a key is held. A clock that never stops is a view that
-    /// redraws sixty times a second to show a scene that has not changed.
+    /// camera moves a little every frame while a key is held or an ease has not finished. A clock that
+    /// never stops is a view that redraws sixty times a second to show a scene that has not changed.
     /// </summary>
-    public bool NeedsClock => Flying || (_workspace.Loaded?.Scene?.IsAnimated ?? false);
+    public bool NeedsClock => Flying || Easing || (_workspace.Loaded?.Scene?.IsAnimated ?? false);
 
     /// <summary>The handles as they stand, or null when there is nothing to put them on.</summary>
     public Gizmo? Handles
@@ -344,6 +381,9 @@ public sealed class SceneViewportState
 
     public void Leave(Offset at) => _order.Leave(at);
 
+    /// <summary>Sets where the shown camera goes, and lets the clock take it there.</summary>
+    public void EaseTo(OrbitCamera goal) => _goal = goal;
+
     public void Cancel() => _order.Cancel();
 
     /// <summary>A key went down or up. Whether the view took it.</summary>
@@ -441,7 +481,7 @@ public sealed class SceneViewportState
     {
         if (!Flying)
         {
-            CameraChanged?.Invoke(Camera.Zoom(deltaY));
+            CameraEased?.Invoke(_goal.Zoom(deltaY));
             return;
         }
 
@@ -491,6 +531,7 @@ public sealed class SceneViewportState
     {
         Fly(elapsed);
         _lastFlew = elapsed;
+        Ease(elapsed);
 
         if (_workspace.Loaded?.Scene is not { } scene)
         {
@@ -1034,6 +1075,31 @@ public sealed class SceneViewportState
         _looking = null;
         _flyLocked = false;
         _held.Clear();
+        Changed?.Invoke();
+    }
+
+    // Moves the shown camera towards the goal for the time since the last frame.
+    private void Ease(TimeSpan elapsed)
+    {
+        if (!Easing)
+        {
+            _lastEased = null;
+            return;
+        }
+
+        var last = _lastEased;
+        _lastEased = elapsed;
+        // The first frame of an ease has no frame before it. The clock was stopped, so the time since
+        // the last tick is however long somebody left the view alone, and easing by it would leap.
+        if (last is not { } before)
+        {
+            return;
+        }
+
+        // Clamped like flying: a frame that took a second should not skip the ease.
+        var seconds = Math.Clamp(Microseconds(elapsed - before) / 1e6, 0, 0.05);
+        var next = _shown.Toward(_goal, seconds, EaseSeconds);
+        _shown = next.IsNear(_goal) ? _goal : next;
         Changed?.Invoke();
     }
 
