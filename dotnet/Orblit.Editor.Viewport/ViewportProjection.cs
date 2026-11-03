@@ -23,8 +23,8 @@ public sealed class ViewportProjection
         _viewProjection = PerspectiveMatrix(
             Doubles.Radians(view.FieldOfView),
             size.Width / Math.Max(size.Height, 1),
-            0.1,
-            1000).Multiplied(ViewMatrix(view.Position, view.Target, new Vector3(0, 1, 0)));
+            OrbitCamera.NearPlane,
+            OrbitCamera.FarPlane).Multiplied(ViewMatrix(view.Position, view.Target, new Vector3(0, 1, 0)));
         _inverse = Matrix4.Inverted(_viewProjection);
         Forward = (view.Target - view.Position).Normalized();
     }

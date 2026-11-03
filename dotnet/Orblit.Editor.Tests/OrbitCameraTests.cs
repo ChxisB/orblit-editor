@@ -33,14 +33,45 @@ public sealed class OrbitCameraTests
             camera = camera.Zoom(-500);
         }
 
-        Assert.True(camera.Distance > 1.0);
+        Assert.True(camera.Distance >= OrbitCamera.MinDistance);
 
         for (var i = 0; i < 400; i++)
         {
             camera = camera.Zoom(500);
         }
 
-        Assert.True(camera.Distance <= 200.0);
+        Assert.True(camera.Distance <= OrbitCamera.MaxDistance);
+    }
+
+    [Fact]
+    public void ZoomNeverLeavesTheRange()
+    {
+        Assert.Equal(OrbitCamera.MinDistance, new OrbitCamera().Zoom(-1e6).Distance);
+        Assert.Equal(OrbitCamera.MaxDistance, new OrbitCamera().Zoom(1e6).Distance);
+    }
+
+    [Fact]
+    public void TheRangeKeepsTheTargetInFrontOfTheNearPlaneAndInsideTheFarOne()
+    {
+        Assert.True(OrbitCamera.MinDistance > OrbitCamera.NearPlane);
+        Assert.True(OrbitCamera.MaxDistance < OrbitCamera.FarPlane);
+    }
+
+    [Fact]
+    public void FramingAWorldOfAHundredMetresFitsIt()
+    {
+        var framed = new OrbitCamera().Framing(new Vector3(0, 0, 0), 100);
+
+        // The ceiling used to be 200 metres, which cut this one short.
+        var fitted = 100 / Math.Tan(Doubles.Radians(50) / 2) * 1.6;
+        Assert.Equal(fitted, framed.Distance, 1e-6);
+    }
+
+    [Fact]
+    public void FramingAGrainOrAContinentStaysInTheRange()
+    {
+        Assert.Equal(OrbitCamera.MinDistance, new OrbitCamera().Framing(new Vector3(0, 0, 0), 0.001).Distance);
+        Assert.Equal(OrbitCamera.MaxDistance, new OrbitCamera().Framing(new Vector3(0, 0, 0), 1e6).Distance);
     }
 
     [Fact]

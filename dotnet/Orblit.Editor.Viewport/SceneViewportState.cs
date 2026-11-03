@@ -45,6 +45,11 @@ public sealed class SceneViewportState
     // turn feels answered, long enough that the steps of a notch run together.
     private const double EaseSeconds = 0.05;
 
+    // A notch of the wheel reports 100. Eight percent a notch is enough to read as a step towards
+    // something and small enough to stop where somebody means to. It is set here and not where the
+    // wheel is read, because the same report sets the speed while flying, which this must not move.
+    private static readonly double ZoomPerWheelUnit = Math.Log(1.08) / OrbitCamera.ZoomRate / 100;
+
     private readonly Workspace _workspace;
     private readonly History? _history;
     private readonly Registry<GizmoType> _gizmos = new();
@@ -481,7 +486,7 @@ public sealed class SceneViewportState
     {
         if (!Flying)
         {
-            CameraEased?.Invoke(_goal.Zoom(deltaY));
+            CameraEased?.Invoke(_goal.Zoom(deltaY * ZoomPerWheelUnit));
             return;
         }
 

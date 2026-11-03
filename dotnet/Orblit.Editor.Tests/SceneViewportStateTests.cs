@@ -72,6 +72,21 @@ public sealed class SceneViewportStateTests
     }
 
     [Fact]
+    public void AWheelNotchChangesTheDistanceByAboutEightPercent()
+    {
+        var view = ShellView();
+        var start = view.Camera.Distance;
+
+        view.Wheel(-100);
+
+        Assert.Equal(start / 1.08, view.Goal.Distance, 1e-9);
+
+        view.Wheel(200);
+
+        Assert.Equal(start / 1.08 * 1.08 * 1.08, view.Goal.Distance, 1e-9);
+    }
+
+    [Fact]
     public void TwoNotchesBeforeATickAddUpInTheGoal()
     {
         var view = ShellView();

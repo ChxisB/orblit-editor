@@ -18,6 +18,21 @@ public sealed class OrbitCamera
     // the image flipping.
     internal const double PitchLimit = (Math.PI / 2) - 0.02;
 
+    // The planes the renderer draws between. The native camera and the picking projection use the
+    // same pair, so a change has to land in all three.
+    internal const double NearPlane = 0.1;
+    internal const double FarPlane = 1000;
+
+    // The closest the eye gets to what it looks at: three times the near plane, so the target is
+    // never clipped away. Close enough to look at something a hand across.
+    internal const double MinDistance = NearPlane * 3;
+
+    // The farthest, at half the far plane, so what lies as far again beyond the target is still drawn.
+    internal const double MaxDistance = FarPlane / 2;
+
+    // Distance per unit of zoom: a unit of 1 / ZoomRate is one e-fold of the distance.
+    internal const double ZoomRate = 0.0016;
+
     private const double NearEnough = 0.001;
 
     // F2: a camera is its angles, its distance, its lens and its target, and every one has a default.
@@ -79,7 +94,7 @@ public sealed class OrbitCamera
     public OrbitCamera Zoom(double amount) => new(
         Yaw,
         Pitch,
-        Doubles.Clamp(Distance * Math.Exp(amount * 0.0016), 1.5, 200.0),
+        Doubles.Clamp(Distance * Math.Exp(amount * ZoomRate), MinDistance, MaxDistance),
         FieldOfView,
         Target);
 
@@ -159,10 +174,11 @@ public sealed class OrbitCamera
     public OrbitCamera Framing(Vector3 centre, double radius)
     {
         // Fitted to the vertical field of view with room to spare, and floored so framing a flat or
-        // tiny object does not put the camera inside it.
+        // tiny object does not put the camera inside it. Capped so a huge one does not put the target
+        // past the far plane.
         var fitted = radius / Math.Tan(Doubles.Radians(FieldOfView) / 2) * 1.6;
 
-        return new OrbitCamera(Yaw, Pitch, Doubles.Clamp(fitted, 1.5, 200.0), FieldOfView, centre.Clone());
+        return new OrbitCamera(Yaw, Pitch, Doubles.Clamp(fitted, MinDistance, MaxDistance), FieldOfView, centre.Clone());
     }
 
     /// <summary>
