@@ -249,7 +249,6 @@ public sealed class EditorWindow : Window
             _panels[panel.Id] = built;
         }
 
-        (built.Parent as Panel)?.Children.Remove(built);
         return built;
     }
 
