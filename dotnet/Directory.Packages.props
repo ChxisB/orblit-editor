@@ -24,6 +24,8 @@
     <PackageVersion Include="Orblit.Mesh" Version="0.6.0" />
     <PackageVersion Include="Orblit.Motion" Version="0.11.0" />
     <PackageVersion Include="Orblit.Native" Version="0.1.1" />
+    <PackageVersion Include="Orblit.Net" Version="0.10.0" />
+    <PackageVersion Include="Orblit.Net.Game" Version="0.1.0" />
     <PackageVersion Include="Orblit.Scene" Version="0.28.0" />
     <PackageVersion Include="Orblit.Sequence" Version="0.2.1" />
     <PackageVersion Include="Orblit.Sprite" Version="0.4.0" />

@@ -54,6 +54,7 @@ internal sealed class GameViewPanel : Border
     };
 
     private readonly GameViewBar _bar;
+    private readonly PlayerBar _players;
     private readonly DeviceFrameHost _host = new() { Name = "game_view_frame" };
     private readonly UnsafeEdgesOverlay _edges = new();
 
@@ -93,14 +94,17 @@ internal sealed class GameViewPanel : Border
         };
         _input = new GameViewInput(new GameInputSource(_picture), () => Subject.Loaded?.Scene is { } scene ? CameraOf(scene) : null);
         _bar = new GameViewBar(session.Device);
+        _players = new PlayerBar(session, () => _picture.Focus());
         var screen = Screen();
         screen.KeyDown += TakeKey;
         _host.Child = screen;
         _host.Fitted += OnFitted;
         var body = new Grid { Children = { _host, Words() } };
-        var column = new Grid { RowDefinitions = new RowDefinitions("Auto,*") };
-        Grid.SetRow(body, 1);
+        var column = new Grid { RowDefinitions = new RowDefinitions("Auto,Auto,*") };
+        Grid.SetRow(_players, 1);
+        Grid.SetRow(body, 2);
         column.Children.Add(_bar);
+        column.Children.Add(_players);
         column.Children.Add(body);
         Child = column;
         SyncFrame();
@@ -135,8 +139,10 @@ internal sealed class GameViewPanel : Border
         _session.Changed += MarkDirty;
         _session.Surfaces.Changed += MarkDirty;
         _session.PlaybackChanged += TakeFocusOnPlay;
+        _session.PlaybackChanged += _players.Sync;
         _interface.Changed += ShowInterface;
         _session.InputFeed = _input;
+        _players.Sync();
         ShowInterface();
         MarkDirty();
     }
@@ -150,6 +156,7 @@ internal sealed class GameViewPanel : Border
         _session.Changed -= MarkDirty;
         _session.Surfaces.Changed -= MarkDirty;
         _session.PlaybackChanged -= TakeFocusOnPlay;
+        _session.PlaybackChanged -= _players.Sync;
         _interface.Changed -= ShowInterface;
         if (ReferenceEquals(_session.InputFeed, _input))
         {
@@ -165,10 +172,11 @@ internal sealed class GameViewPanel : Border
         base.OnDetachedFromVisualTree(e);
     }
 
-    // A playing scene is a copy with a workspace of its own, which is where its shared set lives.
-    private Workspace Subject => _session.Playback?.Workspace ?? _session.Workspace;
+    // A playing scene is a copy with a workspace of its own, which is where its shared set lives. With
+    // more than one player it is the copy of the player shown. Read by tests.
+    internal Workspace Subject => _session.ShownPlayback?.Workspace ?? _session.Workspace;
 
-    private RenderCamera? CameraOf(EditorScene scene) => _session.Playback?.Camera ?? SceneCameras.GameCamera(scene);
+    private RenderCamera? CameraOf(EditorScene scene) => _session.ShownPlayback?.Camera ?? SceneCameras.GameCamera(scene);
 
     // Pressing Play means the person wants to play, so the keys go to the picture. A click or a press made
     // before Play is not carried into the game.

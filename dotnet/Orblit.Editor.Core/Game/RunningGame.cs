@@ -2,6 +2,7 @@ namespace Orblit.Editor.Core;
 
 using Orblit.Game;
 using Orblit.Input;
+using Doc = Orblit.Scene;
 
 /// <summary>A game started in the scene that plays, and the loaded assembly it came from.</summary>
 /// <remarks>
@@ -28,6 +29,15 @@ internal sealed class RunningGame : IDisposable
 
     /// <summary>The exception that ended the game, or null if it did not throw.</summary>
     public Exception? Fault => _host.Fault;
+
+    /// <summary>The copy of the scene this game plays in.</summary>
+    public ScenePlayback Playback => _playback;
+
+    /// <summary>The scene as the game has it now.</summary>
+    public Doc.SceneDocument Scene => _host.Scene;
+
+    /// <summary>Gives the game a net to ask about its role. It is called before <see cref="Start"/>.</summary>
+    public void UseNet(IGameNet net) => _host.UseNet(net);
 
     public void Start()
     {

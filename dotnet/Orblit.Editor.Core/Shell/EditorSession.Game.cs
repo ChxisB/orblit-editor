@@ -6,7 +6,7 @@ using Orblit.Game;
 public sealed partial class EditorSession
 {
     private CancellationTokenSource? _building;
-    private RunningGame? _game;
+    private RunningGames? _games;
     private bool _starting;
 
     /// <summary>Whether the project may build and run its game. Nothing is trusted until the editor is given an answer.</summary>
@@ -25,8 +25,11 @@ public sealed partial class EditorSession
     /// </summary>
     public IGameInputFeed? InputFeed { get; set; }
 
-    /// <summary>The game that is running, or null when none is. A window asks it whether it has a control to show.</summary>
-    public IGame? PlayingGame => _game?.Game;
+    /// <summary>
+    /// The game of the player the game view shows, or null when none is running. A window asks it whether
+    /// it has a control to show.
+    /// </summary>
+    public IGame? PlayingGame => _games?[ShownPlayer].Game;
 
     public GameBuilder Builder { get; init; } = new(new DotnetBuild());
 
@@ -43,7 +46,7 @@ public sealed partial class EditorSession
     public void StopTrusting()
     {
         _building?.Cancel();
-        if (_game is not null)
+        if (_games is not null)
         {
             StopPlayback();
         }
@@ -60,13 +63,14 @@ public sealed partial class EditorSession
     }
 
     /// <summary>
-    /// Runs code of the playing game's that is not an update, such as asking an interface game for its
-    /// control. A throw ends Play, as one from an update does. Does nothing when no game is running.
+    /// Runs code of the shown player's game that is not an update, such as asking an interface game for
+    /// its control. A throw ends Play for every player, as one from an update does. Does nothing when no
+    /// game is running.
     /// </summary>
     public void GuardGame(string name, Action call)
     {
-        _game?.Guard(name, call);
-        if (_game?.Fault is not null)
+        _games?[ShownPlayer].Guard(name, call);
+        if (_games?.Fault is not null)
         {
             StopPlayback();
         }
@@ -171,6 +175,20 @@ public sealed partial class EditorSession
 
     private void StartGame(string assembly, string type)
     {
+        if (RunningGames.Start(PlayerCount, number => MakePlayer(assembly, type, number)) is not { } games)
+        {
+            return;
+        }
+
+        Playback = games.Host.Playback;
+        _games = games;
+        Show();
+    }
+
+    // One player's game, loaded into an assembly context of its own and not yet started. Null when the
+    // assembly cannot be loaded, with the reason in the log.
+    private RunningGame? MakePlayer(string assembly, string type, int number)
+    {
         LoadedGame loaded;
         try
         {
@@ -178,45 +196,34 @@ public sealed partial class EditorSession
         }
         catch (GameLoadException error)
         {
-            Say($"The game could not be loaded. {error.Message}", SayLevel.Error);
-            return;
+            Say($"{PlayerLabel(number)}The game could not be loaded. {error.Message}", SayLevel.Error);
+            return null;
         }
 
         // The scene may have been closed while the game built. Until a running game owns the loaded
         // assembly, a throw here must let it go.
-        ScenePlayback playback;
-        RunningGame game;
         try
         {
             PauseTimelines();
-            playback = NewPlayback();
-            game = new RunningGame(loaded, playback, ProjectFolder, new GameLog(this));
+            return new RunningGame(loaded, NewPlayback(), ProjectFolder, new GameLog(this, PlayerLabel(number)));
         }
         catch
         {
             loaded.Dispose();
             throw;
         }
-
-        game.Start();
-        if (game.Fault is not null)
-        {
-            game.Dispose();
-            return;
-        }
-
-        Playback = playback;
-        _game = game;
-        Show();
     }
+
+    // A line from one of several players says which. With one player there is nothing to tell apart.
+    private string PlayerLabel(int number) => PlayerCount > 1 ? $"Player {number}: " : "";
 
     // The host catches whatever the game throws and ends the game. The log keeps the stack, which is
     // how the person finds the line of their own code.
-    private sealed class GameLog(EditorSession session) : IGameLog
+    private sealed class GameLog(EditorSession session, string who) : IGameLog
     {
-        public void Say(string message) => session.Say(message, SayLevel.Info);
+        public void Say(string message) => session.Say($"{who}{message}", SayLevel.Info);
 
         public void Error(string message, Exception error) =>
-            session.Say($"{message} Play has stopped.", SayLevel.Error, error.ToString());
+            session.Say($"{who}{message} Play has stopped.", SayLevel.Error, error.ToString());
     }
 }

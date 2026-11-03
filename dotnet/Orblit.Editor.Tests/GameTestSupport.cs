@@ -58,13 +58,23 @@ internal static class GameTestSupport
     /// <summary>A project with the starter's camera and the given <c>game</c> field, opened as a session.</summary>
     public static EditorSession Open(DirectoryInfo project, string game, IBuildCommand build, IProjectTrust? trust = null)
     {
+        WriteProject(project, game, new EditorScene([EditorScene.Starter()["camera"]!]));
+        return OpenWritten(project, build, trust);
+    }
+
+    /// <summary>Writes a project that names <paramref name="game"/> and holds <paramref name="scene"/> as its main scene.</summary>
+    public static void WriteProject(DirectoryInfo project, string game, EditorScene scene)
+    {
         File.WriteAllText(
             Path.Combine(project.FullName, Project.FileName),
             $$"""{ "formatVersion": 1, "name": "Crates", "game": {{game}} }""");
         Directory.CreateDirectory(Path.Combine(project.FullName, "scenes"));
-        File.WriteAllText(
-            Path.Combine(project.FullName, "scenes", "main.oscene"),
-            SceneDocument.Encode(new EditorScene([EditorScene.Starter()["camera"]!])));
+        File.WriteAllText(Path.Combine(project.FullName, "scenes", "main.oscene"), SceneDocument.Encode(scene));
+    }
+
+    /// <summary>A project already written to disk, opened as a session.</summary>
+    public static EditorSession OpenWritten(DirectoryInfo project, IBuildCommand build, IProjectTrust? trust = null)
+    {
         var opened = ProjectWorkspace.Open(project.FullName, null);
         return new EditorSession(opened.Workspace, new History(opened.Workspace), EditorModes.Standard(), PanelTypes.BuiltIn())
         {
@@ -73,6 +83,8 @@ internal static class GameTestSupport
         };
     }
 
-    public static bool AnyGameContext() =>
-        AssemblyLoadContext.All.Any(one => one.Name?.StartsWith("game:", StringComparison.Ordinal) == true);
+    public static bool AnyGameContext() => GameContextCount() > 0;
+
+    public static int GameContextCount() =>
+        AssemblyLoadContext.All.Count(one => one.Name?.StartsWith("game:", StringComparison.Ordinal) == true);
 }
