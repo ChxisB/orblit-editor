@@ -65,6 +65,37 @@ public static class Radii
     public static readonly CornerRadius Window = new(12);
 }
 
+/// <summary>
+/// The numbers the dock is drawn with: how its panes sit beside each other and how a strip of tabs
+/// joins the pane under it.
+/// </summary>
+/// <remarks>
+/// Apart from <see cref="Radii"/> because a card in a panel keeps its own radius. Only the dock goes
+/// flat, so a dialog or a launcher card is not pulled along.
+/// </remarks>
+public static class DockStyle
+{
+    public const double Radius = 4;
+
+    /// <summary>What is drawn between two panes.</summary>
+    public const double Gap = 3;
+
+    /// <summary>What can be grabbed to move the split. Wider than the gap, so it overlaps both panes.</summary>
+    public const double GrabWidth = 8;
+
+    public const double TabPadX = 16;
+    public const double TabPadY = 8;
+
+    /// <summary>Zero, because panes are told apart by tone and not by a line. Here so a theme can bring one back.</summary>
+    public const double BorderWidth = 0;
+
+    /// <summary>The pane under a strip: square where the strip meets it, round at the far side.</summary>
+    public static readonly CornerRadius PaneCorners = new(0, 0, Radius, Radius);
+
+    /// <summary>A tab that hangs off the strip: round at the top, flat where it joins its pane.</summary>
+    public static readonly CornerRadius TabCorners = new(Radius, Radius, 0, 0);
+}
+
 public static class OrblitText
 {
     public const double Label = 12;

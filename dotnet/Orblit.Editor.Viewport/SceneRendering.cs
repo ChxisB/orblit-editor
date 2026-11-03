@@ -79,7 +79,7 @@ internal sealed record Conditions(
 
 /// <summary>
 /// Turning the edited scene into the one the renderer draws. It is a translation and nothing
-/// else: nothing here changes the scene, and the result is rebuilt every frame rather than kept.
+/// else: nothing here changes the scene.
 /// </summary>
 public static class SceneRendering
 {
@@ -117,8 +117,36 @@ public static class SceneRendering
             Camera = conditions.Driven ? Metered(camera, lights, ambientLux) : camera,
             Terrain = chosen.TerrainOf?.Invoke(shown) ?? [],
             Populations = chosen.ScatterOf?.Invoke(shown) ?? [],
-        };
+        }.WithGrid(chosen.Grid);
     }
+
+    /// <summary>
+    /// The scene with the grid first, so it is under everything in the list as well as in the
+    /// world. It is not a scene object: never saved, never selected and never in the outliner,
+    /// because it is a drawing aid rather than a thing somebody put there.
+    /// </summary>
+    public static RenderScene WithGrid(this RenderScene scene, GridPlan? grid) => grid is null
+        ? scene
+        : scene with
+        {
+            Materials = [grid.ToMaterial(), .. scene.Materials],
+            Objects = [grid.ToObject(), .. scene.Objects],
+        };
+
+    /// <summary>
+    /// The same scene from <paramref name="camera"/>. The exposure stays the scene's: it is set for
+    /// the light the scene has, which does not change when the viewer walks around in it, and the
+    /// viewport's camera sets none of its own.
+    /// </summary>
+    public static RenderScene SeenFrom(this RenderScene scene, RenderCamera camera) => scene with
+    {
+        Camera = camera with
+        {
+            Aperture = scene.Camera.Aperture,
+            ShutterSpeed = scene.Camera.ShutterSpeed,
+            Sensitivity = scene.Camera.Sensitivity,
+        },
+    };
 
     // A covered sky is one enormous diffuser: less of the light arrives from one direction and more
     // of it from everywhere. A strike lights the whole of it at once, which is why lightning has no
@@ -195,11 +223,6 @@ public static class SceneRendering
         SceneRenderOptions options)
     {
         var materials = new List<RenderMaterial>();
-        if (options.Grid is { } grid)
-        {
-            materials.Add(grid.ToMaterial());
-        }
-
         materials.AddRange(surfaces.Surfaces.Select(one => new RenderMaterial { Key = one.Key, Surface = one.Value }));
 
         // One material per distinct texture rather than one per object, keyed by the texture so
@@ -227,15 +250,7 @@ public static class SceneRendering
         (Dictionary<SceneObject, int> Keys, OrderedDictionary<int, CustomSurface> Surfaces) surfaces,
         SceneRenderOptions options)
     {
-        // The grid is first, so it is under everything in the list as well as in the world. It is
-        // not a scene object: never saved, never selected and never in the outliner, because it is
-        // a drawing aid rather than a thing somebody put there.
         var objects = new List<RenderObject>();
-        if (options.Grid is { } grid)
-        {
-            objects.Add(grid.ToObject());
-        }
-
         foreach (var scene in scenes)
         {
             objects.AddRange(scene.Objects

@@ -140,7 +140,9 @@ public sealed class EditorSessionTerrainTests : IDisposable
         var layout = EditorModes.Standard()["terrain"]!.Layout();
 
         Assert.Equal(["scene", "modelling", "terrain", "animation", "cinematics"], modes);
-        Assert.Equal(["outliner", "scene", "game", "console", "brush", "inspector"], layout.Panels.Select(panel => panel.Id));
+        Assert.Equal(
+            ["outliner", "project", "scene", "game", "console", "brush", "inspector"],
+            layout.Panels.Select(panel => panel.Id));
         Assert.Equal(PanelKind.TerrainBrush, layout.Panels.First(panel => panel.Id == "brush").Kind);
         Assert.Equal(("Brush", "brush_outlined"), (PanelKind.TerrainBrush.Label, PanelKind.TerrainBrush.Icon));
     }

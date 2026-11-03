@@ -18,6 +18,23 @@ public sealed class OrbitCamera
     // the image flipping.
     internal const double PitchLimit = (Math.PI / 2) - 0.02;
 
+    // The planes the renderer draws between. The native camera and the picking projection use the
+    // same pair, so a change has to land in all three.
+    internal const double NearPlane = 0.1;
+    internal const double FarPlane = 1000;
+
+    // The closest the eye gets to what it looks at: three times the near plane, so the target is
+    // never clipped away. Close enough to look at something a hand across.
+    internal const double MinDistance = NearPlane * 3;
+
+    // The farthest, at half the far plane, so what lies as far again beyond the target is still drawn.
+    internal const double MaxDistance = FarPlane / 2;
+
+    // Distance per unit of zoom: a unit of 1 / ZoomRate is one e-fold of the distance.
+    internal const double ZoomRate = 0.0016;
+
+    private const double NearEnough = 0.001;
+
     // F2: a camera is its angles, its distance, its lens and its target, and every one has a default.
     public OrbitCamera(
         double yaw = 0.6,
@@ -77,7 +94,7 @@ public sealed class OrbitCamera
     public OrbitCamera Zoom(double amount) => new(
         Yaw,
         Pitch,
-        Doubles.Clamp(Distance * Math.Exp(amount * 0.0016), 1.5, 200.0),
+        Doubles.Clamp(Distance * Math.Exp(amount * ZoomRate), MinDistance, MaxDistance),
         FieldOfView,
         Target);
 
@@ -157,11 +174,45 @@ public sealed class OrbitCamera
     public OrbitCamera Framing(Vector3 centre, double radius)
     {
         // Fitted to the vertical field of view with room to spare, and floored so framing a flat or
-        // tiny object does not put the camera inside it.
+        // tiny object does not put the camera inside it. Capped so a huge one does not put the target
+        // past the far plane.
         var fitted = radius / Math.Tan(Doubles.Radians(FieldOfView) / 2) * 1.6;
 
-        return new OrbitCamera(Yaw, Pitch, Doubles.Clamp(fitted, 1.5, 200.0), FieldOfView, centre.Clone());
+        return new OrbitCamera(Yaw, Pitch, Doubles.Clamp(fitted, MinDistance, MaxDistance), FieldOfView, centre.Clone());
     }
+
+    /// <summary>
+    /// One step of the way to <paramref name="goal"/>, covering the share of what is left that
+    /// <paramref name="seconds"/> is of <paramref name="tau"/>.
+    /// </summary>
+    /// <remarks>
+    /// The share is <c>1 - exp(-seconds / tau)</c>, so two steps of a sixtieth of a second land where
+    /// one of a thirtieth does, and the ease looks the same on a slow frame as on a fast one. Distance
+    /// moves by ratio, because a zoom is a ratio and halving the way to a far goal should feel like
+    /// halving the way to a near one. Yaw takes the short way round.
+    /// </remarks>
+    public OrbitCamera Toward(OrbitCamera goal, double seconds, double tau)
+    {
+        var share = 1 - Math.Exp(-seconds / tau);
+        return new OrbitCamera(
+            Yaw + (TurnTo(goal) * share),
+            Pitch + ((goal.Pitch - Pitch) * share),
+            Distance * Math.Pow(goal.Distance / Distance, share),
+            FieldOfView + ((goal.FieldOfView - FieldOfView) * share),
+            Target + ((goal.Target - Target) * share));
+    }
+
+    /// <summary>
+    /// Whether <paramref name="other"/> is too close to tell apart on screen: under a thousandth of
+    /// a radian, of a distance, and of the distance in metres. Where an ease stops, because chasing
+    /// the last of an exponential would keep redrawing a view that is not changing.
+    /// </summary>
+    public bool IsNear(OrbitCamera other) =>
+        Math.Abs(TurnTo(other)) < NearEnough
+        && Math.Abs(other.Pitch - Pitch) < NearEnough
+        && Math.Abs(other.FieldOfView - FieldOfView) < NearEnough
+        && Math.Abs(Math.Log(other.Distance / Distance)) < NearEnough
+        && (other.Target - Target).Length < NearEnough * Distance;
 
     public RenderCamera ToRenderCamera()
     {
@@ -176,6 +227,10 @@ public sealed class OrbitCamera
             FieldOfView = FieldOfView,
         };
     }
+
+    // The signed way round to the other yaw, never more than half a turn. Yaw is not wrapped while
+    // somebody orbits, so two yaws a whole turn apart are the same view.
+    private double TurnTo(OrbitCamera other) => Math.IEEERemainder(other.Yaw - Yaw, 2 * Math.PI);
 
     private Vector3 RightAxis() => new(Math.Cos(Yaw), 0, -Math.Sin(Yaw));
 

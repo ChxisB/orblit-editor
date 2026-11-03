@@ -23,8 +23,6 @@ using Orblit.Editor.Core;
 /// </remarks>
 public sealed class DockHost : ContentControl
 {
-    private const double Gap = 4;
-
     private readonly Func<DockedPanel, Control> _content;
     private DockLayout _layout;
     private string _drawn;
@@ -113,23 +111,34 @@ public sealed class DockHost : ContentControl
         var across = split.Axis == DockAxis.Horizontal;
         if (_layout.Locked || split.Folded[before] || split.Folded[before + 1])
         {
-            return new Border { Width = Gap, Height = Gap };
+            return new Border { Width = DockStyle.Gap, Height = DockStyle.Gap };
         }
 
+        // The handle is wider than the gap and reaches over the panes on both sides, so a split is easy to
+        // catch without being drawn wide. The negative margin makes the layout slot the gap's width. The
+        // reach is whole pixels on each side, because layout rounding turns a half into a whole.
+        var reachBack = Math.Floor((DockStyle.GrabWidth - DockStyle.Gap) / 2);
+        var reachOn = DockStyle.GrabWidth - DockStyle.Gap - reachBack;
         var handle = new GridSplitter
         {
             Name = $"handle_{split.Id}_{before}",
-            Background = OrblitColors.Ground,
+            Background = Brushes.Transparent,
             ResizeDirection = across ? GridResizeDirection.Columns : GridResizeDirection.Rows,
+            ZIndex = 1,
         };
         if (across)
         {
-            handle.Width = Gap;
+            handle.Width = DockStyle.GrabWidth;
+            handle.Margin = new Thickness(-reachBack, 0, -reachOn, 0);
         }
         else
         {
-            handle.Height = Gap;
+            handle.Height = DockStyle.GrabWidth;
+            handle.Margin = new Thickness(0, -reachBack, 0, -reachOn);
         }
+
+        handle.PointerEntered += (_, _) => handle.Background = OrblitColors.Hover;
+        handle.PointerExited += (_, _) => handle.Background = Brushes.Transparent;
 
         // The neighbours are read when the drag ends, by which time both have been added.
         handle.DragCompleted += (_, _) =>
@@ -146,13 +155,14 @@ public sealed class DockHost : ContentControl
 
     private Border DrawGroup(DockGroup group)
     {
-        var strip = new StackPanel { Orientation = Orientation.Horizontal, Spacing = Space.Xs };
+        var strip = new StackPanel { Orientation = Orientation.Horizontal };
         foreach (var panel in group.Panels)
         {
             strip.Children.Add(Tab(group, panel));
         }
 
-        var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(Space.Sm, Space.Xs) };
+        // No margin under the strip, so the showing tab sits on its pane.
+        var header = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), Margin = new Thickness(Space.Xs, Space.Xs, Space.Xs, 0) };
         header.Children.Add(strip);
         if (_layout.CanCollapse(group.Id))
         {
@@ -163,24 +173,37 @@ public sealed class DockHost : ContentControl
         body.Children.Add(header);
         if (!group.Collapsed && group.Current is { } current)
         {
-            var content = _content(current);
-            content[Grid.RowProperty] = 1;
-            body.Children.Add(content);
+            var pane = Pane(group, _content(current));
+            pane[Grid.RowProperty] = 1;
+            body.Children.Add(pane);
+        }
+
+        // The group is the strip's tone, and the pane is the card on it.
+        return new Border { Name = $"group_{group.Id}", Background = OrblitColors.Ground, Child = body };
+    }
+
+    private static Border Pane(DockGroup group, Control content)
+    {
+        // A panel that keeps its state is handed back by the content function while the pane it was
+        // drawn in is still on screen, and a control has one parent.
+        if (content.Parent is Border drawn)
+        {
+            drawn.Child = null;
         }
 
         return new Border
         {
-            Name = $"group_{group.Id}",
+            Name = $"pane_{group.Id}",
             Background = OrblitColors.Surface,
             BorderBrush = OrblitColors.Line,
-            BorderThickness = new Thickness(1),
-            CornerRadius = Radii.Panel,
+            BorderThickness = new Thickness(DockStyle.BorderWidth),
+            CornerRadius = DockStyle.PaneCorners,
             ClipToBounds = true,
-            Child = body,
+            Child = content,
         };
     }
 
-    private StackPanel Tab(DockGroup group, DockedPanel panel)
+    private Border Tab(DockGroup group, DockedPanel panel)
     {
         var showing = group.Current == panel;
         var active = showing && !group.Collapsed;
@@ -189,8 +212,8 @@ public sealed class DockHost : ContentControl
             Name = $"tab_{panel.Id}",
             Content = panel.Label,
             FontSize = OrblitText.Label,
-            Padding = new Thickness(Space.Sm, Space.Xs),
-            Background = active ? OrblitColors.Raised : Brushes.Transparent,
+            Padding = new Thickness(DockStyle.TabPadX, DockStyle.TabPadY),
+            Background = Brushes.Transparent,
             Foreground = active ? OrblitColors.Ink : OrblitColors.InkDim,
         };
         // The showing tab of a group that folds folds it, so the console opens and closes from its tab.
@@ -215,7 +238,14 @@ public sealed class DockHost : ContentControl
             tab.Children.Add(close);
         }
 
-        return tab;
+        // The shape is what is drawn, so the close button is inside the showing tab and not beside it.
+        return new Border
+        {
+            Name = $"tabshape_{panel.Id}",
+            Background = active ? OrblitColors.Surface : Brushes.Transparent,
+            CornerRadius = DockStyle.TabCorners,
+            Child = tab,
+        };
     }
 
     private Button Chevron(DockGroup group)
